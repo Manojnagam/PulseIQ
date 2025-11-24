@@ -1982,4 +1982,66 @@ function ClientDietPlan({ client }) {
     );
 }
 
+function Clients({ clients, fetchData, setSelectedClient, selectedClient, handleMarkAttendance, handleDeleteClient, setCheckInData, setShowCheckInModal, setRenewData, setShowRenewModal }) {
+    const [clientModalTab, setClientModalTab] = useState('details');
+    const activeClients = clients.filter(c => c.status === 'active' || c.status === 'trial');
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-white">My Clients</h2>
+                <div className="relative">
+                    <Input placeholder="Search clients..." className="bg-slate-900 border-slate-800 w-64" />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeClients.map(client => (
+                    <motion.div
+                        layoutId={client._id}
+                        key={client._id}
+                        onClick={() => { setSelectedClient(client); setClientModalTab('details'); }}
+                        className="bg-slate-900 border border-slate-800 p-4 rounded-xl cursor-pointer hover:border-indigo-500 transition-all group"
+                    >
+                        <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                    {client.name.charAt(0)}
+                                </div>
+                                <div className="ml-3">
+                                    <h3 className="font-semibold text-white group-hover:text-indigo-400 transition-colors">{client.name}</h3>
+                                    <p className="text-xs text-slate-400">{client.pack}</p>
+                                </div>
+                            </div>
+                            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${client.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                {client.status}
+                            </span>
+                        </div>
+
+                        <div className="space-y-2 text-xs">
+                            <div className="flex justify-between">
+                                <span className="text-slate-500">Joined</span>
+                                <span className="text-white">{new Date(client.joinedDate).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-500">Weight</span>
+                                <span className="text-white">{client.weight} kg</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1 border-emerald-500 text-emerald-400 hover:bg-emerald-500/10" onClick={(e) => { e.stopPropagation(); setCheckInData({}); setSelectedClient(client); setShowCheckInModal(true); }}>
+                                <Scale className="w-3 h-3 mr-1" /> Check-in
+                            </Button>
+                            <Button size="sm" variant="outline" className="flex-1 border-purple-500 text-purple-400 hover:bg-purple-500/10" onClick={(e) => { e.stopPropagation(); setRenewData({ pack: '', packPrice: 0 }); setSelectedClient(client); setShowRenewModal(true); }}>
+                                <RefreshCw className="w-3 h-3 mr-1" /> Renew
+                            </Button>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export default CoachDashboard;
