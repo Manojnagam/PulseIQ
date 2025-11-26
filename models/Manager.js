@@ -15,6 +15,14 @@ const managerSchema = mongoose.Schema({
     ref: 'User',
     default: null
   },
+  uplineName: {
+    type: String,
+    default: ''
+  },
+  uplineMobile: {
+    type: String,
+    default: ''
+  },
   level: {
     type: String,
     enum: ['Junior', 'Senior', 'Regional', 'National'],
@@ -25,8 +33,8 @@ const managerSchema = mongoose.Schema({
     default: ''
   },
   candidateDownlines: [{
-    mobile: { type: String, required: true },
-    lineLevel: { type: String, required: true } // Keeping as String to allow "Level 1" etc if needed, or Number. User said "Line 3", let's stick to String or Number. Let's use String for flexibility based on previous prompt "Level 1".
+    mobile: { type: String },
+    lineLevel: { type: String } // Keeping as String to allow "Level 1" etc if needed, or Number. User said "Line 3", let's stick to String or Number. Let's use String for flexibility based on previous prompt "Level 1".
   }],
   verifiedDownlines: [{
     type: mongoose.Schema.Types.ObjectId,

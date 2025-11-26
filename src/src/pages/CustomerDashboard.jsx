@@ -15,8 +15,11 @@ import {
     Bell,
     Scale,
     Zap,
-    Target
+    Target,
+    X,
+    Plus
 } from 'lucide-react';
+import { Input } from '../components/ui/input';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 class ErrorBoundary extends React.Component {
@@ -54,25 +57,277 @@ class ErrorBoundary extends React.Component {
     }
 }
 
-const CustomerDashboardContent = () => {
-    const { user, logout } = useAuth();
-    const [customer, setCustomer] = useState(null);
-    const [loading, setLoading] = useState(true);
+const BodyCompositionUpdateModal = ({ isOpen, onClose, onUpdate, currentData }) => {
+    const [formData, setFormData] = useState({
+        // Personal
+        age: '',
+        gender: 'Female',
+        height: '',
+
+        // Current Body Comp
+        weight: '',
+        fatPercent: '',
+        visceralFat: '',
+        muscleMassPercent: '',
+        rmr: '',
+        bmi: '',
+        bodyAge: '',
+        tsfPercent: '',
+
+        // Ideal Body Comp
+        idealWeight: '',
+        idealFatPercent: '',
+        idealVisceralFat: '',
+        idealMuscleMassPercent: '',
+        idealRmr: '',
+        idealBmi: '',
+        idealBodyAge: '',
+        idealTsfPercent: '',
+
+        // Membership
+        pack: '',
+        packPrice: 0,
+        status: 'active'
+    });
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const { data } = await api.get('/customers/me');
-                setCustomer(data);
-            } catch (error) {
-                console.error("Failed to fetch profile", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchProfile();
-    }, []);
+        if (isOpen && currentData) {
+            setFormData({
+                age: currentData.age || '',
+                gender: currentData.gender || 'Female',
+                height: currentData.bodyComposition?.height || '',
 
+                weight: currentData.bodyComposition?.weight || '',
+                fatPercent: currentData.bodyComposition?.fatPercent || '',
+                visceralFat: currentData.bodyComposition?.visceralFat || '',
+                muscleMassPercent: currentData.bodyComposition?.muscleMassPercent || '',
+                rmr: currentData.bodyComposition?.rmr || '',
+                bmi: currentData.bodyComposition?.bmi || '',
+                bodyAge: currentData.bodyComposition?.bodyAge || '',
+                tsfPercent: currentData.bodyComposition?.tsfPercent || '',
+
+                idealWeight: currentData.idealBodyComposition?.weight || '',
+                idealFatPercent: currentData.idealBodyComposition?.fatPercent || '',
+                idealVisceralFat: currentData.idealBodyComposition?.visceralFat || '',
+                idealMuscleMassPercent: currentData.idealBodyComposition?.muscleMassPercent || '',
+                idealRmr: currentData.idealBodyComposition?.rmr || '',
+                idealBmi: currentData.idealBodyComposition?.bmi || '',
+                idealBodyAge: currentData.idealBodyComposition?.bodyAge || '',
+                idealTsfPercent: currentData.idealBodyComposition?.tsfPercent || '',
+
+                pack: currentData.pack || '',
+                packPrice: currentData.packPrice || 0,
+                status: currentData.status || 'active'
+            });
+        }
+    }, [isOpen, currentData]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const calculateTarget = (field) => {
+        const current = parseFloat(formData[field]);
+        const ideal = parseFloat(formData[`ideal${field.charAt(0).toUpperCase() + field.slice(1)}`]);
+        if (!isNaN(current) && !isNaN(ideal)) {
+            return (current - ideal).toFixed(2);
+        }
+        return '-';
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const payload = {
+                age: formData.age,
+                gender: formData.gender,
+                pack: formData.pack,
+                packPrice: formData.packPrice,
+                status: formData.status,
+                bodyComposition: {
+                    height: parseFloat(formData.height),
+                    weight: parseFloat(formData.weight),
+                    fatPercent: parseFloat(formData.fatPercent),
+                    visceralFat: parseFloat(formData.visceralFat),
+                    muscleMassPercent: parseFloat(formData.muscleMassPercent),
+                    rmr: parseFloat(formData.rmr),
+                    bmi: parseFloat(formData.bmi),
+                    bodyAge: parseFloat(formData.bodyAge),
+                    tsfPercent: parseFloat(formData.tsfPercent)
+                },
+                idealBodyComposition: {
+                    weight: parseFloat(formData.idealWeight),
+                    fatPercent: parseFloat(formData.idealFatPercent),
+                    visceralFat: parseFloat(formData.idealVisceralFat),
+                    muscleMassPercent: parseFloat(formData.idealMuscleMassPercent),
+                    rmr: parseFloat(formData.idealRmr),
+                    bmi: parseFloat(formData.idealBmi),
+                    bodyAge: parseFloat(formData.idealBodyAge),
+                    tsfPercent: parseFloat(formData.idealTsfPercent)
+                }
+            };
+
+            await api.put('/customers/me', payload);
+            if (onUpdate) onUpdate();
+            onClose();
+        } catch (error) {
+            console.error("Failed to update profile", error);
+            alert("Failed to update profile. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+            >
+                <div className="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-slate-800 p-6 flex justify-between items-center z-10">
+                    <h2 className="text-xl font-bold text-white">Update Health Profile</h2>
+                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-8">
+                    {/* Personal Details */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Personal Details</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">Age</label>
+                                <Input name="age" type="number" value={formData.age} onChange={handleChange} className="bg-slate-800 border-slate-700 text-white" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">Gender</label>
+                                <select name="gender" value={formData.gender} onChange={handleChange} className="w-full bg-slate-800 border border-slate-700 text-white rounded-md p-2 text-sm focus:border-indigo-500 outline-none">
+                                    <option value="Female">Female</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">Height (cm)</label>
+                                <Input name="height" type="number" value={formData.height} onChange={handleChange} className="bg-slate-800 border-slate-700 text-white" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Body Composition */}
+                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                        <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Body Composition (Current vs Ideal)</h3>
+
+                        <div className="grid grid-cols-3 gap-4 text-xs font-bold text-slate-500 uppercase text-center mb-2">
+                            <div>Metric</div>
+                            <div>Current</div>
+                            <div>Ideal</div>
+                        </div>
+
+                        {[
+                            { label: 'Weight (kg)', key: 'weight', idealKey: 'idealWeight' },
+                            { label: 'Fat %', key: 'fatPercent', idealKey: 'idealFatPercent' },
+                            { label: 'Visceral Fat', key: 'visceralFat', idealKey: 'idealVisceralFat' },
+                            { label: 'Muscle Mass %', key: 'muscleMassPercent', idealKey: 'idealMuscleMassPercent' },
+                            { label: 'RMR (kcal)', key: 'rmr', idealKey: 'idealRmr' },
+                            { label: 'BMI', key: 'bmi', idealKey: 'idealBmi' },
+                            { label: 'Body Age', key: 'bodyAge', idealKey: 'idealBodyAge' },
+                            { label: 'TSF %', key: 'tsfPercent', idealKey: 'idealTsfPercent' },
+                        ].map((item) => (
+                            <div key={item.key} className="grid grid-cols-3 gap-4 items-center">
+                                <label className="text-xs text-slate-400 font-medium">{item.label}</label>
+                                <Input
+                                    name={item.key}
+                                    type="number"
+                                    step="0.1"
+                                    placeholder="Curr"
+                                    value={formData[item.key]}
+                                    onChange={handleChange}
+                                    className="h-9 bg-slate-800 border-slate-700 text-white text-sm"
+                                />
+                                <Input
+                                    name={item.idealKey}
+                                    type="number"
+                                    step="0.1"
+                                    placeholder="Ideal"
+                                    value={formData[item.idealKey]}
+                                    onChange={handleChange}
+                                    className="h-9 bg-slate-800 border-slate-700 text-white text-sm"
+                                />
+                            </div>
+                        ))}
+
+                        {/* Target Goals Display */}
+                        <div className="mt-6 p-4 bg-slate-800/50 rounded-xl border border-slate-800">
+                            <h4 className="text-xs font-bold text-indigo-400 uppercase mb-3">Target Goals (To Lose/Gain)</h4>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                                {[
+                                    { label: 'Weight', key: 'weight' },
+                                    { label: 'Fat %', key: 'fatPercent' },
+                                    { label: 'Visceral', key: 'visceralFat' },
+                                    { label: 'Muscle %', key: 'muscleMassPercent' },
+                                ].map((item) => (
+                                    <div key={item.key} className="bg-slate-900/50 p-2 rounded-lg">
+                                        <p className="text-[10px] text-slate-500 uppercase mb-1">{item.label}</p>
+                                        <p className={`text-sm font-bold ${parseFloat(calculateTarget(item.key)) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                                            {calculateTarget(item.key)}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Membership Details */}
+                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                        <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Membership & Status</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">Pack</label>
+                                <select name="pack" value={formData.pack} onChange={handleChange} className="w-full bg-slate-800 border border-slate-700 text-white rounded-md p-2 text-sm focus:border-indigo-500 outline-none">
+                                    <option value="">Select Pack</option>
+                                    <option value="30 Days Shake Pack">30 Days Shake Pack</option>
+                                    <option value="26 Days Shake Pack">26 Days Shake Pack</option>
+                                    <option value="3 Days Trial Pack">3 Days Trial Pack</option>
+                                    <option value="Hot Drink Pack (30 Days)">Hot Drink Pack (30 Days)</option>
+                                    <option value="Coach Self-Use">Coach Self-Use</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">Status</label>
+                                <select name="status" value={formData.status} onChange={handleChange} className="w-full bg-slate-800 border border-slate-700 text-white rounded-md p-2 text-sm focus:border-indigo-500 outline-none">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="trial">Trial</option>
+                                    <option value="lead">Lead</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-6 border-t border-slate-800">
+                        <Button type="button" variant="ghost" onClick={onClose} className="text-slate-400 hover:text-white">
+                            Cancel
+                        </Button>
+                        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={loading}>
+                            {loading ? 'Saving...' : 'Save Updates'}
+                        </Button>
+                    </div>
+                </form>
+            </motion.div>
+        </div>
+    );
+};
+
+export const CustomerStatsView = ({ customer, user, logout, showNavbar = true, onProfileUpdate }) => {
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const isRecentlyRenewed = useMemo(() => {
         if (!customer?.lastRenewalDate) return false;
         const renewalDate = new Date(customer.lastRenewalDate);
@@ -90,21 +345,12 @@ const CustomerDashboardContent = () => {
                 fat: log.fatPercent,
                 muscle: log.muscleMassPercent
             }));
-            console.log("Progress Data:", data);
             return data;
         } catch (err) {
             console.error("Error mapping progress logs:", err);
             return [];
         }
     }, [customer]);
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-            </div>
-        );
-    }
 
     // Helper to safely get data
     const getMetric = (path, fallback = '-') => {
@@ -115,14 +361,6 @@ const CustomerDashboardContent = () => {
     const getIdeal = (path, fallback = '-') => {
         if (!customer?.idealBodyComposition) return fallback;
         return customer.idealBodyComposition[path] || fallback;
-    };
-
-    // Calculate progress (simple linear for now)
-    const calculateProgress = (current, ideal) => {
-        if (!current || !ideal || isNaN(current) || isNaN(ideal)) return 0;
-        // Assuming weight loss for now, logic can be complex
-        // Just returning a visual percentage for the bar
-        return 65;
     };
 
     const NutritionGuide = () => {
@@ -221,49 +459,66 @@ const CustomerDashboardContent = () => {
     return (
         <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-purple-500/30">
             {/* Navbar */}
-            <nav className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                                <Activity className="h-5 w-5 text-white" />
+            {showNavbar && (
+                <nav className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                                    <Activity className="h-5 w-5 text-white" />
+                                </div>
+                                <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                                    PulseIQ
+                                </span>
                             </div>
-                            <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                                PulseIQ
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-sm font-medium text-white">{customer?.name || user?.name}</p>
-                                <p className="text-xs text-slate-400">{customer?.pack || 'Member'}</p>
+                            <div className="flex items-center gap-4">
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-sm font-medium text-white">{customer?.name || user?.name}</p>
+                                    <p className="text-xs text-slate-400">{customer?.pack || 'Member'}</p>
+                                </div>
+                                <Button
+                                    onClick={logout}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-slate-400 hover:text-red-400"
+                                >
+                                    <LogOut className="h-5 w-5" />
+                                </Button>
                             </div>
-                            <Button
-                                onClick={logout}
-                                variant="ghost"
-                                size="icon"
-                                className="text-slate-400 hover:text-red-400"
-                            >
-                                <LogOut className="h-5 w-5" />
-                            </Button>
                         </div>
                     </div>
-                </div>
-            </nav>
+                </nav>
+            )}
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Welcome Section */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
+                    className="mb-8 flex justify-between items-end"
                 >
-                    <h1 className="text-3xl font-bold text-white mb-2">
-                        Hello, {customer?.name?.split(' ')[0] || 'Champion'}! 👋
-                    </h1>
-                    <p className="text-slate-400">
-                        Here's your latest health breakdown.
-                    </p>
+                    <div>
+                        <h1 className="text-3xl font-bold text-white mb-2">
+                            Hello, {customer?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'Champion'}! 👋
+                        </h1>
+                        <p className="text-slate-400">
+                            Here's your latest health breakdown.
+                        </p>
+                    </div>
+                    <Button
+                        onClick={() => setIsUpdateModalOpen(true)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" /> Update Stats
+                    </Button>
                 </motion.div>
+
+                <BodyCompositionUpdateModal
+                    isOpen={isUpdateModalOpen}
+                    onClose={() => setIsUpdateModalOpen(false)}
+                    onUpdate={onProfileUpdate}
+                    currentData={customer}
+                />
 
                 {/* Renewal Celebration Card */}
                 {isRecentlyRenewed && (
@@ -508,12 +763,53 @@ const CustomerDashboardContent = () => {
     );
 };
 
-const CustomerDashboard = () => (
-    <ErrorBoundary>
-        <CustomerDashboardContent />
-    </ErrorBoundary>
-);
+const CustomerDashboard = () => {
+    const { user, logout } = useAuth();
+    const [customer, setCustomer] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchCustomerData();
+    }, []);
+
+    const fetchCustomerData = async () => {
+        try {
+            setLoading(true);
+            const { data } = await api.get('/customers/me');
+            setCustomer(data);
+        } catch (error) {
+            console.error('Failed to fetch customer data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleProfileUpdate = async () => {
+        await fetchCustomerData();
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+                    <p className="text-slate-400">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <ErrorBoundary>
+            <CustomerStatsView
+                customer={customer}
+                user={user}
+                logout={logout}
+                showNavbar={true}
+                onProfileUpdate={handleProfileUpdate}
+            />
+        </ErrorBoundary>
+    );
+};
 
 export default CustomerDashboard;
-
-

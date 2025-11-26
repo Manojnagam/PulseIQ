@@ -100,6 +100,50 @@ const createCustomer = asyncHandler(async (req, res) => {
     }
   }
 
+  // Check if customer with this mobile already exists
+  const existingCustomer = await Customer.findOne({ mobile });
+  
+  if (existingCustomer) {
+    // If customer exists and belongs to this coach, update it
+    if (existingCustomer.coach && existingCustomer.coach.toString() === coach._id.toString()) {
+      // Update existing customer
+      existingCustomer.name = name || existingCustomer.name;
+      existingCustomer.age = age !== undefined ? age : existingCustomer.age;
+      existingCustomer.gender = gender || existingCustomer.gender;
+      existingCustomer.referrer = referrer || existingCustomer.referrer;
+      existingCustomer.referrerMobile = referrerMobile || existingCustomer.referrerMobile;
+      existingCustomer.pack = pack || existingCustomer.pack;
+      existingCustomer.packPrice = packPrice !== undefined ? packPrice : existingCustomer.packPrice;
+      existingCustomer.date = date || existingCustomer.date;
+      existingCustomer.status = status || existingCustomer.status;
+      existingCustomer.pipelineStage = status === 'lead' ? 'New' : (existingCustomer.pipelineStage || 'Converted');
+      
+      if (bodyComposition) existingCustomer.bodyComposition = bodyComposition;
+      if (idealBodyComposition) existingCustomer.idealBodyComposition = idealBodyComposition;
+      if (targetBodyComposition && Object.keys(targetBodyComposition).length > 0) {
+        existingCustomer.targetBodyComposition = targetBodyComposition;
+      }
+      
+      // Add initial payment if provided
+      if (initialPayment && initialPayment.amount) {
+        existingCustomer.payments.push({
+          amount: Number(initialPayment.amount),
+          date: date || Date.now(),
+          type: initialPayment.type || 'Cash',
+          notes: initialPayment.notes || 'Initial Payment'
+        });
+      }
+      
+      const updatedCustomer = await existingCustomer.save();
+      res.status(200).json(updatedCustomer);
+      return;
+    } else {
+      // Customer exists but belongs to another coach or has no coach
+      res.status(400);
+      throw new Error(`A customer with mobile number ${mobile} already exists${existingCustomer.coach ? ' under another coach' : ''}. Please use a different mobile number or contact support to transfer this customer.`);
+    }
+  }
+
   // Prepare payments array if initialPayment exists
   const payments = [];
   if (initialPayment && initialPayment.amount) {

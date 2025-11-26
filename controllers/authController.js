@@ -33,15 +33,20 @@ const signup = asyncHandler(async (req, res) => {
   let user = await User.findOne({ mobile });
 
   if (user) {
-    // If user exists and has a password, return error
+    // If user exists and has a password
     if (user.password) {
-      res.status(400);
-      throw new Error('User already exists. Please login.');
+      if (user.role === role) {
+        res.status(400);
+        throw new Error('User already exists. Please login.');
+      }
+      // If roles differ (e.g. Coach -> Manager), allow upgrade and update password
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    } else {
+      // OTP User setting password for first time
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
     }
-    
-    // If user exists but has NO password (OTP user), allow setting password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
     
     if (user.role !== role) {
         user.role = role; 
@@ -138,10 +143,24 @@ const signup = asyncHandler(async (req, res) => {
     }
   }
 
+  // Get name from role-specific profile
+  let profileName = null;
+  if (role === 'manager') {
+    const manager = await Manager.findOne({ user: user._id });
+    profileName = manager?.name || name || null;
+  } else if (role === 'coach') {
+    const coach = await Coach.findOne({ user: user._id });
+    profileName = coach?.name || name || null;
+  } else if (role === 'customer') {
+    const customer = await Customer.findOne({ user: user._id });
+    profileName = customer?.name || name || null;
+  }
+
   res.status(201).json({
     _id: user._id,
     mobile: user.mobile,
     role: user.role,
+    name: profileName,
     token: generateToken(user._id),
   });
 });
@@ -167,10 +186,24 @@ const login = asyncHandler(async (req, res) => {
       throw new Error(`Incorrect role. This number is registered as ${user.role}`);
     }
 
+    // Get name from role-specific profile
+    let name = null;
+    if (role === 'manager') {
+      const manager = await Manager.findOne({ user: user._id });
+      name = manager?.name || null;
+    } else if (role === 'coach') {
+      const coach = await Coach.findOne({ user: user._id });
+      name = coach?.name || null;
+    } else if (role === 'customer') {
+      const customer = await Customer.findOne({ user: user._id });
+      name = customer?.name || null;
+    }
+
     res.json({
       _id: user._id,
       mobile: user.mobile,
       role: user.role,
+      name: name,
       token: generateToken(user._id),
     });
   } else {
@@ -264,10 +297,24 @@ const verifyOtp = asyncHandler(async (req, res) => {
     }
   }
 
+  // Get name from role-specific profile
+  let name = null;
+  if (user.role === 'manager') {
+    const manager = await Manager.findOne({ user: user._id });
+    name = manager?.name || null;
+  } else if (user.role === 'coach') {
+    const coach = await Coach.findOne({ user: user._id });
+    name = coach?.name || null;
+  } else if (user.role === 'customer') {
+    const customer = await Customer.findOne({ user: user._id });
+    name = customer?.name || null;
+  }
+
   res.json({
     _id: user._id,
     mobile: user.mobile,
     role: user.role,
+    name: name,
     token: generateToken(user._id),
   });
 });

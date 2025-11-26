@@ -271,19 +271,19 @@ const LoginPage = () => {
                                             </p>
 
                                             <div className="space-y-2 pt-2">
-                                                <Label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Downline Wellness Coach Verification <span className="text-red-500">*</span></Label>
-                                                <p className="text-[10px] text-slate-500">Enter at least two verified coaches. Specify their Line Level (e.g., 1 for direct, 2 for indirect).</p>
+                                                <Label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Downline Wellness Coach Verification (Optional)</Label>
+                                                <p className="text-[10px] text-slate-500">Enter verified coaches if available. Specify their Line Level (e.g., 1 for direct, 2 for indirect).</p>
 
                                                 {/* Coach 1 */}
                                                 <div className="flex gap-2 mb-2">
                                                     <Input
-                                                        placeholder="Coach #1 Mobile *"
+                                                        placeholder="Coach #1 Mobile"
                                                         value={downlineCoach1}
                                                         onChange={(e) => setDownlineCoach1(e.target.value)}
                                                         className="bg-black/20 border-white/10 text-white h-10 rounded-lg text-sm flex-[2]"
                                                     />
                                                     <Input
-                                                        placeholder="Level *"
+                                                        placeholder="Level"
                                                         value={downlineCoach1Level}
                                                         onChange={(e) => setDownlineCoach1Level(e.target.value)}
                                                         className="bg-black/20 border-white/10 text-white h-10 rounded-lg text-sm flex-1"
@@ -293,13 +293,13 @@ const LoginPage = () => {
                                                 {/* Coach 2 */}
                                                 <div className="flex gap-2 mb-2">
                                                     <Input
-                                                        placeholder="Coach #2 Mobile *"
+                                                        placeholder="Coach #2 Mobile"
                                                         value={downlineCoach2}
                                                         onChange={(e) => setDownlineCoach2(e.target.value)}
                                                         className="bg-black/20 border-white/10 text-white h-10 rounded-lg text-sm flex-[2]"
                                                     />
                                                     <Input
-                                                        placeholder="Level *"
+                                                        placeholder="Level"
                                                         value={downlineCoach2Level}
                                                         onChange={(e) => setDownlineCoach2Level(e.target.value)}
                                                         className="bg-black/20 border-white/10 text-white h-10 rounded-lg text-sm flex-1"

@@ -28,8 +28,19 @@ const updateCustomerProfile = asyncHandler(async (req, res) => {
   const customer = await Customer.findOne({ user: req.user._id });
 
   if (!customer) {
-    res.status(404);
-    throw new Error('Customer profile not found');
+    // If user is a manager or coach, create a customer profile for them on the fly
+    if (req.user.role === 'manager' || req.user.role === 'coach') {
+        customer = await Customer.create({
+            user: req.user._id,
+            name: req.user.name || 'Manager/Coach', // Fallback
+            mobile: req.user.mobile,
+            status: 'active',
+            pack: 'Coach Self-Use'
+        });
+    } else {
+        res.status(404);
+        throw new Error('Customer profile not found');
+    }
   }
 
   customer.name = req.body.name || customer.name;

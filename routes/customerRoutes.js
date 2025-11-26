@@ -5,7 +5,7 @@ const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
 
 router.route('/me')
-  .get(protect, authorize('customer'), getCustomerProfile)
-  .put(protect, authorize('customer'), updateCustomerProfile);
+  .get(protect, authorize('customer', 'manager'), getCustomerProfile)
+  .put(protect, authorize('customer', 'manager'), updateCustomerProfile);
 
 module.exports = router;
