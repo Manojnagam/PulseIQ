@@ -40,6 +40,10 @@ const managerSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Coach',
   }],
+  downlineManagers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Manager',
+  }],
 }, {
   timestamps: true,
 });

@@ -35,7 +35,7 @@ router.get('/', protect, async (req, res) => {
         if (!coachId && req.user.role === 'customer') {
              // Try to find the customer's coach if not in req.user
              const Customer = require('../models/Customer');
-             const customer = await Customer.findById(req.user._id);
+             const customer = await Customer.findOne({ user: req.user._id });
              coachId = customer ? customer.coach : null;
         }
 

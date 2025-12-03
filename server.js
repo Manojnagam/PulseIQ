@@ -32,6 +32,8 @@ app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/coach', require('./routes/coachRoutes'));
 app.use('/api/manager', require('./routes/managerRoutes'));
 app.use('/api/foods', require('./routes/foodRoutes'));
+app.use('/api/resources', require('./routes/resourceRoutes'));
+app.use('/api/contests', require('./routes/contestRoutes'));
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'PulseIQ API is running' });

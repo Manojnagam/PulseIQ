@@ -25,7 +25,7 @@ const getCustomerProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/customers/me
 // @access  Private (Customer)
 const updateCustomerProfile = asyncHandler(async (req, res) => {
-  const customer = await Customer.findOne({ user: req.user._id });
+  let customer = await Customer.findOne({ user: req.user._id });
 
   if (!customer) {
     // If user is a manager or coach, create a customer profile for them on the fly

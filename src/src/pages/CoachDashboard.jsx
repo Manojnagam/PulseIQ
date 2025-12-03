@@ -39,7 +39,12 @@ import {
     XCircle,
     Clock,
     Search,
-    CreditCard
+    CreditCard,
+    BookOpen,
+    Video,
+    FileText,
+    LinkIcon,
+    Trophy
 } from 'lucide-react';
 import {
     AreaChart,
@@ -408,7 +413,218 @@ export const CoachView = ({ isEmbedded = false }) => {
         }
     };
 
+    // --- Resources Component (Read-Only) ---
+    const Resources = () => {
+        const [resources, setResources] = useState([]);
+        const [loading, setLoading] = useState(true);
+
+        useEffect(() => {
+            fetchResources();
+        }, []);
+
+        const fetchResources = async () => {
+            try {
+                const { data } = await api.get('/resources/coach');
+                setResources(data);
+            } catch (error) {
+                console.error("Failed to fetch resources", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const getIcon = (type) => {
+            switch (type) {
+                case 'video': return Video;
+                case 'pdf': return FileText;
+                default: return LinkIcon;
+            }
+        };
+
+        if (loading) return <div className="text-slate-400">Loading resources...</div>;
+
+        return (
+            <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {resources.length === 0 ? (
+                        <div className="col-span-full text-center py-12 text-slate-500">
+                            <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p>No training resources available yet.</p>
+                        </div>
+                    ) : (
+                        resources.map(resource => {
+                            const Icon = getIcon(resource.type);
+                            return (
+                                <Card key={resource._id} className="bg-slate-900 border-slate-800 hover:border-indigo-500/50 transition-all group cursor-pointer" onClick={() => window.open(resource.url, '_blank')}>
+                                    <CardContent className="p-6 space-y-4">
+                                        <div className="flex items-start justify-between">
+                                            <div className="p-3 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                                                <Icon className="w-6 h-6" />
+                                            </div>
+                                            <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-indigo-400" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-white text-lg line-clamp-1 group-hover:text-indigo-300 transition-colors">{resource.title}</h3>
+                                            <p className="text-sm text-slate-400 mt-1 line-clamp-2">{resource.description}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     // --- Sub-Components ---
+
+    // --- Coach Contests Component ---
+    const CoachContests = () => {
+        const [activeContests, setActiveContests] = useState([]);
+        const [loading, setLoading] = useState(true);
+        const [enrollModalOpen, setEnrollModalOpen] = useState(false);
+        const [selectedContestId, setSelectedContestId] = useState(null);
+        const [selectedClientId, setSelectedClientId] = useState('');
+        const [proofFile, setProofFile] = useState(null);
+        const [enrollLoading, setEnrollLoading] = useState(false);
+
+        useEffect(() => {
+            fetchActiveContests();
+        }, []);
+
+        const fetchActiveContests = async () => {
+            try {
+                const { data } = await api.get('/contests/active');
+                setActiveContests(data);
+            } catch (error) {
+                console.error("Failed to fetch active contests", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const handleEnroll = async (e) => {
+            e.preventDefault();
+            if (!selectedClientId || !selectedContestId) return;
+
+            try {
+                setEnrollLoading(true);
+                const formData = new FormData();
+                formData.append('customerId', selectedClientId);
+                if (proofFile) {
+                    formData.append('proofMedia', proofFile);
+                }
+
+                await api.post(`/contests/${selectedContestId}/enroll`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                alert("Client enrolled successfully!");
+                setEnrollModalOpen(false);
+                setSelectedClientId('');
+                setProofFile(null);
+                fetchActiveContests(); // Refresh to update participant counts if we had them
+            } catch (error) {
+                alert(error.response?.data?.message || "Failed to enroll client");
+            } finally {
+                setEnrollLoading(false);
+            }
+        };
+
+        if (loading) return <div className="text-slate-400">Loading contests...</div>;
+
+        return (
+            <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {activeContests.length === 0 ? (
+                        <div className="col-span-full text-center py-12 text-slate-500">
+                            <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p>No active contests at the moment.</p>
+                        </div>
+                    ) : (
+                        activeContests.map(contest => (
+                            <Card key={contest._id} className="bg-slate-900 border-slate-800 hover:border-indigo-500/50 transition-all">
+                                <CardContent className="p-6 space-y-4">
+                                    <div className="flex justify-between items-start">
+                                        <div className="p-3 rounded-lg bg-yellow-500/10 text-yellow-500">
+                                            <Trophy className="w-6 h-6" />
+                                        </div>
+                                        <span className="text-xs bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded-full capitalize">
+                                            {contest.type.replace('-', ' ')}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-white text-lg">{contest.title}</h3>
+                                        <p className="text-sm text-slate-400 mt-1 line-clamp-2">{contest.description}</p>
+                                    </div>
+                                    <div className="flex items-center text-xs text-slate-500">
+                                        <Calendar className="w-3 h-3 mr-1" />
+                                        {new Date(contest.startDate).toLocaleDateString()} - {new Date(contest.endDate).toLocaleDateString()}
+                                    </div>
+                                    <Button
+                                        className="w-full bg-indigo-600 hover:bg-indigo-700"
+                                        onClick={() => {
+                                            setSelectedContestId(contest._id);
+                                            setEnrollModalOpen(true);
+                                        }}
+                                    >
+                                        Enroll Client
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
+                </div>
+
+                {/* Enroll Modal */}
+                {enrollModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 w-full max-w-md">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-white">Enroll Client</h3>
+                                <Button variant="ghost" size="icon" onClick={() => setEnrollModalOpen(false)}>
+                                    <XCircle className="w-5 h-5" />
+                                </Button>
+                            </div>
+                            <form onSubmit={handleEnroll} className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm text-slate-400">Select Client</label>
+                                    <select
+                                        value={selectedClientId}
+                                        onChange={e => setSelectedClientId(e.target.value)}
+                                        className="w-full bg-slate-800 border border-slate-700 text-white rounded-md p-2 text-sm"
+                                        required
+                                    >
+                                        <option value="">-- Choose a client --</option>
+                                        {clients.map(client => (
+                                            <option key={client._id} value={client._id}>
+                                                {client.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm text-slate-400">Upload Proof (Photo or Video)</label>
+                                    <Input
+                                        type="file"
+                                        accept="image/*,video/*"
+                                        onChange={e => setProofFile(e.target.files[0])}
+                                        className="bg-slate-800 border-slate-700 text-white"
+                                        required
+                                    />
+                                </div>
+                                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" disabled={enrollLoading}>
+                                    {enrollLoading ? 'Enrolling...' : 'Confirm Enrollment'}
+                                </Button>
+                            </form>
+                        </div>
+                    </div >
+                )}
+            </div >
+        );
+    };
 
     const Sidebar = () => (
         <div className="hidden md:flex flex-col w-64 bg-slate-900 text-white h-screen fixed left-0 top-0 border-r border-slate-800">
@@ -418,7 +634,7 @@ export const CoachView = ({ isEmbedded = false }) => {
                 </h1>
                 <p className="text-xs text-slate-400 mt-1">Coach Command Center</p>
             </div>
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
                 {[
                     { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
                     { id: 'clients', icon: Users, label: 'My Clients' },
@@ -426,6 +642,8 @@ export const CoachView = ({ isEmbedded = false }) => {
                     { id: 'analytics', icon: PieChart, label: 'Analytics' },
                     { id: 'nutrition', icon: Utensils, label: 'Nutrition' },
                     { id: 'marketing', icon: Megaphone, label: 'Marketing' },
+                    { id: 'resources', icon: BookOpen, label: 'Training & Resources' },
+                    { id: 'contests', icon: Trophy, label: 'Active Contests' },
                 ].map((item) => (
                     <button
                         key={item.id}
@@ -471,6 +689,8 @@ export const CoachView = ({ isEmbedded = false }) => {
                 { id: 'analytics', icon: PieChart, label: 'Analytics' },
                 { id: 'nutrition', icon: Utensils, label: 'Nutrition' },
                 { id: 'marketing', icon: Megaphone, label: 'Marketing' },
+                { id: 'resources', icon: BookOpen, label: 'Resources' },
+                { id: 'contests', icon: Trophy, label: 'Contests' },
             ].map((item) => (
                 <button
                     key={item.id}
@@ -503,10 +723,15 @@ export const CoachView = ({ isEmbedded = false }) => {
                                 {activeTab === 'analytics' && 'Business Analytics'}
                                 {activeTab === 'nutrition' && 'Local Food Library'}
                                 {activeTab === 'marketing' && 'Marketing Tools'}
+                                {activeTab === 'resources' && 'Training Resources'}
+                                {activeTab === 'contests' && 'Active Contests'}
                             </h1>
                             <p className="text-slate-400 mt-1">Welcome back, {user?.name}</p>
                         </div>
                         <div className="flex gap-3">
+                            <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white" onClick={() => setShowProfile(true)}>
+                                <User className="w-5 h-5" />
+                            </Button>
                             <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800">
                                 <Bell className="w-4 h-4" />
                             </Button>
@@ -540,6 +765,8 @@ export const CoachView = ({ isEmbedded = false }) => {
                             {activeTab === 'analytics' && <Analytics stats={stats} />}
                             {activeTab === 'nutrition' && <FoodLibrary clients={clients} />}
                             {activeTab === 'marketing' && <SuccessStoryGenerator clients={clients} user={user} />}
+                            {activeTab === 'resources' && <Resources />}
+                            {activeTab === 'contests' && <CoachContests />}
                         </motion.div>
                     </AnimatePresence>
                 </div>
