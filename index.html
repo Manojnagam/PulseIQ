@@ -2277,6 +2277,7 @@ function goTo(name, el) {
   document.getElementById('sec-'+name).classList.add('active');
   el.classList.add('active');
   if (window.innerWidth <= 768) toggleSidebar();
+  if (name==='attendance') setTimeout(renderAttendance, 80);
   if (name==='analytics') setTimeout(renderAnalytics, 80);
   if (name==='coupons')   setTimeout(function(){ renderCouponView(); updateCouponCoachSelects(); }, 80);
   if (name==='payments')  setTimeout(function(){ renderPayments(); updatePaymentPersonSelect(); }, 80);
@@ -3358,23 +3359,39 @@ function switchAttTab(tab) {
     renderAttGrid();
   } else renderAttendance();
 }
+var _attResetTimer = null;
 async function toggleAtt(cid, cname, date, currentStatus) {
   getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
-  var newStatus = currentStatus==='present' ? 'absent' : 'present';
   var existing = D.attendance.find(function(a){return a.customer_id===cid && a.date===date;});
   try {
-    var attPayload = {customer_id:cid, customer_name:cname, date:date, status:newStatus, servings:1};
-    try {
-      if(existing) await dbUpdate('attendance', existing.id, {status:newStatus, servings:1});
-      else await dbInsert('attendance', attPayload);
-    } catch(e2) {
-      // Retry without servings if column doesn't exist yet
-      delete attPayload.servings;
-      if(existing) await dbUpdate('attendance', existing.id, {status:newStatus});
-      else await dbInsert('attendance', attPayload);
+    if(existing && existing.status==='present') {
+      var curServ = Number(existing.servings) || 1;
+      var newServ = curServ + 1;
+      await dbUpdate('attendance', existing.id, {servings:newServ});
+      showToast(cname+' — '+newServ+' servings today','success');
+      sendAttendanceWhatsApp(cid, cname, date);
+    } else if(existing) {
+      await dbUpdate('attendance', existing.id, {status:'present', servings:1});
+      showToast(cname+' — marked present (1 serving)','success');
+      sendAttendanceWhatsApp(cid, cname, date);
+    } else {
+      await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1});
+      showToast(cname+' — marked present (1 serving)','success');
+      sendAttendanceWhatsApp(cid, cname, date);
     }
+    _daysLeftCache = {};
     await loadAttendance(); renderOverview();
-    if(newStatus==='present') sendAttendanceWhatsApp(cid, cname, date);
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+async function resetAtt(cid, cname, date) {
+  getCredentials(); if (!SB_URL || !SB_KEY) return;
+  var existing = D.attendance.find(function(a){return a.customer_id===cid && a.date===date;});
+  if(!existing || existing.status!=='present') return;
+  try {
+    await dbUpdate('attendance', existing.id, {status:'absent', servings:0});
+    showToast(cname+' — attendance removed','info');
+    _daysLeftCache = {};
+    await loadAttendance(); renderOverview();
   } catch(e) { showToast('Error: '+e.message,'error'); }
 }
 function sendAttendanceWhatsApp(custId, custName, date) {
@@ -3401,8 +3418,13 @@ function sendAttendanceWhatsApp(custId, custName, date) {
     packLine = '💪 You\'re doing amazing! Keep showing up and the results will follow.';
   }
 
+  var todayServings = 0;
+  D.attendance.forEach(function(a){ if(a.customer_id===custId && a.date===date && a.status==='present') todayServings = Number(a.servings)||1; });
+  var todayLine = todayServings > 1 ? '🥤 Today\'s servings: *'+todayServings+'*\n' : '';
+
   var msg = 'Hi '+custName+'! ✅\n\n'
-    + 'Your attendance is marked for today ('+date+') at '+cn+'.\n\n'
+    + 'Your attendance is marked for today ('+date+') at '+cn+'.\n'
+    + todayLine+'\n'
     + progressLine+'\n'
     + packLine+'\n\n'
     + 'See you tomorrow! 💚🌿\n— '+cn;
@@ -3454,8 +3476,9 @@ function renderAttGrid() {
         var dStr = monthStr+'-'+(i<10?'0':'')+i;
         var att = D.attendance.find(function(a){return a.customer_id===c.id && a.date===dStr;});
         var st = att ? att.status : '';
+        var servCount = att ? (Number(att.servings) || 1) : 0;
         var cls = st==='present' ? 'p' : (st==='absent' ? 'a' : (st==='complementary' ? 'c' : ''));
-        var txt = st==='present' ? 'P' : (st==='absent' ? 'A' : (st==='complementary' ? '🎁' : '—'));
+        var txt = st==='present' ? (servCount > 1 ? servCount : 'P') : (st==='absent' ? 'A' : (st==='complementary' ? '🎁' : '—'));
         if(st==='present') presentSet.add(dStr);
         html += '<td class="att-cell '+cls+'" onclick="toggleAtt(\''+c.id+'\',\''+c.name+'\',\''+dStr+'\',\''+st+'\')">'+txt+'</td>';
       }
@@ -3500,15 +3523,17 @@ function renderAttendance() {
   allPersons.forEach(function(p){
     var att = D.attendance.find(function(a){return a.customer_id===p.id && a.date===todayStr;});
     var stst = att ? att.status : 'None';
+    var servings = att ? (Number(att.servings) || 1) : 0;
     var st = getDaysLeft(p.obj);
     var bdg = st.days > 3 ? 'bg' : 'br';
     if(stst === 'complementary') {
-      // Show complementary as a special card in present list
       present.push('<div class="att-card" style="border-left:3px solid #f9c74f;cursor:default"><div class="att-card-name">'+p.name+' 🎁</div><div><span class="badge by">Complementary</span></div></div>');
       return;
     }
-    var cardHtml = '<div class="att-card" onclick="toggleAtt(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\',\''+stst+'\')">' +
-                     '<div class="att-card-name">'+p.name+'</div>' +
+    var servBadge = stst==='present' && servings > 1 ? '<span class="badge" style="background:#6366f1;color:#fff;margin-left:6px">×'+servings+'</span>' : '';
+    var resetHtml = stst==='present' ? ' ondblclick="event.stopPropagation();resetAtt(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\')"' : '';
+    var cardHtml = '<div class="att-card" onclick="toggleAtt(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\',\''+stst+'\')"'+resetHtml+'>' +
+                     '<div class="att-card-name">'+p.name+servBadge+'</div>' +
                      '<div><span class="badge '+bdg+'">'+st.used+'/'+st.total+'</span></div>' +
                    '</div>';
     if (stst === 'present') present.push(cardHtml);
