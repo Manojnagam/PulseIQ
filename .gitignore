@@ -1,0 +1,14 @@
+# Browser save artifacts
+Wellness Hub — Supervisor Dashboard_files/
+
+# Old/duplicate files
+check.js
+PulseIQ-v8 (1).html
+PulseIQ-Dashboard-fixed.html
+index (2).html
+index (3).html
+
+# System
+.DS_Store
+Thumbs.db
+.claude/
