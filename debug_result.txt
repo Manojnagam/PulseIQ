@@ -1,0 +1,13 @@
+OK: getCoachProfile
+OK: getCoachDownlines
+OK: createCustomer
+OK: addCheckIn
+OK: renewMembership
+OK: markAttendance
+OK: updateCoachProfile
+OK: selfRegister
+OK: updateCustomer
+OK: getBusinessStats
+OK: getNetworkLeads
+OK: deleteCustomer
+OK: addPayment

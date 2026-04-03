@@ -12,3 +12,6 @@ index (3).html
 .DS_Store
 Thumbs.db
 .claude/
+node_modules/
+.env
+*.log
