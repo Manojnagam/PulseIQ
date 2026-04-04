@@ -3369,18 +3369,16 @@ async function toggleAtt(cid, cname, date, currentStatus) {
       var newServ = curServ + 1;
       await dbUpdate('attendance', existing.id, {servings:newServ});
       showToast(cname+' — '+newServ+' servings today','success');
-      sendAttendanceWhatsApp(cid, cname, date);
     } else if(existing) {
       await dbUpdate('attendance', existing.id, {status:'present', servings:1});
       showToast(cname+' — marked present (1 serving)','success');
-      sendAttendanceWhatsApp(cid, cname, date);
     } else {
       await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1});
       showToast(cname+' — marked present (1 serving)','success');
-      sendAttendanceWhatsApp(cid, cname, date);
     }
     _daysLeftCache = {};
     await loadAttendance(); renderOverview();
+    sendAttendanceWhatsApp(cid, cname, date);
   } catch(e) { showToast('Error: '+e.message,'error'); }
 }
 async function resetAtt(cid, cname, date) {
