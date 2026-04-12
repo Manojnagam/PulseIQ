@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach Dashboard — Dharani's</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f2ee;--surface:#fff;--surface2:#f0ede8;--primary:#2d5a3d;--primary-light:#3d7a52;--accent:#e8a838;--text:#1a2e1f;--muted:#6b7c6f;--border:#ddd8d0;--danger:#c0392b;--danger-light:#fdf0ef;--success:#27ae60;--success-light:#eafaf1;--shadow:0 2px 12px rgba(45,90,61,.08);--radius:12px;--sw:210px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── LOGIN ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a28 0%,#2d5a3d 60%,#3d7a52 100%);padding:20px}
+.login-box{background:#fff;border-radius:20px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-size:22px;color:var(--primary);font-weight:700}
+.login-logo p{color:var(--muted);font-size:13px;margin-top:4px}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.login-field input,.login-field select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;transition:border .2s}
+.login-field input:focus,.login-field select:focus{border-color:var(--primary)}
+.login-btn{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s}
+.login-btn:hover{background:var(--primary-light)}
+.login-err{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
+.login-step{display:none}
+.login-step.active{display:block}
+.step-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
+
+/* ── APP LAYOUT ── */
+#app{display:none;min-height:100vh}
+#sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:linear-gradient(180deg,#1a3a28 0%,#2d5a3d 100%);display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-logo h1{font-size:17px;color:#fff;font-weight:700}
+.sb-logo span{color:var(--accent);font-size:11px;font-weight:600;display:block;margin-top:2px}
+.sb-coach-badge{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px}
+.sb-coach-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.sb-coach-name{color:#fff;font-size:13px;font-weight:600;line-height:1.3}
+.sb-coach-sub{color:rgba(255,255,255,.55);font-size:11px}
+.sb-nav{padding:12px 8px;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;color:rgba(255,255,255,.75);cursor:pointer;transition:all .18s;font-weight:500;font-size:13px;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.18);color:#fff;font-weight:700}
+.nav-item .ic{font-size:16px;width:20px;text-align:center}
+.sb-bottom{padding:12px 16px;border-top:1px solid rgba(255,255,255,.1)}
+.logout-btn{width:100%;padding:9px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2);border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .2s}
+.logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+#main{margin-left:var(--sw);padding:24px;min-height:100vh}
+#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99}
+#menu-btn{display:none;position:fixed;top:14px;left:14px;z-index:101;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
+
+/* ── SECTIONS ── */
+.sec{display:none}
+.sec.active{display:block}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.pt{font-size:22px;font-weight:700;color:var(--text)}
+.ps{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* ── STATS ── */
+.stats{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.stat{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px 18px;flex:1;min-width:130px;box-shadow:var(--shadow)}
+.stat-l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-v{font-size:26px;font-weight:700;color:var(--primary);margin-top:4px}
+
+/* ── CARDS & COMMON ── */
+.tcard{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.bg{background:var(--success-light);color:var(--success)}
+.br{background:var(--danger-light);color:var(--danger)}
+.by{background:#fff3cd;color:#856404}
+.search{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;outline:none;background:var(--surface);margin-bottom:14px}
+.search:focus{border-color:var(--primary)}
+.btn-p{padding:9px 18px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-p:hover{background:var(--primary-light)}
+.btn-e{padding:5px 12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer}
+.btn-d{padding:5px 12px;background:var(--danger-light);color:var(--danger);border:1px solid #fca5a5;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer}
+.btn-c{padding:9px 18px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty .ei{font-size:40px;margin-bottom:10px}
+
+/* ── CUSTOMER CARDS ── */
+.cust-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.cust-name{font-weight:700;font-size:15px}
+.cust-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.cust-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+
+/* ── ATTENDANCE ── */
+.att-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .2s}
+.att-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.06);border-color:var(--primary)}
+.att-card-name{font-weight:600;font-size:14px}
+.att-panel{border-radius:12px;padding:16px;border:1px solid var(--border);margin-bottom:16px}
+
+/* ── BODY COMP ── */
+.body-rec{background:var(--surface2);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.body-rec-date{font-weight:700;font-size:13px}
+.body-rec-vals{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted)}
+.body-rec-val span{font-weight:700;color:var(--text)}
+
+/* ── FINANCE ── */
+.fin-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.fin-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.fin-row:last-child{border-bottom:none}
+
+/* ── LEADS ── */
+.lead-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.lead-card.overdue{border-left:4px solid var(--danger)}
+.lead-card.due-today{border-left:4px solid var(--accent)}
+.lead-name{font-weight:700;font-size:14px}
+.lead-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.lead-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+
+/* ── WA BAR ── */
+#att-wa-bar{display:none;background:#e6f9ee;border:1.5px solid #25D366;border-radius:10px;padding:12px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* ── MODALS ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:24px}
+.modal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-h h3{font-size:17px;font-weight:700}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;outline:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary)}
+.fg textarea{resize:vertical;min-height:70px}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mf{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast-item{padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.15);animation:slideIn .3s ease;max-width:300px}
+.toast-item.success{background:#1a7a3c;color:#fff}
+.toast-item.error{background:#c0392b;color:#fff}
+.toast-item.info{background:#2d5a3d;color:#fff}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes pop-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── OVERVIEW CARDS ── */
+.ov-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.ov-card h3{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--text)}
+.ov-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.ov-row:last-child{border-bottom:none}
+.ov-name{font-weight:600;font-size:13px}
+.ov-sub{font-size:11px;color:var(--muted)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%);transition:transform .3s}
+  #sidebar.open{transform:translateX(0)}
+  #sb-overlay.open{display:block}
+  #main{margin-left:0;padding:16px;padding-top:56px}
+  #menu-btn{display:block}
+  .fg-row{grid-template-columns:1fr}
+  .stats .stat{min-width:calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TOAST ══ -->
+<div id="toast"></div>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div style="font-size:36px;margin-bottom:8px">🌿</div>
+      <h1>Dharani's</h1>
+      <p>Coach Dashboard</p>
+    </div>
+
+    <!-- Step 1: Supabase Config (first time only) -->
+    <div class="login-step active" id="step-config">
+      <div class="login-field">
+        <label>Supabase URL</label>
+        <input type="text" id="cfg-url" placeholder="https://xxxx.supabase.co">
+      </div>
+      <div class="login-field">
+        <label>Supabase Key (anon)</label>
+        <input type="password" id="cfg-key" placeholder="eyJ...">
+      </div>
+      <button class="login-btn" onclick="saveConfig()">Continue →</button>
+      <p class="step-hint">Get these from your Supabase project settings → API</p>
+    </div>
+
+    <!-- Step 2: Coach Login -->
+    <div class="login-step" id="step-login">
+      <div class="login-field">
+        <label>Your Name</label>
+        <select id="login-coach-sel">
+          <option value="">Loading coaches...</option>
+        </select>
+      </div>
+      <div class="login-field">
+        <label>PIN</label>
+        <input type="password" id="login-pin" placeholder="Enter your PIN" maxlength="10" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="login-btn" onclick="doLogin()">Login</button>
+      <div class="login-err" id="login-err"></div>
+      <p class="step-hint" style="cursor:pointer;text-decoration:underline" onclick="resetConfig()">Change Supabase connection</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<button id="menu-btn" onclick="toggleSidebar()">☰</button>
+<div id="sb-overlay" onclick="toggleSidebar()"></div>
+
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-logo">
+      <h1>🌿 Dharani's</h1>
+      <span>Coach Portal</span>
+    </div>
+    <div class="sb-coach-badge">
+      <div class="sb-coach-avatar" id="sb-avatar">C</div>
+      <div>
+        <div class="sb-coach-name" id="sb-coach-name">Coach</div>
+        <div class="sb-coach-sub">Coach Dashboard</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <button class="nav-item active" onclick="goTo('overview',this)"><span class="ic">🏠</span>Overview</button>
+      <button class="nav-item" onclick="goTo('customers',this)"><span class="ic">👥</span>My Customers</button>
+      <button class="nav-item" onclick="goTo('attendance',this)"><span class="ic">✅</span>Attendance</button>
+      <button class="nav-item" onclick="goTo('body',this)"><span class="ic">⚖️</span>Body Composition</button>
+      <button class="nav-item" onclick="goTo('finance',this)"><span class="ic">💰</span>My Finance</button>
+      <button class="nav-item" onclick="goTo('leads',this)"><span class="ic">📞</span>My Leads</button>
+    </nav>
+    <div class="sb-bottom">
+      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="sec active" id="sec-overview">
+      <div class="ph">
+        <div><div class="pt">Overview</div><div class="ps" id="ov-date"></div></div>
+        <button class="btn-p" onclick="loadAll()">🔄 Refresh</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-l">My Customers</div><div class="stat-v" id="ov-total">0</div></div>
+        <div class="stat"><div class="stat-l">Present Today</div><div class="stat-v" style="color:var(--success)" id="ov-present">0</div></div>
+        <div class="stat"><div class="stat-l">Expiring Soon</div><div class="stat-v" style="color:var(--accent)" id="ov-expiring">0</div></div>
+        <div class="stat"><div class="stat-l">My Leads</div><div class="stat-v" id="ov-leads">0</div></div>
+      </div>
+      <div id="ov-expiring-list"></div>
+      <div id="ov-present-list"></div>
+    </div>
+
+    <!-- ── MY CUSTOMERS ── -->
+    <div class="sec" id="sec-customers">
+      <div class="ph">
+        <div><div class="pt">My Customers</div><div class="ps">Customers you referred</div></div>
+        <button class="btn-p" onclick="openCustModal()">+ Add Customer</button>
+      </div>
+      <input class="search" id="cust-search" placeholder="🔍 Search customers..." oninput="renderCustomers()">
+      <div id="cust-list"></div>
+    </div>
+
+    <!-- ── ATTENDANCE ── -->
+    <div class="sec" id="sec-attendance">
+      <div class="ph">
+        <div><div class="pt">Attendance</div><div class="ps" id="att-date-label"></div></div>
+      </div>
+      <div id="att-wa-bar">
+        <span id="att-wa-text" style="font-size:14px;font-weight:600;color:#1a7a3c"></span>
+        <div style="display:flex;gap:8px">
+          <a id="att-wa-link" href="#" target="_blank" rel="noopener" style="background:#25D366;color:#fff;padding:7px 16px;border-radius:7px;font-weight:700;font-size:13px;text-decoration:none" onclick="document.getElementById('att-wa-bar').style.display='none'">💬 Open WhatsApp</a>
+          <button onclick="document.getElementById('att-wa-bar').style.display='none'" style="background:transparent;border:1.5px solid #25D366;color:#1a7a3c;padding:7px 12px;border-radius:7px;font-size:13px;cursor:pointer">✕</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-l">Present</div><div class="stat-v" style="color:var(--success)" id="att-present-count">0</div></div>
+        <div class="stat"><div class="stat-l">Not Yet</div><div class="stat-v" style="color:var(--danger)" id="att-absent-count">0</div></div>
+      </div>
+      <div class="att-panel" style="background:rgba(0,180,100,0.05);border-top:4px solid var(--success);margin-bottom:16px">
+        <h3 style="color:var(--success);margin-bottom:12px;font-size:14px">✅ Present Today</h3>
+        <div id="att-present-list"><div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No one present yet.</div></div>
+      </div>
+      <div class="att-panel" style="background:rgba(230,50,50,0.05);border-top:4px solid var(--danger)">
+        <h3 style="color:var(--danger);margin-bottom:12px;font-size:14px">⭕ Not Yet</h3>
+        <div id="att-absent-list"></div>
+      </div>
+    </div>
+
+    <!-- ── BODY COMPOSITION ── -->
+    <div class="sec" id="sec-body">
+      <div class="ph">
+        <div><div class="pt">Body Composition</div><div class="ps">Track customer measurements</div></div>
+      </div>
+      <div class="tcard" style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Select Customer</label>
+        <select id="body-cust-sel" onchange="onBodyCustChange()" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="">— Select a customer —</option>
+        </select>
+      </div>
+      <div id="body-content" style="display:none">
+        <div class="ph" style="margin-bottom:12px">
+          <div class="pt" style="font-size:16px" id="body-cust-name"></div>
+          <button class="btn-p" onclick="openBodyModal()">+ Add Record</button>
+        </div>
+        <div id="body-records"></div>
+      </div>
+    </div>
+
+    <!-- ── MY FINANCE ── -->
+    <div class="sec" id="sec-finance">
+      <div class="ph">
+        <div><div class="pt">My Finance</div><div class="ps">Your customer earnings overview</div></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-l">Total Customers</div><div class="stat-v" id="fin-total">0</div></div>
+        <div class="stat"><div class="stat-l">Active Packs</div><div class="stat-v" style="color:var(--success)" id="fin-active">0</div></div>
+        <div class="stat"><div class="stat-l">Pack Value (₹)</div><div class="stat-v" id="fin-value">0</div></div>
+        <div class="stat"><div class="stat-l">Expiring ≤7 days</div><div class="stat-v" style="color:var(--accent)" id="fin-expiring">0</div></div>
+      </div>
+      <div class="tcard">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Customer Pack Status</h3>
+        <div id="fin-list"></div>
+      </div>
+    </div>
+
+    <!-- ── MY LEADS ── -->
+    <div class="sec" id="sec-leads">
+      <div class="ph">
+        <div><div class="pt">My Leads</div><div class="ps">Your potential customers</div></div>
+        <button class="btn-p" onclick="openLeadModal()">+ Add Lead</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-l">Due Today</div><div class="stat-v" style="color:var(--accent)" id="ls-due">0</div></div>
+        <div class="stat"><div class="stat-l">Called Today</div><div class="stat-v" style="color:var(--success)" id="ls-called">0</div></div>
+        <div class="stat"><div class="stat-l">Overdue</div><div class="stat-v" style="color:var(--danger)" id="ls-overdue">0</div></div>
+        <div class="stat"><div class="stat-l">Total</div><div class="stat-v" id="ls-total">0</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn-e" id="ltab-all" onclick="setLeadTab('all',this)" style="background:var(--primary);color:#fff;border-color:var(--primary)">All</button>
+        <button class="btn-e" id="ltab-today" onclick="setLeadTab('today',this)">📅 Due Today</button>
+        <button class="btn-e" id="ltab-overdue" onclick="setLeadTab('overdue',this)">⚠️ Overdue</button>
+        <button class="btn-e" id="ltab-joined" onclick="setLeadTab('joined',this)">🎉 Joined</button>
+      </div>
+      <div id="leads-list"></div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══ MODALS ══ -->
+
+<!-- Customer Modal -->
+<div class="modal-overlay" id="modal-cust">
+  <div class="modal-box">
+    <div class="modal-h">
+      <h3 id="cust-modal-title">Add Customer</h3>
+      <button class="modal-close" onclick="closeModal('cust')">×</button>
+    </div>
+    <input type="hidden" id="cust-id">
+    <div class="fg-row">
+      <div class="fg"><label>Name *</label><input type="text" id="cust-name" placeholder="Full name"></div>
+      <div class="fg"><label>Contact</label><input type="text" id="cust-contact" placeholder="Phone number"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Date of Birth</label><input type="date" id="cust-dob"></div>
+      <div class="fg"><label>Gender</label><select id="cust-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Pack Type</label><select id="cust-pack"><option value="">No Pack</option><option value="26 days">26 Days</option><option value="30 days">30 Days</option><option value="3 days">3 Days (Trial)</option></select></div>
+      <div class="fg"><label>Pack Start Date</label><input type="date" id="cust-pack-start"></div>
+    </div>
+    <div class="fg"><label>Goal</label><input type="text" id="cust-goal" placeholder="Weight loss, muscle gain..."></div>
+    <div class="fg"><label>Notes</label><textarea id="cust-notes" rows="2" placeholder="Any notes..."></textarea></div>
+    <div class="mf">
+      <button class="btn-c" onclick="closeModal('cust')">Cancel</button>
+      <button class="btn-p" onclick="saveCustomer()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Body Modal -->
+<div class="modal-overlay" id="modal-body">
+  <div class="modal-box">
+    <div class="modal-h">
+      <h3>Body Composition Record</h3>
+      <button class="modal-close" onclick="closeModal('body')">×</button>
+    </div>
+    <input type="hidden" id="body-rec-id">
+    <div class="fg-row">
+      <div class="fg"><label>Date</label><input type="date" id="body-date"></div>
+      <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="body-weight" placeholder="60.5"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Body Fat (%)</label><input type="number" step="0.1" id="body-fat" placeholder="22.5"></div>
+      <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="body-muscle" placeholder="35.0"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>BMI</label><input type="number" step="0.1" id="body-bmi" placeholder="22.3"></div>
+      <div class="fg"><label>Visceral Fat</label><input type="number" step="0.01" id="body-visceral" placeholder="auto"></div>
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="body-notes" rows="2" placeholder="Any observations..."></textarea></div>
+    <div class="mf">
+      <button class="btn-c" onclick="closeModal('body')">Cancel</button>
+      <button class="btn-p" onclick="saveBodyRecord()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lead Modal -->
+<div class="modal-overlay" id="modal-lead">
+  <div class="modal-box">
+    <div class="modal-h">
+      <h3 id="lead-modal-title">Add Lead</h3>
+      <button class="modal-close" onclick="closeModal('lead')">×</button>
+    </div>
+    <input type="hidden" id="lead-id">
+    <div class="fg-row">
+      <div class="fg"><label>Name *</label><input type="text" id="lead-name" placeholder="Full name"></div>
+      <div class="fg"><label>Mobile</label><input type="text" id="lead-mobile" placeholder="Phone number"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Status</label><select id="lead-status"><option>New</option><option>Contacted</option><option>Interested</option><option>Not Interested</option><option>Joined</option></select></div>
+      <div class="fg"><label>Next Follow-up</label><input type="date" id="lead-next-date"></div>
+    </div>
+    <div class="fg"><label>Source</label><input type="text" id="lead-source" placeholder="Walk-in, WhatsApp, Referral..."></div>
+    <div class="fg"><label>Notes</label><textarea id="lead-notes" rows="2" placeholder="Any notes..."></textarea></div>
+    <div class="mf">
+      <button class="btn-c" onclick="closeModal('lead')">Cancel</button>
+      <button class="btn-p" onclick="saveLead()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Followup Modal -->
+<div class="modal-overlay" id="modal-followup">
+  <div class="modal-box">
+    <div class="modal-h">
+      <h3>Log Call</h3>
+      <button class="modal-close" onclick="closeModal('followup')">×</button>
+    </div>
+    <input type="hidden" id="fu-lead-id">
+    <div id="fu-lead-info" style="background:var(--surface2);padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Call Date</label><input type="date" id="fu-date"></div>
+      <div class="fg"><label>Update Status</label><select id="fu-status"><option>New</option><option>Contacted</option><option>Interested</option><option>Not Interested</option><option>Joined</option></select></div>
+    </div>
+    <div class="fg"><label>Next Follow-up Date</label>
+      <input type="date" id="fu-next-date" style="margin-bottom:6px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="btn-e" style="font-size:11px" onclick="setFuDate(2)">+2d</button>
+        <button type="button" class="btn-e" style="font-size:11px" onclick="setFuDate(3)">+3d</button>
+        <button type="button" class="btn-e" style="font-size:11px" onclick="setFuDate(7)">+7d</button>
+        <button type="button" class="btn-e" style="font-size:11px" onclick="setFuDate(14)">+14d</button>
+      </div>
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="fu-note" rows="2" placeholder="What was discussed..."></textarea></div>
+    <div class="mf">
+      <button class="btn-c" onclick="closeModal('followup')">Cancel</button>
+      <button class="btn-p" onclick="saveFollowup()">Save Call</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  GLOBALS
+// ══════════════════════════════════════════
+var SB_URL = localStorage.getItem('coach_sb_url') || '';
+var SB_KEY = localStorage.getItem('coach_sb_key') || '';
+var COACH_ID   = sessionStorage.getItem('coachId')   || '';
+var COACH_NAME = sessionStorage.getItem('coachName') || '';
+var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
+var _leadTab = 'all';
+var _bodySelCustId = '';
+var _daysLeftCache = {};
+
+var D = {
+  customers: [],   // only this coach's customers
+  attendance: [],
+  body: [],
+  leads: [],
+  leadFollowups: [],
+  centers: [],
+  allCoaches: []   // for center name lookup
+};
+
+// ══════════════════════════════════════════
+//  SUPABASE HELPERS
+// ══════════════════════════════════════════
+async function req(path, method, body) {
+  var res = await fetch(SB_URL + '/rest/v1/' + path, {
+    method: method || 'GET',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) {
+    var err = await res.json().catch(function(){ return {}; });
+    throw new Error(err.message || err.details || res.statusText);
+  }
+  var text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+function dbGet(table, order, filter) {
+  var q = table + '?order=' + (order||'created_at') + '.desc';
+  if (filter) q += '&' + filter;
+  return req(q);
+}
+function dbInsert(table, data) { return req(table, 'POST', data); }
+function dbUpdate(table, id, data) { return req(table + '?id=eq.' + id, 'PATCH', data); }
+function dbDelete(table, id) { return req(table + '?id=eq.' + id, 'DELETE'); }
+
+// ══════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════
+async function init() {
+  if (!SB_URL || !SB_KEY) {
+    showStep('config');
+    return;
+  }
+  // Load coach list for dropdown
+  showStep('login');
+  await loadCoachList();
+  // If already logged in
+  if (COACH_ID && COACH_NAME) {
+    startApp();
+  }
+}
+
+async function loadCoachList() {
+  try {
+    var coaches = await req('coaches?order=name.asc');
+    var sel = document.getElementById('login-coach-sel');
+    sel.innerHTML = '<option value="">— Select your name —</option>' +
+      coaches.map(function(c){ return '<option value="'+c.id+'" data-pin="'+(c.coach_pin||'')+'">'+c.name+'</option>'; }).join('');
+  } catch(e) {
+    document.getElementById('login-err').textContent = 'Could not load coaches. Check Supabase connection.';
+  }
+}
+
+function saveConfig() {
+  var url = document.getElementById('cfg-url').value.trim().replace(/\/+$/, '');
+  var key = document.getElementById('cfg-key').value.trim();
+  if (!url || !key) { showToast('Enter both URL and Key', 'error'); return; }
+  SB_URL = url; SB_KEY = key;
+  localStorage.setItem('coach_sb_url', url);
+  localStorage.setItem('coach_sb_key', key);
+  showStep('login');
+  loadCoachList();
+}
+
+async function doLogin() {
+  var sel = document.getElementById('login-coach-sel');
+  var pin = document.getElementById('login-pin').value.trim();
+  var err = document.getElementById('login-err');
+  err.textContent = '';
+  var opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) { err.textContent = 'Please select your name.'; return; }
+  var storedPin = opt.getAttribute('data-pin') || '';
+  if (!storedPin) { err.textContent = 'No PIN set for this coach. Ask supervisor to set your PIN.'; return; }
+  if (pin !== storedPin) { err.textContent = 'Incorrect PIN. Try again.'; return; }
+  COACH_ID   = opt.value;
+  COACH_NAME = opt.text;
+  sessionStorage.setItem('coachId',   COACH_ID);
+  sessionStorage.setItem('coachName', COACH_NAME);
+  startApp();
+}
+
+function startApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('sb-coach-name').textContent = COACH_NAME;
+  document.getElementById('sb-avatar').textContent = COACH_NAME.charAt(0).toUpperCase();
+  document.getElementById('ov-date').textContent = new Date().toDateString();
+  document.getElementById('att-date-label').textContent = 'Today — ' + todayStr();
+  loadAll();
+}
+
+function logout() {
+  if (!confirm('Log out?')) return;
+  sessionStorage.clear();
+  COACH_ID = ''; COACH_NAME = '';
+  location.reload();
+}
+
+function resetConfig() {
+  localStorage.removeItem('coach_sb_url');
+  localStorage.removeItem('coach_sb_key');
+  location.reload();
+}
+
+function showStep(step) {
+  document.querySelectorAll('.login-step').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('step-' + step).classList.add('active');
+}
+
+// ══════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════
+function goTo(name, el) {
+  document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  document.getElementById('sec-' + name).classList.add('active');
+  el.classList.add('active');
+  if (window.innerWidth <= 768) toggleSidebar();
+  if (name === 'customers')  renderCustomers();
+  if (name === 'attendance') renderAttendance();
+  if (name === 'body')       renderBodyCustSelect();
+  if (name === 'finance')    renderFinance();
+  if (name === 'leads')      renderLeads();
+}
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('open');
+}
+function openModal(id) { document.getElementById('modal-' + id).classList.add('open'); }
+function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+
+// ══════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+function showToast(msg, type) {
+  type = type || 'success';
+  var t = document.createElement('div');
+  t.className = 'toast-item ' + type;
+  t.textContent = msg;
+  document.getElementById('toast').appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3500);
+}
+
+function parsePack(packType) {
+  if (!packType) return 30;
+  var t = packType.toLowerCase();
+  if (/\b26\b/.test(t)) return 26;
+  if (/\b3\b/.test(t) && !/\b30\b/.test(t)) return 3;
+  return 30;
+}
+
+function getDaysLeft(c) {
+  if (!c.pack_type || !c.pack_start_date) return { days: 0, active: false, used: 0, total: 0 };
+  var key = c.id + '|' + c.pack_start_date;
+  if (_daysLeftCache[key]) return _daysLeftCache[key];
+  var dur = parsePack(c.pack_type);
+  var used = 0;
+  D.attendance.forEach(function(a) {
+    if (a.customer_id === c.id && a.status === 'present' && a.date >= c.pack_start_date) {
+      used += (Number(a.servings) || 1);
+    }
+  });
+  var remaining = Math.max(0, dur - used);
+  var result = { days: remaining, active: remaining > 0, used: used, total: dur };
+  _daysLeftCache[key] = result;
+  return result;
+}
+
+// ══════════════════════════════════════════
+//  DATA LOADING
+// ══════════════════════════════════════════
+async function loadAll() {
+  if (!COACH_ID) return;
+  try {
+    var [custs, att, body, leads, fus, centers] = await Promise.all([
+      dbGet('customers', 'name', 'referred_by_id=eq.' + COACH_ID),
+      dbGet('attendance', 'date'),
+      dbGet('body_composition', 'date'),
+      dbGet('leads', 'created_at', 'coach_id=eq.' + COACH_ID),
+      dbGet('lead_followups', 'called_at'),
+      dbGet('wellness_centers', 'name')
+    ]);
+    D.customers       = Array.isArray(custs)    ? custs    : [];
+    D.attendance      = Array.isArray(att)       ? att      : [];
+    D.body            = Array.isArray(body)      ? body     : [];
+    D.leads           = Array.isArray(leads)     ? leads    : [];
+    D.leadFollowups   = Array.isArray(fus)       ? fus      : [];
+    D.centers         = Array.isArray(centers)   ? centers  : [];
+    _daysLeftCache    = {};
+    // Filter attendance/body to only this coach's customers
+    var custIds = D.customers.map(function(c){ return c.id; });
+    D.attendance = D.attendance.filter(function(a){ return custIds.indexOf(a.customer_id) !== -1; });
+    D.body       = D.body.filter(function(b){ return custIds.indexOf(b.customer_id) !== -1; });
+    renderOverview();
+    renderCustomers();
+    renderAttendance();
+    renderBodyCustSelect();
+    renderFinance();
+    renderLeads();
+  } catch(e) { showToast('Load error: ' + e.message, 'error'); }
+}
+
+// ══════════════════════════════════════════
+//  OVERVIEW
+// ══════════════════════════════════════════
+function renderOverview() {
+  var today = todayStr();
+  var total = D.customers.length;
+  var present = D.customers.filter(function(c){
+    return D.attendance.some(function(a){ return a.customer_id === c.id && a.date === today && a.status === 'present'; });
+  });
+  var expiring = D.customers.filter(function(c){
+    var st = getDaysLeft(c);
+    return st.active && st.days <= 5;
+  });
+
+  document.getElementById('ov-total').textContent = total;
+  document.getElementById('ov-present').textContent = present.length;
+  document.getElementById('ov-expiring').textContent = expiring.length;
+  document.getElementById('ov-leads').textContent = D.leads.length;
+
+  // Expiring packs card
+  var expHtml = expiring.length ? '<div class="ov-card"><h3>⚠️ Expiring Soon</h3>' +
+    expiring.map(function(c){
+      var st = getDaysLeft(c);
+      var phone = (c.contact||'').replace(/\D/g,'');
+      if(phone.length===10) phone = COUNTRY_CODE + phone;
+      var msg = encodeURIComponent('Hi '+c.name+'! 🌿 Your pack at Dharani\'s is ending in just '+st.days+' serving'+(st.days!==1?'s':'')+'. Renew now to keep your streak going! 💪');
+      return '<div class="ov-row"><div><div class="ov-name">'+c.name+'</div><div class="ov-sub">'+st.days+' servings left</div></div>' +
+        (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+msg+'" target="_blank" style="background:#25D366;color:#fff;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none">💬 Remind</a>' : '') +
+        '</div>';
+    }).join('') + '</div>' : '';
+  document.getElementById('ov-expiring-list').innerHTML = expHtml;
+
+  // Present today card
+  var presHtml = present.length ? '<div class="ov-card"><h3>✅ Present Today (' + present.length + ')</h3>' +
+    present.map(function(c){
+      var att = D.attendance.find(function(a){ return a.customer_id === c.id && a.date === today && a.status === 'present'; });
+      var serv = att ? (Number(att.servings)||1) : 1;
+      return '<div class="ov-row"><div class="ov-name">'+c.name+'</div><span class="badge bg">'+serv+' serving'+(serv>1?'s':'')+'</span></div>';
+    }).join('') + '</div>' : '';
+  document.getElementById('ov-present-list').innerHTML = presHtml;
+}
+
+// ══════════════════════════════════════════
+//  CUSTOMERS
+// ══════════════════════════════════════════
+function renderCustomers() {
+  var q = (document.getElementById('cust-search')||{value:''}).value.toLowerCase();
+  var list = D.customers.filter(function(c){ return (c.name||'').toLowerCase().includes(q) || (c.contact||'').includes(q); });
+  var el = document.getElementById('cust-list');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="ei">👥</div><p>No customers yet. Add your first one!</p></div>'; return; }
+  el.innerHTML = list.map(function(c){
+    var st = getDaysLeft(c);
+    var bdg = st.total > 0 ? (st.days <= 3 ? '<span class="badge br">'+st.days+' left</span>' : '<span class="badge bg">'+st.days+' left</span>') : '<span class="badge" style="background:var(--surface2);color:var(--muted)">No Pack</span>';
+    var phone = (c.contact||'').replace(/\D/g,'');
+    if(phone.length===10) phone = COUNTRY_CODE + phone;
+    var waMsg = encodeURIComponent('Hi '+c.name+'! 🌿 Hope you\'re doing great. See you at Dharani\'s today! 💪');
+    return '<div class="cust-card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
+        '<div><div class="cust-name">'+c.name+'</div>'+
+        '<div class="cust-meta">'+(c.contact||'No contact')+' '+(c.pack_type ? '• '+c.pack_type : '')+'</div></div>'+
+        bdg+
+      '</div>'+
+      '<div class="cust-acts">'+
+        '<button class="btn-e" onclick="openCustModal(\''+c.id+'\')">✏️ Edit</button>'+
+        (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+waMsg+'" target="_blank" style="padding:5px 12px;background:#25D366;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none">💬 WhatsApp</a>' : '')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openCustModal(id) {
+  document.getElementById('cust-id').value = id || '';
+  document.getElementById('cust-modal-title').textContent = id ? 'Edit Customer' : 'Add Customer';
+  if (id) {
+    var c = D.customers.find(function(x){ return x.id === id; });
+    if (!c) return;
+    document.getElementById('cust-name').value        = c.name || '';
+    document.getElementById('cust-contact').value     = c.contact || '';
+    document.getElementById('cust-dob').value         = c.dob || '';
+    document.getElementById('cust-gender').value      = c.gender || '';
+    document.getElementById('cust-pack').value        = c.pack_type || '';
+    document.getElementById('cust-pack-start').value  = c.pack_start_date || '';
+    document.getElementById('cust-goal').value        = c.goal || '';
+    document.getElementById('cust-notes').value       = c.notes || '';
+  } else {
+    ['cust-name','cust-contact','cust-dob','cust-pack-start','cust-goal','cust-notes'].forEach(function(f){ document.getElementById(f).value = ''; });
+    document.getElementById('cust-gender').value = '';
+    document.getElementById('cust-pack').value = '';
+  }
+  openModal('cust');
+}
+
+async function saveCustomer() {
+  var name = document.getElementById('cust-name').value.trim();
+  if (!name) { showToast('Name is required', 'error'); return; }
+  var id = document.getElementById('cust-id').value;
+  var payload = {
+    name: name,
+    contact: document.getElementById('cust-contact').value.trim() || null,
+    dob: document.getElementById('cust-dob').value || null,
+    gender: document.getElementById('cust-gender').value || null,
+    pack_type: document.getElementById('cust-pack').value || null,
+    pack_start_date: document.getElementById('cust-pack-start').value || null,
+    goal: document.getElementById('cust-goal').value.trim() || null,
+    notes: document.getElementById('cust-notes').value.trim() || null,
+    referred_by_id: COACH_ID,
+    referred_by: COACH_NAME
+  };
+  try {
+    if (id) {
+      await dbUpdate('customers', id, payload);
+      var idx = D.customers.findIndex(function(c){ return c.id === id; });
+      if (idx !== -1) D.customers[idx] = Object.assign(D.customers[idx], payload);
+      showToast('Customer updated');
+    } else {
+      var res = await dbInsert('customers', payload);
+      if (Array.isArray(res) && res[0]) D.customers.push(res[0]);
+      showToast('Customer added!');
+    }
+    closeModal('cust');
+    _daysLeftCache = {};
+    renderCustomers();
+    renderOverview();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ══════════════════════════════════════════
+//  ATTENDANCE
+// ══════════════════════════════════════════
+function renderAttendance() {
+  var today = todayStr();
+  var present = [], notYet = [];
+  D.customers.filter(function(c){ return getDaysLeft(c).active; }).forEach(function(c) {
+    var att = D.attendance.find(function(a){ return a.customer_id === c.id && a.date === today; });
+    var st  = att ? att.status : '';
+    var serv = att ? (Number(att.servings)||1) : 0;
+    var stLeft = getDaysLeft(c);
+    var bdg = stLeft.days <= 3 ? 'br' : 'bg';
+    var servBadge = st === 'present' && serv > 1 ? '<span class="badge" style="background:#6366f1;color:#fff;margin-left:6px">×'+serv+'</span>' : '';
+    var card = '<div class="att-card" onclick="toggleAtt(\''+c.id+'\',\''+c.name+'\',\''+today+'\',\''+st+'\')" ondblclick="event.stopPropagation();resetAtt(\''+c.id+'\',\''+c.name+'\',\''+today+'\')">'+
+      '<div class="att-card-name">'+c.name+servBadge+'</div>'+
+      '<span class="badge '+bdg+'">'+stLeft.used+'/'+stLeft.total+'</span>'+
+    '</div>';
+    if (st === 'present') present.push(card); else notYet.push(card);
+  });
+  document.getElementById('att-present-count').textContent = present.length;
+  document.getElementById('att-absent-count').textContent = notYet.length;
+  document.getElementById('att-present-list').innerHTML = present.length ? present.join('') : '<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No one present yet.</div>';
+  document.getElementById('att-absent-list').innerHTML = notYet.length ? notYet.join('') : '<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">All done! 🎉</div>';
+}
+
+async function toggleAtt(cid, cname, date, currentStatus) {
+  var existing = D.attendance.find(function(a){ return a.customer_id === cid && a.date === date; });
+  try {
+    if (existing && existing.status === 'present') {
+      var newServ = (Number(existing.servings)||1) + 1;
+      await dbUpdate('attendance', existing.id, {servings: newServ});
+      showToast(cname + ' — ' + newServ + ' servings today');
+    } else if (existing) {
+      await dbUpdate('attendance', existing.id, {status:'present', servings:1});
+      showToast(cname + ' — marked present');
+    } else {
+      await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1});
+      showToast(cname + ' — marked present');
+    }
+    _daysLeftCache = {};
+    // Reload attendance for this coach's customers
+    var fresh = await dbGet('attendance', 'date');
+    var custIds = D.customers.map(function(c){ return c.id; });
+    D.attendance = (Array.isArray(fresh) ? fresh : []).filter(function(a){ return custIds.indexOf(a.customer_id) !== -1; });
+    renderAttendance();
+    renderOverview();
+    sendAttWA(cid, cname, date);
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function resetAtt(cid, cname, date) {
+  var existing = D.attendance.find(function(a){ return a.customer_id === cid && a.date === date && a.status === 'present'; });
+  if (!existing) return;
+  try {
+    await dbUpdate('attendance', existing.id, {status:'absent', servings:0});
+    showToast(cname + ' — attendance removed', 'info');
+    _daysLeftCache = {};
+    var fresh = await dbGet('attendance', 'date');
+    var custIds = D.customers.map(function(c){ return c.id; });
+    D.attendance = (Array.isArray(fresh) ? fresh : []).filter(function(a){ return custIds.indexOf(a.customer_id) !== -1; });
+    renderAttendance();
+    renderOverview();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function sendAttWA(custId, custName, date) {
+  var cust = D.customers.find(function(c){ return c.id === custId; });
+  if (!cust || !cust.contact) return;
+  var phone = (cust.contact||'').replace(/\D/g,'');
+  if (phone.length === 10) phone = COUNTRY_CODE + phone;
+  var st = getDaysLeft(cust);
+  var progressLine = st.total > 0 ? '📊 Progress: *'+st.used+' of '+st.total+'* servings used!\n' : '';
+  var packLine = '💪 You\'re doing amazing! Keep showing up and the results will follow.';
+  if (st.total > 0) {
+    if (!st.active || st.days <= 0) packLine = '🔄 You\'ve finished your pack! Renew now to keep the momentum going.';
+    else if (st.days <= 3) packLine = '🌟 Almost done — just '+st.days+' serving'+(st.days!==1?'s':'')+' left! Ask us about renewal!';
+    else if (st.days <= 7) packLine = '💪 Great consistency! Think about renewing early for best results!';
+  }
+  var msg = 'Hi '+custName+'! ✅\n\nYour attendance is marked for today ('+date+') at Dharani\'s.\n\n'+progressLine+packLine+'\n\nSee you tomorrow! 💚🌿\n— Dharani\'s';
+  var url = 'https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg);
+  var bar = document.getElementById('att-wa-bar');
+  document.getElementById('att-wa-text').textContent = '💬 Send WhatsApp to ' + custName + '?';
+  document.getElementById('att-wa-link').href = url;
+  bar.style.display = 'flex';
+  bar.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// ══════════════════════════════════════════
+//  BODY COMPOSITION
+// ══════════════════════════════════════════
+function renderBodyCustSelect() {
+  var sel = document.getElementById('body-cust-sel');
+  sel.innerHTML = '<option value="">— Select a customer —</option>' +
+    D.customers.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  if (_bodySelCustId) { sel.value = _bodySelCustId; onBodyCustChange(); }
+}
+
+function onBodyCustChange() {
+  _bodySelCustId = document.getElementById('body-cust-sel').value;
+  var content = document.getElementById('body-content');
+  if (!_bodySelCustId) { content.style.display = 'none'; return; }
+  var cust = D.customers.find(function(c){ return c.id === _bodySelCustId; });
+  content.style.display = 'block';
+  document.getElementById('body-cust-name').textContent = cust ? cust.name : '';
+  renderBodyRecords();
+}
+
+function renderBodyRecords() {
+  var recs = D.body.filter(function(b){ return b.customer_id === _bodySelCustId; });
+  var el = document.getElementById('body-records');
+  if (!recs.length) { el.innerHTML = '<div class="empty"><div class="ei">⚖️</div><p>No records yet.</p></div>'; return; }
+  el.innerHTML = recs.map(function(b){
+    return '<div class="body-rec">'+
+      '<div><div class="body-rec-date">'+b.date+'</div>'+(b.notes?'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+b.notes+'</div>':'')+'</div>'+
+      '<div class="body-rec-vals">'+
+        (b.weight   ? '<div>Wt <span>'+b.weight+'kg</span></div>' : '')+
+        (b.fat_percentage ? '<div>Fat <span>'+b.fat_percentage+'%</span></div>' : '')+
+        (b.muscle_percentage ? '<div>Muscle <span>'+b.muscle_percentage+'%</span></div>' : '')+
+        (b.bmi      ? '<div>BMI <span>'+b.bmi+'</span></div>' : '')+
+        (b.visceral_fat ? '<div>VF <span>'+b.visceral_fat+'</span></div>' : '')+
+      '</div>'+
+      '<div style="display:flex;gap:6px">'+
+        '<button class="btn-e" onclick="openBodyModal(\''+b.id+'\')">Edit</button>'+
+        '<button class="btn-d" onclick="delBodyRecord(\''+b.id+'\')">Del</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openBodyModal(id) {
+  document.getElementById('body-rec-id').value = id || '';
+  var today = todayStr();
+  if (id) {
+    var b = D.body.find(function(x){ return x.id === id; });
+    if (!b) return;
+    document.getElementById('body-date').value     = b.date || today;
+    document.getElementById('body-weight').value   = b.weight || '';
+    document.getElementById('body-fat').value      = b.fat_percentage || '';
+    document.getElementById('body-muscle').value   = b.muscle_percentage || '';
+    document.getElementById('body-bmi').value      = b.bmi || '';
+    document.getElementById('body-visceral').value = b.visceral_fat || '';
+    document.getElementById('body-notes').value    = b.notes || '';
+  } else {
+    ['body-weight','body-fat','body-muscle','body-bmi','body-visceral','body-notes'].forEach(function(f){ document.getElementById(f).value=''; });
+    document.getElementById('body-date').value = today;
+  }
+  openModal('body');
+}
+
+async function saveBodyRecord() {
+  if (!_bodySelCustId) { showToast('Select a customer first', 'error'); return; }
+  var cust = D.customers.find(function(c){ return c.id === _bodySelCustId; });
+  var id = document.getElementById('body-rec-id').value;
+  var payload = {
+    customer_id:         _bodySelCustId,
+    customer_name:       cust ? cust.name : '',
+    date:                document.getElementById('body-date').value || todayStr(),
+    weight:              document.getElementById('body-weight').value || null,
+    fat_percentage:      document.getElementById('body-fat').value || null,
+    muscle_percentage:   document.getElementById('body-muscle').value || null,
+    bmi:                 document.getElementById('body-bmi').value || null,
+    visceral_fat:        document.getElementById('body-visceral').value || null,
+    notes:               document.getElementById('body-notes').value.trim() || null
+  };
+  try {
+    if (id) {
+      await dbUpdate('body_composition', id, payload);
+      var idx = D.body.findIndex(function(b){ return b.id === id; });
+      if (idx !== -1) D.body[idx] = Object.assign(D.body[idx], payload);
+      showToast('Record updated');
+    } else {
+      var res = await dbInsert('body_composition', payload);
+      if (Array.isArray(res) && res[0]) D.body.unshift(res[0]);
+      showToast('Record saved!');
+    }
+    closeModal('body');
+    renderBodyRecords();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function delBodyRecord(id) {
+  if (!confirm('Delete this record?')) return;
+  try {
+    await dbDelete('body_composition', id);
+    D.body = D.body.filter(function(b){ return b.id !== id; });
+    showToast('Deleted', 'info');
+    renderBodyRecords();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ══════════════════════════════════════════
+//  FINANCE
+// ══════════════════════════════════════════
+function renderFinance() {
+  var total = D.customers.length;
+  var active = D.customers.filter(function(c){ return getDaysLeft(c).active; }).length;
+  var expiring = D.customers.filter(function(c){ var st=getDaysLeft(c); return st.active && st.days<=7; }).length;
+  // Estimate pack value (customers with pack_type)
+  var value = D.customers.reduce(function(sum, c){
+    if (!c.pack_type) return sum;
+    var days = parsePack(c.pack_type);
+    return sum + (days === 26 ? 2600 : days === 3 ? 300 : 3000);
+  }, 0);
+  document.getElementById('fin-total').textContent    = total;
+  document.getElementById('fin-active').textContent   = active;
+  document.getElementById('fin-value').textContent    = '₹' + value.toLocaleString();
+  document.getElementById('fin-expiring').textContent = expiring;
+
+  var el = document.getElementById('fin-list');
+  if (!D.customers.length) { el.innerHTML = '<div class="empty"><p>No customers yet.</p></div>'; return; }
+  el.innerHTML = D.customers.map(function(c){
+    var st = getDaysLeft(c);
+    var badge = st.total > 0
+      ? (st.days <= 3 ? '<span class="badge br">'+st.days+' left</span>'
+        : st.days <= 7 ? '<span class="badge by">'+st.days+' left</span>'
+        : '<span class="badge bg">'+st.days+' left</span>')
+      : '<span class="badge" style="background:var(--surface2);color:var(--muted)">No Pack</span>';
+    return '<div class="fin-row">'+
+      '<div><div style="font-weight:600;font-size:13px">'+c.name+'</div>'+
+      '<div style="font-size:11px;color:var(--muted)">'+(c.pack_type||'—')+' • Start: '+(c.pack_start_date||'—')+'</div></div>'+
+      badge+
+    '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  LEADS
+// ══════════════════════════════════════════
+function renderLeads() {
+  var today = todayStr();
+  var leads = D.leads;
+  if (_leadTab === 'today')    leads = leads.filter(function(l){ return l.next_followup_date === today && l.status !== 'Joined' && l.status !== 'Not Interested'; });
+  if (_leadTab === 'overdue')  leads = leads.filter(function(l){ return l.next_followup_date && l.next_followup_date < today && l.status !== 'Joined' && l.status !== 'Not Interested'; });
+  if (_leadTab === 'joined')   leads = leads.filter(function(l){ return l.status === 'Joined'; });
+
+  // Stats
+  var due     = D.leads.filter(function(l){ return l.next_followup_date === today && l.status !== 'Joined' && l.status !== 'Not Interested'; }).length;
+  var called  = D.leads.filter(function(l){ return l.last_called_date === today; }).length;
+  var overdue = D.leads.filter(function(l){ return l.next_followup_date && l.next_followup_date < today && l.status !== 'Joined' && l.status !== 'Not Interested'; }).length;
+  document.getElementById('ls-due').textContent     = due;
+  document.getElementById('ls-called').textContent  = called;
+  document.getElementById('ls-overdue').textContent = overdue;
+  document.getElementById('ls-total').textContent   = D.leads.length;
+
+  var el = document.getElementById('leads-list');
+  if (!leads.length) { el.innerHTML = '<div class="empty"><div class="ei">📞</div><p>No leads found.</p></div>'; return; }
+  el.innerHTML = leads.map(function(l){
+    var cls = '';
+    if (l.next_followup_date && l.next_followup_date < today && l.status !== 'Joined') cls = 'overdue';
+    else if (l.next_followup_date === today) cls = 'due-today';
+    var phone = (l.mobile||'').replace(/\D/g,'');
+    if(phone.length===10) phone = COUNTRY_CODE + phone;
+    var fu = D.leadFollowups.filter(function(f){ return f.lead_id === l.id; });
+    return '<div class="lead-card '+cls+'">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">'+
+        '<div><div class="lead-name">'+l.name+'</div>'+
+        '<div class="lead-meta">'+(l.mobile||'No mobile')+' • '+l.status+(l.source?' • '+l.source:'')+'</div>'+
+        (l.next_followup_date ? '<div style="font-size:11px;margin-top:3px;color:'+(cls==='overdue'?'var(--danger)':cls==='due-today'?'#856404':'var(--muted)')+'">📅 Follow-up: '+l.next_followup_date+'</div>' : '')+
+        (fu.length ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">📞 '+fu.length+' call'+(fu.length!==1?'s':'')+' logged</div>' : '')+
+        '</div>'+
+        '<span class="badge '+(l.status==='Joined'?'bg':l.status==='Interested'?'by':'')+'">'+l.status+'</span>'+
+      '</div>'+
+      '<div class="lead-acts">'+
+        '<button class="btn-p" style="font-size:11px;padding:5px 12px" onclick="openFollowupModal(\''+l.id+'\')">📞 Log Call</button>'+
+        '<button class="btn-e" onclick="openLeadModal(\''+l.id+'\')">Edit</button>'+
+        (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'" target="_blank" style="padding:5px 12px;background:#25D366;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">💬</a>' : '')+
+        '<button class="btn-d" onclick="delLead(\''+l.id+'\')">Delete</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function setLeadTab(tab, el) {
+  _leadTab = tab;
+  document.querySelectorAll('#sec-leads .btn-e').forEach(function(b){ b.style.background=''; b.style.color=''; b.style.borderColor=''; });
+  el.style.background = 'var(--primary)'; el.style.color = '#fff'; el.style.borderColor = 'var(--primary)';
+  renderLeads();
+}
+
+function openLeadModal(id) {
+  document.getElementById('lead-id').value = id || '';
+  document.getElementById('lead-modal-title').textContent = id ? 'Edit Lead' : 'Add Lead';
+  if (id) {
+    var l = D.leads.find(function(x){ return x.id === id; });
+    if (!l) return;
+    document.getElementById('lead-name').value      = l.name || '';
+    document.getElementById('lead-mobile').value    = l.mobile || '';
+    document.getElementById('lead-status').value    = l.status || 'New';
+    document.getElementById('lead-next-date').value = l.next_followup_date || '';
+    document.getElementById('lead-source').value    = l.source || '';
+    document.getElementById('lead-notes').value     = l.notes || '';
+  } else {
+    ['lead-name','lead-mobile','lead-next-date','lead-source','lead-notes'].forEach(function(f){ document.getElementById(f).value=''; });
+    document.getElementById('lead-status').value = 'New';
+    var d = new Date(); d.setDate(d.getDate()+2);
+    document.getElementById('lead-next-date').value = d.toISOString().split('T')[0];
+  }
+  openModal('lead');
+}
+
+async function saveLead() {
+  var name = document.getElementById('lead-name').value.trim();
+  if (!name) { showToast('Name is required', 'error'); return; }
+  var id = document.getElementById('lead-id').value;
+  var data = {
+    name: name,
+    mobile: document.getElementById('lead-mobile').value.trim() || null,
+    status: document.getElementById('lead-status').value,
+    next_followup_date: document.getElementById('lead-next-date').value || null,
+    source: document.getElementById('lead-source').value.trim() || null,
+    notes: document.getElementById('lead-notes').value.trim() || null,
+    coach_id: COACH_ID
+  };
+  try {
+    if (id) {
+      await dbUpdate('leads', id, data);
+      var idx = D.leads.findIndex(function(l){ return l.id === id; });
+      if (idx !== -1) D.leads[idx] = Object.assign(D.leads[idx], data);
+      showToast('Lead updated');
+    } else {
+      var res = await dbInsert('leads', data);
+      if (Array.isArray(res) && res[0]) D.leads.unshift(res[0]);
+      showToast('Lead added!');
+    }
+    closeModal('lead');
+    renderLeads();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function delLead(id) {
+  if (!confirm('Delete this lead?')) return;
+  try {
+    await dbDelete('leads', id);
+    D.leads = D.leads.filter(function(l){ return l.id !== id; });
+    renderLeads();
+    showToast('Deleted', 'info');
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function openFollowupModal(leadId) {
+  var lead = D.leads.find(function(l){ return l.id === leadId; });
+  if (!lead) return;
+  document.getElementById('fu-lead-id').value = leadId;
+  document.getElementById('fu-lead-info').innerHTML = '<strong>'+lead.name+'</strong>'+(lead.mobile?' — '+lead.mobile:'')+'<br><span style="color:var(--muted);font-size:12px">Status: '+lead.status+'</span>';
+  document.getElementById('fu-date').value = todayStr();
+  document.getElementById('fu-note').value = '';
+  document.getElementById('fu-status').value = lead.status === 'New' ? 'Contacted' : lead.status;
+  var d = new Date(); d.setDate(d.getDate()+7);
+  document.getElementById('fu-next-date').value = d.toISOString().split('T')[0];
+  openModal('followup');
+}
+
+function setFuDate(days) {
+  var d = new Date(); d.setDate(d.getDate()+days);
+  document.getElementById('fu-next-date').value = d.toISOString().split('T')[0];
+}
+
+async function saveFollowup() {
+  var leadId  = document.getElementById('fu-lead-id').value;
+  var calledAt = document.getElementById('fu-date').value;
+  var note    = document.getElementById('fu-note').value.trim();
+  var nextDate = document.getElementById('fu-next-date').value || null;
+  var newStatus = document.getElementById('fu-status').value;
+  if (!calledAt) { showToast('Set call date', 'error'); return; }
+  try {
+    var res = await dbInsert('lead_followups', {lead_id:leadId, called_at:calledAt, note:note, next_followup_date:nextDate});
+    if (Array.isArray(res) && res[0]) D.leadFollowups.push(res[0]);
+    var update = {status:newStatus, next_followup_date:nextDate, last_called_date:calledAt};
+    await dbUpdate('leads', leadId, update);
+    var idx = D.leads.findIndex(function(l){ return l.id === leadId; });
+    if (idx !== -1) D.leads[idx] = Object.assign(D.leads[idx], update);
+    closeModal('followup');
+    renderLeads();
+    showToast('Call logged! Next follow-up: '+(nextDate||'not set'));
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ══════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
