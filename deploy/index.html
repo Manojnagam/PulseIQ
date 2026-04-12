@@ -3,7 +3,7 @@
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wellness Hub — Supervisor Dashboard</title>
+<title>Dharani's Wellness Center — Supervisor Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f5f2ee;--surface:#fff;--surface2:#f0ede8;--primary:#2d5a3d;--primary-light:#3d7a52;--accent:#e8a838;--accent-light:#fdf3dc;--text:#1a2es1f;--muted:#6b7c6f;--border:#ddd8d0;--danger:#c0392b;--danger-light:#fdf0ef;--success:#27ae60;--success-light:#eafaf1;--shadow:0 2px 12px rgba(45,90,61,.08);--radius:12px;--sw:220px}
@@ -28,7 +28,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sb-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1)}
 .sb-logo h1{font-family:'DM Serif Display',serif;color:#fff;font-size:19px}
 .sb-logo span{color:var(--accent);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1px}
-.sb-nav{padding:14px 8px;flex:1}
+.sb-nav{padding:14px 8px;flex:1;overflow-y:auto;min-height:0}
 .nav-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.4);padding:8px 10px 4px;font-weight:600}
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;color:rgba(255,255,255,.75);cursor:pointer;transition:all .18s;font-weight:500;font-size:13px;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
 .nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
@@ -278,6 +278,49 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 .payment-fill{height:100%;border-radius:20px;background:var(--success);transition:width .5s}
 .payment-fill.overdue{background:var(--danger)}
 @media(max-width:768px){.slicer-group{min-width:calc(50% - 8px)}}
+/* ── HOW TO USE GUIDE ── */
+.guide-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+.guide-card-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none}
+.guide-card-header:hover{background:var(--surface2)}
+.guide-card-icon{font-size:22px;width:36px;text-align:center}
+.guide-card-title{font-family:'DM Serif Display',serif;font-size:16px;flex:1}
+.guide-card-arrow{font-size:12px;color:var(--muted);transition:transform .2s}
+.guide-card.open .guide-card-arrow{transform:rotate(90deg)}
+.guide-card-body{display:none;padding:0 18px 18px 66px;font-size:13px;line-height:1.8;color:var(--text)}
+.guide-card.open .guide-card-body{display:block}
+.guide-step{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+.guide-step-num{background:var(--primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.guide-tip{background:var(--accent-light);border-left:3px solid var(--accent);border-radius:6px;padding:10px 13px;margin-top:10px;font-size:12px;color:#7a5a00}
+@keyframes pulseRed{0%,100%{box-shadow:0 4px 14px rgba(192,57,43,.35)}50%{box-shadow:0 4px 22px rgba(192,57,43,.7)}}
+/* ── LEADS ── */
+.lead-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;transition:box-shadow .18s}
+.lead-card:hover{box-shadow:0 4px 16px rgba(45,90,61,.12)}
+.lead-card.due-today{border-left:4px solid var(--accent)}
+.lead-card.overdue{border-left:4px solid var(--danger)}
+.lead-card.joined{border-left:4px solid var(--success);opacity:.8}
+.lead-avatar{width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+.lead-info{flex:1;min-width:0}
+.lead-name{font-weight:700;font-size:14px;margin-bottom:2px}
+.lead-mobile{font-size:12px;color:var(--muted)}
+.lead-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.lead-next{font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600}
+.lead-next.today{background:#fff3cd;color:#856404}
+.lead-next.overdue{background:var(--danger-light);color:var(--danger)}
+.lead-next.future{background:var(--success-light);color:var(--success)}
+.lead-next.none{background:var(--surface2);color:var(--muted)}
+.lead-acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.lead-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.lead-tab{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s}
+.lead-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.lead-status-new{background:#e8f4fd;color:#0369a1}
+.lead-status-contacted{background:#fef9c3;color:#854d0e}
+.lead-status-interested{background:var(--success-light);color:var(--success)}
+.lead-status-notinterested{background:var(--danger-light);color:var(--danger)}
+.lead-status-joined{background:var(--accent-light);color:#b07800}
+.fu-item{padding:10px 12px;border-bottom:1px solid var(--surface2);font-size:13px}
+.fu-item:last-child{border-bottom:none}
+.fu-date{font-weight:700;color:var(--primary);margin-bottom:2px}
+.fu-note{color:var(--muted);font-size:12px}
 </style>
 <script src="./index_files/chart.umd.min.js.download"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -291,7 +334,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 <!-- SETUP -->
 <div id="setup" style="display: none;">
   <div class="card">
-    <div class="logo">🌿 Wellness Hub</div>
+    <div class="logo">🌿 Dharani's Wellness Center</div>
     <div class="sub">Supervisor Dashboard — Connect your Supabase project</div>
     <label>Supabase Project URL</label>
     <input type="text" id="sb-url" placeholder="https://xxxx.supabase.co">
@@ -313,7 +356,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 <div id="app" style="display: block;">
   <nav class="sidebar" id="sidebar">
     <div class="sb-logo">
-      <h1>🌿 Wellness Hub</h1>
+      <h1>🌿 Dharani's Wellness Center</h1>
       <span>Supervisor Dashboard</span>
     </div>
     <div class="sb-nav">
@@ -323,6 +366,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
       <button class="nav-item" onclick="goTo(&#39;coaches&#39;,this)"><span class="ic">👨‍🏫</span>Coaches</button>
       <button class="nav-item" onclick="goTo(&#39;inventory&#39;,this)"><span class="ic">📦</span>Inventory</button>
       <button id="nav-customers" class="nav-item" onclick="goTo(&#39;customers&#39;,this)"><span class="ic">👤</span>Customers</button>
+      <button class="nav-item" onclick="goTo(&#39;leads&#39;,this)"><span class="ic">📞</span>Leads</button>
       <button class="nav-item" onclick="goTo(&#39;attendance&#39;,this)"><span class="ic">📅</span>Attendance</button>
       <button class="nav-item" onclick="goTo(&#39;body&#39;,this)"><span class="ic">⚖️</span>Body Composition</button>
       <button class="nav-item" onclick="goTo(&#39;finance&#39;,this)"><span class="ic">💰</span>Finance</button>
@@ -332,7 +376,9 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
       <button class="nav-item" onclick="goTo('payments',this)"><span class="ic">💳</span>Payments</button>
       <button class="nav-item" onclick="goTo('orgtree',this)"><span class="ic">🌳</span>Org Tree</button>
       <button class="nav-item" onclick="goTo('pintracker',this)"><span class="ic">🏅</span>Pin Tracker</button>
+      <button class="nav-item" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span>Biz Analyst</button>
       <div class="nav-lbl" style="margin-top:10px">Setup</div>
+      <button class="nav-item" onclick="goTo('guide',this)"><span class="ic">📖</span>How to Use</button>
       <button class="nav-item" onclick="goTo('profile',this)"><span class="ic">👤</span>My Profile</button>
       <button class="nav-item" onclick="goTo(&#39;sql&#39;,this)"><span class="ic">🛠️</span>SQL Setup Guide</button>
     </div>
@@ -348,6 +394,17 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
   </nav>
 
   <main class="main">
+    <!-- OVERDUE LEADS BANNER -->
+    <div id="overdue-leads-banner" style="display:none;background:#c0392b;color:#fff;padding:12px 18px;border-radius:10px;margin-bottom:18px;display:none;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 4px 14px rgba(192,57,43,.35);animation:pulseRed 2s infinite">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">⚠️</span>
+        <div>
+          <div style="font-weight:700;font-size:14px" id="overdue-banner-text">You have overdue follow-ups!</div>
+          <div style="font-size:12px;opacity:.85">These leads were supposed to be called but weren't. Don't lose them!</div>
+        </div>
+      </div>
+      <button onclick="gotoOverdueLeads()" style="background:#fff;color:#c0392b;border:none;border-radius:8px;padding:8px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">View Overdue Leads →</button>
+    </div>
     <!-- OVERVIEW -->
     <div class="sec active" id="sec-overview">
       <div class="ph">
@@ -362,6 +419,8 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
       <div class="stats" id="overview-stats"></div>
       <!-- Revenue Row -->
       <div id="ov-revenue-row" style="margin-bottom:20px"></div>
+      <!-- Pin Progress Widget -->
+      <div id="ov-pin-widget" style="margin-bottom:16px"></div>
       <!-- Main Grid: Left & Right columns -->
       <div class="ov-grid" id="ov-main-grid">
         <div id="ov-col-left"></div>
@@ -470,7 +529,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
           </div>
           <div class="fr">
             <div class="fg"><label>Quantity *</label><input type="number" step="0.01" id="inv-out-qty" placeholder="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-            <div class="fg"><label>Unit</label><input type="text" id="inv-out-unit" placeholder="boxes / grams / tablets" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+            <div class="fg"><label>Unit</label><select id="inv-out-unit" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)"><option value="boxes">boxes</option><option value="pcs">pcs</option><option value="bottles">bottles</option><option value="sachets">sachets</option><option value="strips">strips</option><option value="grams">grams</option><option value="kg">kg</option><option value="liters">liters</option><option value="ml">ml</option></select></div>
           </div>
           <div class="fr">
             <div class="fg"><label>Sale Price (₹)</label><input type="number" step="0.01" id="inv-out-sale" placeholder="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
@@ -490,36 +549,73 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 
       <!-- Daily Usage -->
       <div id="inv-sec-usage" style="display:none">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-          <div class="tcard" style="padding:20px">
-            <div style="font-family:&#39;DM Serif Display&#39;,serif;font-size:17px;margin-bottom:14px">📅 Daily Summary</div>
-            <div class="fg"><label>Date *</label><input type="date" id="inv-sum-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-            <div class="fr">
-              <div class="fg"><label>Weight Gain Shakes</label><input type="number" id="inv-wg" value="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-              <div class="fg"><label>Weight Loss Shakes</label><input type="number" id="inv-wl" value="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="tcard" style="padding:20px;margin-bottom:16px">
+          <div style="font-family:'DM Serif Display',serif;font-size:17px;margin-bottom:16px">📅 End of Day Log</div>
+
+          <!-- Date + Auto-fill -->
+          <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px">
+            <div class="fg" style="flex:1;margin-bottom:0">
+              <label>Date *</label>
+              <input type="date" id="inv-sum-date" onchange="autoFillFromAttendance(this.value)" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             </div>
-            <div class="fg"><label>Total Customers</label><input type="number" id="inv-custs" value="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-            <div class="fg"><label>Notes</label><input type="text" id="inv-sum-notes" placeholder="Optional" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-            <input type="hidden" id="inv-sum-id">
-            <div class="mf"><button class="btn-c" onclick="resetInvSum()">Cancel</button><button class="btn-p" onclick="saveDailySummary()">Save Summary</button></div>
+            <button onclick="autoFillFromAttendance(document.getElementById('inv-sum-date').value)" style="padding:9px 14px;background:var(--accent-light);color:var(--primary);border:1.5px solid var(--primary);border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;white-space:nowrap">⟳ Auto-fill from Attendance</button>
           </div>
-          <div class="tcard" style="padding:20px">
-            <div style="font-family:&#39;DM Serif Display&#39;,serif;font-size:17px;margin-bottom:14px">📦 Product Usage</div>
-            <div class="fg" style="position:relative">
-              <label>Product *</label>
-              <input type="text" id="inv-usage-search" placeholder="Type to search product..." oninput="filterInvDrop(&#39;usage&#39;)" onfocus="showInvDrop(&#39;usage&#39;)" autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text)">
-              <div id="inv-usage-drop" class="inv-drop"></div>
-              <input type="hidden" id="inv-usage-pid">
-            </div>
+
+          <!-- Shakes section -->
+          <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Shakes Given Today</div>
             <div class="fr">
-              <div class="fg"><label>Quantity *</label><input type="number" step="0.01" id="inv-usage-qty" placeholder="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-              <div class="fg"><label>Unit</label><input type="text" id="inv-usage-unit" placeholder="scoops" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+              <div class="fg">
+                <label>Weight Gain shakes</label>
+                <input type="number" id="inv-wg" value="0" min="0" oninput="updateShakeTotals()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+              </div>
+              <div class="fg">
+                <label>Weight Loss shakes</label>
+                <input type="number" id="inv-wl" value="0" min="0" oninput="updateShakeTotals()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+              </div>
+              <div class="fg">
+                <label>Total Customers</label>
+                <input type="number" id="inv-custs" value="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+              </div>
             </div>
-            <div class="fg"><label>Date *</label><input type="date" id="inv-usage-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-            <input type="hidden" id="inv-usage-id">
-            <div class="mf"><button class="btn-c" onclick="resetInvUsage()">Cancel</button><button class="btn-p" onclick="saveProductUsage()">Log Usage</button></div>
+            <div class="fr" style="margin-top:10px">
+              <div class="fg" style="max-width:140px">
+                <label>Extra shakes <span style="color:var(--muted);font-weight:400">(outside attendance)</span></label>
+                <input type="number" id="inv-wg-extra" value="0" min="0" oninput="updateShakeTotals()" style="width:100%;padding:9px 11px;border:1.5px solid var(--primary);border-radius:8px;font-family:inherit;font-size:13px">
+              </div>
+              <div class="fg">
+                <label>Who got extra shakes?</label>
+                <input type="text" id="inv-extra-reason" placeholder="e.g. Mom, visitor, pack ending bonus" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+              </div>
+            </div>
+            <div id="inv-shake-preview" style="margin-top:10px;font-size:13px"></div>
+          </div>
+
+          <!-- Flavours section -->
+          <div style="margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Flavours / Products Used Today</div>
+              <button onclick="addUsageRow()" style="font-size:12px;padding:6px 14px;background:var(--accent-light);color:var(--primary);border:1.5px solid var(--primary);border-radius:7px;cursor:pointer;font-family:inherit">+ Add Product</button>
+            </div>
+            <div id="inv-usage-rows"></div>
+            <div id="inv-usage-rows-empty" style="color:var(--muted);font-size:13px;padding:8px 4px;font-style:italic">No products added yet — click &quot;+ Add Product&quot; to log which flavours were used today</div>
+          </div>
+
+          <!-- Notes -->
+          <div class="fg" style="margin-bottom:14px">
+            <label>Notes <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+            <input type="text" id="inv-sum-notes" placeholder="e.g. Chocolate ran out at noon" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          </div>
+
+          <input type="hidden" id="inv-sum-id">
+          <input type="hidden" id="inv-usage-id">
+          <input type="hidden" id="inv-wl-extra" value="0">
+          <div class="mf">
+            <button class="btn-c" onclick="resetDailyUsage()">Reset</button>
+            <button class="btn-p" onclick="saveAllUsage()">💾 Save Everything</button>
           </div>
         </div>
+
         <div class="tcard">
           <div class="ttoolbar"><span style="font-weight:600;font-size:13px">Daily Usage History</span></div>
           <div id="inv-usage-body" style="padding:4px 16px 16px"><div class="empty"><div class="ei">📊</div><p>No usage records yet.</p></div></div>
@@ -549,6 +645,32 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
         </div>
       </div>
     </div>
+    <!-- LEADS -->
+    <div class="sec" id="sec-leads">
+      <div class="ph">
+        <div><div class="pt">Leads</div><div class="ps">Track potential customers and follow-ups</div></div>
+        <button class="btn-p" onclick="openLeadModal()">+ Add Lead</button>
+      </div>
+      <div class="stats" id="leads-stats">
+        <div class="stat"><div class="stat-ic">📞</div><div class="stat-l">Due Today</div><div class="stat-v" id="ls-due">0</div></div>
+        <div class="stat"><div class="stat-ic">✅</div><div class="stat-l">Called Today</div><div class="stat-v" id="ls-called">0</div></div>
+        <div class="stat"><div class="stat-ic">⚠️</div><div class="stat-l">Overdue</div><div class="stat-v" style="color:var(--danger)" id="ls-overdue">0</div></div>
+        <div class="stat"><div class="stat-ic">🏷️</div><div class="stat-l">Total Leads</div><div class="stat-v" id="ls-total">0</div></div>
+        <div class="stat"><div class="stat-ic">🎉</div><div class="stat-l">Joined</div><div class="stat-v" style="color:var(--success)" id="ls-joined">0</div></div>
+      </div>
+      <div class="lead-tabs">
+        <button class="lead-tab active" id="ltab-today" onclick="setLeadTab('today',this)">📅 Due Today</button>
+        <button class="lead-tab" id="ltab-overdue" onclick="setLeadTab('overdue',this)">⚠️ Overdue</button>
+        <button class="lead-tab" id="ltab-all" onclick="setLeadTab('all',this)">All</button>
+        <button class="lead-tab" id="ltab-new" onclick="setLeadTab('new',this)">New</button>
+        <button class="lead-tab" id="ltab-interested" onclick="setLeadTab('interested',this)">Interested</button>
+        <button class="lead-tab" id="ltab-joined" onclick="setLeadTab('joined',this)">Joined</button>
+        <button class="lead-tab" id="ltab-notinterested" onclick="setLeadTab('notinterested',this)">Not Interested</button>
+      </div>
+      <input class="search" id="leads-search" placeholder="🔍 Search name or mobile..." oninput="renderLeads()" style="width:100%;max-width:100%;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:12px 16px;font-family:inherit;font-size:14px;margin-bottom:14px">
+      <div id="leads-list"></div>
+    </div>
+
     <!-- ATTENDANCE -->
     <div class="sec" id="sec-attendance">
       <div class="ph">
@@ -735,6 +857,19 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
       <div class="stats" id="orgtree-stats"></div>
       <div class="tcard" style="padding:20px;overflow-x:auto"><div id="orgtree-container"><div class="empty"><div class="ei">🌳</div><p>Click Refresh to load.</p></div></div></div>
     </div>
+    <!-- BIZ ANALYST -->
+    <div class="sec" id="sec-bizanalyst">
+      <div class="ph">
+        <div><div class="pt">📊 Business Analyst</div><div class="ps">Auto-analysis of every coach's business — no selection needed</div></div>
+        <div style="display:flex;gap:8px">
+          <select id="biz-month" onchange="renderBizAnalyst()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></select>
+          <button class="btn-p" onclick="generateBizAIReport()">✨ AI Report</button>
+        </div>
+      </div>
+      <div id="biz-ai-result" class="tcard" style="display:none;padding:20px;line-height:1.7;margin-bottom:16px"></div>
+      <div id="biz-org-summary" style="margin-bottom:16px"></div>
+      <div id="biz-content"></div>
+    </div>
     <!-- PIN TRACKER -->
     <div class="sec" id="sec-pintracker">
       <div class="ph">
@@ -742,7 +877,11 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
         <div style="display:flex;gap:8px;align-items:center">
           <select id="pin-month" onchange="renderPinTracker()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></select>
           <select id="pin-target" onchange="renderPinTracker()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
-            <option value="2500 GET Team">Target: 2500 GET</option>
+            <option value="Supervisor">Target: Supervisor</option>
+            <option value="World Team">Target: World Team</option>
+            <option value="Active World Team">Target: Active World Team</option>
+            <option value="GET Team">Target: GET Team</option>
+            <option value="2500 GET Team">Target: 2500 GET Team</option>
             <option value="Millionaire Team">Target: Millionaire Team</option>
             <option value="7500 Millionaire Team">Target: 7500 Millionaire Team</option>
             <option value="President's Team">Target: President's Team</option>
@@ -820,6 +959,18 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
       </div>
     </div>
     <!-- SQL -->
+    <!-- HOW TO USE GUIDE -->
+    <div class="sec" id="sec-guide">
+      <div class="ph">
+        <div><div class="pt">How to Use</div><div class="ps">Step-by-step guide for every feature</div></div>
+        <div style="display:flex;background:var(--surface2);border-radius:20px;padding:3px;border:1px solid var(--border)">
+          <button id="guide-lang-en" onclick="setGuideLang('en')" style="padding:6px 18px;border-radius:16px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:var(--primary);color:#fff;transition:all .2s">English</button>
+          <button id="guide-lang-te" onclick="setGuideLang('te')" style="padding:6px 18px;border-radius:16px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s">తెలుగు</button>
+        </div>
+      </div>
+      <div id="guide-content"></div>
+    </div>
+
     <div class="sec" id="sec-sql">
       <div class="ph"><div><div class="pt">SQL Setup Guide &amp; AI Config</div><div class="ps">Configure APIs and Database Schemas</div></div></div>
       <div class="tcard" style="padding:26px;margin-bottom:20px;border-top:4px solid var(--primary)">
@@ -1075,6 +1226,35 @@ ADD COLUMN IF NOT EXISTS status text default 'Active',
 ADD COLUMN IF NOT EXISTS upline text,
 ADD COLUMN IF NOT EXISTS notes text,
 ADD COLUMN IF NOT EXISTS herbalife_pin text;
+
+-- ==========================================
+-- 📞 LEADS & FOLLOW-UPS
+-- ==========================================
+create table if not exists leads (
+  id uuid default gen_random_uuid() primary key,
+  center_id uuid references wellness_centers(id),
+  name text not null,
+  mobile text,
+  status text default 'New',
+  source text,
+  notes text,
+  next_followup_date date,
+  last_called_date date,
+  created_at timestamptz default now()
+);
+alter table leads enable row level security;
+create policy "allow all" on leads for all using (true);
+
+create table if not exists lead_followups (
+  id uuid default gen_random_uuid() primary key,
+  lead_id uuid references leads(id) on delete cascade,
+  called_at date not null,
+  note text,
+  next_followup_date date,
+  created_at timestamptz default now()
+);
+alter table lead_followups enable row level security;
+create policy "allow all" on lead_followups for all using (true);
 </pre>
         <p style="margin-top:14px;font-size:12px;color:var(--muted)">✅ After running, refresh and all sections will work!</p>
       </div>
@@ -1912,7 +2092,8 @@ function getCredentials() {
   if (!SB_KEY) SB_KEY = localStorage.getItem('sb_key') || '';
   return SB_URL && SB_KEY;
 }
-var D = { centers:[], customers:[], attendance:[], body:[], finance:[], coaches:[], inventory:[] };
+var D = { centers:[], customers:[], attendance:[], body:[], finance:[], coaches:[], inventory:[], leads:[], leadFollowups:[] };
+var _leadTab = 'today';
 
 // ── SUPABASE REST ──
 async function req(method, table, body, filter) {
@@ -2021,7 +2202,7 @@ async function loadAll() {
   D.coupons=[]; D.payments=[]; D.packHistory=[];
   await Promise.all([loadCenters(),loadCoaches(),loadInventory(),loadCustomers(),
     loadAttendance(),loadBody(),loadFinance(),
-    loadCoupons(),loadPayments(),loadPackHistory()]);
+    loadCoupons(),loadPayments(),loadPackHistory(),loadLeads()]);
   _daysLeftCache = {};  // all data loaded — recalculate with full attendance
   renderCustomers();    // re-render so days-left matches attendance data
   renderOverview();
@@ -2283,7 +2464,10 @@ function goTo(name, el) {
   if (name==='payments')  setTimeout(function(){ renderPayments(); updatePaymentPersonSelect(); }, 80);
   if (name==='orgtree')   setTimeout(renderOrgTree, 80);
   if (name==='pintracker') setTimeout(initPinTracker, 80);
+  if (name==='bizanalyst') setTimeout(initBizAnalyst, 80);
   if (name==='profile')   setTimeout(function(){ renderProfileCard(); updateProfileCoachSelect(); }, 80);
+  if (name==='leads')     setTimeout(function(){ renderLeadsStats(); renderLeads(); updateLeadCenterSel(); }, 80);
+  if (name==='guide')     setTimeout(renderGuide, 80);
 }
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
@@ -2626,7 +2810,7 @@ function renderOverview() {
   var attToday = attTodayList.length;
   var checkedInNames = attTodayList.map(function(a){
     var cu = _custs.find(function(x){return x.id===a.customer_id;});
-    return {name: cu?cu.name:'Unknown', time: a.check_in_time||'', id: a.customer_id};
+    return {name: cu?cu.name:(a.customer_name||'Walk-in'), time: a.check_in_time||'', id: a.customer_id};
   });
 
   // ── Finance ──
@@ -2772,6 +2956,36 @@ function renderOverview() {
   rightHtml += '</div></div></div>';
 
   document.getElementById('ov-col-right').innerHTML = rightHtml;
+
+  // ── Pin Progress Mini Widget ──
+  var pinWidget = document.getElementById('ov-pin-widget');
+  if(pinWidget) {
+    var curPin = (OWNER_PROFILE&&OWNER_PROFILE.current_pin) || 'Associate';
+    var tgtPin = (OWNER_PROFILE&&OWNER_PROFILE.next_pin) || PIN_NEXT[curPin] || 'Supervisor';
+    var pinReq = PIN_REQUIREMENTS[tgtPin];
+    if(pinReq) {
+      var pVP = getPersonalVP(currentMonth);
+      var oVP = getOrgVP(currentMonth);
+      var pPct = pinReq.personalVP>0 ? Math.min(100,Math.round((pVP/pinReq.personalVP)*100)) : 100;
+      var oPct = pinReq.orgVP>0 ? Math.min(100,Math.round((oVP/pinReq.orgVP)*100)) : 100;
+      var pColor = pPct>=100?'var(--success)':pPct>=60?'var(--accent)':'var(--danger)';
+      var oColor = oPct>=100?'var(--success)':oPct>=60?'var(--accent)':'var(--danger)';
+      pinWidget.innerHTML = '<div class="tcard" style="padding:18px;border-left:4px solid var(--accent)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+        +'<div><div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px">Pin Journey</div>'
+        +'<div style="font-size:15px;font-weight:700;margin-top:2px">'+curPin+' <span style="color:var(--muted);font-weight:400;font-size:13px">→</span> <span style="color:var(--accent)">'+tgtPin+'</span></div></div>'
+        +'<span class="ov-link" onclick="goTo(\'pintracker\',document.querySelector(\'[onclick*=pintracker]\'))">Full report →</span>'
+        +'</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+        +'<div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--muted)">Personal VP</span><span style="font-weight:700;color:'+pColor+'">'+pVP+' / '+pinReq.personalVP+'</span></div>'
+        +'<div class="pin-progress" style="height:10px"><div class="pin-fill" style="width:'+pPct+'%;background:'+pColor+'"></div></div></div>'
+        +(pinReq.orgVP>0?'<div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--muted)">Org VP</span><span style="font-weight:700;color:'+oColor+'">'+oVP+' / '+pinReq.orgVP+'</span></div>'
+        +'<div class="pin-progress" style="height:10px"><div class="pin-fill" style="width:'+oPct+'%;background:'+oColor+'"></div></div></div>':'<div style="display:flex;align-items:center;font-size:12px;color:var(--muted)">No org VP needed for this pin</div>')
+        +'</div></div>';
+    } else {
+      pinWidget.innerHTML = '';
+    }
+  }
 
   checkBirthdaysToday();
 }
@@ -3038,16 +3252,23 @@ function renderDailyUsageHistory() {
   sorted.forEach(function(r){ if(!byDate[r.date]) byDate[r.date]=[];  byDate[r.date].push(r); });
   container.innerHTML = Object.keys(byDate).sort().reverse().map(function(date){
     var items = byDate[date];
-    var summary = items.find(function(i){return i.type==='summary';});
+    var summaries = items.filter(function(i){return i.type==='summary';});
+    var summary = summaries[0];
     var products = items.filter(function(i){return i.type==='product';});
     var html = '<div class="inv-usage-card"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:14px">📅 '+date+'</strong><div style="display:flex;gap:6px">';
     if (summary) html += '<button class="btn-e" onclick="editInvSum(\''+summary.id+'\')">Edit Summary</button><button class="btn-d" onclick="delInvSum(\''+summary.id+'\')">Delete</button>';
     html += '</div></div>';
+    if (summaries.length > 1) html += '<div style="color:var(--danger);font-size:11px;font-weight:600;margin-bottom:6px">⚠️ '+summaries.length+' duplicate summaries for this date — delete the incorrect one below.</div>';
     if (summary) {
       var wg = summary.weight_gain_shakes||0, wl = summary.weight_loss_shakes||0, tc = summary.total_customers||0;
       html += '<div class="inv-usage-grid"><div class="inv-usage-stat"><div class="inv-usage-stat-lbl">Weight Gain</div><div class="inv-usage-stat-val" style="color:var(--primary)">'+wg+'</div></div><div class="inv-usage-stat"><div class="inv-usage-stat-lbl">Weight Loss</div><div class="inv-usage-stat-val" style="color:var(--danger)">'+wl+'</div></div><div class="inv-usage-stat"><div class="inv-usage-stat-lbl">Total Custs</div><div class="inv-usage-stat-val" style="color:var(--success)">'+tc+'</div></div><div class="inv-usage-stat"><div class="inv-usage-stat-lbl">Total Shakes</div><div class="inv-usage-stat-val">'+(wg+wl)+'</div></div></div>';
       if (summary.notes) html += '<div style="margin-top:8px;font-size:12px;color:var(--muted)">'+summary.notes+'</div>';
     }
+    // Show additional duplicate summaries with delete option
+    summaries.slice(1).forEach(function(s){
+      var wg2=s.weight_gain_shakes||0, wl2=s.weight_loss_shakes||0;
+      html += '<div style="margin-top:6px;padding:8px 10px;background:var(--danger-light);border-radius:8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--danger)">Duplicate: WG '+wg2+' WL '+wl2+' = '+(wg2+wl2)+' shakes</span><div style="display:flex;gap:6px"><button class="btn-e" onclick="editInvSum(\''+s.id+'\')" style="font-size:11px;padding:2px 8px">Edit</button><button class="btn-d" onclick="delInvSum(\''+s.id+'\')" style="font-size:11px;padding:2px 8px">Delete</button></div></div>';
+    });
     if (products.length) {
       html += '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px"><div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Product Usage</div>';
       products.forEach(function(r){
@@ -3075,7 +3296,7 @@ function addBatchRow(pid, pname, unit) {
     +'<input type="hidden" id="'+rid+'-pid" value="'+(pid||'')+'">'
     +'</div>'
     +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Qty *</label><input type="number" step="0.01" id="'+rid+'-qty" placeholder="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>'
-    +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Unit</label><input type="text" id="'+rid+'-unit" value="'+(unit||'')+'" placeholder="boxes" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>'
+    +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Unit</label><select id="'+rid+'-unit" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)"><option value="boxes"'+(unit==='boxes'?' selected':'')+'>boxes</option><option value="pcs"'+(unit==='pcs'?' selected':'')+'>pcs</option><option value="bottles"'+(unit==='bottles'?' selected':'')+'>bottles</option><option value="sachets"'+(unit==='sachets'?' selected':'')+'>sachets</option><option value="strips"'+(unit==='strips'?' selected':'')+'>strips</option><option value="grams"'+(unit==='grams'?' selected':'')+'>grams</option><option value="kg"'+(unit==='kg'?' selected':'')+'>kg</option><option value="liters"'+(unit==='liters'?' selected':'')+'>liters</option><option value="ml"'+(unit==='ml'?' selected':'')+'>ml</option></select></div>'
     +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Cost (₹)</label><input type="number" step="0.01" id="'+rid+'-cost" placeholder="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>'
     +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Expiry</label><input type="date" id="'+rid+'-expiry" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>'
     +'<button onclick="document.getElementById(\''+rid+'\').remove()" style="padding:8px 10px;background:var(--danger-light);color:var(--danger);border:none;border-radius:8px;cursor:pointer;font-size:16px;margin-bottom:1px">✕</button>';
@@ -3215,7 +3436,8 @@ async function saveStockOut() {
 }
 function resetInvOut() {
   ['inv-out-id','inv-out-pid'].forEach(function(i){document.getElementById(i).value='';});
-  ['inv-out-search','inv-out-qty','inv-out-unit','inv-out-sale','inv-out-notes'].forEach(function(i){document.getElementById(i).value='';});
+  ['inv-out-search','inv-out-qty','inv-out-sale','inv-out-notes'].forEach(function(i){document.getElementById(i).value='';});
+  document.getElementById('inv-out-unit').selectedIndex=0;
   document.getElementById('inv-out-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('inv-out-title').textContent='➖ Add Stock Out';
 }
@@ -3245,29 +3467,88 @@ async function saveDailySummary() {
   var id = document.getElementById('inv-sum-id').value;
   var date = document.getElementById('inv-sum-date').value;
   if (!date) { showToast('Date is required','error'); return; }
-  var wg = Number(document.getElementById('inv-wg').value)||0;
-  var wl = Number(document.getElementById('inv-wl').value)||0;
+  // Prevent duplicate: if no ID set, check if a summary already exists for this date
+  if (!id) {
+    var existing = D.dailyUsage.find(function(r){ return r.type==='summary' && r.date===date; });
+    if (existing) id = existing.id;
+  }
+  var wg = (Number(document.getElementById('inv-wg').value)||0) + (Number(document.getElementById('inv-wg-extra').value)||0);
+  var wl = (Number(document.getElementById('inv-wl').value)||0) + (Number(document.getElementById('inv-wl-extra').value)||0);
   var custs = Number(document.getElementById('inv-custs').value)||0;
   var totalShakes = wg + wl;
-  // P2b: Mismatch check — compare with attendance
-  var attPresent = D.attendance.filter(function(a){return a.date===date && a.status==='present';}).length;
-  if (attPresent > 0 && Math.abs(totalShakes - attPresent) > 2) {
-    var diff = totalShakes - attPresent;
-    var msg = '⚠️ Mismatch detected!\n\nAttendance says '+attPresent+' customers present on '+date+'.\nYou entered '+(wg+wl)+' total shakes.\n\nDifference: '+(diff>0?'+':'')+diff+' shakes.\n\nSave anyway?';
-    if (!confirm(msg)) return;
-  }
   var payload = { type:'summary', date:date, weight_gain_shakes:wg, weight_loss_shakes:wl, total_customers:custs, notes:document.getElementById('inv-sum-notes').value.trim()||null };
   try {
     if (id) await dbUpdate('inventory_daily_usage',id,payload); else await dbInsert('inventory_daily_usage',payload);
     showToast('Summary saved!'); resetInvSum(); await loadInventory();
   } catch(e) { showToast('Error: '+e.message,'error'); }
 }
-function resetInvSum() {
-  document.getElementById('inv-sum-id').value='';
-  document.getElementById('inv-sum-date').value=new Date().toISOString().split('T')[0];
-  ['inv-wg','inv-wl','inv-custs'].forEach(function(i){document.getElementById(i).value='0';});
-  document.getElementById('inv-sum-notes').value='';
+function updateShakeTotals() {
+  var wg = Number(document.getElementById('inv-wg').value)||0;
+  var wl = Number(document.getElementById('inv-wl').value)||0;
+  var extra = Number(document.getElementById('inv-wg-extra').value)||0;
+  var total = wg + wl + extra;
+  var preview = document.getElementById('inv-shake-preview');
+  if (!preview) return;
+  if (total === 0) { preview.innerHTML = ''; return; }
+  var attDate = document.getElementById('inv-sum-date').value;
+  var attPresent = 0;
+  if (attDate && Array.isArray(D.attendance)) {
+    attPresent = D.attendance.filter(function(a){ return a.date===attDate && a.status==='present'; })
+      .reduce(function(sum,a){ return sum+(a.servings||1); }, 0);
+  }
+  var diff = total - attPresent;
+  var msg, color;
+  if (attPresent === 0) {
+    msg = '📊 '+total+' shakes total';
+    color = 'var(--muted)';
+  } else if (diff === 0) {
+    msg = '✅ '+total+' shakes — matches attendance perfectly';
+    color = '#16a34a';
+  } else if (diff > 0) {
+    msg = '📊 '+total+' shakes — '+attPresent+' from attendance + '+diff+' extra (outside attendance)';
+    color = 'var(--primary)';
+  } else {
+    msg = '⚠️ '+total+' shakes entered, but '+attPresent+' customers in attendance. '+Math.abs(diff)+' may be missing a shake.';
+    color = 'var(--accent)';
+  }
+  preview.innerHTML = '<span style="color:'+color+'">'+msg+'</span>';
 }
+function autoFillFromAttendance(date) {
+  if (!date || !Array.isArray(D.attendance) || !Array.isArray(D.customers) || !Array.isArray(D.dailyUsage)) return;
+  var existingSummary = D.dailyUsage.find(function(r){ return r.type==='summary' && r.date===date; });
+  if (existingSummary) {
+    document.getElementById('inv-sum-id').value = existingSummary.id;
+    document.getElementById('inv-wg').value = existingSummary.weight_gain_shakes||0;
+    document.getElementById('inv-wl').value = existingSummary.weight_loss_shakes||0;
+    document.getElementById('inv-wg-extra').value = 0;
+    document.getElementById('inv-wl-extra').value = 0;
+    document.getElementById('inv-custs').value = existingSummary.total_customers||0;
+    document.getElementById('inv-sum-notes').value = existingSummary.notes||'';
+    updateShakeTotals();
+    showToast('Loaded existing summary for '+date);
+    return;
+  }
+  // Auto-calculate from attendance for this date
+  var present = D.attendance.filter(function(a){ return a.date===date && a.status==='present'; });
+  if (!present.length) return;
+  var wl=0, wg=0, uniqueCusts=new Set();
+  present.forEach(function(a) {
+    var servings = a.servings||1;
+    var cust = D.customers.find(function(c){ return c.id===a.customer_id; });
+    var goal = cust ? (cust.goal||'') : '';
+    if (goal==='Weight Gain') wg += servings;
+    else wl += servings;
+    if (a.customer_id) uniqueCusts.add(a.customer_id);
+  });
+  document.getElementById('inv-wg').value = wg;
+  document.getElementById('inv-wl').value = wl;
+  document.getElementById('inv-wg-extra').value = 0;
+  document.getElementById('inv-wl-extra').value = 0;
+  document.getElementById('inv-custs').value = uniqueCusts.size;
+  updateShakeTotals();
+  showToast('Auto-filled: '+wl+' WL + '+wg+' WG = '+(wl+wg)+' shakes from attendance');
+}
+function resetInvSum() { resetDailyUsage(); }
 async function editInvSum(id) {
   var r = D.dailyUsage.find(function(x){return x.id===id;});
   if (!r) return;
@@ -3299,29 +3580,151 @@ async function saveProductUsage() {
     showToast('Usage logged!'); resetInvUsage(); await loadInventory();
   } catch(e) { showToast('Error: '+e.message,'error'); }
 }
-function resetInvUsage() {
-  document.getElementById('inv-usage-id').value='';
-  document.getElementById('inv-usage-pid').value='';
-  document.getElementById('inv-usage-search').value='';
-  document.getElementById('inv-usage-qty').value='';
-  document.getElementById('inv-usage-unit').value='scoops';
-  document.getElementById('inv-usage-date').value=new Date().toISOString().split('T')[0];
-}
+function resetInvUsage() { /* handled by resetDailyUsage */ }
 async function editInvUsage(id) {
   var r = D.dailyUsage.find(function(x){return x.id===id;});
   if (!r) return;
-  document.getElementById('inv-usage-id').value=r.id;
-  document.getElementById('inv-usage-pid').value=r.product_id||'';
-  document.getElementById('inv-usage-search').value=r.product_name||r.product_id||'';
-  document.getElementById('inv-usage-qty').value=r.quantity||'';
-  document.getElementById('inv-usage-unit').value=r.unit||'scoops';
-  document.getElementById('inv-usage-date').value=r.date||'';
   switchInvTab('usage', document.getElementById('inv-tab-usage'));
+  document.getElementById('inv-sum-date').value = r.date||'';
+  addUsageRow(r.product_id||'', r.product_name||r.product_id||'', r.unit||'scoops', r.id);
+  var rows = document.getElementById('inv-usage-rows');
+  if (rows && rows.lastChild) {
+    var lastRid = rows.lastChild.id;
+    var qtyEl = document.getElementById(lastRid+'-qty');
+    if (qtyEl) qtyEl.value = r.quantity||'';
+  }
+  showToast('Loaded for editing — update and click Save Everything');
 }
 async function delInvUsage(id) {
   if (!confirm('Delete this usage record?')) return;
   try { await dbDelete('inventory_daily_usage',id); showToast('Deleted!'); await loadInventory(); } catch(e){ showToast('Error: '+e.message,'error'); }
 }
+
+// ── DAILY USAGE — BATCH PRODUCT ROWS ──
+var usageRowCount = 0;
+function addUsageRow(pid, pname, unit, editId) {
+  usageRowCount++;
+  var rid = 'urow-'+usageRowCount;
+  var emptyMsg = document.getElementById('inv-usage-rows-empty');
+  if (emptyMsg) emptyMsg.style.display = 'none';
+  var row = document.createElement('div');
+  row.id = rid;
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 80px 36px;gap:8px;align-items:end;margin-bottom:8px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)';
+  row.innerHTML =
+    '<div style="position:relative">'
+    +'<label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Product / Flavour</label>'
+    +'<input type="text" id="'+rid+'-search" value="'+(pname||'')+'" placeholder="Search product..." oninput="filterUsageDrop(\''+rid+'\')" onfocus="filterUsageDrop(\''+rid+'\')" autocomplete="off" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">'
+    +'<div id="'+rid+'-drop" class="inv-drop"></div>'
+    +'<input type="hidden" id="'+rid+'-pid" value="'+(pid||'')+'">'
+    +'<input type="hidden" id="'+rid+'-editid" value="'+(editId||'')+'">'
+    +'</div>'
+    +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Qty</label>'
+    +'<input type="number" step="0.01" id="'+rid+'-qty" placeholder="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>'
+    +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Unit</label>'
+    +'<input type="text" id="'+rid+'-unit" value="'+(unit||'scoops')+'" placeholder="scoops" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>'
+    +'<button onclick="removeUsageRow(\''+rid+'\')" style="padding:8px 10px;background:var(--danger-light);color:var(--danger);border:none;border-radius:8px;cursor:pointer;font-size:16px;align-self:flex-end">✕</button>';
+  document.getElementById('inv-usage-rows').appendChild(row);
+  document.addEventListener('click', function(e){
+    var drop = document.getElementById(rid+'-drop');
+    if (drop && !row.contains(e.target)) drop.style.display='none';
+  });
+}
+function removeUsageRow(rid) {
+  var row = document.getElementById(rid);
+  if (row) row.remove();
+  var rows = document.getElementById('inv-usage-rows');
+  if (rows && rows.children.length === 0) {
+    var emptyMsg = document.getElementById('inv-usage-rows-empty');
+    if (emptyMsg) emptyMsg.style.display = '';
+  }
+}
+function filterUsageDrop(rid) {
+  var q = document.getElementById(rid+'-search').value.toLowerCase();
+  var drop = document.getElementById(rid+'-drop');
+  var cats = {};
+  PRODUCTS_DB.filter(function(p){ return !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q); })
+    .forEach(function(p){ if(!cats[p.category]) cats[p.category]=[]; cats[p.category].push(p); });
+  var html='';
+  Object.keys(cats).forEach(function(cat){
+    html+='<div class="inv-drop-cat">'+cat+'</div>';
+    cats[cat].forEach(function(p){
+      html+='<div class="inv-drop-item" onclick="selectUsageProduct(\''+rid+'\',\''+p.id+'\',\''+p.name.replace(/'/g,"&#39;")+'\',\''+p.defaultUnit+'\')">'+p.name+'</div>';
+    });
+  });
+  if (!html) html='<div style="padding:10px 12px;color:var(--muted);font-size:13px">No products found</div>';
+  drop.innerHTML=html; drop.style.display='block';
+}
+function selectUsageProduct(rid, pid, pname, unit) {
+  document.getElementById(rid+'-search').value=pname;
+  document.getElementById(rid+'-pid').value=pid;
+  var unitEl=document.getElementById(rid+'-unit');
+  if(unitEl && unit) unitEl.value=unit;
+  var drop=document.getElementById(rid+'-drop');
+  if(drop) drop.style.display='none';
+}
+async function saveAllUsage() {
+  getCredentials();
+  if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  var date = document.getElementById('inv-sum-date').value;
+  if (!date) { showToast('Date is required','error'); return; }
+  var sumId = document.getElementById('inv-sum-id').value;
+  var wg = Number(document.getElementById('inv-wg').value)||0;
+  var wl = Number(document.getElementById('inv-wl').value)||0;
+  var extra = Number(document.getElementById('inv-wg-extra').value)||0;
+  var custs = Number(document.getElementById('inv-custs').value)||0;
+  var notesVal = document.getElementById('inv-sum-notes').value.trim();
+  var reasonEl = document.getElementById('inv-extra-reason');
+  var reasonVal = reasonEl ? reasonEl.value.trim() : '';
+  var fullNotes = notesVal;
+  if (reasonVal) fullNotes = (notesVal ? notesVal+' | ' : '')+'Extra: '+reasonVal;
+  if (!sumId) {
+    var existing = D.dailyUsage.find(function(r){ return r.type==='summary' && r.date===date; });
+    if (existing) sumId = existing.id;
+  }
+  var sumPayload = { type:'summary', date:date, weight_gain_shakes:wg+extra, weight_loss_shakes:wl, total_customers:custs, notes:fullNotes||null };
+  var rowEls = document.getElementById('inv-usage-rows').children;
+  var usageItems = [];
+  for (var i=0; i<rowEls.length; i++) {
+    var rid = rowEls[i].id;
+    var pid = document.getElementById(rid+'-pid').value;
+    var pname = document.getElementById(rid+'-search').value.trim();
+    var qty = Number(document.getElementById(rid+'-qty').value)||0;
+    var unit = document.getElementById(rid+'-unit').value.trim()||'scoops';
+    var editId = document.getElementById(rid+'-editid').value;
+    if (!pid) { showToast('Select a product for row '+(i+1),'error'); return; }
+    if (!qty) { showToast('Enter quantity for '+pname,'error'); return; }
+    usageItems.push({ editId:editId, payload:{ type:'product', product_id:pid, product_name:pname, quantity:qty, unit:unit, date:date } });
+  }
+  try {
+    if (sumId) await dbUpdate('inventory_daily_usage', sumId, sumPayload);
+    else await dbInsert('inventory_daily_usage', sumPayload);
+    for (var j=0; j<usageItems.length; j++) {
+      var item = usageItems[j];
+      if (item.editId) await dbUpdate('inventory_daily_usage', item.editId, item.payload);
+      else await dbInsert('inventory_daily_usage', item.payload);
+    }
+    showToast('Saved! '+(usageItems.length > 0 ? usageItems.length+' product(s) logged.' : 'Summary saved.'));
+    resetDailyUsage();
+    await loadInventory();
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+function resetDailyUsage() {
+  document.getElementById('inv-sum-id').value='';
+  document.getElementById('inv-usage-id').value='';
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('inv-sum-date').value=today;
+  ['inv-wg','inv-wl','inv-wg-extra','inv-custs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value='0'; });
+  document.getElementById('inv-sum-notes').value='';
+  var er=document.getElementById('inv-extra-reason'); if(er) er.value='';
+  document.getElementById('inv-usage-rows').innerHTML='';
+  usageRowCount=0;
+  var emptyMsg=document.getElementById('inv-usage-rows-empty');
+  if(emptyMsg) emptyMsg.style.display='';
+  var preview=document.getElementById('inv-shake-preview');
+  if(preview) preview.innerHTML='';
+  autoFillFromAttendance(today);
+}
+
 
 // ── RENDER CENTERS ──
 function renderCenters() {
@@ -3369,16 +3772,18 @@ async function toggleAtt(cid, cname, date, currentStatus) {
       var newServ = curServ + 1;
       await dbUpdate('attendance', existing.id, {servings:newServ});
       showToast(cname+' — '+newServ+' servings today','success');
+      sendAttendanceWhatsApp(cid, cname, date);
     } else if(existing) {
       await dbUpdate('attendance', existing.id, {status:'present', servings:1});
       showToast(cname+' — marked present (1 serving)','success');
+      sendAttendanceWhatsApp(cid, cname, date);
     } else {
       await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1});
       showToast(cname+' — marked present (1 serving)','success');
+      sendAttendanceWhatsApp(cid, cname, date);
     }
     _daysLeftCache = {};
     await loadAttendance(); renderOverview();
-    sendAttendanceWhatsApp(cid, cname, date);
   } catch(e) { showToast('Error: '+e.message,'error'); }
 }
 async function resetAtt(cid, cname, date) {
@@ -3393,7 +3798,7 @@ async function resetAtt(cid, cname, date) {
   } catch(e) { showToast('Error: '+e.message,'error'); }
 }
 function sendAttendanceWhatsApp(custId, custName, date) {
-  var cust = D.customers.find(function(c){return c.id===custId;});
+  var cust = D.customers.find(function(c){return c.id===custId;}) || D.coaches.find(function(c){return c.id===custId;});
   if(!cust || !cust.contact) return;
   var phone = (cust.contact||'').replace(/\D/g,'');
   if(phone.length===10) phone = COUNTRY_CODE + phone;
@@ -3779,13 +4184,13 @@ function sendRecheckWA(cid) {
   var recs = D.body.filter(function(b){return b.customer_id===cid;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   var lastScan = recs.length ? recs[0].date : null;
   var days = lastScan ? Math.floor((new Date()-new Date(lastScan))/86400000) : null;
-  var msg = '🌿 *Body Scan Reminder — Wellness Hub*\n\n'
+  var msg = '🌿 *Body Scan Reminder — Dharani\'s Wellness Center*\n\n'
     +'Hi *'+c.name+'*! 😊\n\n'
     +(days ? 'It\'s been *'+days+' days* since your last body scan.' : 'You haven\'t done a body scan yet!')
     +' Time for your weekly recheck! 📊\n\n'
     +'Regular scans help us track your progress accurately and adjust your plan for the best results.\n\n'
     +'📅 *Please visit the center this week for your scan.*\n\n'
-    +'_Your Wellness Hub Team_ 💚';
+    +'_Your Dharani\'s Wellness Center Team_ 💚';
   var phone = c.contact.replace(/\D/g,'');
   if (phone.length===10) phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
@@ -4147,6 +4552,7 @@ async function saveAttendance() {
   var servings = parseInt(document.getElementById('att-servings').value)||1;
   var payload = { customer_id:custId||null, customer_name:custName, date:document.getElementById('att-date').value, status:document.getElementById('att-status').value, servings:servings, notes:document.getElementById('att-notes').value.trim() };
   if (!payload.date) { showToast('Date is required','error'); return; }
+  if (!custId) { showToast('Please select a customer','error'); return; }
   try {
     if(id) await dbUpdate('attendance',id,payload); else await dbInsert('attendance',payload);
     showToast('Attendance saved!'); closeModal('attendance'); await loadAttendance(); renderOverview();
@@ -4404,7 +4810,7 @@ function sendRenewalWA(cid) {
     var sign = wDiff < 0 ? '' : '+';
     progressLine = '\n\nYour progress so far: *'+sign+wDiff+'kg* from '+first.weight+'kg to '+latest.weight+'kg 💪';
   }
-  var msg = '🌿 *Wellness Hub Update*\n\nHi *'+c.name+'*! 😊\n\nYour *'+( c.pack_type||'wellness pack')+' ends in just '+st.days+' day'+(st.days===1?'':'s')+'*.'+progressLine+'\n\nDon\'t break your momentum — let\'s renew and keep going! 🙏\n\nReply here or visit the center to renew. 💚';
+  var msg = '🌿 *Dharani\'s Wellness Center Update*\n\nHi *'+c.name+'*! 😊\n\nYour *'+( c.pack_type||'wellness pack')+' ends in just '+st.days+' day'+(st.days===1?'':'s')+'*.'+progressLine+'\n\nDon\'t break your momentum — let\'s renew and keep going! 🙏\n\nReply here or visit the center to renew. 💚';
   var phone = (c.contact||'').replace(/\D/g,'');
   if (phone.length===10) phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?'+(phone?'phone='+phone+'&':'')+'text='+encodeURIComponent(msg),'_blank');
@@ -4418,7 +4824,7 @@ function sendInactiveWA(cid) {
   var lastDate = atts.length ? atts.sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0].date : null;
   var since = lastDate ? 'since *'+lastDate+'*' : 'in a while';
   var goal = c.goal || 'your wellness goal';
-  var msg = '🌿 *We Miss You at Wellness Hub!*\n\nHi *'+c.name+'*! 😊\n\nWe haven\'t seen you '+since+'. Life gets busy — we totally understand! 🤗\n\nBut remember your goal: *'+goal+'* — every visit counts, even just 15 minutes!\n\nCome back tomorrow? Your body will thank you 💪\n\n_See you soon!_ 🌱';
+  var msg = '🌿 *We Miss You at Dharani\'s Wellness Center!*\n\nHi *'+c.name+'*! 😊\n\nWe haven\'t seen you '+since+'. Life gets busy — we totally understand! 🤗\n\nBut remember your goal: *'+goal+'* — every visit counts, even just 15 minutes!\n\nCome back tomorrow? Your body will thank you 💪\n\n_See you soon!_ 🌱';
   var phone = (c.contact||'').replace(/\D/g,'');
   if (phone.length===10) phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?'+(phone?'phone='+phone+'&':'')+'text='+encodeURIComponent(msg),'_blank');
@@ -4449,7 +4855,7 @@ function sendMilestoneWA(cid) {
   var ms = getMilestones(cid);
   if (!ms.length) { showToast('No milestones yet for this customer','error'); return; }
   var msText = ms.map(function(m){return '🏆 '+m.label;}).join('\n');
-  var msg = '🌿 *Milestone Alert — Wellness Hub*\n\nHi *'+c.name+'*! 🎉\n\nYou\'ve achieved something amazing:\n\n'+msText+'\n\nYou are proof that consistency works! Keep going — your best results are still ahead 🚀\n\n_Your Wellness Hub Family_ 💚';
+  var msg = '🌿 *Milestone Alert — Dharani\'s Wellness Center*\n\nHi *'+c.name+'*! 🎉\n\nYou\'ve achieved something amazing:\n\n'+msText+'\n\nYou are proof that consistency works! Keep going — your best results are still ahead 🚀\n\n_Your Dharani\'s Wellness Center Family_ 💚';
   var phone = (c.contact||'').replace(/\D/g,'');
   if (phone.length===10) phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?'+(phone?'phone='+phone+'&':'')+'text='+encodeURIComponent(msg),'_blank');
@@ -4465,8 +4871,8 @@ function checkBirthdaysToday() {
   el.style.display='block';
   el.innerHTML = bdays.map(function(c){
     var phone=(c.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
-    var msg='🎂 *Happy Birthday \'+c.name+\'!*\n\nWishing you a wonderful birthday filled with joy and good health! 🌿💚\n\n_Your Wellness Hub Family_';
-    return '<span>🎂 <strong>'+c.name+'</strong> — Birthday Today! <button class="wa-btn" style="font-size:11px;padding:2px 7px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent('🎂 Happy Birthday '+c.name+'! 🌿 Wishing you great health and happiness. Your Wellness Hub family loves you! 💚')+'\',\'_blank\')">💬 Wish</button></span>';
+    var msg='🎂 *Happy Birthday \'+c.name+\'!*\n\nWishing you a wonderful birthday filled with joy and good health! 🌿💚\n\n_Your Dharani\'s Wellness Center Family_';
+    return '<span>🎂 <strong>'+c.name+'</strong> — Birthday Today! <button class="wa-btn" style="font-size:11px;padding:2px 7px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent('🎂 Happy Birthday '+c.name+'! 🌿 Wishing you great health and happiness. Your Dharani\'s Wellness Center family loves you! 💚')+'\',\'_blank\')">💬 Wish</button></span>';
   }).join(' &nbsp;|&nbsp; ');
 }
 
@@ -4766,7 +5172,7 @@ function sendWeeklyProgressWA(cid) {
           : '💪 Let\'s increase your meal frequency this week.\n')
       : '👏 Keep up the great work this week!\n'
     ) +
-    '\n_Your Wellness Hub Team_ 🌱';
+    '\n_Your Dharani\'s Wellness Center Team_ 🌱';
 
   var phone = c.contact.replace(/\D/g,'');
   if (phone.length === 10) phone = COUNTRY_CODE + phone;
@@ -4847,9 +5253,9 @@ function sendRecheckWA(cid){
   var c=D.customers.find(function(x){return x.id===cid;}); if(!c||!c.contact) return;
   var r=D.body.filter(function(b){return b.customer_id===cid;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   var days=r.length?Math.floor((new Date()-new Date(r[0].date))/86400000):null;
-  var msg='🌿 *Body Scan Reminder — Wellness Hub*\n\nHi *'+c.name+'*! 😊\n\n'
+  var msg='🌿 *Body Scan Reminder — Dharani\'s Wellness Center*\n\nHi *'+c.name+'*! 😊\n\n'
     +(days?'It\'s been *'+days+' days* since your last scan.':'You haven\'t done a body scan yet!')
-    +' Time for your weekly recheck! 📊\n\nRegular scans help us track your progress accurately.\n\n📅 *Please visit the center this week for your scan.*\n\n_Your Wellness Hub Team_ 💚';
+    +' Time for your weekly recheck! 📊\n\nRegular scans help us track your progress accurately.\n\n📅 *Please visit the center this week for your scan.*\n\n_Your Dharani\'s Wellness Center Team_ 💚';
   var phone=c.contact.replace(/\D/g,''); if(phone.length===10)phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
@@ -4937,7 +5343,7 @@ async function saveRenewal(){
     await dbUpdate('customers',cid,{pack_type:packType,pack_start_date:startDate,pack_price:price});
     showToast('Pack renewed! 🎉');closeModal('renew-pack');await loadCustomers();await loadPackHistory();renderOverview();
     if(c&&c.contact){
-      var msg='🌿 *Pack Renewed!*\n\nHi *'+c.name+'*! 🎉\n\nYour *'+packType+'* starts *'+startDate+'*.\n\nThank you for continuing your wellness journey! 💪\n\n_Your Wellness Hub Family_ 💚';
+      var msg='🌿 *Pack Renewed!*\n\nHi *'+c.name+'*! 🎉\n\nYour *'+packType+'* starts *'+startDate+'*.\n\nThank you for continuing your wellness journey! 💪\n\n_Your Dharani\'s Wellness Center Family_ 💚';
       var phone=c.contact.replace(/\D/g,'');if(phone.length===10)phone=COUNTRY_CODE+phone;
       setTimeout(function(){if(confirm('Send WhatsApp renewal confirmation to '+c.name+'?'))window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');},400);
     }
@@ -4948,12 +5354,12 @@ function sendLoyaltyWA(cid){
   var joinDate=c.join_date||c.pack_start_date;
   var tier=getLoyaltyTier(joinDate);
   var months=tier?tier.months:0;
-  var msg='🌿 *Thank You from Wellness Hub!*\n\nDear *'+c.name+'*, 🙏\n\n';
+  var msg='🌿 *Thank You from Dharani\'s Wellness Center!*\n\nDear *'+c.name+'*, 🙏\n\n';
   if(months>=12) msg+='It\'s been *'+Math.floor(months/12)+' year'+(Math.floor(months/12)>1?'s':'')+' together*! 🎊\n\nYou are family. Thank you for trusting us with your wellness journey. Here\'s to many more years! 💎';
   else if(months>=6) msg+='Six months of amazing progress! 🏆\n\nYour commitment is inspiring. Thank you for being our Gold Member! 🌟';
   else if(months>=3) msg+='Three months strong! 🌟\n\nYour consistency is amazing. Thank you for being such a wonderful member! 💪';
   else msg+='Welcome to your first month! 🌱\n\nYou took the most important step. We\'re with you every step! 💚';
-  msg+='\n\n_Your Wellness Hub Family_ 🌿';
+  msg+='\n\n_Your Dharani\'s Wellness Center Family_ 🌿';
   var phone=c.contact.replace(/\D/g,'');if(phone.length===10)phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
@@ -5135,6 +5541,179 @@ function renderPinTracker() {
   }
 
   container.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+// 📊 BUSINESS ANALYST
+// ══════════════════════════════════════════════
+function initBizAnalyst() {
+  var sel = document.getElementById('biz-month'); if(!sel) return;
+  var now = new Date();
+  sel.innerHTML = '';
+  for(var i=0;i<6;i++){
+    var d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    var val = d.toISOString().substring(0,7);
+    sel.innerHTML += '<option value="'+val+'"'+(i===0?' selected':'')+'>'+d.toLocaleString('en-IN',{month:'long',year:'numeric'})+'</option>';
+  }
+  renderBizAnalyst();
+}
+
+function renderBizAnalyst() {
+  var month = (document.getElementById('biz-month')||{}).value || new Date().toISOString().substring(0,7);
+  var todayStr = new Date().toISOString().split('T')[0];
+
+  // ── Org Summary ──
+  var totalPersonalVP = getPersonalVP(month);
+  var totalOrgVP = getOrgVP(month);
+  var totalVP = totalPersonalVP + totalOrgVP;
+  var allActiveCusts = D.customers.filter(function(c){ return getDaysLeft(c).active; }).length;
+  var allInactive = D.customers.filter(function(c){ return isInactive(c.id); }).length;
+  var monthRenewals = (D.packHistory||[]).filter(function(h){ return h.start_date&&h.start_date.startsWith(month); }).length;
+
+  document.getElementById('biz-org-summary').innerHTML =
+    '<div class="stats" style="margin-bottom:0">' +
+    '<div class="stat"><div class="stat-ic">⚡</div><div class="stat-l">Total Org VP ('+month+')</div><div class="stat-v" style="color:var(--primary)">'+totalVP.toLocaleString('en-IN')+'</div></div>' +
+    '<div class="stat"><div class="stat-ic">🏠</div><div class="stat-l">Your Center VP</div><div class="stat-v">'+totalPersonalVP+'</div></div>' +
+    '<div class="stat"><div class="stat-ic">🌐</div><div class="stat-l">Downline VP</div><div class="stat-v">'+totalOrgVP+'</div></div>' +
+    '<div class="stat"><div class="stat-ic">✅</div><div class="stat-l">Active Customers</div><div class="stat-v" style="color:var(--success)">'+allActiveCusts+'</div></div>' +
+    '<div class="stat"><div class="stat-ic">😴</div><div class="stat-l">Inactive (7d+)</div><div class="stat-v" style="color:'+(allInactive?'var(--danger)':'var(--success)')+'">'+allInactive+'</div></div>' +
+    '<div class="stat"><div class="stat-ic">🔄</div><div class="stat-l">Renewals This Month</div><div class="stat-v" style="color:var(--success)">'+monthRenewals+'</div></div>' +
+    '</div>';
+
+  // ── Per-coach cards ──
+  var coachData = D.coaches.map(function(coach) {
+    var center = D.centers.find(function(c){ return c.owner_id===coach.id; });
+    var cid = center ? center.id : null;
+    var custs = D.customers.filter(function(c){ return c.wellness_center_id===cid; });
+    var activeCusts = custs.filter(function(c){ return getDaysLeft(c).active; }).length;
+    var inactiveCusts = custs.filter(function(c){ return isInactive(c.id); }).length;
+    var expiring = custs.filter(function(c){ var st=getDaysLeft(c); return st.active&&st.days<=5; }).length;
+    var vp = calcMonthlyVP(month, cid);
+    var custIds = custs.map(function(c){return c.id;});
+    var monthAtt = D.attendance.filter(function(a){
+      return a.date.startsWith(month) && a.status==='present' && custIds.indexOf(a.customer_id)>-1;
+    }).length;
+    var renewals = (D.packHistory||[]).filter(function(h){
+      return h.start_date&&h.start_date.startsWith(month)&&custIds.indexOf(h.customer_id)>-1;
+    }).length;
+    // Score: VP(40%) + active%(30%) + renewals(20%) + low-inactive(10%)
+    var activeRate = custs.length ? activeCusts/custs.length : 0;
+    var inactiveRate = custs.length ? inactiveCusts/custs.length : 0;
+    var score = Math.round((Math.min(vp/100,40)) + (activeRate*30) + (Math.min(renewals*5,20)) + ((1-inactiveRate)*10));
+    return { coach:coach, center:center, custs:custs.length, activeCusts:activeCusts, inactiveCusts:inactiveCusts, expiring:expiring, vp:vp, monthAtt:monthAtt, renewals:renewals, score:score };
+  }).sort(function(a,b){ return b.score-a.score; });
+
+  if(!coachData.length) {
+    document.getElementById('biz-content').innerHTML = '<div class="tcard" style="padding:32px;text-align:center"><div style="font-size:40px">📊</div><p style="color:var(--muted);margin-top:8px">No coaches added yet. Add coaches in the Coaches section to see business analysis here.</p></div>';
+    return;
+  }
+
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">';
+  coachData.forEach(function(d, idx) {
+    var coach = d.coach;
+    var rank = idx+1;
+    var rankColor = rank===1?'var(--accent)':rank===2?'#aaa':rank===3?'#cd7f32':'var(--muted)';
+    var rankIcon = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank;
+    var scoreColor = d.score>=70?'var(--success)':d.score>=40?'var(--accent)':'var(--danger)';
+    var health = d.score>=70?'Healthy':d.score>=40?'Needs Attention':'At Risk';
+    var healthColor = d.score>=70?'bg':d.score>=40?'by':'br';
+    var phone = (coach.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
+    var waMsg = encodeURIComponent('Hi '+coach.name+'! Checking in on your center\'s progress for '+month+'. VP: '+d.vp+', Active customers: '+d.activeCusts+'. Let\'s connect! 💪');
+    html += '<div class="tcard" style="padding:18px;border-top:3px solid '+rankColor+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
+      +'<div>'
+      +'<div style="font-size:13px;color:var(--muted);margin-bottom:2px">'+rankIcon+' Rank #'+rank+'</div>'
+      +'<div style="font-weight:700;font-size:16px">'+coach.name+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(d.center?d.center.name:'No center linked')+' &nbsp;·&nbsp; <span style="color:var(--primary)">'+(coach.herbalife_pin||'Associate')+'</span></div>'
+      +'</div>'
+      +'<div style="text-align:right">'
+      +'<div style="font-family:DM Serif Display,serif;font-size:26px;color:'+scoreColor+'">'+d.score+'</div>'
+      +'<div style="font-size:10px;color:var(--muted)">score</div>'
+      +'<span class="badge '+healthColor+'" style="font-size:9px;margin-top:4px">'+health+'</span>'
+      +'</div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;text-align:center">'
+      +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:18px;font-weight:700;color:var(--primary)">'+d.vp+'</div><div style="font-size:10px;color:var(--muted)">VP this month</div></div>'
+      +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:18px;font-weight:700;color:var(--success)">'+d.activeCusts+'</div><div style="font-size:10px;color:var(--muted)">active</div></div>'
+      +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:18px;font-weight:700;color:'+(d.inactiveCusts?'var(--danger)':'var(--success)')+'">'+d.inactiveCusts+'</div><div style="font-size:10px;color:var(--muted)">inactive</div></div>'
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;gap:12px">'
+      +'<span>👥 '+d.custs+' total customers</span>'
+      +'<span>📋 '+d.monthAtt+' check-ins</span>'
+      +'<span>🔄 '+d.renewals+' renewals</span>'
+      +(d.expiring?'<span style="color:var(--danger)">⏰ '+d.expiring+' expiring</span>':'')
+      +'</div>'
+      // Insights
+      +(d.inactiveCusts>3?'<div style="font-size:11px;background:var(--danger-light);color:var(--danger);border-radius:6px;padding:5px 8px;margin-bottom:6px">⚠️ '+d.inactiveCusts+' inactive customers — follow up needed</div>':'')
+      +(d.expiring>2?'<div style="font-size:11px;background:#fff3cd;color:#856404;border-radius:6px;padding:5px 8px;margin-bottom:6px">⏰ '+d.expiring+' packs expiring in 5 days — renewal push!</div>':'')
+      +(d.vp===0?'<div style="font-size:11px;background:var(--danger-light);color:var(--danger);border-radius:6px;padding:5px 8px;margin-bottom:6px">📌 No VP recorded — add customers or pack renewals</div>':'')
+      +(d.renewals===0&&d.activeCusts>3?'<div style="font-size:11px;background:#fff3cd;color:#856404;border-radius:6px;padding:5px 8px;margin-bottom:6px">💡 0 renewals this month — push for pack renewals</div>':'')
+      +(d.score>=70?'<div style="font-size:11px;background:#d4edda;color:#155724;border-radius:6px;padding:5px 8px;margin-bottom:6px">✅ Business is healthy this month!</div>':'')
+      +'<div style="display:flex;justify-content:flex-end;gap:6px;margin-top:4px">'
+      +(phone?'<button class="wa-btn" style="font-size:11px;padding:4px 10px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+waMsg+'\',\'_blank\')">💬 WhatsApp</button>':'')
+      +'</div>'
+      +'</div>';
+  });
+  html += '</div>';
+  document.getElementById('biz-content').innerHTML = html;
+}
+
+var _bizAiInFlight = false;
+async function generateBizAIReport() {
+  if(_bizAiInFlight) return;
+  var groqKey = localStorage.getItem('groqKey');
+  if(!groqKey) { showToast('Add your Groq API key in SQL/Config to use AI Report','error'); return; }
+  var month = (document.getElementById('biz-month')||{}).value || new Date().toISOString().substring(0,7);
+  _bizAiInFlight = true;
+  var btn = document.querySelector('[onclick="generateBizAIReport()"]');
+  if(btn) btn.textContent = '⏳ Generating...';
+  var resultEl = document.getElementById('biz-ai-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="color:var(--muted);font-size:13px">Analysing your business data...</div>';
+
+  // Build context for AI
+  var totalVP = getPersonalVP(month) + getOrgVP(month);
+  var activeCusts = D.customers.filter(function(c){ return getDaysLeft(c).active; }).length;
+  var inactiveCusts = D.customers.filter(function(c){ return isInactive(c.id); }).length;
+  var renewals = (D.packHistory||[]).filter(function(h){ return h.start_date&&h.start_date.startsWith(month); }).length;
+  var monthAtt = D.attendance.filter(function(a){ return a.date.startsWith(month)&&a.status==='present'; }).length;
+  var coachCount = D.coaches.length;
+  var centerCount = D.centers.length;
+  var coachLines = D.coaches.map(function(c){
+    var center = D.centers.find(function(ct){ return ct.owner_id===c.id; });
+    var cid = center?center.id:null;
+    var vp = calcMonthlyVP(month, cid);
+    var custs = D.customers.filter(function(cu){ return cu.wellness_center_id===cid; });
+    return c.name+' ('+( c.herbalife_pin||'Associate')+', VP:'+vp+', customers:'+custs.length+')';
+  }).join('; ');
+
+  var prompt = 'You are a Herbalife business coach analysing a wellness center supervisor\'s monthly performance for '+month+'. Here is their data:\n\n'
+    +'- Total org VP: '+totalVP+'\n'
+    +'- Active customers: '+activeCusts+'\n'
+    +'- Inactive customers (7+ days absent): '+inactiveCusts+'\n'
+    +'- Pack renewals this month: '+renewals+'\n'
+    +'- Total attendance check-ins this month: '+monthAtt+'\n'
+    +'- Coaches in network: '+coachCount+'\n'
+    +'- Downline centers: '+centerCount+'\n'
+    +'- Coach breakdown: '+coachLines+'\n\n'
+    +'Give a 150-word business analysis covering: 1) Overall health of the business, 2) Top 2 strengths, 3) Top 2 urgent issues to fix, 4) One specific action to take this week to grow VP. Be direct, practical, and encouraging. Use Indian business context.';
+
+  try {
+    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body: JSON.stringify({ model:'llama-3.1-8b-instant', messages:[{role:'user',content:prompt}], max_tokens:300 })
+    });
+    if(!res.ok) throw new Error('Groq API error: '+res.status);
+    var data = await res.json();
+    var text = (data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'No response.';
+    resultEl.innerHTML = '<div style="font-weight:600;margin-bottom:8px;font-size:14px">✨ AI Business Report — '+month+'</div><div style="font-size:13px;line-height:1.8">'+text.replace(/\n/g,'<br>')+'</div>';
+  } catch(e) {
+    resultEl.innerHTML = '<div style="color:var(--danger)">Error: '+e.message+'</div>';
+  } finally {
+    _bizAiInFlight = false;
+    if(btn) btn.textContent = '✨ AI Report';
+  }
 }
 
 function renderOrgTree(){
@@ -5594,7 +6173,7 @@ function sendPaymentWA(pid){
   var phone=(person&&person.contact?person.contact:'').replace(/\D/g,'');
   if(phone.length===10)phone=COUNTRY_CODE+phone;
   if(!phone){showToast('No contact number','error');return;}
-  var msg='🌿 *Payment Reminder — Wellness Hub*\n\nHi *'+p.person_name+'*! 😊\n\n📋 *'+p.description+'*\n✅ Paid: ₹'+Number(p.amount_paid).toLocaleString('en-IN')+'\n⚠️ Balance: *₹'+bal.toLocaleString('en-IN')+'*\n'+(p.due_date?'📅 Due: *'+p.due_date+'*\n':'')+'\nPlease clear at earliest. Thank you! 🙏\n\n_Wellness Hub_ 💚';
+  var msg='🌿 *Payment Reminder — Dharani\'s Wellness Center*\n\nHi *'+p.person_name+'*! 😊\n\n📋 *'+p.description+'*\n✅ Paid: ₹'+Number(p.amount_paid).toLocaleString('en-IN')+'\n⚠️ Balance: *₹'+bal.toLocaleString('en-IN')+'*\n'+(p.due_date?'📅 Due: *'+p.due_date+'*\n':'')+'\nPlease clear at earliest. Thank you! 🙏\n\n_Dharani\'s Wellness Center_ 💚';
   window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
 function checkOverduePayments(){
@@ -5699,6 +6278,554 @@ function renderCustomers() {
   checkBirthdaysToday();
 }
 
+// ══════════════════════════════════════════════
+// HOW TO USE GUIDE
+// ══════════════════════════════════════════════
+var _guideLang = 'en';
+
+var GUIDE_DATA = [
+  {
+    icon: '🏠',
+    en_title: 'Overview Dashboard',
+    te_title: 'Overview Dashboard',
+    en_steps: [
+      'When you open the app, the Overview page opens first.',
+      'You can see today\'s attendance count, expiring packs, pending payments, and recent activity.',
+      'Use the Quick Action buttons at the top to jump to any section fast.',
+      'Revenue cards show this month\'s income, expenses, and net profit.',
+      'The 7-day bar chart shows how many customers came each day this week.'
+    ],
+    te_steps: [
+      'App తెరిచినప్పుడు ముందుగా Overview page వస్తుంది.',
+      'ఈ రోజు attendance, expire అవుతున్న packs, pending payments అన్నీ ఇక్కడ కనిపిస్తాయి.',
+      'పైన ఉన్న Quick Action buttons తో ఏ section కైనా వెంటనే వెళ్ళవచ్చు.',
+      'Revenue cards లో ఈ నెల income, expenses, మరియు net profit చూడవచ్చు.',
+      'Bar chart లో ఈ వారం రోజువారీ attendance చూడవచ్చు.'
+    ],
+    en_tip: 'Check this page every morning to know what needs attention today.',
+    te_tip: 'ప్రతి రోజు ఉదయం ఈ page చూడండి — ఏం చేయాలో అర్థమవుతుంది.'
+  },
+  {
+    icon: '📞',
+    en_title: 'Leads — Track Potential Customers',
+    te_title: 'Leads — కొత్త Customers ని Track చేయడం',
+    en_steps: [
+      'Click "Leads" in the sidebar to open the Leads section.',
+      'Click "+ Add Lead" to save a new person\'s name and mobile number.',
+      'Set a "Next Follow-up Date" — the date you want to call them.',
+      'Every morning, open Leads → "Due Today" tab to see who to call today.',
+      'After calling, click "Log Call" → write what they said → set next call date → Save.',
+      'If they want to join, click "Convert to Customer" — their details move to the Customers form automatically.',
+      'If they said "call me next Friday", type that date in "Next Call Date" when logging the call.'
+    ],
+    te_steps: [
+      'Sidebar లో "Leads" click చేయండి.',
+      '"+ Add Lead" button తో కొత్త person పేరు మరియు mobile number save చేయండి.',
+      '"Next Follow-up Date" set చేయండి — ఆ రోజు call చేయాలని reminder వస్తుంది.',
+      'ప్రతి ఉదయం Leads → "Due Today" tab చూడండి — ఈ రోజు ఎవరికి call చేయాలో కనిపిస్తుంది.',
+      'Call చేసిన తర్వాత "Log Call" click చేయండి → ఏం చెప్పారో రాయండి → తదుపరి call date set చేయండి → Save.',
+      'Join అవ్వాలని అంటే "Convert to Customer" click చేయండి — వారి details automatically Customer form లో వస్తాయి.',
+      '"వచ్చే Friday call చేయండి" అంటే, Log Call లో ఆ date type చేయండి.'
+    ],
+    en_tip: 'A red banner appears at the top if you have overdue follow-ups — don\'t ignore it!',
+    te_tip: 'Overdue follow-ups ఉంటే top లో red banner కనిపిస్తుంది — దాన్ని ignore చేయకండి!'
+  },
+  {
+    icon: '👤',
+    en_title: 'Customers — Add & Manage Members',
+    te_title: 'Customers — Members ని Add & Manage చేయడం',
+    en_steps: [
+      'Click "Customers" in the sidebar.',
+      'Click "+ Add Customer" to add a new member with their name, mobile, pack type, and start date.',
+      'The "Days Left" column shows how many days remain in their pack.',
+      'Red badge means pack is expiring soon — remind them to renew.',
+      'Click "Edit" on any customer to update their details or renew their pack.',
+      'The "Referred By" field tracks who brought them — that person earns coupon points.'
+    ],
+    te_steps: [
+      'Sidebar లో "Customers" click చేయండి.',
+      '"+ Add Customer" button తో కొత్త member పేరు, mobile, pack type, start date add చేయండి.',
+      '"Days Left" column లో pack ఎన్ని రోజులు మిగిలిందో కనిపిస్తుంది.',
+      'Red badge వస్తే pack expire అవుతోందని అర్థం — వారికి renew చేయమని చెప్పండి.',
+      'ఏ customer ను అయినా "Edit" click చేసి details update చేయవచ్చు లేదా pack renew చేయవచ్చు.',
+      '"Referred By" field లో ఎవరు తీసుకొచ్చారో mention చేయండి — వారికి coupon points వస్తాయి.'
+    ],
+    en_tip: 'Stars (⭐) next to a customer name mean they referred others — reward them with coupons!',
+    te_tip: 'Customer పేరు పక్కన ⭐ ఉంటే వారు others ని refer చేశారని అర్థం — వారికి coupons ఇవ్వండి!'
+  },
+  {
+    icon: '📅',
+    en_title: 'Attendance — Mark Daily Check-ins',
+    te_title: 'Attendance — రోజువారీ Attendance వేయడం',
+    en_steps: [
+      'Click "Attendance" in the sidebar.',
+      'You see two lists — "Present Today" (green) and "Not Yet" (red).',
+      'Find the customer in the "Not Yet" list and click the green ✓ button to mark them present.',
+      'To send a WhatsApp message after marking, click the WhatsApp button on their card.',
+      'Use the "Monthly Grid" tab to see the full month\'s attendance for all customers.'
+    ],
+    te_steps: [
+      'Sidebar లో "Attendance" click చేయండి.',
+      'రెండు lists కనిపిస్తాయి — "Present Today" (green) మరియు "Not Yet" (red).',
+      '"Not Yet" list లో customer ని కనుగొని green ✓ button click చేసి present mark చేయండి.',
+      'Mark చేసిన తర్వాత WhatsApp button click చేస్తే వారికి message వెళ్ళిపోతుంది.',
+      '"Monthly Grid" tab లో ఒక నెల మొత్తం attendance చూడవచ్చు.'
+    ],
+    en_tip: 'Mark attendance every day without fail — this helps track streaks and pack usage accurately.',
+    te_tip: 'ప్రతి రోజూ attendance mark చేయండి — streaks మరియు pack usage సరిగ్గా track అవుతుంది.'
+  },
+  {
+    icon: '💰',
+    en_title: 'Finance — Track Income & Expenses',
+    te_title: 'Finance — Income & Expenses Track చేయడం',
+    en_steps: [
+      'Click "Finance" in the sidebar.',
+      'Click "+ Add Entry" to record any income (pack fee, product sale) or expense (rent, supplies).',
+      'Select "Income" or "Expense" from the type dropdown.',
+      'The totals at the top update automatically.',
+      'Use the date filter to see a specific month\'s records.'
+    ],
+    te_steps: [
+      'Sidebar లో "Finance" click చేయండి.',
+      '"+ Add Entry" click చేసి income (pack fee, product sale) లేదా expense (rent, supplies) record చేయండి.',
+      'Type dropdown లో "Income" లేదా "Expense" select చేయండి.',
+      'Totals పైన automatically update అవుతాయి.',
+      'Date filter తో specific నెల records చూడవచ్చు.'
+    ],
+    en_tip: 'Record every transaction the same day — don\'t leave it for later or you\'ll forget.',
+    te_tip: 'ప్రతి transaction అదే రోజు record చేయండి — తర్వాత చేద్దాం అని వదిలేస్తే మర్చిపోతారు.'
+  },
+  {
+    icon: '🎟️',
+    en_title: 'Coupons — Reward Referrals',
+    te_title: 'Coupons — Referrals కి Reward ఇవ్వడం',
+    en_steps: [
+      'Coupons are earned automatically when a customer refers someone new.',
+      '+1 coupon when they invite someone, +3 coupons if that person takes a pack.',
+      'Click "Coupons" in the sidebar to see everyone\'s coupon balance.',
+      'To redeem coupons, click "+ Redeem" and select the person.',
+      'Coupons can be held by both coaches and customers.'
+    ],
+    te_steps: [
+      'Customer ఎవరైనా కొత్త person ని refer చేస్తే automatically coupons వస్తాయి.',
+      'Invite చేస్తే +1 coupon, ఆ person pack తీసుకుంటే +3 coupons వస్తాయి.',
+      'Sidebar లో "Coupons" click చేస్తే అందరి coupon balance కనిపిస్తుంది.',
+      'Redeem చేయాలంటే "+ Redeem" click చేసి person select చేయండి.',
+      'Coaches మరియు customers ఇద్దరూ coupons earn చేయవచ్చు.'
+    ],
+    en_tip: 'Tell every customer: "Refer a friend and earn free coupons!" — it\'s the best way to grow.',
+    te_tip: 'ప్రతి customer కి చెప్పండి: "Friend ని refer చేస్తే free coupons వస్తాయి!" — ఇది center grow అవ్వడానికి best way.'
+  },
+  {
+    icon: '💬',
+    en_title: 'WhatsApp Messages',
+    te_title: 'WhatsApp Messages పంపడం',
+    en_steps: [
+      'WhatsApp buttons appear on Customer cards, Attendance cards, and Lead cards.',
+      'Clicking WhatsApp opens a pre-written message in WhatsApp with their number.',
+      'Messages are customized automatically — renewal reminders, milestone congratulations, birthday wishes.',
+      'You can edit the message before sending if needed.',
+      'No extra app needed — it opens directly in WhatsApp Web or your phone.'
+    ],
+    te_steps: [
+      'Customer cards, Attendance cards, మరియు Lead cards లో WhatsApp buttons ఉంటాయి.',
+      'WhatsApp button click చేస్తే వారి number తో pre-written message WhatsApp లో తెరుచుకుంటుంది.',
+      'Messages automatically customize అవుతాయి — renewal reminders, milestones, birthday wishes.',
+      'పంపే ముందు message edit చేయవచ్చు.',
+      'Extra app అవసరం లేదు — directly WhatsApp Web లేదా phone లో తెరుచుకుంటుంది.'
+    ],
+    en_tip: 'Send a WhatsApp message to every new customer on their joining day — it makes them feel welcome!',
+    te_tip: 'కొత్త customer join అయిన రోజే WhatsApp message పంపండి — వారికి చాలా special feel అవుతుంది!'
+  },
+  {
+    icon: '📊',
+    en_title: 'Analytics & Reports',
+    te_title: 'Analytics & Reports చూడడం',
+    en_steps: [
+      'Click "Analytics" in the sidebar to see charts and reports.',
+      'See monthly revenue trends, attendance patterns, and top customers.',
+      'Use "Biz Analyst" for AI-powered weekly business summaries.',
+      'Filter by center or date range to focus on specific data.'
+    ],
+    te_steps: [
+      'Sidebar లో "Analytics" click చేయండి.',
+      'Monthly revenue trends, attendance patterns, మరియు top customers చూడవచ్చు.',
+      '"Biz Analyst" లో AI weekly business summary చూడవచ్చు.',
+      'Center లేదా date range filter చేసి specific data చూడవచ్చు.'
+    ],
+    en_tip: 'Check Analytics every Sunday to plan the coming week.',
+    te_tip: 'ప్రతి Sunday Analytics చూడండి — next week ఏం చేయాలో plan చేయవచ్చు.'
+  }
+];
+
+function setGuideLang(lang) {
+  _guideLang = lang;
+  document.getElementById('guide-lang-en').style.background = lang === 'en' ? 'var(--primary)' : 'transparent';
+  document.getElementById('guide-lang-en').style.color = lang === 'en' ? '#fff' : 'var(--muted)';
+  document.getElementById('guide-lang-te').style.background = lang === 'te' ? 'var(--primary)' : 'transparent';
+  document.getElementById('guide-lang-te').style.color = lang === 'te' ? '#fff' : 'var(--muted)';
+  renderGuide();
+}
+
+function renderGuide() {
+  var lang = _guideLang;
+  var html = '';
+  GUIDE_DATA.forEach(function(item, idx) {
+    var title = lang === 'te' ? item.te_title : item.en_title;
+    var steps = lang === 'te' ? item.te_steps : item.en_steps;
+    var tip = lang === 'te' ? item.te_tip : item.en_tip;
+    var stepsHtml = steps.map(function(s, i) {
+      return '<div class="guide-step"><div class="guide-step-num">'+(i+1)+'</div><div>'+s+'</div></div>';
+    }).join('');
+    html += '<div class="guide-card" id="guide-card-'+idx+'">' +
+      '<div class="guide-card-header" onclick="toggleGuideCard('+idx+')">' +
+        '<div class="guide-card-icon">'+item.icon+'</div>' +
+        '<div class="guide-card-title">'+title+'</div>' +
+        '<span class="guide-card-arrow">▶</span>' +
+      '</div>' +
+      '<div class="guide-card-body">' +
+        stepsHtml +
+        '<div class="guide-tip">💡 '+tip+'</div>' +
+      '</div>' +
+    '</div>';
+  });
+  document.getElementById('guide-content').innerHTML = html;
+}
+
+function toggleGuideCard(idx) {
+  var card = document.getElementById('guide-card-'+idx);
+  card.classList.toggle('open');
+}
+
+// ══════════════════════════════════════════════
+// LEADS
+// ══════════════════════════════════════════════
+
+async function loadLeads() {
+  D.leads = await dbGet('leads', 'created_at');
+  D.leadFollowups = await dbGet('lead_followups', 'called_at');
+  renderLeadsStats();
+  renderLeads();
+  checkOverdueBanner();
+}
+
+function checkOverdueBanner() {
+  var today = todayStr();
+  var overdue = filterLeadsByCenter(D.leads).filter(function(l){
+    return l.next_followup_date && l.next_followup_date < today && l.status !== 'Joined' && l.status !== 'Not Interested';
+  });
+  var banner = document.getElementById('overdue-leads-banner');
+  if (!banner) return;
+  if (overdue.length > 0) {
+    document.getElementById('overdue-banner-text').textContent =
+      overdue.length + ' overdue follow-up'+(overdue.length>1?'s':'')+' — these leads are waiting for your call!';
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function gotoOverdueLeads() {
+  var navBtn = document.querySelector('.nav-item[onclick*="leads"]');
+  if (navBtn) goTo('leads', navBtn);
+  setLeadTab('overdue', document.getElementById('ltab-overdue'));
+}
+
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function filterLeadsByCenter(leads) {
+  if (!ACTIVE_CENTER) return leads;
+  return leads.filter(function(l){ return l.center_id === ACTIVE_CENTER; });
+}
+
+function setLeadTab(tab, el) {
+  _leadTab = tab;
+  document.querySelectorAll('.lead-tab').forEach(function(b){ b.classList.remove('active'); });
+  el.classList.add('active');
+  renderLeads();
+}
+
+function renderLeadsStats() {
+  var today = todayStr();
+  var leads = filterLeadsByCenter(D.leads);
+  var due = leads.filter(function(l){ return l.next_followup_date === today && l.status !== 'Joined' && l.status !== 'Not Interested'; }).length;
+  var overdue = leads.filter(function(l){ return l.next_followup_date && l.next_followup_date < today && l.status !== 'Joined' && l.status !== 'Not Interested'; }).length;
+  var called = leads.filter(function(l){ return l.last_called_date === today; }).length;
+  var joined = leads.filter(function(l){ return l.status === 'Joined'; }).length;
+  document.getElementById('ls-due').textContent = due;
+  document.getElementById('ls-called').textContent = called;
+  document.getElementById('ls-overdue').textContent = overdue;
+  document.getElementById('ls-total').textContent = leads.length;
+  document.getElementById('ls-joined').textContent = joined;
+}
+
+function renderLeads() {
+  var today = todayStr();
+  var q = (document.getElementById('leads-search') || {}).value || '';
+  q = q.toLowerCase();
+  var leads = filterLeadsByCenter(D.leads);
+
+  // filter by tab
+  if (_leadTab === 'today') {
+    leads = leads.filter(function(l){ return l.next_followup_date === today && l.status !== 'Joined' && l.status !== 'Not Interested'; });
+  } else if (_leadTab === 'overdue') {
+    leads = leads.filter(function(l){ return l.next_followup_date && l.next_followup_date < today && l.status !== 'Joined' && l.status !== 'Not Interested'; });
+  } else if (_leadTab === 'new') {
+    leads = leads.filter(function(l){ return l.status === 'New'; });
+  } else if (_leadTab === 'interested') {
+    leads = leads.filter(function(l){ return l.status === 'Interested'; });
+  } else if (_leadTab === 'joined') {
+    leads = leads.filter(function(l){ return l.status === 'Joined'; });
+  } else if (_leadTab === 'notinterested') {
+    leads = leads.filter(function(l){ return l.status === 'Not Interested'; });
+  }
+
+  // search filter
+  if (q) leads = leads.filter(function(l){
+    return (l.name||'').toLowerCase().includes(q) || (l.mobile||'').includes(q);
+  });
+
+  var container = document.getElementById('leads-list');
+  if (!leads.length) {
+    container.innerHTML = '<div class="ov-empty">No leads found for this filter.</div>';
+    return;
+  }
+
+  var html = '';
+  leads.forEach(function(lead) {
+    var initial = (lead.name||'?')[0].toUpperCase();
+    var st = lead.status || 'New';
+    var stKey = st.toLowerCase().replace(/\s/g,'');
+    var statusBadge = '<span class="badge lead-status-'+stKey+'" style="font-size:11px">'+st+'</span>';
+
+    var nfd = lead.next_followup_date;
+    var nextLabel = '', nextClass = 'none';
+    if (nfd) {
+      if (nfd === today) { nextLabel = 'Call Today'; nextClass = 'today'; }
+      else if (nfd < today) { nextLabel = 'Overdue: '+nfd; nextClass = 'overdue'; }
+      else { nextLabel = 'Next: '+nfd; nextClass = 'future'; }
+    } else {
+      nextLabel = 'No follow-up set';
+    }
+
+    var cardClass = 'lead-card';
+    if (nfd === today && st !== 'Joined') cardClass += ' due-today';
+    else if (nfd && nfd < today && st !== 'Joined') cardClass += ' overdue';
+    else if (st === 'Joined') cardClass += ' joined';
+
+    var fuCount = D.leadFollowups.filter(function(f){ return f.lead_id === lead.id; }).length;
+    var centerName = '';
+    var ctr = D.centers.find(function(c){ return c.id === lead.center_id; });
+    if (ctr) centerName = '<span style="font-size:11px;color:var(--muted)">'+ctr.name+'</span> &bull; ';
+
+    var convertBtn = (st === 'Interested') ?
+      '<button class="btn-p" style="font-size:11px;padding:5px 10px;background:var(--success)" onclick="convertLeadToCustomer(\''+lead.id+'\')">Convert to Customer</button>' : '';
+
+    var waBtn = lead.mobile ?
+      '<button class="btn-e" style="font-size:11px;padding:5px 10px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="window.open(\'https://api.whatsapp.com/send?phone=\'+COUNTRY_CODE+\''+lead.mobile+'\',\'_blank\')">WhatsApp</button>' : '';
+
+    html += '<div class="'+cardClass+'" id="lead-card-'+lead.id+'">'+
+      '<div class="lead-avatar">'+initial+'</div>'+
+      '<div class="lead-info">'+
+        '<div class="lead-name">'+lead.name+'</div>'+
+        '<div class="lead-mobile">'+centerName+(lead.mobile||'No mobile')+(lead.source ? ' &bull; via '+lead.source : '')+'</div>'+
+        '<div class="lead-meta">'+
+          statusBadge+
+          '<span class="lead-next '+nextClass+'">'+nextLabel+'</span>'+
+          (fuCount ? '<span style="font-size:11px;color:var(--muted)">'+fuCount+' call'+(fuCount>1?'s':'')+'</span>' : '')+
+        '</div>'+
+        (lead.notes ? '<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">'+lead.notes+'</div>' : '')+
+        '<div class="lead-acts">'+
+          '<button class="btn-p" style="font-size:11px;padding:5px 10px" onclick="openFollowupModal(\''+lead.id+'\')">Log Call</button>'+
+          '<button class="btn-e" style="font-size:11px;padding:5px 10px" onclick="openLeadHistory(\''+lead.id+'\')">History ('+fuCount+')</button>'+
+          waBtn+
+          convertBtn+
+          '<button class="btn-e" style="font-size:11px;padding:5px 10px" onclick="openLeadModal(\''+lead.id+'\')">Edit</button>'+
+          '<button class="btn-d" style="font-size:11px;padding:5px 10px" onclick="delLead(\''+lead.id+'\')">Delete</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function updateLeadCenterSel() {
+  var sel = document.getElementById('lead-center-sel');
+  if (!sel) return;
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">Select center</option>';
+  D.centers.forEach(function(c){ sel.innerHTML += '<option value="'+c.id+'">'+(c.name||c.id)+'</option>'; });
+  if (cur) sel.value = cur;
+  if (!sel.value && ACTIVE_CENTER) sel.value = ACTIVE_CENTER;
+}
+
+function openLeadModal(id) {
+  document.getElementById('lead-modal-title').textContent = id ? 'Edit Lead' : 'Add Lead';
+  document.getElementById('lead-id').value = id || '';
+  updateLeadCenterSel();
+  if (id) {
+    var lead = D.leads.find(function(l){ return l.id === id; });
+    if (!lead) return;
+    document.getElementById('lead-name').value = lead.name || '';
+    document.getElementById('lead-mobile').value = lead.mobile || '';
+    document.getElementById('lead-center-sel').value = lead.center_id || '';
+    document.getElementById('lead-status').value = lead.status || 'New';
+    document.getElementById('lead-source').value = lead.source || '';
+    document.getElementById('lead-next-date').value = lead.next_followup_date || '';
+    document.getElementById('lead-notes').value = lead.notes || '';
+  } else {
+    document.getElementById('lead-next-date').value = todayStr();
+    if (ACTIVE_CENTER) document.getElementById('lead-center-sel').value = ACTIVE_CENTER;
+  }
+  document.getElementById('modal-lead').classList.add('open');
+}
+
+async function saveLead() {
+  var id = document.getElementById('lead-id').value;
+  var name = document.getElementById('lead-name').value.trim();
+  var mobile = document.getElementById('lead-mobile').value.trim();
+  if (!name) { showToast('Name is required', 'error'); return; }
+  var data = {
+    name: name,
+    mobile: mobile,
+    center_id: document.getElementById('lead-center-sel').value || null,
+    status: document.getElementById('lead-status').value,
+    source: document.getElementById('lead-source').value.trim(),
+    next_followup_date: document.getElementById('lead-next-date').value || null,
+    notes: document.getElementById('lead-notes').value.trim()
+  };
+  try {
+    if (id) {
+      await dbUpdate('leads', id, data);
+      var idx = D.leads.findIndex(function(l){ return l.id === id; });
+      if (idx !== -1) D.leads[idx] = Object.assign(D.leads[idx], data);
+    } else {
+      var res = await dbInsert('leads', data);
+      if (Array.isArray(res) && res[0]) D.leads.unshift(res[0]);
+    }
+    closeModal('lead');
+    renderLeadsStats();
+    renderLeads();
+    showToast(id ? 'Lead updated' : 'Lead added');
+  } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
+async function delLead(id) {
+  if (!confirm('Delete this lead and all follow-up history?')) return;
+  try {
+    await dbDelete('leads', id);
+    D.leads = D.leads.filter(function(l){ return l.id !== id; });
+    D.leadFollowups = D.leadFollowups.filter(function(f){ return f.lead_id !== id; });
+    renderLeadsStats();
+    renderLeads();
+    showToast('Lead deleted');
+  } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
+function openFollowupModal(leadId) {
+  var lead = D.leads.find(function(l){ return l.id === leadId; });
+  if (!lead) return;
+  document.getElementById('fu-lead-id').value = leadId;
+  document.getElementById('fu-lead-info').innerHTML = '<strong>'+lead.name+'</strong>'+(lead.mobile ? ' — '+lead.mobile : '')+'<br><span style="color:var(--muted);font-size:12px">Current status: '+lead.status+'</span>';
+  document.getElementById('fu-date').value = todayStr();
+  document.getElementById('fu-note').value = '';
+  document.getElementById('fu-status').value = lead.status === 'New' ? 'Contacted' : lead.status;
+  // default next date = +7 days
+  var d = new Date(); d.setDate(d.getDate()+7);
+  document.getElementById('fu-next-date').value = d.toISOString().split('T')[0];
+  document.getElementById('modal-followup').classList.add('open');
+}
+
+function setFuNextDate(days) {
+  var d = new Date(); d.setDate(d.getDate()+days);
+  document.getElementById('fu-next-date').value = d.toISOString().split('T')[0];
+}
+
+async function saveFollowup() {
+  var leadId = document.getElementById('fu-lead-id').value;
+  var calledAt = document.getElementById('fu-date').value;
+  var note = document.getElementById('fu-note').value.trim();
+  var nextDate = document.getElementById('fu-next-date').value || null;
+  var newStatus = document.getElementById('fu-status').value;
+  if (!calledAt) { showToast('Please set call date', 'error'); return; }
+  try {
+    // save followup record
+    var fuData = { lead_id: leadId, called_at: calledAt, note: note, next_followup_date: nextDate };
+    var res = await dbInsert('lead_followups', fuData);
+    if (Array.isArray(res) && res[0]) D.leadFollowups.push(res[0]);
+
+    // update lead
+    var leadUpdate = { status: newStatus, next_followup_date: nextDate, last_called_date: calledAt };
+    await dbUpdate('leads', leadId, leadUpdate);
+    var idx = D.leads.findIndex(function(l){ return l.id === leadId; });
+    if (idx !== -1) D.leads[idx] = Object.assign(D.leads[idx], leadUpdate);
+
+    closeModal('followup');
+    renderLeadsStats();
+    renderLeads();
+    checkOverdueBanner();
+    showToast('Call logged! Next follow-up: '+(nextDate||'not set'));
+  } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
+function openLeadHistory(leadId) {
+  var lead = D.leads.find(function(l){ return l.id === leadId; });
+  if (!lead) return;
+  document.getElementById('lh-title').textContent = 'Follow-up History — '+lead.name;
+  document.getElementById('lh-lead-info').innerHTML =
+    '<strong>'+lead.name+'</strong>'+(lead.mobile ? ' — '+lead.mobile : '')+
+    '<br><span style="color:var(--muted);font-size:12px">Status: '+lead.status+
+    (lead.next_followup_date ? ' &bull; Next call: '+lead.next_followup_date : '')+'</span>';
+
+  var fus = D.leadFollowups.filter(function(f){ return f.lead_id === leadId; });
+  fus.sort(function(a,b){ return b.called_at > a.called_at ? 1 : -1; });
+
+  var html = '';
+  if (!fus.length) {
+    html = '<div class="ov-empty">No follow-ups logged yet.</div>';
+  } else {
+    fus.forEach(function(f){
+      html += '<div class="fu-item">'+
+        '<div class="fu-date">'+f.called_at+(f.next_followup_date ? ' &rarr; Next: '+f.next_followup_date : '')+'</div>'+
+        '<div class="fu-note">'+(f.note || '<em>No note recorded</em>')+'</div>'+
+      '</div>';
+    });
+  }
+  document.getElementById('lh-list').innerHTML = html;
+  document.getElementById('modal-lead-history').classList.add('open');
+}
+
+function convertLeadToCustomer(leadId) {
+  var lead = D.leads.find(function(l){ return l.id === leadId; });
+  if (!lead) return;
+  if (!confirm('Convert "'+lead.name+'" to a customer? This will open the Add Customer form pre-filled.')) return;
+
+  // Mark lead as Joined
+  dbUpdate('leads', leadId, { status: 'Joined' }).then(function(){
+    var idx = D.leads.findIndex(function(l){ return l.id === leadId; });
+    if (idx !== -1) D.leads[idx].status = 'Joined';
+    renderLeadsStats();
+    renderLeads();
+  });
+
+  // Pre-fill customer form and open it
+  goTo('customers', document.getElementById('nav-customers'));
+  setTimeout(function(){
+    openNewCustomerModal();
+    setTimeout(function(){
+      var nameEl = document.getElementById('customer-name');
+      var contactEl = document.getElementById('customer-contact');
+      if (nameEl) nameEl.value = lead.name;
+      if (contactEl) contactEl.value = lead.mobile || '';
+      var centerEl = document.getElementById('customer-center');
+      if (centerEl && lead.center_id) centerEl.value = lead.center_id;
+    }, 100);
+  }, 200);
+  showToast('Lead marked as Joined — fill in the customer details');
+}
+
 </script>
 
 
@@ -5801,6 +6928,81 @@ function renderCustomers() {
       <div class="fg" style="margin-top:10px"><label>Notes</label><input type="text" id="inst-notes" placeholder="e.g. Cash received" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       <div style="margin-top:12px;font-size:12px;color:var(--muted);padding:8px 12px;background:#e8f4fd;border-radius:6px">Finance income entry will be auto-created for this amount.</div>
       <div class="mf"><button class="btn-c" onclick="closeModal('installment')">Cancel</button><button class="btn-p" onclick="saveInstallment()">Save Payment</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT LEAD -->
+<div class="overlay" id="modal-lead">
+  <div class="modal" style="max-width:480px">
+    <div class="mh"><div class="mt" id="lead-modal-title">Add Lead</div><button class="mc" onclick="closeModal('lead')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="lead-id">
+      <div class="fr">
+        <div class="fg"><label>Name *</label><input type="text" id="lead-name" placeholder="Full name"></div>
+        <div class="fg"><label>Mobile *</label><input type="text" id="lead-mobile" placeholder="Phone number" maxlength="15"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Center</label><select id="lead-center-sel" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">Select center</option></select></div>
+        <div class="fg"><label>Status</label>
+          <select id="lead-status" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Interested">Interested</option>
+            <option value="Not Interested">Not Interested</option>
+            <option value="Joined">Joined</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Source</label><input type="text" id="lead-source" placeholder="e.g. Walk-in, WhatsApp, Referral"></div>
+        <div class="fg"><label>Next Follow-up Date</label><input type="date" id="lead-next-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <div class="fg"><label>Notes</label><textarea id="lead-notes" rows="2" placeholder="Any details about this lead..." style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical"></textarea></div>
+      <div class="mf"><button class="btn-c" onclick="closeModal('lead')">Cancel</button><button class="btn-p" onclick="saveLead()">💾 Save Lead</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOG FOLLOW-UP -->
+<div class="overlay" id="modal-followup">
+  <div class="modal" style="max-width:420px">
+    <div class="mh"><div class="mt">📞 Log Follow-up Call</div><button class="mc" onclick="closeModal('followup')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="fu-lead-id">
+      <div id="fu-lead-info" style="background:var(--surface2);border-radius:8px;padding:11px 13px;margin-bottom:12px;font-size:13px"></div>
+      <div class="fg"><label>Date of Call *</label><input type="date" id="fu-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      <div class="fg" style="margin-top:10px"><label>Outcome / Notes</label><textarea id="fu-note" rows="3" placeholder="What did they say? Interested? Want more info? Call back?" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical"></textarea></div>
+      <div class="fg" style="margin-top:10px"><label>Update Status</label>
+        <select id="fu-status" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="Contacted">Contacted</option>
+          <option value="Interested">Interested</option>
+          <option value="Not Interested">Not Interested</option>
+          <option value="New">Keep as New</option>
+        </select>
+      </div>
+      <div style="margin-top:10px;padding:10px 13px;background:var(--accent-light);border-radius:8px;font-size:12px;font-weight:600;color:#7a5a00">
+        Next Follow-up: when should you call again?
+      </div>
+      <div class="fr" style="margin-top:8px">
+        <div class="fg"><label>Next Call Date</label><input type="date" id="fu-next-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg" style="display:flex;align-items:flex-end">
+          <button class="btn-p" style="width:100%;font-size:12px" onclick="setFuNextDate(7)">+7 days</button>
+        </div>
+      </div>
+      <div class="mf"><button class="btn-c" onclick="closeModal('followup')">Cancel</button><button class="btn-p" onclick="saveFollowup()">Save Call Log</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- LEAD HISTORY -->
+<div class="overlay" id="modal-lead-history">
+  <div class="modal" style="max-width:440px">
+    <div class="mh"><div class="mt" id="lh-title">Follow-up History</div><button class="mc" onclick="closeModal('lead-history')">✕</button></div>
+    <div class="mb">
+      <div id="lh-lead-info" style="background:var(--surface2);border-radius:8px;padding:11px 13px;margin-bottom:12px;font-size:13px"></div>
+      <div id="lh-list" style="max-height:320px;overflow-y:auto"></div>
+      <div class="mf"><button class="btn-c" onclick="closeModal('lead-history')">Close</button></div>
     </div>
   </div>
 </div>
