@@ -38,13 +38,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sb-coach-name{color:#fff;font-size:13px;font-weight:600;line-height:1.3}
 .sb-coach-sub{color:rgba(255,255,255,.55);font-size:11px}
 .sb-nav{padding:12px 8px;flex:1}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;color:rgba(255,255,255,.75);cursor:pointer;transition:all .18s;font-weight:500;font-size:13px;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:8px;color:rgba(255,255,255,.75);cursor:pointer;transition:all .18s;font-weight:500;font-size:13px;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
 .nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
 .nav-item.active{background:rgba(255,255,255,.18);color:#fff;font-weight:700}
 .nav-item .ic{font-size:16px;width:20px;text-align:center}
-.sb-bottom{padding:12px 16px;border-top:1px solid rgba(255,255,255,.1)}
-.logout-btn{width:100%;padding:9px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2);border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .2s}
-.logout-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.sb-bottom{padding:10px 12px;border-top:1px solid rgba(255,255,255,.1)}
+.sb-bottom-row{display:flex;gap:6px}
+.sb-icon-btn{flex:1;padding:8px 4px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;text-align:center;transition:all .2s}
+.sb-icon-btn:hover{background:rgba(255,255,255,.18);color:#fff}
 #main{margin-left:var(--sw);padding:24px;min-height:100vh}
 #sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99}
 #menu-btn{display:none;position:fixed;top:14px;left:14px;z-index:101;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
@@ -144,6 +145,130 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .ov-name{font-weight:600;font-size:13px}
 .ov-sub{font-size:11px;color:var(--muted)}
 
+/* ── WATER INTENTION ── */
+.wi-card{background:linear-gradient(135deg,#e8f4fd 0%,#dbeeff 100%);border-radius:var(--radius);border:1px solid #b3d4f5;padding:18px 20px;margin-bottom:16px}
+.wi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.wi-title{font-size:15px;font-weight:700;color:#1a3a5c}
+.wi-streak{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:#e07b00}
+.wi-affirmation{background:rgba(255,255,255,.7);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:14px;line-height:1.7;color:#1a3a5c;font-style:italic;border-left:3px solid #4a9fd4}
+.wi-guide{font-size:12px;color:#4a7a9b;margin-bottom:12px;line-height:1.6}
+.wi-done-btn{width:100%;padding:11px;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.wi-done-btn.pending{background:#4a9fd4;color:#fff}
+.wi-done-btn.done{background:var(--success-light);color:var(--success);border:1.5px solid var(--success);cursor:default}
+
+/* ── VP TRACKER ── */
+.vp-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.vp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.vp-title{font-size:15px;font-weight:700;color:var(--text)}
+.vp-input-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.vp-input-row input{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:15px;font-weight:700;text-align:center}
+.vp-input-row input:focus{border-color:var(--primary);outline:none}
+.vp-bar-wrap{background:var(--surface2);border-radius:20px;height:14px;overflow:hidden;margin-bottom:8px}
+.vp-bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#4a9fd4,#2d7abf);transition:width .5s ease}
+.vp-bar-fill.goal{background:linear-gradient(90deg,var(--success),#2ecc71)}
+.vp-footer{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.vp-footer strong{color:var(--primary)}
+
+/* ── VISION CARD ── */
+.vision-card{border-radius:var(--radius);padding:20px 22px;margin-bottom:16px;background:linear-gradient(135deg,#0f2318 0%,#1a3a28 50%,#2d5a3d 100%);box-shadow:0 6px 24px rgba(0,0,0,.25);position:relative;overflow:hidden}
+.vision-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(232,168,56,.15) 0%,transparent 70%);pointer-events:none}
+.vision-greeting{font-size:12px;color:rgba(255,255,255,.55);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.vision-text{font-size:19px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:10px}
+.vision-text em{color:var(--accent);font-style:normal}
+.vision-sub{font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.3px;font-style:italic}
+
+/* ── PIN PROGRESS ── */
+.pin-card{background:linear-gradient(135deg,#1a3a28 0%,#2d5a3d 100%);border-radius:var(--radius);padding:20px;margin-bottom:16px;color:#fff;box-shadow:0 4px 20px rgba(45,90,61,.3)}
+.pin-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.pin-badge{display:flex;align-items:center;gap:10px}
+.pin-icon{font-size:32px;line-height:1}
+.pin-label{font-size:11px;color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.pin-name{font-size:20px;font-weight:700;color:#fff}
+.pin-next{text-align:right;font-size:11px;color:rgba(255,255,255,.6)}
+.pin-next strong{display:block;font-size:14px;color:var(--accent);font-weight:700}
+.pin-bar-wrap{background:rgba(255,255,255,.15);border-radius:20px;height:10px;overflow:hidden;margin-bottom:8px}
+.pin-bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--accent),#f5c842);transition:width .6s ease}
+.pin-hint{font-size:12px;color:rgba(255,255,255,.7);text-align:center}
+
+/* ── INACTIVE CUSTOMERS ── */
+.inactive-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.inactive-card h3{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--text)}
+.inactive-card .ic-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.inactive-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);gap:8px}
+.inactive-row:last-child{border-bottom:none}
+.inactive-days{display:inline-block;background:var(--danger-light);color:var(--danger);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:3px}
+
+/* ── DAILY TARGET ── */
+.dt-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.dt-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.dt-title{font-size:15px;font-weight:700;color:var(--text)}
+.dt-edit{display:flex;align-items:center;gap:6px}
+.dt-edit input{width:52px;padding:4px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;text-align:center}
+.dt-edit input:focus{border-color:var(--primary);outline:none}
+.dt-bar-wrap{background:var(--surface2);border-radius:20px;height:14px;overflow:hidden;margin-bottom:10px}
+.dt-bar-fill{height:100%;border-radius:20px;transition:width .5s ease;background:linear-gradient(90deg,var(--primary),var(--primary-light))}
+.dt-bar-fill.done{background:linear-gradient(90deg,var(--success),#2ecc71)}
+.dt-footer{display:flex;justify-content:space-between;align-items:center}
+.dt-count{font-size:22px;font-weight:700;color:var(--primary)}
+.dt-count span{font-size:13px;color:var(--muted);font-weight:400}
+.dt-msg{font-size:12px;color:var(--muted);font-style:italic;text-align:right;max-width:55%}
+
+/* ── MONTHLY SUMMARY ── */
+.ms-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.ms-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.ms-title{font-size:15px;font-weight:700;color:var(--text)}
+.ms-month{font-size:12px;color:var(--muted);background:var(--surface2);padding:3px 10px;border-radius:20px}
+.ms-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ms-stat{background:var(--surface2);border-radius:10px;padding:12px 14px}
+.ms-stat-l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.ms-stat-v{font-size:24px;font-weight:700;color:var(--primary)}
+.ms-diff{font-size:11px;font-weight:700;margin-top:3px}
+.ms-diff.up{color:var(--success)}
+.ms-diff.down{color:var(--danger)}
+.ms-diff.same{color:var(--muted)}
+
+/* ── LEADERBOARD ── */
+.lb-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.lb-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.lb-title{font-size:15px;font-weight:700;color:var(--text)}
+.lb-month{font-size:12px;color:var(--muted);background:var(--surface2);padding:3px 10px;border-radius:20px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.lb-row:last-child{border-bottom:none}
+.lb-row.me{background:rgba(45,90,61,.06);border-radius:8px;padding:9px 10px;margin:0 -4px}
+.lb-rank{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.lb-info{flex:1}
+.lb-name{font-weight:700;font-size:13px}
+.lb-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.lb-score{text-align:right;flex-shrink:0}
+.lb-score-v{font-size:18px;font-weight:700;color:var(--primary)}
+.lb-score-l{font-size:10px;color:var(--muted)}
+
+/* ── RENEWAL REMINDERS ── */
+.renew-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.renew-card.urgent{border-left:4px solid var(--danger)}
+.renew-card.soon{border-left:4px solid var(--accent)}
+.renew-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+
+/* ── SESSION NOTES SECTION ── */
+.notes-cust-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .18s}
+.notes-cust-item:hover{border-color:var(--primary);box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.notes-cust-item.expanded{border-color:var(--primary)}
+.notes-panel{display:none;padding-top:12px;border-top:1px solid var(--border);margin-top:12px}
+.notes-panel.open{display:block}
+.note-entry{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px}
+.note-meta{font-size:11px;color:var(--muted);margin-bottom:4px}
+
+/* ── WORKOUT PLANNER ── */
+.plan-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
+.plan-title{font-weight:700;font-size:14px;margin-bottom:6px}
+.exercise-row{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid var(--border);font-size:13px}
+.exercise-row:last-child{border-bottom:none}
+
+/* ── BULK WHATSAPP ── */
+.wa-recipient{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--surface);gap:8px}
+.wa-template{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;min-height:100px;resize:vertical;outline:none}
+.wa-template:focus{border-color:var(--primary)}
+
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
   #sidebar{transform:translateX(-100%);transition:transform .3s}
@@ -222,15 +347,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
     <nav class="sb-nav">
-      <button class="nav-item active" onclick="goTo('overview',this)"><span class="ic">🏠</span>Overview</button>
-      <button class="nav-item" onclick="goTo('customers',this)"><span class="ic">👥</span>My Customers</button>
-      <button class="nav-item" onclick="goTo('attendance',this)"><span class="ic">✅</span>Attendance</button>
-      <button class="nav-item" onclick="goTo('body',this)"><span class="ic">⚖️</span>Body Composition</button>
-      <button class="nav-item" onclick="goTo('finance',this)"><span class="ic">💰</span>My Finance</button>
-      <button class="nav-item" onclick="goTo('leads',this)"><span class="ic">📞</span>My Leads</button>
+      <button class="nav-item active" onclick="goTo('overview',this)"><span class="ic">🏠</span><span data-t="nav_overview">Overview</span></button>
+      <button class="nav-item" onclick="goTo('customers',this)"><span class="ic">👥</span><span data-t="nav_customers">My Customers</span></button>
+      <button class="nav-item" onclick="goTo('attendance',this)"><span class="ic">✅</span><span data-t="nav_attendance">Attendance</span></button>
+      <button class="nav-item" onclick="goTo('body',this)"><span class="ic">⚖️</span><span data-t="nav_body">Body Composition</span></button>
+      <button class="nav-item" onclick="goTo('finance',this)"><span class="ic">💰</span><span data-t="nav_finance">My Finance</span></button>
+      <button class="nav-item" onclick="goTo('finance',this);setTimeout(function(){document.getElementById('coach-pending-payments').scrollIntoView({behavior:'smooth'});},200)" style="padding-left:28px;font-size:12px"><span class="ic">💳</span><span id="pending-pay-nav-label">Pending Payments</span></button>
+      <button class="nav-item" onclick="goTo('leads',this)"><span class="ic">📞</span><span data-t="nav_leads">My Leads</span></button>
+      <button class="nav-item" onclick="goTo('renewals',this)"><span class="ic">🔔</span><span data-t="nav_renewals">Renewal Reminders</span></button>
+      <button class="nav-item" onclick="goTo('notes',this)"><span class="ic">📝</span><span data-t="nav_notes">Session Notes</span></button>
+      <button class="nav-item" onclick="goTo('workout',this)"><span class="ic">🏋️</span><span data-t="nav_workout">Workout Planner</span></button>
+      <button class="nav-item" onclick="goTo('bulkwa',this)"><span class="ic">📢</span><span data-t="nav_bulkwa">Bulk WhatsApp</span></button>
+      <div style="margin:8px 11px 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px">My Health</div>
+      <button class="nav-item" onclick="goTo('mybody',this)"><span class="ic">🧬</span><span>My Body Stats</span></button>
+      <button class="nav-item" onclick="goTo('mydiet',this)"><span class="ic">🥗</span><span>My Diet Plan</span></button>
+      <button class="nav-item" onclick="goTo('myfoodlog',this)"><span class="ic">📋</span><span>My Food Log</span></button>
     </nav>
     <div class="sb-bottom">
-      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+      <div class="sb-bottom-row">
+        <button id="lang-toggle-btn" class="sb-icon-btn" onclick="toggleLang()" title="Toggle Language" style="font-weight:700">తె</button>
+        <button id="gender-toggle-btn" class="sb-icon-btn" onclick="toggleGender()" title="Toggle Gender">♂</button>
+        <button class="sb-icon-btn" onclick="logout()" title="Logout">🚪</button>
+      </div>
     </div>
   </div>
 
@@ -240,7 +378,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- ── OVERVIEW ── -->
     <div class="sec active" id="sec-overview">
       <div class="ph">
-        <div><div class="pt">Overview</div><div class="ps" id="ov-date"></div></div>
+        <div><div class="pt" data-t="pt_overview">Overview</div><div class="ps" id="ov-date"></div></div>
         <button class="btn-p" onclick="loadAll()">🔄 Refresh</button>
       </div>
       <div class="stats">
@@ -249,14 +387,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div class="stat"><div class="stat-l">Expiring Soon</div><div class="stat-v" style="color:var(--accent)" id="ov-expiring">0</div></div>
         <div class="stat"><div class="stat-l">My Leads</div><div class="stat-v" id="ov-leads">0</div></div>
       </div>
+      <div id="vision-card"></div>
+      <div id="water-intention-card"></div>
+      <div id="vp-tracker-card"></div>
+      <div id="pin-progress-card"></div>
+      <div id="daily-target-card"></div>
+      <div id="monthly-summary-card"></div>
+      <div id="leaderboard-card"></div>
       <div id="ov-expiring-list"></div>
+      <div id="ov-inactive-list"></div>
       <div id="ov-present-list"></div>
     </div>
 
     <!-- ── MY CUSTOMERS ── -->
     <div class="sec" id="sec-customers">
       <div class="ph">
-        <div><div class="pt">My Customers</div><div class="ps">Customers you referred</div></div>
+        <div><div class="pt" data-t="pt_customers">My Customers</div><div class="ps" data-t="ps_customers">Customers you referred</div></div>
         <button class="btn-p" onclick="openCustModal()">+ Add Customer</button>
       </div>
       <input class="search" id="cust-search" placeholder="🔍 Search customers..." oninput="renderCustomers()">
@@ -266,7 +412,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- ── ATTENDANCE ── -->
     <div class="sec" id="sec-attendance">
       <div class="ph">
-        <div><div class="pt">Attendance</div><div class="ps" id="att-date-label"></div></div>
+        <div><div class="pt" data-t="pt_attendance">Attendance</div><div class="ps" id="att-date-label"></div></div>
       </div>
       <div id="att-wa-bar">
         <span id="att-wa-text" style="font-size:14px;font-weight:600;color:#1a7a3c"></span>
@@ -292,7 +438,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- ── BODY COMPOSITION ── -->
     <div class="sec" id="sec-body">
       <div class="ph">
-        <div><div class="pt">Body Composition</div><div class="ps">Track customer measurements</div></div>
+        <div><div class="pt" data-t="pt_body">Body Composition</div><div class="ps" data-t="ps_body">Track customer measurements</div></div>
       </div>
       <div class="tcard" style="margin-bottom:16px">
         <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Select Customer</label>
@@ -305,6 +451,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <div class="pt" style="font-size:16px" id="body-cust-name"></div>
           <button class="btn-p" onclick="openBodyModal()">+ Add Record</button>
         </div>
+        <div id="body-coach-ideals" style="display:none;margin-bottom:16px"></div>
         <div id="body-records"></div>
       </div>
     </div>
@@ -312,7 +459,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- ── MY FINANCE ── -->
     <div class="sec" id="sec-finance">
       <div class="ph">
-        <div><div class="pt">My Finance</div><div class="ps">Your customer earnings overview</div></div>
+        <div><div class="pt" data-t="pt_finance">My Finance &amp; Commission</div><div class="ps" data-t="ps_finance">Earnings overview and commission breakdown</div></div>
+        <button class="btn-p" onclick="openTxnModal()">+ Add Transaction</button>
       </div>
       <div class="stats">
         <div class="stat"><div class="stat-l">Total Customers</div><div class="stat-v" id="fin-total">0</div></div>
@@ -320,16 +468,71 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div class="stat"><div class="stat-l">Pack Value (₹)</div><div class="stat-v" id="fin-value">0</div></div>
         <div class="stat"><div class="stat-l">Expiring ≤7 days</div><div class="stat-v" style="color:var(--accent)" id="fin-expiring">0</div></div>
       </div>
+      <!-- Commission Calculator -->
+      <div class="tcard" style="margin-bottom:12px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:14px">💰 Commission Calculator</div>
+        <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:10px;padding:14px 16px;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:600;color:#166534;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Set Your Commission Rate</div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <div>
+              <label style="font-size:12px;color:#374151">Commission % per pack sale</label>
+              <input type="number" id="comm-pct" value="10" min="0" max="100" style="width:70px;padding:6px 8px;border:1.5px solid #86efac;border-radius:6px;font-size:13px;font-family:inherit;margin-left:8px" oninput="renderFinance()">
+            </div>
+            <div>
+              <label style="font-size:12px;color:#374151">Bonus per referral (₹)</label>
+              <input type="number" id="comm-ref-bonus" value="200" min="0" style="width:80px;padding:6px 8px;border:1.5px solid #86efac;border-radius:6px;font-size:13px;font-family:inherit;margin-left:8px" oninput="renderFinance()">
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px" id="comm-cards"></div>
+      </div>
+      <!-- Retail Transactions -->
+      <div class="tcard" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <div style="font-weight:700;font-size:14px">🛍️ Retail Transactions</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="month" id="txn-month-filter" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:12px;color:var(--text)" onchange="renderTransactions()">
+            <select id="txn-type-filter" onchange="renderTransactions()" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:12px;color:var(--text);background:#fff">
+              <option value="">All</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <button class="btn-p" style="font-size:12px;padding:6px 13px" onclick="openTxnModal()">+ Add</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px">
+          <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:10px;padding:12px 14px;text-align:center">
+            <div style="font-size:10px;font-weight:600;color:#166534;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Total Income</div>
+            <div style="font-size:18px;font-weight:700;color:#16a34a" id="txn-total-income">₹0</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#fff1f2,#ffe4e6);border-radius:10px;padding:12px 14px;text-align:center">
+            <div style="font-size:10px;font-weight:600;color:#9f1239;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Total Expense</div>
+            <div style="font-size:18px;font-weight:700;color:#dc2626" id="txn-total-expense">₹0</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:10px;padding:12px 14px;text-align:center">
+            <div style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Net Profit</div>
+            <div style="font-size:18px;font-weight:700" id="txn-net-profit">₹0</div>
+          </div>
+        </div>
+        <div id="txn-list"></div>
+      </div>
+
       <div class="tcard">
         <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Customer Pack Status</h3>
         <div id="fin-list"></div>
+      </div>
+
+      <!-- Pending Payments (read-only) -->
+      <div class="tcard" style="margin-top:16px">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">💳 Pending Payments</h3>
+        <div id="coach-pending-payments"><div class="empty"><div class="ei">💳</div><p>No pending payments.</p></div></div>
       </div>
     </div>
 
     <!-- ── MY LEADS ── -->
     <div class="sec" id="sec-leads">
       <div class="ph">
-        <div><div class="pt">My Leads</div><div class="ps">Your potential customers</div></div>
+        <div><div class="pt" data-t="pt_leads">My Leads</div><div class="ps" data-t="ps_leads">Your potential customers</div></div>
         <button class="btn-p" onclick="openLeadModal()">+ Add Lead</button>
       </div>
       <div class="stats">
@@ -345,6 +548,170 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <button class="btn-e" id="ltab-joined" onclick="setLeadTab('joined',this)">🎉 Joined</button>
       </div>
       <div id="leads-list"></div>
+    </div>
+
+    <!-- ── RENEWAL REMINDERS ── -->
+    <div class="sec" id="sec-renewals">
+      <div class="ph">
+        <div><div class="pt" data-t="pt_renewals">Renewal Reminders</div><div class="ps" data-t="ps_renewals">Customers with expiring or expired packs</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn-e" id="rtab-all" onclick="setRenewTab('all',this)" style="background:var(--primary);color:#fff;border-color:var(--primary)">All Expiring</button>
+        <button class="btn-e" id="rtab-1" onclick="setRenewTab('1',this)">⚠️ Today/Tomorrow</button>
+        <button class="btn-e" id="rtab-3" onclick="setRenewTab('3',this)">📅 ≤3 Days</button>
+        <button class="btn-e" id="rtab-7" onclick="setRenewTab('7',this)">🗓️ ≤7 Days</button>
+        <button class="btn-e" id="rtab-exp" onclick="setRenewTab('exp',this)">❌ Expired</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-l">Expired</div><div class="stat-v" style="color:var(--danger)" id="rn-expired">0</div></div>
+        <div class="stat"><div class="stat-l">≤3 Days</div><div class="stat-v" style="color:var(--accent)" id="rn-3days">0</div></div>
+        <div class="stat"><div class="stat-l">≤7 Days</div><div class="stat-v" id="rn-7days">0</div></div>
+      </div>
+      <div id="renewals-list"></div>
+    </div>
+
+    <!-- ── SESSION NOTES ── -->
+    <div class="sec" id="sec-notes">
+      <div class="ph">
+        <div><div class="pt" data-t="pt_notes">Session Notes</div><div class="ps" data-t="ps_notes">Coaching logs and notes per customer</div></div>
+      </div>
+      <input class="search" id="notes-search" placeholder="🔍 Search customers..." oninput="renderNotesSection()">
+      <div id="notes-section-list"></div>
+    </div>
+
+    <!-- ── WORKOUT PLANNER ── -->
+    <div class="sec" id="sec-workout">
+      <div class="ph">
+        <div><div class="pt" data-t="pt_workout">Workout Planner</div><div class="ps" data-t="ps_workout">Assign and manage workout plans</div></div>
+        <button class="btn-p" onclick="openWorkoutModal()">+ New Plan</button>
+      </div>
+      <select id="workout-cust-filter" onchange="renderWorkoutPlans()" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:14px;background:var(--surface)">
+        <option value="">All Customers</option>
+      </select>
+      <div id="workout-plans-list"></div>
+    </div>
+
+    <!-- ── BULK WHATSAPP ── -->
+    <div class="sec" id="sec-bulkwa">
+      <div class="ph">
+        <div><div class="pt" data-t="pt_bulkwa">Bulk WhatsApp</div><div class="ps" data-t="ps_bulkwa">Send messages to multiple customers at once</div></div>
+      </div>
+      <div class="tcard" style="margin-bottom:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:12px">1. Select Recipients</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="btn-e" onclick="waSelectGroup('expiring')">🔔 Expiring ≤7d</button>
+          <button class="btn-e" onclick="waSelectGroup('inactive')">💤 Inactive 7d+</button>
+          <button class="btn-e" onclick="waSelectGroup('all')">👥 All Customers</button>
+          <button class="btn-e" onclick="waSelectGroup('none')">✕ Clear All</button>
+        </div>
+        <div id="wa-recipients-list"></div>
+      </div>
+      <div class="tcard" style="margin-bottom:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:10px">2. Compose Message</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button class="btn-e" style="font-size:11px" onclick="waSetTemplate('renewal')">📦 Renewal Nudge</button>
+          <button class="btn-e" style="font-size:11px" onclick="waSetTemplate('motivation')">💪 Motivation</button>
+          <button class="btn-e" style="font-size:11px" onclick="waSetTemplate('inactive')">😴 Re-engage</button>
+        </div>
+        <textarea class="wa-template" id="wa-message" placeholder="Type your message here... Use {name} to personalize with the customer's name"></textarea>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">Tip: Use <strong>{name}</strong> to auto-insert each customer's name</div>
+      </div>
+      <div class="tcard">
+        <div style="font-weight:700;font-size:14px;margin-bottom:10px">3. Send</div>
+        <div id="wa-send-status" style="font-size:13px;color:var(--muted);margin-bottom:12px">Select recipients and compose a message, then tap the button below.</div>
+        <button class="btn-p" onclick="waSendNext()" id="wa-send-btn" style="width:100%;padding:12px">💬 Open Next WhatsApp</button>
+        <div id="wa-send-progress" style="margin-top:12px;display:none">
+          <div style="background:var(--surface2);border-radius:20px;height:10px;overflow:hidden">
+            <div id="wa-prog-fill" style="height:100%;background:linear-gradient(90deg,#25D366,#128C7E);transition:width .4s;width:0%"></div>
+          </div>
+          <div id="wa-prog-text" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MY BODY STATS ── -->
+    <div class="sec" id="sec-mybody">
+      <div class="ph">
+        <div><div class="pt">My Body Stats</div><div class="ps">Track your personal body composition over time</div></div>
+        <button class="btn-p" onclick="openMyBodyModal()">+ Add Today's Stats</button>
+      </div>
+      <!-- Ideal targets card -->
+      <div class="tcard" id="my-body-ideals" style="margin-bottom:16px"></div>
+      <!-- History -->
+      <div class="tcard">
+        <div style="font-weight:700;font-size:14px;margin-bottom:12px">Body History</div>
+        <div id="my-body-history"></div>
+      </div>
+      <!-- Weight chart -->
+      <div class="tcard" style="margin-top:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:12px">Weight Over Time</div>
+        <canvas id="my-weight-chart" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- ── MY DIET PLAN ── -->
+    <div class="sec" id="sec-mydiet">
+      <div class="ph">
+        <div><div class="pt">My Diet Plan</div><div class="ps">AI-generated personal diet plan based on your body stats</div></div>
+      </div>
+      <!-- Goal & body input -->
+      <div class="tcard" style="margin-bottom:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:14px">My Details</div>
+        <div class="fg-row">
+          <div class="fg"><label>Age</label><input type="number" id="my-age" placeholder="25" min="15" max="80"></div>
+          <div class="fg"><label>Goal</label>
+            <select id="my-goal">
+              <option value="build_muscle">Build Muscle</option>
+              <option value="stay_fit">Stay Fit</option>
+              <option value="lose_fat">Lose Fat</option>
+              <option value="improve_stamina">Improve Stamina</option>
+            </select>
+          </div>
+        </div>
+        <div id="my-diet-body-summary" style="background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--muted);margin-bottom:12px">
+          Loading latest body stats...
+        </div>
+        <button class="btn-p" onclick="generateMyDietPlan()" id="my-diet-gen-btn" style="width:100%;padding:12px">🤖 Generate My Diet Plan</button>
+      </div>
+      <!-- Diet plan display -->
+      <div id="my-diet-plan-output"></div>
+      <!-- Goal foods -->
+      <div class="tcard" style="margin-top:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:6px">My Goal Foods</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Tick foods that are available & affordable for you. These guide your meal planning.</div>
+        <div id="my-goal-foods-list"></div>
+      </div>
+    </div>
+
+    <!-- ── MY FOOD LOG ── -->
+    <div class="sec" id="sec-myfoodlog">
+      <div class="ph">
+        <div><div class="pt">My Food Log</div><div class="ps">Track what you eat daily</div></div>
+      </div>
+      <!-- Today's totals -->
+      <div class="tcard" id="my-fl-totals" style="margin-bottom:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:12px">Today's Nutrition</div>
+        <div id="my-fl-totals-body" style="color:var(--muted);font-size:13px">Log meals below to see totals.</div>
+      </div>
+      <!-- Add food -->
+      <div class="tcard" style="margin-bottom:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:12px">Add a Meal</div>
+        <div class="fg">
+          <label>Search Food</label>
+          <input type="text" id="my-fl-search" placeholder="Type food name..." oninput="myFlSearch()" autocomplete="off">
+          <div id="my-fl-dropdown" style="border:1.5px solid var(--border);border-top:none;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;display:none;background:#fff;position:relative;z-index:10"></div>
+        </div>
+        <div id="my-fl-selected-preview" style="display:none;background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px"></div>
+        <div class="fg-row">
+          <div class="fg"><label>Grams eaten</label><input type="number" id="my-fl-grams" placeholder="e.g. 150" min="1" oninput="myFlUpdatePreview()"></div>
+          <div class="fg" style="display:flex;align-items:flex-end"><button class="btn-p" onclick="myFlAddEntry()" style="width:100%;padding:10px">+ Add</button></div>
+        </div>
+      </div>
+      <!-- Today's log -->
+      <div class="tcard">
+        <div style="font-weight:700;font-size:14px;margin-bottom:12px">Today's Log</div>
+        <div id="my-fl-entries"></div>
+      </div>
     </div>
 
   </div><!-- /main -->
@@ -365,7 +732,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="fg"><label>Contact</label><input type="text" id="cust-contact" placeholder="Phone number"></div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Date of Birth</label><input type="date" id="cust-dob"></div>
+      <div class="fg"><label>Date of Birth *</label><input type="date" id="cust-dob"></div>
       <div class="fg"><label>Gender</label><select id="cust-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
     </div>
     <div class="fg-row">
@@ -373,7 +740,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="fg"><label>Pack Start Date</label><input type="date" id="cust-pack-start"></div>
     </div>
     <div class="fg"><label>Goal</label><input type="text" id="cust-goal" placeholder="Weight loss, muscle gain..."></div>
+    <div class="fg-row">
+      <div class="fg"><label>Pack Price (₹)</label><input type="number" id="cust-pack-price" placeholder="e.g. 2500" oninput="onCoachPackPriceChange()"></div>
+    </div>
+    <!-- Payment section — shown only when price is entered -->
+    <div id="cust-pay-section" style="display:none;border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">💰 Payment</div>
+      <div class="fg-row">
+        <div class="fg">
+          <label>Payment Mode</label>
+          <select id="cust-pay-mode" onchange="onCoachPayModeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+            <option value="full">✅ Full Payment — paid in full</option>
+            <option value="partial">⏳ Partial — paying in installments</option>
+            <option value="none">🕐 No payment yet</option>
+          </select>
+        </div>
+        <div class="fg"><label>Payment Date</label><input type="date" id="cust-pay-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <div class="fg-row" id="cust-paid-now-row" style="display:none">
+        <div class="fg"><label>Paid So Far (₹)</label><input type="number" id="cust-paid-now" placeholder="e.g. 1000" oninput="updateCoachBalancePreview()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label>Balance Due By</label><input type="date" id="cust-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <div id="cust-balance-preview" style="display:none;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:13px;margin-top:6px"></div>
+    </div>
     <div class="fg"><label>Notes</label><textarea id="cust-notes" rows="2" placeholder="Any notes..."></textarea></div>
+    <div class="fg">
+      <label>🌐 WhatsApp Language</label>
+      <select id="cust-lang" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+        <option value="">Default</option>
+        <option value="English">English</option>
+        <option value="Telugu">Telugu (తెలుగు)</option>
+        <option value="Hindi">Hindi (हिंदी)</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>📸 Before Photo (optional)</label>
+      <input type="file" id="cust-photo-before" accept="image/*" style="width:100%;font-size:12px;padding:4px" onchange="previewCoachCustPhoto()">
+      <div id="coach-cust-before-preview"></div>
+    </div>
     <div class="mf">
       <button class="btn-c" onclick="closeModal('cust')">Cancel</button>
       <button class="btn-p" onclick="saveCustomer()">Save</button>
@@ -391,15 +795,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <input type="hidden" id="body-rec-id">
     <div class="fg-row">
       <div class="fg"><label>Date</label><input type="date" id="body-date"></div>
-      <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="body-weight" placeholder="60.5"></div>
+      <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="body-weight" placeholder="60.5" oninput="coachCalcBody()"></div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Body Fat (%)</label><input type="number" step="0.1" id="body-fat" placeholder="22.5"></div>
+      <div class="fg"><label>Height (cm)</label><input type="number" step="0.1" id="body-height" placeholder="170"></div>
+      <div class="fg"><label>Age</label><input type="number" id="body-age-field" placeholder="30"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Body Fat (%)</label><input type="number" step="0.1" id="body-fat" placeholder="22.5" oninput="coachCalcBody()"></div>
       <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="body-muscle" placeholder="35.0"></div>
     </div>
     <div class="fg-row">
+      <div class="fg"><label>Subcutaneous Fat (%)</label><input type="number" step="0.01" id="body-subfat" placeholder="15.0" oninput="coachCalcBody()"></div>
+      <div class="fg"><label>Visceral Fat <span style="font-size:10px;color:var(--accent)">(auto)</span></label><input type="number" step="0.01" id="body-visceral" placeholder="auto" readonly style="background:#f5f5f5;color:var(--primary);font-weight:600"></div>
+    </div>
+    <div class="fg-row">
       <div class="fg"><label>BMI</label><input type="number" step="0.1" id="body-bmi" placeholder="22.3"></div>
-      <div class="fg"><label>Visceral Fat</label><input type="number" step="0.01" id="body-visceral" placeholder="auto"></div>
+      <div class="fg"><label>BMR</label><input type="number" id="body-bmr" placeholder="1483"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Body Age</label><input type="number" id="body-age" placeholder="25"></div>
     </div>
     <div class="fg"><label>Notes</label><textarea id="body-notes" rows="2" placeholder="Any observations..."></textarea></div>
     <div class="mf">
@@ -430,6 +845,49 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="mf">
       <button class="btn-c" onclick="closeModal('lead')">Cancel</button>
       <button class="btn-p" onclick="saveLead()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transaction Modal -->
+<div class="modal-overlay" id="modal-txn">
+  <div class="modal-box">
+    <div class="modal-h">
+      <h3 id="txn-modal-title">Add Transaction</h3>
+      <button class="modal-close" onclick="closeModal('txn')">×</button>
+    </div>
+    <input type="hidden" id="txn-id">
+    <div class="fg-row">
+      <div class="fg">
+        <label>Type *</label>
+        <select id="txn-type" onchange="updateTxnCats()" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Category *</label>
+        <select id="txn-cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+          <option>Retail Sale</option>
+          <option>Pack Commission</option>
+          <option>Referral Bonus</option>
+          <option>Other Income</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Product / Description *</label><input type="text" id="txn-desc" placeholder="e.g. Herbalife F1 Vanilla, 2 boxes"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Amount (₹) *</label><input type="number" id="txn-amount" placeholder="0" min="0"></div>
+      <div class="fg"><label>Date *</label><input type="date" id="txn-date"></div>
+    </div>
+    <div class="fg">
+      <label>Customer (optional)</label>
+      <input type="text" id="txn-customer" placeholder="Customer name">
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="txn-notes" rows="2" placeholder="Any extra details..."></textarea></div>
+    <div class="mf">
+      <button class="btn-c" onclick="closeModal('txn')">Cancel</button>
+      <button class="btn-p" onclick="saveTxn()">Save</button>
     </div>
   </div>
 </div>
@@ -468,12 +926,90 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 // ══════════════════════════════════════════
 //  GLOBALS
 // ══════════════════════════════════════════
-var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
-var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+var SB_URL = localStorage.getItem('coach_sb_url') || '';
+var SB_KEY = localStorage.getItem('coach_sb_key') || '';
 var COACH_ID   = sessionStorage.getItem('coachId')   || '';
 var COACH_NAME = sessionStorage.getItem('coachName') || '';
+var COACH_GENDER = COACH_ID ? (localStorage.getItem('coachGender_' + COACH_ID) || 'male') : 'male';
 var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
 var _leadTab = 'all';
+
+// ── LANGUAGE / TRANSLATIONS ──
+var LANG = localStorage.getItem('coachLang') || 'en';
+var T = {
+  en: {
+    // nav
+    nav_overview:'Overview', nav_customers:'My Customers', nav_attendance:'Attendance',
+    nav_body:'Body Composition', nav_finance:'My Finance', nav_leads:'My Leads',
+    nav_renewals:'Renewal Reminders', nav_notes:'Session Notes',
+    nav_workout:'Workout Planner', nav_bulkwa:'Bulk WhatsApp',
+    // sidebar bottom
+    btn_logout:'\uD83D\uDEAA Logout',
+    btn_lang:'తె',
+    // section titles
+    pt_overview:'Overview', pt_customers:'My Customers', ps_customers:'Customers you referred',
+    pt_attendance:'Attendance', pt_body:'Body Composition', ps_body:'Track customer measurements',
+    pt_finance:'My Finance & Commission', ps_finance:'Earnings overview and commission breakdown',
+    pt_leads:'My Leads', ps_leads:'Your potential customers',
+    pt_renewals:'Renewal Reminders', ps_renewals:'Customers with expiring or expired packs',
+    pt_notes:'Session Notes', ps_notes:'Coaching logs and notes per customer',
+    pt_workout:'Workout Planner', ps_workout:'Assign and manage workout plans',
+    pt_bulkwa:'Bulk WhatsApp', ps_bulkwa:'Send messages to multiple customers at once',
+    // water card
+    wi_title:'\uD83C\uDF0A Morning Water Intention',
+    wi_guide1:'\uD83E\uDD5B Hold your glass of water. Close your eyes. Breathe deeply once. Then read this aloud <strong>3 times</strong> with full feeling:',
+    wi_guide2:'\u2728 On the 3rd reading \u2014 drink the water <strong>immediately</strong>. No waiting. The water carries your intention. \uD83D\uDCAA',
+    wi_done_btn:'\u2705 Done for today! See you tomorrow.',
+    wi_pending_btn:'\uD83D\uDCA7 I did it \u2014 I drank my intention!',
+    affirmation:'I, {name}, am a {icon} {pin} member at Dharani\'s. I attract abundance, health and happiness. I help people transform their lives every single day. Success flows to me naturally.',
+    // buttons
+    btn_refresh:'\uD83D\uDD04 Refresh',
+  },
+  te: {
+    // nav
+    nav_overview:'ఓవర్‌వ్యూ', nav_customers:'నా కస్టమర్లు', nav_attendance:'హాజరు',
+    nav_body:'శరీర కూర్పు', nav_finance:'నా ఆర్థికం', nav_leads:'నా లీడ్స్',
+    nav_renewals:'రిన్యువల్ రిమైండర్లు', nav_notes:'సెషన్ నోట్స్',
+    nav_workout:'వర్కౌట్ ప్లానర్', nav_bulkwa:'బల్క్ వాట్సాప్',
+    // sidebar bottom
+    btn_logout:'\uD83D\uDEAA లాగ్అవుట్',
+    btn_lang:'EN',
+    // section titles
+    pt_overview:'ఓవర్‌వ్యూ', pt_customers:'నా కస్టమర్లు', ps_customers:'మీరు రిఫర్ చేసిన కస్టమర్లు',
+    pt_attendance:'హాజరు', pt_body:'శరీర కూర్పు', ps_body:'కస్టమర్ కొలతలను ట్రాక్ చేయండి',
+    pt_finance:'నా ఆర్థికం & కమీషన్', ps_finance:'ఆదాయం మరియు కమీషన్ వివరాలు',
+    pt_leads:'నా లీడ్స్', ps_leads:'మీ సంభావ్య కస్టమర్లు',
+    pt_renewals:'రిన్యువల్ రిమైండర్లు', ps_renewals:'ప్యాక్ ముగుస్తున్న లేదా ముగిసిన కస్టమర్లు',
+    pt_notes:'సెషన్ నోట్స్', ps_notes:'కోచింగ్ లాగ్స్ మరియు కస్టమర్ నోట్స్',
+    pt_workout:'వర్కౌట్ ప్లానర్', ps_workout:'వర్కౌట్ ప్లాన్లను అసైన్ చేయండి',
+    pt_bulkwa:'బల్క్ వాట్సాప్', ps_bulkwa:'ఒకేసారి అనేక కస్టమర్లకు మెసేజ్ పంపండి',
+    // water card
+    wi_title:'\uD83C\uDF0A ఉదయం నీటి సంకల్పం',
+    wi_guide1:'\uD83E\uDD5B మీ నీటి గ్లాసు పట్టుకోండి. కళ్ళు మూసుకోండి. ఒకసారి లోతుగా శ్వాస తీసుకోండి. తర్వాత పూర్తి భావంతో ఈ మాటలు <strong>3 సార్లు</strong> బిగ్గరగా చదవండి:',
+    wi_guide2:'\u2728 మూడవ సారి చదివిన వెంటనే \u2014 ఆ క్షణంలోనే నీళ్ళు తాగండి. ఆగవద్దు. నీళ్ళు మీ సంకల్పాన్ని మోస్తాయి. \uD83D\uDCAA',
+    wi_done_btn:'\u2705 ఈరోజు చేసారు! రేపు కలుద్దాం.',
+    wi_pending_btn:'\uD83D\uDCA7 చేసాను \u2014 సంకల్పంతో నీళ్ళు తాగాను!',
+    affirmation:'నేను, {name}, ధరణి\'స్‌లో {icon} {pin} {member}. నేను సమృద్ధి, ఆరోగ్యం మరియు సంతోషాన్ని ఆకర్షిస్తాను. నేను ప్రతిరోజూ ప్రజల జీవితాలను మార్చడంలో సహాయపడతాను. విజయం నాకు సహజంగా వస్తుంది.',
+    // buttons
+    btn_refresh:'\uD83D\uDD04 రిఫ్రెష్',
+  }
+};
+function t(key) { return (T[LANG] && T[LANG][key]) || (T['en'] && T['en'][key]) || key; }
+function applyLang() {
+  document.querySelectorAll('[data-t]').forEach(function(el) {
+    var key = el.getAttribute('data-t');
+    if (el.getAttribute('data-t-html')) el.innerHTML = t(key);
+    else el.textContent = t(key);
+  });
+  var btn = document.getElementById('lang-toggle-btn');
+  if (btn) btn.textContent = t('btn_lang');
+  if (typeof renderWaterIntentionCard === 'function') renderWaterIntentionCard();
+}
+function toggleLang() {
+  LANG = LANG === 'en' ? 'te' : 'en';
+  localStorage.setItem('coachLang', LANG);
+  applyLang();
+}
 var _bodySelCustId = '';
 var _daysLeftCache = {};
 
@@ -535,13 +1071,22 @@ async function init() {
 }
 
 async function loadCoachList() {
+  var errEl = document.getElementById('login-err');
+  errEl.textContent = '';
   try {
     var coaches = await req('coaches?order=name.asc');
     var sel = document.getElementById('login-coach-sel');
+    if (!coaches || coaches.length === 0) {
+      sel.innerHTML = '<option value="">No coaches found</option>';
+      errEl.innerHTML = 'No coaches in database. Ask supervisor to add coach accounts. <a href="#" onclick="loadCoachList();return false;" style="color:var(--primary)">Retry</a>';
+      return;
+    }
     sel.innerHTML = '<option value="">— Select your name —</option>' +
       coaches.map(function(c){ return '<option value="'+c.id+'" data-pin="'+(c.coach_pin||'')+'">'+c.name+'</option>'; }).join('');
   } catch(e) {
-    document.getElementById('login-err').textContent = 'Could not load coaches. Check Supabase connection.';
+    console.error('loadCoachList error:', e);
+    errEl.innerHTML = 'Could not load coaches: ' + (e.message || 'Network error') +
+      ' <a href="#" onclick="loadCoachList();return false;" style="color:var(--primary)">Retry</a>';
   }
 }
 
@@ -574,13 +1119,25 @@ async function doLogin() {
 }
 
 function startApp() {
+  COACH_GENDER = localStorage.getItem('coachGender_' + COACH_ID) || 'male';
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('sb-coach-name').textContent = COACH_NAME;
   document.getElementById('sb-avatar').textContent = COACH_NAME.charAt(0).toUpperCase();
   document.getElementById('ov-date').textContent = new Date().toDateString();
   document.getElementById('att-date-label').textContent = 'Today — ' + todayStr();
+  updateGenderToggleUI();
   loadAll();
+}
+function toggleGender() {
+  COACH_GENDER = COACH_GENDER === 'male' ? 'female' : 'male';
+  localStorage.setItem('coachGender_' + COACH_ID, COACH_GENDER);
+  updateGenderToggleUI();
+  if (typeof renderWaterIntentionCard === 'function') renderWaterIntentionCard();
+}
+function updateGenderToggleUI() {
+  var btn = document.getElementById('gender-toggle-btn');
+  if (btn) btn.textContent = COACH_GENDER === 'female' ? '♀ Female' : '♂ Male';
 }
 
 function logout() {
@@ -607,14 +1164,22 @@ function showStep(step) {
 function goTo(name, el) {
   document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('active'); });
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
-  document.getElementById('sec-' + name).classList.add('active');
-  el.classList.add('active');
+  var sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  if (el) el.classList.add('active');
   if (window.innerWidth <= 768) toggleSidebar();
   if (name === 'customers')  renderCustomers();
   if (name === 'attendance') renderAttendance();
-  if (name === 'body')       renderBodyCustSelect();
+  if (name === 'body')       { renderBodyCustSelect(); loadMyBodyStats(); }
   if (name === 'finance')    renderFinance();
   if (name === 'leads')      renderLeads();
+  if (name === 'renewals')   renderRenewals();
+  if (name === 'notes')      renderNotesSection();
+  if (name === 'workout')    { renderWorkoutCustFilter(); renderWorkoutPlans(); }
+  if (name === 'bulkwa')     renderWaRecipients();
+  if (name === 'mybody')    loadMyBodyStats();
+  if (name === 'mydiet')    loadMyDiet();
+  if (name === 'myfoodlog') loadMyFoodLog();
 }
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
@@ -668,13 +1233,14 @@ function getDaysLeft(c) {
 async function loadAll() {
   if (!COACH_ID) return;
   try {
-    var [custs, att, body, leads, fus, centers] = await Promise.all([
+    var [custs, att, body, leads, fus, centers, coachRec] = await Promise.all([
       dbGet('customers', 'name', 'referred_by_id=eq.' + COACH_ID),
       dbGet('attendance', 'date'),
       dbGet('body_composition', 'date'),
       dbGet('leads', 'id', 'coach_id=eq.' + COACH_ID),
       dbGet('lead_followups', 'called_at'),
-      dbGet('wellness_centers', 'name')
+      dbGet('wellness_centers', 'name'),
+      req('coaches?id=eq.' + COACH_ID + '&select=id,name,herbalife_pin')
     ]);
     D.customers       = Array.isArray(custs)    ? custs    : [];
     D.attendance      = Array.isArray(att)       ? att      : [];
@@ -682,24 +1248,354 @@ async function loadAll() {
     D.leads           = Array.isArray(leads)     ? leads    : [];
     D.leadFollowups   = Array.isArray(fus)       ? fus      : [];
     D.centers         = Array.isArray(centers)   ? centers  : [];
+    D.coachProfile    = (Array.isArray(coachRec) && coachRec[0]) ? coachRec[0] : {};
+    // Load payments for coach's customers only
+    var custIds = D.customers.map(function(c){ return c.id; });
+    try {
+      var allPay = await dbGet('payments', 'payment_date');
+      D.payments = Array.isArray(allPay) ? allPay.filter(function(p){ return custIds.indexOf(p.person_id) !== -1; }) : [];
+    } catch(e) { D.payments = []; }
     _daysLeftCache    = {};
-    // Filter attendance/body to only this coach's customers
+    // Filter attendance/body to only this coach's customers + coach themselves
     var custIds = D.customers.map(function(c){ return c.id; });
     D.attendance = D.attendance.filter(function(a){ return custIds.indexOf(a.customer_id) !== -1; });
-    D.body       = D.body.filter(function(b){ return custIds.indexOf(b.customer_id) !== -1; });
+    D.body       = D.body.filter(function(b){ return custIds.indexOf(b.customer_id) !== -1 || b.customer_id === COACH_ID; });
     renderOverview();
     renderCustomers();
     renderAttendance();
     renderBodyCustSelect();
     renderFinance();
+    renderPendingPayments();
     renderLeads();
+    applyLang();
+    loadLeaderboard();
   } catch(e) { showToast('Load error: ' + e.message, 'error'); }
 }
 
 // ══════════════════════════════════════════
 //  OVERVIEW
 // ══════════════════════════════════════════
+// ── VISION CARD ──
+function getGreeting() {
+  var h = new Date().getHours();
+  if (h < 12) return 'Good Morning';
+  if (h < 17) return 'Good Afternoon';
+  return 'Good Evening';
+}
+function renderVisionCard() {
+  var name = COACH_NAME ? COACH_NAME.split(' ')[0] : 'Coach';
+  var curPin = (D.coachProfile && D.coachProfile.herbalife_pin) || 'Associate';
+  var nextPin = PIN_NEXT_MAP[curPin] || null;
+  var targetPin = nextPin || curPin;
+  var targetIcon = PIN_ICONS[targetPin] || '⭐';
+  document.getElementById('vision-card').innerHTML =
+    '<div class="vision-card">' +
+      '<div class="vision-greeting">' + getGreeting() + ', ' + name + '! 👋</div>' +
+      '<div class="vision-text">"I am a <em>' + targetIcon + ' ' + targetPin + '</em> member at Dharani\'s."</div>' +
+      '<div class="vision-sub">Believe it. Work for it. Own it. 💪</div>' +
+    '</div>';
+}
+
+// ── HERBALIFE PIN LEVELS ──
+var HERBALIFE_PINS = ['Preferred Customer','Associate','Qualified Producer (QP)','Success Builder','Supervisor','World Team','Active World Team','GET Team','2500 GET Team','Millionaire Team','7500 Millionaire Team',"President's Team"];
+var PIN_ICONS = {'Preferred Customer':'🌱','Associate':'⭐','Qualified Producer (QP)':'🥉','Success Builder':'🥈','Supervisor':'🥇','World Team':'💎','Active World Team':'💎','GET Team':'👑','2500 GET Team':'👑','Millionaire Team':'🏆','7500 Millionaire Team':'🏆',"President's Team":'🌟'};
+var PIN_NEXT_MAP = {'Preferred Customer':'Associate','Associate':'Qualified Producer (QP)','Qualified Producer (QP)':'Success Builder','Success Builder':'Supervisor','Supervisor':'World Team','World Team':'Active World Team','Active World Team':'GET Team','GET Team':'2500 GET Team','2500 GET Team':'Millionaire Team','Millionaire Team':'7500 Millionaire Team','7500 Millionaire Team':"President's Team","President's Team":null};
+var PIN_TIPS_MAP = {'Preferred Customer':'Become an Associate to start building your business.','Associate':'Reach QP by accumulating volume points with your customers.','Qualified Producer (QP)':'Maintain consistent volume and grow your customer base.','Success Builder':'Accumulate 4000VP over qualifying months with a strong team.','Supervisor':'Mentor 2+ active downline supervisors for World Team.','World Team':'Maintain qualifying volume across 2+ months.','Active World Team':'Build 3+ active supervisors in your downline.','GET Team':'Grow your organisation to 2500VP qualifying volume.','2500 GET Team':'Scale up your team volume to reach Millionaire Team.','Millionaire Team':'Maintain high-volume organisation (7500VP).','7500 Millionaire Team':"Sustain elite organisation volume and team depth.","President's Team":"Top recognition — keep growing! 🏆"};
+
+function renderPinProgress() {
+  var curPin = (D.coachProfile && D.coachProfile.herbalife_pin) || 'Associate';
+  var nextPin = PIN_NEXT_MAP[curPin] || null;
+  var curIdx  = HERBALIFE_PINS.indexOf(curPin);
+  if (curIdx === -1) curIdx = 1; // default to Associate
+  var pct = Math.round(((curIdx) / (HERBALIFE_PINS.length - 1)) * 100);
+  var tip = PIN_TIPS_MAP[curPin] || '';
+  var curIcon  = PIN_ICONS[curPin]  || '⭐';
+  var nextIcon = nextPin ? (PIN_ICONS[nextPin] || '⭐') : '';
+
+  document.getElementById('pin-progress-card').innerHTML =
+    '<div class="pin-card">' +
+      '<div class="pin-top">' +
+        '<div class="pin-badge"><div class="pin-icon">'+curIcon+'</div><div><div class="pin-label">Current Pin</div><div class="pin-name">'+curPin+'</div></div></div>' +
+        (nextPin ? '<div class="pin-next"><span>Next Pin</span><strong>'+nextIcon+' '+nextPin+'</strong></div>' : '<div class="pin-next"><strong style="color:#f5c842">🌟 Top Level!</strong></div>') +
+      '</div>' +
+      '<div class="pin-bar-wrap"><div class="pin-bar-fill" style="width:'+pct+'%"></div></div>' +
+      '<div class="pin-hint">'+tip+'</div>' +
+    '</div>';
+}
+
+// ── WATER INTENTION CARD ──
+function getWaterStreak() {
+  return JSON.parse(localStorage.getItem('waterStreak_' + COACH_ID) || '{"count":0,"lastDate":""}');
+}
+function markWaterDone() {
+  var today = todayStr();
+  var s = getWaterStreak();
+  if (s.lastDate === today) return;
+  var yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  var yStr = yesterday.toISOString().slice(0, 10);
+  s.count = (s.lastDate === yStr) ? s.count + 1 : 1;
+  s.lastDate = today;
+  localStorage.setItem('waterStreak_' + COACH_ID, JSON.stringify(s));
+  renderWaterIntentionCard();
+  showToast('Beautiful! Keep going! 🌊', 'success');
+}
+function renderWaterIntentionCard() {
+  var s = getWaterStreak();
+  var today = todayStr();
+  var doneToday = s.lastDate === today;
+  var curPin = (D.coachProfile && D.coachProfile.herbalife_pin) || 'Associate';
+  var nextPin = PIN_NEXT_MAP[curPin] || curPin;
+  var name = COACH_NAME ? COACH_NAME.split(' ')[0] : 'Coach';
+  var streakIcon = s.count >= 30 ? '🔥🔥' : s.count >= 7 ? '🔥' : '💧';
+  var streakLabel = s.count >= 30 ? s.count + ' day streak — UNSTOPPABLE!' : s.count >= 7 ? s.count + ' day streak!' : s.count > 0 ? s.count + ' day streak' : 'Start today';
+  var affirmationTpl = t('affirmation');
+  var memberWord = COACH_GENDER === 'female' ? 'సభ్యురాలిని' : 'సభ్యుడిని';
+  var affirmation = affirmationTpl.replace('{name}', name).replace('{icon}', PIN_ICONS[nextPin] || '⭐').replace('{pin}', nextPin).replace('{member}', memberWord);
+  document.getElementById('water-intention-card').innerHTML =
+    '<div class="wi-card">' +
+      '<div class="wi-top">' +
+        '<div class="wi-title">' + t('wi_title') + '</div>' +
+        '<div class="wi-streak">' + streakIcon + ' ' + streakLabel + '</div>' +
+      '</div>' +
+      '<div class="wi-guide">' + t('wi_guide1') + '</div>' +
+      '<div class="wi-affirmation">"' + affirmation + '"</div>' +
+      '<div class="wi-guide">' + t('wi_guide2') + '</div>' +
+      (doneToday
+        ? '<button class="wi-done-btn done">' + t('wi_done_btn') + '</button>'
+        : '<button class="wi-done-btn pending" onclick="markWaterDone()">' + t('wi_pending_btn') + '</button>') +
+    '</div>';
+}
+
+// ── VP TRACKER ──
+function getVPData() {
+  return JSON.parse(localStorage.getItem('vpData_' + COACH_ID) || '{"current":0,"target":4000}');
+}
+function saveVP(val) {
+  var d = getVPData();
+  d.current = Math.max(0, parseInt(val, 10) || 0);
+  localStorage.setItem('vpData_' + COACH_ID, JSON.stringify(d));
+  renderVPTracker();
+}
+function renderVPTracker() {
+  var d = getVPData();
+  var cur = d.current, target = d.target || 4000;
+  var pct = Math.min(100, Math.round((cur / target) * 100));
+  var done = cur >= target;
+  var remaining = Math.max(0, target - cur);
+  var curPin = (D.coachProfile && D.coachProfile.herbalife_pin) || 'Associate';
+  var nextPin = PIN_NEXT_MAP[curPin] || 'Supervisor';
+  document.getElementById('vp-tracker-card').innerHTML =
+    '<div class="vp-card">' +
+      '<div class="vp-top">' +
+        '<div class="vp-title">📈 My Volume Points</div>' +
+        '<div style="font-size:11px;color:var(--muted)">Target: ' + target.toLocaleString() + ' VP</div>' +
+      '</div>' +
+      '<div class="vp-input-row">' +
+        '<span style="font-size:12px;color:var(--muted);white-space:nowrap">Current VP:</span>' +
+        '<input type="number" min="0" value="' + cur + '" onchange="saveVP(this.value)" placeholder="0">' +
+        '<span style="font-size:12px;color:var(--muted);white-space:nowrap">/ ' + target.toLocaleString() + '</span>' +
+      '</div>' +
+      '<div class="vp-bar-wrap"><div class="vp-bar-fill' + (done ? ' goal' : '') + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="vp-footer">' +
+        '<span>' + pct + '% to <strong>' + nextPin + '</strong></span>' +
+        (done ? '<span style="color:var(--success);font-weight:700">🎉 Target reached!</span>' : '<span><strong>' + remaining.toLocaleString() + ' VP</strong> remaining</span>') +
+      '</div>' +
+    '</div>';
+}
+
+// ── LEADERBOARD ──
+var D_leaderboard = [];
+async function loadLeaderboard() {
+  try {
+    var all = await req('customers?select=referred_by_id,referred_by,created_at');
+    if (!Array.isArray(all)) return;
+    var cur = getMonthRange(0);
+    var map = {};
+    all.forEach(function(c) {
+      if (!c.referred_by_id) return;
+      var key = c.referred_by_id;
+      if (!map[key]) map[key] = {id: key, name: c.referred_by || 'Unknown', total: 0, thisMonth: 0};
+      map[key].total++;
+      var d = (c.created_at || '').slice(0, 10);
+      if (d >= cur.start && d <= cur.end) map[key].thisMonth++;
+    });
+    D_leaderboard = Object.values(map).sort(function(a, b) { return b.thisMonth - a.thisMonth || b.total - a.total; });
+    renderLeaderboard();
+  } catch(e) { /* silent fail — leaderboard is non-critical */ }
+}
+var RANK_ICONS = ['🥇','🥈','🥉'];
+function renderLeaderboard() {
+  var el = document.getElementById('leaderboard-card');
+  if (!el) return;
+  if (!D_leaderboard.length) { el.innerHTML = ''; return; }
+  var cur = getMonthRange(0);
+  var monthName = new Date(cur.start + 'T00:00:00').toLocaleString('default', {month:'long'});
+  var rows = D_leaderboard.map(function(coach, i) {
+    var isMe = coach.id === COACH_ID;
+    var rank = i < 3 ? RANK_ICONS[i] : '#' + (i + 1);
+    return '<div class="lb-row' + (isMe ? ' me' : '') + '">' +
+      '<div class="lb-rank">' + rank + '</div>' +
+      '<div class="lb-info">' +
+        '<div class="lb-name">' + coach.name + (isMe ? ' <span style="font-size:10px;color:var(--primary);font-weight:700">YOU</span>' : '') + '</div>' +
+        '<div class="lb-sub">' + coach.total + ' total customers</div>' +
+      '</div>' +
+      '<div class="lb-score"><div class="lb-score-v">' + coach.thisMonth + '</div><div class="lb-score-l">this month</div></div>' +
+    '</div>';
+  }).join('');
+  el.innerHTML = '<div class="lb-card">' +
+    '<div class="lb-header"><div class="lb-title">🏆 Referral Leaderboard</div><div class="lb-month">' + monthName + '</div></div>' +
+    rows +
+  '</div>';
+}
+
+// ── MONTHLY SUMMARY ──
+function getMonthRange(monthOffset) {
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth() + monthOffset;
+  while (m < 0) { m += 12; y--; }
+  while (m > 11) { m -= 12; y++; }
+  var start = new Date(y, m, 1).toISOString().slice(0, 10);
+  var end   = new Date(y, m + 1, 0).toISOString().slice(0, 10);
+  return {start: start, end: end};
+}
+function diffTag(cur, prev) {
+  var d = cur - prev;
+  if (d > 0)  return '<div class="ms-diff up">↑ ' + d + ' vs last month</div>';
+  if (d < 0)  return '<div class="ms-diff down">↓ ' + Math.abs(d) + ' vs last month</div>';
+  return '<div class="ms-diff same">= Same as last month</div>';
+}
+function renderMonthlySummary() {
+  var cur  = getMonthRange(0);
+  var prev = getMonthRange(-1);
+  var monthName = new Date(cur.start + 'T00:00:00').toLocaleString('default', {month:'long', year:'numeric'});
+
+  // New customers joined
+  var newCur  = D.customers.filter(function(c){ var d = (c.created_at||'').slice(0,10); return d >= cur.start  && d <= cur.end;  }).length;
+  var newPrev = D.customers.filter(function(c){ var d = (c.created_at||'').slice(0,10); return d >= prev.start && d <= prev.end; }).length;
+
+  // Attendance sessions (present)
+  var attCur  = D.attendance.filter(function(a){ return a.status === 'present' && a.date >= cur.start  && a.date <= cur.end;  }).length;
+  var attPrev = D.attendance.filter(function(a){ return a.status === 'present' && a.date >= prev.start && a.date <= prev.end; }).length;
+
+  // Unique customers attended this month
+  var uniqCur  = new Set(D.attendance.filter(function(a){ return a.status==='present' && a.date>=cur.start  && a.date<=cur.end;  }).map(function(a){return a.customer_id;})).size;
+  var uniqPrev = new Set(D.attendance.filter(function(a){ return a.status==='present' && a.date>=prev.start && a.date<=prev.end; }).map(function(a){return a.customer_id;})).size;
+
+  // Leads added
+  var leadsCur  = D.leads.filter(function(l){ var d=(l.created_at||'').slice(0,10); return d>=cur.start  && d<=cur.end;  }).length;
+  var leadsPrev = D.leads.filter(function(l){ var d=(l.created_at||'').slice(0,10); return d>=prev.start && d<=prev.end; }).length;
+
+  document.getElementById('monthly-summary-card').innerHTML =
+    '<div class="ms-card">' +
+      '<div class="ms-header"><div class="ms-title">📊 Monthly Performance</div><div class="ms-month">' + monthName + '</div></div>' +
+      '<div class="ms-grid">' +
+        '<div class="ms-stat"><div class="ms-stat-l">New Joins</div><div class="ms-stat-v">' + newCur + '</div>' + diffTag(newCur, newPrev) + '</div>' +
+        '<div class="ms-stat"><div class="ms-stat-l">Attendance Sessions</div><div class="ms-stat-v">' + attCur + '</div>' + diffTag(attCur, attPrev) + '</div>' +
+        '<div class="ms-stat"><div class="ms-stat-l">Customers Attended</div><div class="ms-stat-v">' + uniqCur + '</div>' + diffTag(uniqCur, uniqPrev) + '</div>' +
+        '<div class="ms-stat"><div class="ms-stat-l">Leads Added</div><div class="ms-stat-v">' + leadsCur + '</div>' + diffTag(leadsCur, leadsPrev) + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+// ── DAILY TARGET ──
+var DT_MESSAGES = [
+  {pct:0,   msg:'Let\'s go! Start marking attendance 💪'},
+  {pct:1,   msg:'Great start! Keep going 🌱'},
+  {pct:40,  msg:'You\'re building momentum! 🔥'},
+  {pct:60,  msg:'More than halfway there! 🚀'},
+  {pct:80,  msg:'Almost there! Push through! ⚡'},
+  {pct:100, msg:'Target crushed! Amazing work today! 🎉'}
+];
+function getDailyTarget() {
+  return parseInt(localStorage.getItem('dailyTarget_' + COACH_ID) || '10', 10);
+}
+function setDailyTarget(val) {
+  var n = Math.max(1, parseInt(val, 10) || 10);
+  localStorage.setItem('dailyTarget_' + COACH_ID, n);
+  renderDailyTarget();
+}
+function renderDailyTarget() {
+  var today = todayStr();
+  var target = getDailyTarget();
+  var present = D.customers.filter(function(c) {
+    return D.attendance.some(function(a) { return a.customer_id === c.id && a.date === today && a.status === 'present'; });
+  }).length;
+  var pct = target > 0 ? Math.min(100, Math.round((present / target) * 100)) : 0;
+  var done = present >= target;
+  var msg = DT_MESSAGES[0].msg;
+  DT_MESSAGES.forEach(function(m) { if (pct >= m.pct) msg = m.msg; });
+  document.getElementById('daily-target-card').innerHTML =
+    '<div class="dt-card">' +
+      '<div class="dt-top">' +
+        '<div class="dt-title">🎯 Today\'s Target</div>' +
+        '<div class="dt-edit">' +
+          '<span style="font-size:12px;color:var(--muted)">Goal:</span>' +
+          '<input type="number" min="1" max="100" value="' + target + '" id="dt-input" onchange="setDailyTarget(this.value)" style="width:52px;padding:4px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;text-align:center">' +
+          '<span style="font-size:12px;color:var(--muted)">customers</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="dt-bar-wrap"><div class="dt-bar-fill' + (done ? ' done' : '') + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="dt-footer">' +
+        '<div class="dt-count">' + present + ' <span>/ ' + target + ' present</span></div>' +
+        '<div class="dt-msg">' + msg + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function renderInactiveList() {
+  var today = new Date(todayStr());
+  var INACTIVE_DAYS = 5;
+  var inactive = D.customers.filter(function(c) {
+    if (!getDaysLeft(c).active) return false; // skip customers with no active pack
+    var lastAtt = null;
+    D.attendance.forEach(function(a) {
+      if (a.customer_id === c.id && a.status === 'present') {
+        var d = new Date(a.date);
+        if (!lastAtt || d > lastAtt) lastAtt = d;
+      }
+    });
+    if (!lastAtt) return true; // never attended
+    var diff = Math.floor((today - lastAtt) / (1000 * 60 * 60 * 24));
+    return diff >= INACTIVE_DAYS;
+  });
+
+  var el = document.getElementById('ov-inactive-list');
+  if (!inactive.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = '<div class="inactive-card">' +
+    '<h3>😴 Inactive Customers (' + inactive.length + ')</h3>' +
+    '<div class="ic-sub">Active pack but not seen in ' + INACTIVE_DAYS + '+ days — reach out!</div>' +
+    inactive.map(function(c) {
+      var lastAtt = null;
+      D.attendance.forEach(function(a) {
+        if (a.customer_id === c.id && a.status === 'present') {
+          var d = new Date(a.date);
+          if (!lastAtt || d > lastAtt) lastAtt = d;
+        }
+      });
+      var daysAgo = lastAtt ? Math.floor((today - lastAtt) / (1000 * 60 * 60 * 24)) : null;
+      var phone = (c.contact || '').replace(/\D/g, '');
+      if (phone.length === 10) phone = COUNTRY_CODE + phone;
+      var msg = encodeURIComponent('Hi ' + c.name + '! 🌿 We miss you at Dharani\'s! Your pack is still active. Come in today and let\'s get back on track! 💪');
+      return '<div class="inactive-row">' +
+        '<div>' +
+          '<div class="ov-name">' + c.name + '</div>' +
+          '<span class="inactive-days">' + (daysAgo !== null ? daysAgo + ' days ago' : 'Never attended') + '</span>' +
+        '</div>' +
+        (phone ? '<a href="https://api.whatsapp.com/send?phone=' + phone + '&text=' + msg + '" target="_blank" style="flex-shrink:0;background:#25D366;color:#fff;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none">💬 Nudge</a>' : '') +
+      '</div>';
+    }).join('') +
+  '</div>';
+}
+
 function renderOverview() {
+  renderPinProgress();
+  renderVisionCard();
+  renderWaterIntentionCard();
+  renderVPTracker();
+  renderDailyTarget();
+  renderMonthlySummary();
+  renderLeaderboard();
   var today = todayStr();
   var total = D.customers.length;
   var present = D.customers.filter(function(c){
@@ -736,6 +1632,7 @@ function renderOverview() {
       return '<div class="ov-row"><div class="ov-name">'+c.name+'</div><span class="badge bg">'+serv+' serving'+(serv>1?'s':'')+'</span></div>';
     }).join('') + '</div>' : '';
   document.getElementById('ov-present-list').innerHTML = presHtml;
+  renderInactiveList();
 }
 
 // ══════════════════════════════════════════
@@ -752,6 +1649,7 @@ function renderCustomers() {
     var phone = (c.contact||'').replace(/\D/g,'');
     if(phone.length===10) phone = COUNTRY_CODE + phone;
     var waMsg = encodeURIComponent('Hi '+c.name+'! 🌿 Hope you\'re doing great. See you at Dharani\'s today! 💪');
+    var dashMsg = encodeURIComponent('Hi '+c.name+'! 🌿 Here\'s your personal wellness dashboard link:\nhttps://pulseiq-app.nagam-kumar.workers.dev/customer.html\n\nLogin with your mobile number and date of birth. Track your progress, attendance & more! 💪');
     return '<div class="cust-card">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
         '<div><div class="cust-name">'+c.name+'</div>'+
@@ -760,7 +1658,9 @@ function renderCustomers() {
       '</div>'+
       '<div class="cust-acts">'+
         '<button class="btn-e" onclick="openCustModal(\''+c.id+'\')">✏️ Edit</button>'+
+        '<button class="btn-e" onclick="openNotesModal(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" style="background:#f0f4ff;border-color:#c7d2fe;color:#4f46e5">📝 Notes</button>'+
         (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+waMsg+'" target="_blank" style="padding:5px 12px;background:#25D366;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none">💬 WhatsApp</a>' : '')+
+        (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+dashMsg+'" target="_blank" style="padding:5px 12px;background:#4f46e5;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none">🔗 Share Dashboard</a>' : '')+
       '</div>'+
     '</div>';
   }).join('');
@@ -780,27 +1680,109 @@ function openCustModal(id) {
     document.getElementById('cust-pack-start').value  = c.pack_start_date || '';
     document.getElementById('cust-goal').value        = c.goal || '';
     document.getElementById('cust-notes').value       = c.notes || '';
+    document.getElementById('cust-lang').value        = c.preferred_language || '';
   } else {
-    ['cust-name','cust-contact','cust-dob','cust-pack-start','cust-goal','cust-notes'].forEach(function(f){ document.getElementById(f).value = ''; });
+    ['cust-name','cust-contact','cust-dob','cust-pack-start','cust-goal','cust-notes','cust-pack-price','cust-paid-now','cust-due-date','cust-pay-date'].forEach(function(f){ document.getElementById(f).value = ''; });
     document.getElementById('cust-gender').value = '';
     document.getElementById('cust-pack').value = '';
+    document.getElementById('cust-pay-section').style.display = 'none';
+    document.getElementById('cust-paid-now-row').style.display = 'none';
+    document.getElementById('cust-balance-preview').style.display = 'none';
+    document.getElementById('cust-lang').value = '';
+    document.getElementById('cust-photo-before').value = '';
+    document.getElementById('coach-cust-before-preview').innerHTML = '';
+    document.getElementById('cust-pay-mode').value = 'full';
   }
   openModal('cust');
+}
+
+function onCoachPackPriceChange() {
+  var price = Number(document.getElementById('cust-pack-price').value) || 0;
+  var isNew = !document.getElementById('cust-id').value;
+  document.getElementById('cust-pay-section').style.display = (price > 0 && isNew) ? 'block' : 'none';
+  updateCoachBalancePreview();
+}
+function onCoachPayModeChange() {
+  var mode = document.getElementById('cust-pay-mode').value;
+  document.getElementById('cust-paid-now-row').style.display = (mode === 'partial' || mode === 'none') ? 'flex' : 'none';
+  document.getElementById('cust-balance-preview').style.display = mode === 'partial' ? 'block' : 'none';
+  updateCoachBalancePreview();
+}
+function updateCoachBalancePreview() {
+  var total = Number(document.getElementById('cust-pack-price').value) || 0;
+  var paid  = Number((document.getElementById('cust-paid-now') || {value:0}).value) || 0;
+  var bal   = total - paid;
+  var el = document.getElementById('cust-balance-preview');
+  if (el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</strong>';
+}
+
+function renderPendingPayments() {
+  var el = document.getElementById('coach-pending-payments'); if (!el) return;
+  var today = todayStr();
+  var pending = (D.payments || []).filter(function(p) {
+    return Math.max(0, Number(p.total_amount) - Number(p.amount_paid)) > 0;
+  });
+  if (!pending.length) {
+    el.innerHTML = '<div class="empty"><div class="ei">✅</div><p>No pending payments.</p></div>';
+    return;
+  }
+  el.innerHTML = pending.map(function(p) {
+    var total = Number(p.total_amount), paid = Number(p.amount_paid), bal = Math.max(0, total - paid);
+    var isOverdue = p.due_date && p.due_date < today;
+    var badgeStyle = isOverdue ? 'color:var(--danger);font-weight:700' : 'color:var(--accent);font-weight:700';
+    var badgeText  = isOverdue ? '⚠️ Overdue' : '⏳ Pending';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:6px">' +
+      '<div>' +
+        '<div style="font-weight:600;font-size:13px">' + (p.person_name || '—') + '</div>' +
+        '<div style="font-size:11px;color:var(--muted)">' + (p.description || '') + (p.due_date ? ' · Due: ' + p.due_date : '') + '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div style="font-size:13px;color:var(--danger);font-weight:700">₹' + bal.toLocaleString('en-IN') + ' due</div>' +
+        '<div style="font-size:11px;' + badgeStyle + '">' + badgeText + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function uploadPhoto(file, customerId, type) {
+  var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  var path = customerId + '/' + type + '_' + Date.now() + '.' + ext;
+  var res = await fetch(SB_URL + '/storage/v1/object/customer-photos/' + path, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' },
+    body: file
+  });
+  if (!res.ok) { var t = await res.text(); throw new Error('Photo upload failed: ' + t); }
+  return SB_URL + '/storage/v1/object/public/customer-photos/' + path;
+}
+function previewCoachCustPhoto() {
+  var file = document.getElementById('cust-photo-before').files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('coach-cust-before-preview').innerHTML = '<img src="'+e.target.result+'" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);margin-top:4px">';
+  };
+  reader.readAsDataURL(file);
 }
 
 async function saveCustomer() {
   var name = document.getElementById('cust-name').value.trim();
   if (!name) { showToast('Name is required', 'error'); return; }
+  var dob = document.getElementById('cust-dob').value;
+  if (!dob) { showToast('Date of Birth is required — customer needs it to log in to their dashboard', 'error'); return; }
   var id = document.getElementById('cust-id').value;
+  var packPrice = Number(document.getElementById('cust-pack-price').value) || 0;
   var payload = {
     name: name,
     contact: document.getElementById('cust-contact').value.trim() || null,
-    dob: document.getElementById('cust-dob').value || null,
+    dob: dob,
     gender: document.getElementById('cust-gender').value || null,
     pack_type: document.getElementById('cust-pack').value || null,
     pack_start_date: document.getElementById('cust-pack-start').value || null,
+    pack_price: packPrice || null,
     goal: document.getElementById('cust-goal').value.trim() || null,
     notes: document.getElementById('cust-notes').value.trim() || null,
+    preferred_language: document.getElementById('cust-lang').value || null,
     referred_by_id: COACH_ID,
     referred_by: COACH_NAME
   };
@@ -812,8 +1794,43 @@ async function saveCustomer() {
       showToast('Customer updated');
     } else {
       var res = await dbInsert('customers', payload);
-      if (Array.isArray(res) && res[0]) D.customers.push(res[0]);
-      showToast('Customer added!');
+      var newCust = Array.isArray(res) && res[0] ? res[0] : null;
+      if (newCust) D.customers.push(newCust);
+      // ── Upload before photo if selected ──
+      if (newCust) {
+        var beforeFile = document.getElementById('cust-photo-before').files[0];
+        if (beforeFile) {
+          try {
+            var photoUrl = await uploadPhoto(beforeFile, newCust.id, 'before');
+            await dbUpdate('customers', newCust.id, { photo_before: photoUrl });
+            newCust.photo_before = photoUrl;
+          } catch(pe) { showToast('Photo upload failed: ' + pe.message, 'error'); }
+        }
+      }
+      // ── Auto-create payment record ──
+      if (newCust && packPrice > 0) {
+        var payMode = document.getElementById('cust-pay-mode').value;
+        var payDate = document.getElementById('cust-pay-date').value || todayStr();
+        if (payMode === 'full') {
+          await dbInsert('finance', { type:'income', description:name+' — Pack sale', amount:packPrice, category:'Pack sale to customer', date:payDate });
+          showToast('Customer added + ₹'+packPrice.toLocaleString('en-IN')+' income recorded!', 'success');
+        } else if (payMode === 'partial') {
+          var paidNow = Number(document.getElementById('cust-paid-now').value) || 0;
+          var dueDate = document.getElementById('cust-due-date').value || null;
+          await dbInsert('payments', { person_id:newCust.id, person_name:name, total_amount:packPrice, amount_paid:paidNow, payment_date:payDate, due_date:dueDate, description:payload.pack_type||'Pack', notes:'Added by coach' });
+          if (paidNow > 0) await dbInsert('finance', { type:'income', description:name+' — Partial pack payment', amount:paidNow, category:'Pack sale to customer', date:payDate });
+          showToast('Customer added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
+        } else {
+          var dueDateNone = document.getElementById('cust-due-date').value || null;
+          await dbInsert('payments', { person_id:newCust.id, person_name:name, total_amount:packPrice, amount_paid:0, payment_date:payDate, due_date:dueDateNone, description:payload.pack_type||'Pack', notes:'Added by coach' });
+          showToast('Customer added + payment reminder created!', 'success');
+        }
+        // Refresh payments
+        try { var allPay = await dbGet('payments','payment_date'); var custIds = D.customers.map(function(c){return c.id;}); D.payments = Array.isArray(allPay)?allPay.filter(function(p){return custIds.indexOf(p.person_id)!==-1;}):[];} catch(e){}
+        renderPendingPayments();
+      } else {
+        showToast('Customer added!');
+      }
     }
     closeModal('cust');
     _daysLeftCache = {};
@@ -915,6 +1932,7 @@ function sendAttWA(custId, custName, date) {
 function renderBodyCustSelect() {
   var sel = document.getElementById('body-cust-sel');
   sel.innerHTML = '<option value="">— Select a customer —</option>' +
+    '<option value="'+COACH_ID+'">👤 My Own Measurements</option>' +
     D.customers.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
   if (_bodySelCustId) { sel.value = _bodySelCustId; onBodyCustChange(); }
 }
@@ -923,7 +1941,7 @@ function onBodyCustChange() {
   _bodySelCustId = document.getElementById('body-cust-sel').value;
   var content = document.getElementById('body-content');
   if (!_bodySelCustId) { content.style.display = 'none'; return; }
-  var cust = D.customers.find(function(c){ return c.id === _bodySelCustId; });
+  var cust = _bodySelCustId === COACH_ID ? { name: COACH_NAME } : D.customers.find(function(c){ return c.id === _bodySelCustId; });
   content.style.display = 'block';
   document.getElementById('body-cust-name').textContent = cust ? cust.name : '';
   renderBodyRecords();
@@ -951,22 +1969,48 @@ function renderBodyRecords() {
   }).join('');
 }
 
+function coachCalcBody() {
+  var w = parseFloat(document.getElementById('body-weight').value) || 0;
+  var f = parseFloat(document.getElementById('body-fat').value) || 0;
+  var sf = parseFloat(document.getElementById('body-subfat').value) || 0;
+  var vfEl = document.getElementById('body-visceral');
+  if (w > 0 && f > 0) {
+    var fatKg = w * f / 100;
+    var sfKg = sf > 0 ? (w * sf / 100) : (fatKg * 0.8);
+    vfEl.value = Math.max(0, fatKg - sfKg).toFixed(2);
+  } else {
+    vfEl.value = '';
+  }
+}
+
 function openBodyModal(id) {
   document.getElementById('body-rec-id').value = id || '';
   var today = todayStr();
+  var fields = ['body-weight','body-fat','body-muscle','body-bmi','body-visceral','body-notes','body-height','body-age-field','body-subfat','body-bmr','body-age'];
   if (id) {
     var b = D.body.find(function(x){ return x.id === id; });
     if (!b) return;
-    document.getElementById('body-date').value     = b.date || today;
-    document.getElementById('body-weight').value   = b.weight || '';
-    document.getElementById('body-fat').value      = b.fat_percentage || '';
-    document.getElementById('body-muscle').value   = b.muscle_percentage || '';
-    document.getElementById('body-bmi').value      = b.bmi || '';
-    document.getElementById('body-visceral').value = b.visceral_fat || '';
-    document.getElementById('body-notes').value    = b.notes || '';
+    document.getElementById('body-date').value        = b.date || today;
+    document.getElementById('body-weight').value      = b.weight || '';
+    document.getElementById('body-fat').value         = b.fat_percentage || '';
+    document.getElementById('body-muscle').value      = b.muscle_percentage || '';
+    document.getElementById('body-bmi').value         = b.bmi || '';
+    document.getElementById('body-visceral').value    = b.visceral_fat || '';
+    document.getElementById('body-notes').value       = b.notes || '';
+    document.getElementById('body-height').value      = b.height || '';
+    document.getElementById('body-age-field').value   = b.age || '';
+    document.getElementById('body-subfat').value      = b.subcutaneous_fat_percentage || '';
+    document.getElementById('body-bmr').value         = b.bmr || '';
+    document.getElementById('body-age').value         = b.body_age || '';
   } else {
-    ['body-weight','body-fat','body-muscle','body-bmi','body-visceral','body-notes'].forEach(function(f){ document.getElementById(f).value=''; });
+    fields.forEach(function(f){ document.getElementById(f).value=''; });
     document.getElementById('body-date').value = today;
+    // Pre-fill height/age from customer record
+    var cust = D.customers.find(function(c){ return c.id === _bodySelCustId; });
+    if (cust) {
+      if (cust.height) document.getElementById('body-height').value = cust.height;
+      if (cust.age)    document.getElementById('body-age-field').value = cust.age;
+    }
   }
   openModal('body');
 }
@@ -976,15 +2020,20 @@ async function saveBodyRecord() {
   var cust = D.customers.find(function(c){ return c.id === _bodySelCustId; });
   var id = document.getElementById('body-rec-id').value;
   var payload = {
-    customer_id:         _bodySelCustId,
-    customer_name:       cust ? cust.name : '',
-    date:                document.getElementById('body-date').value || todayStr(),
-    weight:              document.getElementById('body-weight').value || null,
-    fat_percentage:      document.getElementById('body-fat').value || null,
-    muscle_percentage:   document.getElementById('body-muscle').value || null,
-    bmi:                 document.getElementById('body-bmi').value || null,
-    visceral_fat:        document.getElementById('body-visceral').value || null,
-    notes:               document.getElementById('body-notes').value.trim() || null
+    customer_id:                    _bodySelCustId,
+    customer_name:                  cust ? cust.name : '',
+    date:                           document.getElementById('body-date').value || todayStr(),
+    weight:                         document.getElementById('body-weight').value || null,
+    fat_percentage:                 document.getElementById('body-fat').value || null,
+    muscle_percentage:              document.getElementById('body-muscle').value || null,
+    bmi:                            document.getElementById('body-bmi').value || null,
+    visceral_fat:                   document.getElementById('body-visceral').value || null,
+    notes:                          document.getElementById('body-notes').value.trim() || null,
+    height:                         document.getElementById('body-height').value || null,
+    age:                            document.getElementById('body-age-field').value || null,
+    subcutaneous_fat_percentage:    document.getElementById('body-subfat').value || null,
+    bmr:                            document.getElementById('body-bmr').value || null,
+    body_age:                       document.getElementById('body-age').value || null
   };
   try {
     if (id) {
@@ -1015,20 +2064,154 @@ async function delBodyRecord(id) {
 // ══════════════════════════════════════════
 //  FINANCE
 // ══════════════════════════════════════════
+function packPrice(c) {
+  if (c.pack_price) return Number(c.pack_price);
+  var days = parsePack(c.pack_type);
+  return days === 26 ? 2600 : days === 3 ? 300 : 3000;
+}
+// ══════════════════════════════════════════
+//  RETAIL TRANSACTIONS
+// ══════════════════════════════════════════
+function getTxns() {
+  return JSON.parse(localStorage.getItem('coachTxns_' + COACH_ID) || '[]');
+}
+function saveTxnsStore(arr) {
+  localStorage.setItem('coachTxns_' + COACH_ID, JSON.stringify(arr));
+}
+function updateTxnCats() {
+  var type = document.getElementById('txn-type').value;
+  var cat  = document.getElementById('txn-cat');
+  cat.innerHTML = type === 'income'
+    ? '<option>Retail Sale</option><option>Pack Commission</option><option>Referral Bonus</option><option>Other Income</option>'
+    : '<option>Supplies / Products</option><option>Travel</option><option>Marketing</option><option>Other Expense</option>';
+}
+function openTxnModal(id) {
+  var t = id ? getTxns().find(function(x){ return x.id === id; }) : null;
+  document.getElementById('txn-id').value       = t ? t.id : '';
+  document.getElementById('txn-modal-title').textContent = t ? 'Edit Transaction' : 'Add Transaction';
+  document.getElementById('txn-type').value     = t ? t.type : 'income';
+  updateTxnCats();
+  document.getElementById('txn-cat').value      = t ? t.cat : 'Retail Sale';
+  document.getElementById('txn-desc').value     = t ? t.desc : '';
+  document.getElementById('txn-amount').value   = t ? t.amount : '';
+  document.getElementById('txn-date').value     = t ? t.date : todayStr();
+  document.getElementById('txn-customer').value = t ? (t.customer || '') : '';
+  document.getElementById('txn-notes').value    = t ? (t.notes || '') : '';
+  openModal('txn');
+}
+function saveTxn() {
+  var id     = document.getElementById('txn-id').value;
+  var type   = document.getElementById('txn-type').value;
+  var cat    = document.getElementById('txn-cat').value;
+  var desc   = document.getElementById('txn-desc').value.trim();
+  var amount = parseFloat(document.getElementById('txn-amount').value) || 0;
+  var date   = document.getElementById('txn-date').value;
+  var customer = document.getElementById('txn-customer').value.trim();
+  var notes  = document.getElementById('txn-notes').value.trim();
+  if (!desc) { showToast('Enter a description'); return; }
+  if (!amount || amount <= 0) { showToast('Enter a valid amount'); return; }
+  if (!date) { showToast('Select a date'); return; }
+  var txns = getTxns();
+  if (id) {
+    var idx = txns.findIndex(function(x){ return x.id === id; });
+    if (idx !== -1) txns[idx] = { id:id, type:type, cat:cat, desc:desc, amount:amount, date:date, customer:customer, notes:notes };
+  } else {
+    txns.push({ id: Date.now().toString(), type:type, cat:cat, desc:desc, amount:amount, date:date, customer:customer, notes:notes });
+  }
+  saveTxnsStore(txns);
+  closeModal('txn');
+  renderTransactions();
+  showToast('Transaction saved');
+}
+function delTxn(id) {
+  if (!confirm('Delete this transaction?')) return;
+  var txns = getTxns().filter(function(x){ return x.id !== id; });
+  saveTxnsStore(txns);
+  renderTransactions();
+  showToast('Deleted');
+}
+function renderTransactions() {
+  var monthFilter = (document.getElementById('txn-month-filter') || {value:''}).value;
+  var typeFilter  = (document.getElementById('txn-type-filter') || {value:''}).value;
+  var txns = getTxns();
+  // default month filter to current month on first render
+  if (!monthFilter) {
+    var d = new Date(); var mm = String(d.getMonth()+1).padStart(2,'0');
+    var defMonth = d.getFullYear() + '-' + mm;
+    var el = document.getElementById('txn-month-filter');
+    if (el && !el.value) el.value = defMonth;
+    monthFilter = defMonth;
+  }
+  if (monthFilter) txns = txns.filter(function(t){ return t.date && t.date.startsWith(monthFilter); });
+  if (typeFilter)  txns = txns.filter(function(t){ return t.type === typeFilter; });
+  txns.sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+  var allForMonth = getTxns().filter(function(t){ return !monthFilter || t.date.startsWith(monthFilter); });
+  var totalIncome  = allForMonth.filter(function(t){ return t.type==='income'; }).reduce(function(s,t){ return s+t.amount; }, 0);
+  var totalExpense = allForMonth.filter(function(t){ return t.type==='expense'; }).reduce(function(s,t){ return s+t.amount; }, 0);
+  var net = totalIncome - totalExpense;
+
+  var incEl = document.getElementById('txn-total-income');
+  var expEl = document.getElementById('txn-total-expense');
+  var netEl = document.getElementById('txn-net-profit');
+  if (incEl) incEl.textContent = '₹' + totalIncome.toLocaleString();
+  if (expEl) expEl.textContent = '₹' + totalExpense.toLocaleString();
+  if (netEl) { netEl.textContent = '₹' + Math.abs(net).toLocaleString() + (net < 0 ? ' loss' : ''); netEl.style.color = net >= 0 ? '#2563eb' : '#dc2626'; }
+
+  var el = document.getElementById('txn-list');
+  if (!el) return;
+  if (!txns.length) { el.innerHTML = '<div class="empty" style="padding:20px 0"><p>No transactions found. Tap + Add to record a sale or expense.</p></div>'; return; }
+  el.innerHTML = txns.map(function(t){
+    var isIncome = t.type === 'income';
+    var color = isIncome ? '#16a34a' : '#dc2626';
+    var sign  = isIncome ? '+' : '-';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap">'
+      + '<div style="flex:1;min-width:140px">'
+        + '<div style="font-weight:600;font-size:13px">' + t.desc + '</div>'
+        + '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + t.cat + (t.customer ? ' • ' + t.customer : '') + ' • ' + t.date + '</div>'
+        + (t.notes ? '<div style="font-size:11px;color:var(--muted);font-style:italic">' + t.notes + '</div>' : '')
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:8px">'
+        + '<div style="font-size:15px;font-weight:700;color:' + color + '">' + sign + '₹' + t.amount.toLocaleString() + '</div>'
+        + '<button class="btn-e" style="font-size:11px;padding:3px 8px" onclick="openTxnModal(\'' + t.id + '\')">Edit</button>'
+        + '<button class="btn-d" style="font-size:11px;padding:3px 8px" onclick="delTxn(\'' + t.id + '\')">Del</button>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
 function renderFinance() {
   var total = D.customers.length;
   var active = D.customers.filter(function(c){ return getDaysLeft(c).active; }).length;
   var expiring = D.customers.filter(function(c){ var st=getDaysLeft(c); return st.active && st.days<=7; }).length;
-  // Estimate pack value (customers with pack_type)
-  var value = D.customers.reduce(function(sum, c){
-    if (!c.pack_type) return sum;
-    var days = parsePack(c.pack_type);
-    return sum + (days === 26 ? 2600 : days === 3 ? 300 : 3000);
-  }, 0);
+  var value = D.customers.reduce(function(sum, c){ return c.pack_type ? sum + packPrice(c) : sum; }, 0);
   document.getElementById('fin-total').textContent    = total;
   document.getElementById('fin-active').textContent   = active;
   document.getElementById('fin-value').textContent    = '₹' + value.toLocaleString();
   document.getElementById('fin-expiring').textContent = expiring;
+  // ── Commission Calculator ──
+  var commPct    = Number((document.getElementById('comm-pct')||{value:10}).value) || 10;
+  var refBonus   = Number((document.getElementById('comm-ref-bonus')||{value:200}).value) || 200;
+  var now = new Date(); var ym = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  var thisMonthCusts = D.customers.filter(function(c){ return (c.created_at||'').startsWith(ym) || (c.join_date||'').startsWith(ym); });
+  var totalComm   = Math.round(value * commPct / 100);
+  var monthComm   = Math.round(thisMonthCusts.reduce(function(s,c){return c.pack_type?s+packPrice(c):s;},0) * commPct / 100);
+  var refEarnings = D.customers.length * refBonus;
+  var thisMonthRef = thisMonthCusts.length * refBonus;
+  var totalEarned = totalComm + refEarnings;
+  var commEl = document.getElementById('comm-cards'); if(!commEl) return;
+  function cCard(label, val, color) {
+    return '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center">'+
+      '<div style="font-size:11px;color:#6b7280;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-size:18px;font-weight:700;color:'+color+'">'+val+'</div>'+
+    '</div>';
+  }
+  commEl.innerHTML =
+    cCard('Pack Commission (all time)', '₹'+totalComm.toLocaleString(), '#16a34a') +
+    cCard('Pack Commission (this month)', '₹'+monthComm.toLocaleString(), '#2563eb') +
+    cCard('Referral Bonus (all time)', '₹'+refEarnings.toLocaleString(), '#9333ea') +
+    cCard('Referral Bonus (this month)', '₹'+thisMonthRef.toLocaleString(), '#ea580c') +
+    cCard('Total Estimated Earnings', '₹'+totalEarned.toLocaleString(), '#dc2626');
 
   var el = document.getElementById('fin-list');
   if (!D.customers.length) { el.innerHTML = '<div class="empty"><p>No customers yet.</p></div>'; return; }
@@ -1045,6 +2228,7 @@ function renderFinance() {
       badge+
     '</div>';
   }).join('');
+  renderTransactions();
 }
 
 // ══════════════════════════════════════════
@@ -1203,6 +2387,957 @@ async function saveFollowup() {
 //  BOOT
 // ══════════════════════════════════════════
 init();
+
+// ══════════════════════════════════════════
+//  RENEWAL REMINDERS
+// ══════════════════════════════════════════
+var _renewTab = 'all';
+
+function setRenewTab(tab, el) {
+  _renewTab = tab;
+  document.querySelectorAll('#sec-renewals .btn-e').forEach(function(b){ b.style.background=''; b.style.color=''; b.style.borderColor=''; });
+  el.style.background = 'var(--primary)'; el.style.color = '#fff'; el.style.borderColor = 'var(--primary)';
+  renderRenewals();
+}
+
+function renderRenewals() {
+  var all = D.customers.filter(function(c){ return c.pack_type; });
+  var expired  = all.filter(function(c){ var st=getDaysLeft(c); return !st.active || st.days <= 0; });
+  var within3  = all.filter(function(c){ var st=getDaysLeft(c); return st.active && st.days > 0 && st.days <= 3; });
+  var within7  = all.filter(function(c){ var st=getDaysLeft(c); return st.active && st.days > 0 && st.days <= 7; });
+
+  document.getElementById('rn-expired').textContent = expired.length;
+  document.getElementById('rn-3days').textContent   = within3.length;
+  document.getElementById('rn-7days').textContent   = within7.length;
+
+  var list;
+  if (_renewTab === 'exp') list = expired;
+  else if (_renewTab === '1') list = all.filter(function(c){ var st=getDaysLeft(c); return (st.active && st.days <= 1) || !st.active || st.days <= 0; });
+  else if (_renewTab === '3') list = within3.concat(expired);
+  else if (_renewTab === '7') list = within7.concat(expired);
+  else list = within7.concat(expired); // 'all' = within7 + expired
+
+  list = list.filter(function(c, i, arr){ return arr.indexOf(c) === i; }); // deduplicate
+  list = list.slice().sort(function(a,b){ return getDaysLeft(a).days - getDaysLeft(b).days; });
+
+  var el = document.getElementById('renewals-list');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="ei">🎉</div><p>No customers in this range.</p></div>'; return; }
+
+  el.innerHTML = list.map(function(c){
+    var st   = getDaysLeft(c);
+    var days = st.days;
+    var cls  = (!st.active || days <= 0) ? 'urgent' : days <= 3 ? 'urgent' : 'soon';
+    var badge = (!st.active || days <= 0)
+      ? '<span class="renew-badge" style="background:var(--danger-light);color:var(--danger)">Expired</span>'
+      : days <= 3
+        ? '<span class="renew-badge" style="background:#fff3cd;color:#856404">'+days+' day'+(days!==1?'s':'')+' left</span>'
+        : '<span class="renew-badge" style="background:#dbeafe;color:#1d4ed8">'+days+' days left</span>';
+    var phone = (c.contact||'').replace(/\D/g,'');
+    if (phone.length === 10) phone = COUNTRY_CODE + phone;
+    var waMsg = (!st.active || days <= 0)
+      ? 'Hi '+c.name+'! \uD83C\uDF3F\n\nYour wellness pack at Dharani\'s has expired. Come renew and keep the momentum going!\n\nWe miss you! \uD83D\uDC9A'
+      : 'Hi '+c.name+'! \uD83C\uDF3F\n\nJust a heads-up — your pack expires in '+days+' day'+(days!==1?'s':'')+'. Renew early to stay on track with your health goals!\n\nDharani\'s \uD83D\uDC9A';
+    var waUrl = phone ? 'https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(waMsg) : '';
+    return '<div class="renew-card '+cls+'">'+
+      '<div>'+
+        '<div style="font-weight:700;font-size:14px">'+c.name+'</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:2px">'+(c.pack_type||'')+(c.contact?' \u2022 '+c.contact:'')+'</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+        badge+
+        (waUrl ? '<a href="'+waUrl+'" target="_blank" rel="noopener" style="padding:6px 14px;background:#25D366;color:#fff;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none">\uD83D\uDCAC WhatsApp</a>' : '')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  SESSION NOTES SECTION
+// ══════════════════════════════════════════
+var _expandedNotesCustId = null;
+
+function renderNotesSection() {
+  var q = ((document.getElementById('notes-search')||{}).value||'').toLowerCase();
+  var custs = D.customers.filter(function(c){ return !q || c.name.toLowerCase().indexOf(q) !== -1; });
+  var el = document.getElementById('notes-section-list');
+  if (!el) return;
+  if (!custs.length) { el.innerHTML = '<div class="empty"><div class="ei">\uD83D\uDCDD</div><p>No customers found.</p></div>'; return; }
+  el.innerHTML = custs.map(function(c){
+    var notes = JSON.parse(localStorage.getItem('coachNotes_'+c.id) || '[]');
+    var expanded = _expandedNotesCustId === c.id;
+    var notesHtml = notes.length
+      ? notes.map(function(n){
+          var dt = new Date(n.ts);
+          var ds = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' '+dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+          return '<div class="note-entry"><div class="note-meta">'+ds+'</div><div style="white-space:pre-wrap">'+n.text+'</div></div>';
+        }).join('')
+      : '<div style="color:var(--muted);font-size:13px;padding:8px 0">No notes yet.</div>';
+    return '<div class="notes-cust-item'+(expanded?' expanded':'')+'" id="nci-'+c.id+'">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center" onclick="toggleNotesExpand(\''+c.id+'\')">'+
+        '<div>'+
+          '<div style="font-weight:700;font-size:14px">'+c.name+'</div>'+
+          '<div style="font-size:12px;color:var(--muted);margin-top:2px">'+notes.length+' note'+(notes.length!==1?'s':'')+' \u2022 tap to '+(expanded?'collapse':'expand')+'</div>'+
+        '</div>'+
+        '<span style="font-size:16px;color:var(--muted)">'+(expanded?'▲':'▼')+'</span>'+
+      '</div>'+
+      '<div class="notes-panel'+(expanded?' open':'')+'" id="np-'+c.id+'">'+
+        '<div style="display:flex;gap:8px;margin-bottom:10px;padding-top:4px">'+
+          '<textarea id="nsinput-'+c.id+'" rows="2" placeholder="Add session note..." style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;outline:none"></textarea>'+
+          '<button class="btn-p" style="align-self:flex-end;padding:8px 14px" onclick="event.stopPropagation();saveNoteSection(\''+c.id+'\')">Save</button>'+
+        '</div>'+
+        notesHtml+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function toggleNotesExpand(custId) {
+  _expandedNotesCustId = _expandedNotesCustId === custId ? null : custId;
+  renderNotesSection();
+  // Scroll to expanded item
+  var el = document.getElementById('nci-'+custId);
+  if (el && _expandedNotesCustId) setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 50);
+}
+
+function saveNoteSection(custId) {
+  var el = document.getElementById('nsinput-'+custId);
+  if (!el || !el.value.trim()) { showToast('Write something first', 'error'); return; }
+  var notes = JSON.parse(localStorage.getItem('coachNotes_'+custId) || '[]');
+  notes.unshift({ ts: new Date().toISOString(), text: el.value.trim() });
+  localStorage.setItem('coachNotes_'+custId, JSON.stringify(notes));
+  el.value = '';
+  renderNotesSection();
+  // Re-expand
+  _expandedNotesCustId = custId;
+  renderNotesSection();
+  showToast('Note saved!');
+}
+
+// ══════════════════════════════════════════
+//  WORKOUT PLANNER
+// ══════════════════════════════════════════
+function getWorkoutPlans() {
+  return JSON.parse(localStorage.getItem('coachWorkouts_'+COACH_ID) || '[]');
+}
+function saveWorkoutPlansStore(arr) {
+  localStorage.setItem('coachWorkouts_'+COACH_ID, JSON.stringify(arr));
+}
+function renderWorkoutCustFilter() {
+  var sel = document.getElementById('workout-cust-filter');
+  if (!sel) return;
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">All Customers</option>'+
+    D.customers.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  if (cur) sel.value = cur;
+}
+function renderWorkoutPlans() {
+  var filter = ((document.getElementById('workout-cust-filter')||{}).value||'');
+  var plans  = getWorkoutPlans();
+  if (filter) plans = plans.filter(function(p){ return p.custId === filter; });
+  plans.sort(function(a,b){ return (b.startDate||'').localeCompare(a.startDate||''); });
+  var el = document.getElementById('workout-plans-list');
+  if (!el) return;
+  if (!plans.length) { el.innerHTML = '<div class="empty"><div class="ei">\uD83C\uDFCB\uFE0F</div><p>No workout plans yet. Tap + New Plan to create one.</p></div>'; return; }
+  el.innerHTML = plans.map(function(p){
+    var cust = D.customers.find(function(c){ return c.id === p.custId; });
+    var exercises = (p.exercises||'').split('\n').filter(function(e){ return e.trim(); });
+    return '<div class="plan-card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
+        '<div>'+
+          '<div class="plan-title">'+p.name+'</div>'+
+          '<div style="font-size:12px;color:var(--muted)">'+(cust?cust.name:'Unknown')+(p.startDate?' \u2022 Started '+p.startDate:'')+'</div>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px">'+
+          '<button class="btn-e" onclick="openWorkoutModal(\''+p.id+'\')">Edit</button>'+
+          '<button class="btn-d" onclick="delWorkoutPlan(\''+p.id+'\')">Del</button>'+
+        '</div>'+
+      '</div>'+
+      (exercises.length
+        ? '<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:8px">'+
+            exercises.map(function(e){
+              var parts = e.split('\u2022'); var ex = (parts[0]||e).trim(); var sets = (parts[1]||'').trim();
+              return '<div class="exercise-row"><span>'+ex+'</span>'+(sets?'<span style="color:var(--primary);font-weight:600">'+sets+'</span>':'')+'</div>';
+            }).join('')+
+          '</div>'
+        : '')+
+      (p.notes ? '<div style="font-size:12px;color:var(--muted);font-style:italic;border-top:1px solid var(--border);padding-top:8px">\uD83D\uDCA1 '+p.notes+'</div>' : '')+
+    '</div>';
+  }).join('');
+}
+function openWorkoutModal(id) {
+  var p = id ? getWorkoutPlans().find(function(x){ return x.id === id; }) : null;
+  document.getElementById('workout-plan-id').value = id || '';
+  document.getElementById('workout-modal-title').textContent = id ? 'Edit Plan' : 'New Workout Plan';
+  var sel = document.getElementById('workout-cust-sel');
+  sel.innerHTML = '<option value="">— Select customer —</option>'+D.customers.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  if (p) {
+    sel.value = p.custId || '';
+    document.getElementById('workout-plan-name').value  = p.name || '';
+    document.getElementById('workout-start-date').value = p.startDate || '';
+    document.getElementById('workout-exercises').value  = p.exercises || '';
+    document.getElementById('workout-plan-notes').value = p.notes || '';
+  } else {
+    sel.value = '';
+    ['workout-plan-name','workout-exercises','workout-plan-notes'].forEach(function(f){ document.getElementById(f).value=''; });
+    document.getElementById('workout-start-date').value = todayStr();
+  }
+  openModal('workout');
+}
+function saveWorkoutPlan() {
+  var custId = document.getElementById('workout-cust-sel').value;
+  var name   = document.getElementById('workout-plan-name').value.trim();
+  if (!custId) { showToast('Select a customer', 'error'); return; }
+  if (!name)   { showToast('Enter a plan name', 'error'); return; }
+  var id = document.getElementById('workout-plan-id').value;
+  var plan = {
+    id:        id || Date.now().toString(),
+    custId:    custId,
+    name:      name,
+    startDate: document.getElementById('workout-start-date').value,
+    exercises: document.getElementById('workout-exercises').value.trim(),
+    notes:     document.getElementById('workout-plan-notes').value.trim()
+  };
+  var plans = getWorkoutPlans();
+  if (id) {
+    var idx = plans.findIndex(function(p){ return p.id === id; });
+    if (idx !== -1) plans[idx] = plan; else plans.unshift(plan);
+  } else {
+    plans.unshift(plan);
+  }
+  saveWorkoutPlansStore(plans);
+  closeModal('workout');
+  renderWorkoutPlans();
+  showToast('Plan saved!');
+}
+function delWorkoutPlan(id) {
+  if (!confirm('Delete this workout plan?')) return;
+  var plans = getWorkoutPlans().filter(function(p){ return p.id !== id; });
+  saveWorkoutPlansStore(plans);
+  renderWorkoutPlans();
+  showToast('Deleted', 'info');
+}
+
+// ══════════════════════════════════════════
+//  BULK WHATSAPP
+// ══════════════════════════════════════════
+var _waSendQueue = [];
+var _waSendIdx   = 0;
+
+function renderWaRecipients() {
+  var el = document.getElementById('wa-recipients-list');
+  if (!el) return;
+  _waSendQueue = []; _waSendIdx = 0;
+  if (!D.customers.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">No customers loaded.</div>'; return; }
+  el.innerHTML = D.customers.map(function(c){
+    var phone = (c.contact||'').replace(/\D/g,'');
+    var hasPhone = phone.length >= 10;
+    return '<div class="wa-recipient">'+
+      '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">'+
+        '<input type="checkbox" id="war-'+c.id+'" value="'+c.id+'" '+(hasPhone?'':'disabled title="No phone number"')+'>'+
+        '<label for="war-'+c.id+'" style="font-size:13px;font-weight:600;cursor:'+(hasPhone?'pointer':'default')+';'+(hasPhone?'':'opacity:.5')+'">'+c.name+(hasPhone?'':' (no phone)')+'</label>'+
+      '</div>'+
+      (hasPhone?'<span style="font-size:11px;color:var(--muted)">'+c.contact+'</span>':'')+
+    '</div>';
+  }).join('');
+  // Reset send state UI
+  document.getElementById('wa-send-status').textContent = 'Select recipients and compose a message, then tap the button below.';
+  document.getElementById('wa-send-btn').textContent = '\uD83D\uDCAC Open Next WhatsApp';
+  document.getElementById('wa-send-progress').style.display = 'none';
+}
+
+function waSelectGroup(group) {
+  var today = todayStr();
+  D.customers.forEach(function(c){
+    var cb = document.getElementById('war-'+c.id);
+    if (!cb || cb.disabled) return;
+    if (group === 'expiring') {
+      var st = getDaysLeft(c); cb.checked = st.active && st.days <= 7;
+    } else if (group === 'inactive') {
+      var lastAtt = D.attendance.filter(function(a){ return a.customer_id===c.id && a.status==='present'; })
+        .sort(function(a,b){ return b.date.localeCompare(a.date); })[0];
+      var daysSince = lastAtt ? Math.floor((new Date(today)-new Date(lastAtt.date))/86400000) : 999;
+      cb.checked = daysSince >= 7;
+    } else if (group === 'all') {
+      cb.checked = true;
+    } else {
+      cb.checked = false;
+    }
+  });
+}
+
+function waSetTemplate(type) {
+  var msgs = {
+    renewal:    'Hi {name}! \uD83C\uDF3F\n\nYour wellness pack at Dharani\'s is expiring soon. Renew now to keep your health journey on track!\n\nCall us or walk in anytime. See you soon! \uD83D\uDC9A',
+    motivation: 'Hi {name}! \uD83D\uDCAA\n\nJust a reminder — consistency is the key to lasting results! We\'re cheering for you at Dharani\'s.\n\nKeep showing up — you\'re doing great! \uD83C\uDF3F',
+    inactive:   'Hi {name}! \uD83D\uDE0A\n\nWe\'ve missed you at Dharani\'s! Your health journey is too important to pause.\n\nCome back and let\'s get back on track together. See you soon! \uD83D\uDC9A\uD83C\uDF3F'
+  };
+  document.getElementById('wa-message').value = msgs[type] || '';
+}
+
+function waSendNext() {
+  var msg = (document.getElementById('wa-message').value||'').trim();
+  if (!msg) { showToast('Write a message first', 'error'); return; }
+
+  // Build queue on first send
+  if (_waSendIdx === 0) {
+    _waSendQueue = [];
+    D.customers.forEach(function(c){
+      var cb = document.getElementById('war-'+c.id);
+      if (!cb || !cb.checked) return;
+      var phone = (c.contact||'').replace(/\D/g,'');
+      if (phone.length === 10) phone = COUNTRY_CODE + phone;
+      if (phone) _waSendQueue.push({ name: c.name, phone: phone });
+    });
+    if (!_waSendQueue.length) { showToast('Select at least one recipient', 'error'); return; }
+  }
+
+  if (_waSendIdx >= _waSendQueue.length) {
+    _waSendIdx = 0; _waSendQueue = [];
+    document.getElementById('wa-send-btn').textContent = '\uD83D\uDCAC Open Next WhatsApp';
+    document.getElementById('wa-send-status').textContent = '\u2705 All messages sent!';
+    showToast('All done!', 'success');
+    return;
+  }
+
+  var recipient = _waSendQueue[_waSendIdx];
+  var text = msg.replace(/\{name\}/g, recipient.name);
+  window.open('https://api.whatsapp.com/send?phone='+recipient.phone+'&text='+encodeURIComponent(text), '_blank');
+  _waSendIdx++;
+
+  var pct = Math.round((_waSendIdx / _waSendQueue.length) * 100);
+  document.getElementById('wa-send-progress').style.display = 'block';
+  document.getElementById('wa-prog-fill').style.width = pct + '%';
+  document.getElementById('wa-prog-text').textContent = _waSendIdx + ' of ' + _waSendQueue.length + ' sent';
+  if (_waSendIdx < _waSendQueue.length) {
+    document.getElementById('wa-send-status').textContent = 'Next up: ' + _waSendQueue[_waSendIdx].name;
+    document.getElementById('wa-send-btn').textContent = '\uD83D\uDCAC Send to ' + _waSendQueue[_waSendIdx].name;
+  } else {
+    document.getElementById('wa-send-status').textContent = '\u2705 That was the last one!';
+    document.getElementById('wa-send-btn').textContent = '\u2705 All Done — Reset';
+  }
+}
+
+// ── SESSION NOTES ──
+var _notesCustomerId = null;
+function openNotesModal(custId, custName) {
+  _notesCustomerId = custId;
+  document.getElementById('notes-cust-name').textContent = custName;
+  document.getElementById('notes-input').value = '';
+  renderNotesList();
+  document.getElementById('modal-notes').classList.add('open');
+}
+function renderNotesList() {
+  var notes = JSON.parse(localStorage.getItem('coachNotes_'+_notesCustomerId) || '[]');
+  var el = document.getElementById('notes-list');
+  if (!notes.length) { el.innerHTML='<div style="text-align:center;padding:24px;color:#888;font-size:13px">No notes yet. Add your first session note!</div>'; return; }
+  el.innerHTML = notes.map(function(n,i){
+    var dt = new Date(n.ts);
+    var ds = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+' '+dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    return '<div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#fafafa">'+
+      '<div style="font-size:11px;color:#888;margin-bottom:4px">'+ds+'</div>'+
+      '<div style="font-size:13px;color:#222;white-space:pre-wrap">'+n.text+'</div>'+
+      '<div style="margin-top:6px;text-align:right"><button onclick="deleteNote('+i+')" style="border:none;background:none;color:#ef4444;font-size:11px;cursor:pointer">Delete</button></div>'+
+    '</div>';
+  }).join('');
+}
+function saveNote() {
+  var text = document.getElementById('notes-input').value.trim();
+  if (!text) { return; }
+  var notes = JSON.parse(localStorage.getItem('coachNotes_'+_notesCustomerId) || '[]');
+  notes.unshift({ ts: new Date().toISOString(), text: text });
+  localStorage.setItem('coachNotes_'+_notesCustomerId, JSON.stringify(notes));
+  document.getElementById('notes-input').value = '';
+  renderNotesList();
+}
+function deleteNote(idx) {
+  if (!confirm('Delete this note?')) return;
+  var notes = JSON.parse(localStorage.getItem('coachNotes_'+_notesCustomerId) || '[]');
+  notes.splice(idx,1);
+  localStorage.setItem('coachNotes_'+_notesCustomerId, JSON.stringify(notes));
+  renderNotesList();
+}
+
+// ══════════════════════════════════════════
+//  MY BODY STATS (coach personal)
+// ══════════════════════════════════════════
+var D_MY_BODY = [];
+var _myWeightChart = null;
+
+async function loadMyBodyStats() {
+  try {
+    var rows = await dbGet('coach_body_composition', 'date', 'coach_id=eq.' + COACH_ID);
+    D_MY_BODY = Array.isArray(rows) ? rows : [];
+  } catch(e) {
+    D_MY_BODY = [];
+  }
+  renderMyBodyIdeals();
+  renderMyBodyHistory();
+  renderMyWeightChart();
+}
+
+function renderMyBodyIdeals() {
+  var latest = D_MY_BODY[0] || null;
+  var isMale = COACH_GENDER === 'male';
+  var fatMin = isMale ? 10 : 18, fatMax = isMale ? 20 : 28;
+  var musMin = isMale ? 33 : 24, musMax = isMale ? 39 : 30;
+
+  function status(val, min, max) {
+    if (val === null || val === undefined || val === '') return { icon:'—', cls:'', label:'No data' };
+    var v = parseFloat(val);
+    if (v >= min && v <= max) return { icon:'✅', cls:'color:var(--success)', label:'Ideal' };
+    if (v < min) return { icon:'⬇️', cls:'color:var(--accent)', label:'Below ideal' };
+    return { icon:'⬆️', cls:'color:var(--danger)', label:'Above ideal' };
+  }
+
+  var fatSt = status(latest && latest.fat_percentage, fatMin, fatMax);
+  var musSt = status(latest && latest.muscle_percentage, musMin, musMax);
+  var bmi   = latest ? parseFloat(latest.bmi||0) : null;
+  var bmiSt = bmi ? (bmi < 18.5 ? {icon:'⬇️',cls:'color:var(--accent)',label:'Underweight'} : bmi <= 24.9 ? {icon:'✅',cls:'color:var(--success)',label:'Normal'} : bmi <= 29.9 ? {icon:'⬆️',cls:'color:var(--accent)',label:'Overweight'} : {icon:'🔴',cls:'color:var(--danger)',label:'Obese'}) : {icon:'—',cls:'',label:'No data'};
+
+  document.getElementById('my-body-ideals').innerHTML =
+    '<div style="font-weight:700;font-size:14px;margin-bottom:14px">My Ideal Targets (' + (isMale ? 'Male' : 'Female') + ')</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">' +
+      mkIdealCard('Body Fat', latest ? latest.fat_percentage : null, '%', fatMin+'-'+fatMax+'%', fatSt) +
+      mkIdealCard('Muscle Mass', latest ? latest.muscle_percentage : null, '%', musMin+'-'+musMax+'%', musSt) +
+      mkIdealCard('BMI', latest ? latest.bmi : null, '', '18.5–24.9', bmiSt) +
+      mkIdealCard('Visceral Fat', latest ? latest.visceral_fat : null, '', '< 9 (low risk)', latest && latest.visceral_fat ? (parseFloat(latest.visceral_fat) < 9 ? {icon:'✅',cls:'color:var(--success)',label:'Good'} : {icon:'⚠️',cls:'color:var(--danger)',label:'High'}) : {icon:'—',cls:'',label:'No data'}) +
+    '</div>' +
+    (latest ? '<div style="font-size:12px;color:var(--muted);margin-top:12px">Last recorded: ' + latest.date + ' · Weight: ' + (latest.weight||'—') + ' kg · Height: ' + (latest.height||'—') + ' cm</div>' : '<div style="font-size:12px;color:var(--muted);margin-top:12px">No body records yet. Add your first one!</div>');
+}
+
+function mkIdealCard(label, val, unit, range, st) {
+  return '<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center">' +
+    '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px">' + label + '</div>' +
+    '<div style="font-size:22px;font-weight:700;color:var(--primary)">' + (val !== null && val !== undefined && val !== '' ? parseFloat(val).toFixed(1) + unit : '—') + '</div>' +
+    '<div style="font-size:11px;margin-top:4px;' + st.cls + '">' + st.icon + ' ' + st.label + '</div>' +
+    '<div style="font-size:10px;color:var(--muted);margin-top:2px">Goal: ' + range + '</div>' +
+  '</div>';
+}
+
+function renderMyBodyHistory() {
+  var el = document.getElementById('my-body-history');
+  if (!D_MY_BODY.length) {
+    el.innerHTML = '<div class="empty"><div class="ei">🧬</div>No records yet. Tap "+ Add Today\'s Stats"</div>';
+    return;
+  }
+  el.innerHTML = D_MY_BODY.map(function(r, i) {
+    var prev = D_MY_BODY[i+1];
+    function diff(cur, prv, field) {
+      if (!prv || cur[field] === undefined || prv[field] === undefined) return '';
+      var d = parseFloat(cur[field]) - parseFloat(prv[field]);
+      if (!d) return '';
+      var sign = d > 0 ? '+' : '';
+      return ' <span style="font-size:11px;color:' + (d > 0 ? 'var(--danger)' : 'var(--success)') + '">' + sign + d.toFixed(1) + '</span>';
+    }
+    return '<div class="body-rec">' +
+      '<div>' +
+        '<div class="body-rec-date">' + r.date + '</div>' +
+        (r.notes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + r.notes + '</div>' : '') +
+      '</div>' +
+      '<div class="body-rec-vals">' +
+        '<div class="body-rec-val">Wt <span>' + (r.weight||'—') + 'kg</span>' + diff(r,prev,'weight') + '</div>' +
+        '<div class="body-rec-val">Fat <span>' + (r.fat_percentage||'—') + '%</span>' + diff(r,prev,'fat_percentage') + '</div>' +
+        '<div class="body-rec-val">Muscle <span>' + (r.muscle_percentage||'—') + '%</span>' + diff(r,prev,'muscle_percentage') + '</div>' +
+        '<div class="body-rec-val">BMI <span>' + (r.bmi||'—') + '</span>' + diff(r,prev,'bmi') + '</div>' +
+        (r.visceral_fat ? '<div class="body-rec-val">VF <span>' + r.visceral_fat + '</span>' + diff(r,prev,'visceral_fat') + '</div>' : '') +
+      '</div>' +
+      '<div style="display:flex;gap:6px">' +
+        '<button class="btn-e" onclick="editMyBody(\'' + r.id + '\')">Edit</button>' +
+        '<button class="btn-d" onclick="deleteMyBody(\'' + r.id + '\')">Del</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderMyWeightChart() {
+  var canvas = document.getElementById('my-weight-chart');
+  if (!canvas) return;
+  var rows = D_MY_BODY.slice().reverse();
+  var labels = rows.map(function(r){ return r.date; });
+  var weights = rows.map(function(r){ return parseFloat(r.weight)||null; });
+  if (_myWeightChart) { _myWeightChart.destroy(); _myWeightChart = null; }
+  if (!rows.length) { canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height); return; }
+  _myWeightChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Weight (kg)', data: weights, borderColor: '#2d5a3d', backgroundColor: 'rgba(45,90,61,.1)', tension: 0.3, fill: true, pointRadius: 4, pointBackgroundColor: '#2d5a3d' }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: false, ticks: { font: { size: 11 } } }, x: { ticks: { font: { size: 10 }, maxRotation: 45 } } }
+    }
+  });
+}
+
+function openMyBodyModal() {
+  document.getElementById('mybody-rec-id').value  = '';
+  document.getElementById('mybody-date').value = todayStr();
+  document.getElementById('mybody-weight').value = '';
+  document.getElementById('mybody-height').value = D_MY_BODY.length ? (D_MY_BODY[0].height||'') : '';
+  document.getElementById('mybody-fat').value = '';
+  document.getElementById('mybody-muscle').value = '';
+  document.getElementById('mybody-bmi').value = '';
+  document.getElementById('mybody-visceral').value = '';
+  document.getElementById('mybody-notes').value = '';
+  openModal('mybody');
+}
+
+function editMyBody(id) {
+  var r = D_MY_BODY.find(function(x){ return x.id === id; });
+  if (!r) return;
+  document.getElementById('mybody-rec-id').value  = r.id;
+  document.getElementById('mybody-date').value     = r.date || todayStr();
+  document.getElementById('mybody-weight').value   = r.weight || '';
+  document.getElementById('mybody-height').value   = r.height || '';
+  document.getElementById('mybody-fat').value      = r.fat_percentage || '';
+  document.getElementById('mybody-muscle').value   = r.muscle_percentage || '';
+  document.getElementById('mybody-bmi').value      = r.bmi || '';
+  document.getElementById('mybody-visceral').value = r.visceral_fat || '';
+  document.getElementById('mybody-notes').value    = r.notes || '';
+  openModal('mybody');
+}
+
+async function saveMyBody() {
+  var id      = document.getElementById('mybody-rec-id').value;
+  var w       = parseFloat(document.getElementById('mybody-weight').value)||null;
+  var h       = parseFloat(document.getElementById('mybody-height').value)||null;
+  var fat     = parseFloat(document.getElementById('mybody-fat').value)||null;
+  var muscle  = parseFloat(document.getElementById('mybody-muscle').value)||null;
+  var bmiVal  = parseFloat(document.getElementById('mybody-bmi').value)||null;
+  var visceral= parseFloat(document.getElementById('mybody-visceral').value)||null;
+  var notes   = document.getElementById('mybody-notes').value.trim();
+  var date    = document.getElementById('mybody-date').value || todayStr();
+
+  // Auto-calculate BMI if not provided
+  if (!bmiVal && w && h) bmiVal = parseFloat((w / ((h/100)*(h/100))).toFixed(1));
+
+  if (!w) { showToast('Enter at least your weight', 'error'); return; }
+
+  var data = { coach_id: COACH_ID, date: date, weight: w };
+  if (h) data.height = h;
+  if (fat !== null) data.fat_percentage = fat;
+  if (muscle !== null) data.muscle_percentage = muscle;
+  if (bmiVal) data.bmi = bmiVal;
+  if (visceral !== null) data.visceral_fat = visceral;
+  if (notes) data.notes = notes;
+
+  try {
+    if (id) {
+      await dbUpdate('coach_body_composition', id, data);
+      showToast('Body stats updated!', 'success');
+    } else {
+      await dbInsert('coach_body_composition', data);
+      showToast('Body stats saved!', 'success');
+    }
+    closeModal('mybody');
+    loadMyBodyStats();
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function deleteMyBody(id) {
+  if (!confirm('Delete this record?')) return;
+  try {
+    await dbDelete('coach_body_composition', id);
+    showToast('Deleted', 'success');
+    loadMyBodyStats();
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════
+//  MY DIET PLAN
+// ══════════════════════════════════════════
+var _myDietGenInFlight = false;
+var _myGoalFoodsAll = [];
+var _myGoalFoodRestrict = [];
+
+async function loadMyDiet() {
+  // Load foods for goal foods list
+  try {
+    var rows = await dbGet('foods', 'name');
+    _myGoalFoodsAll = Array.isArray(rows) ? rows : [];
+  } catch(e) { _myGoalFoodsAll = []; }
+
+  // Load coach's personal food restrictions
+  try {
+    var coachRow = await req('coaches?id=eq.' + COACH_ID + '&select=personal_diet_plan,personal_food_restrict');
+    if (Array.isArray(coachRow) && coachRow[0]) {
+      var cr = coachRow[0];
+      _myGoalFoodRestrict = JSON.parse(cr.personal_food_restrict||'[]');
+      // Show saved diet plan
+      if (cr.personal_diet_plan) {
+        document.getElementById('my-diet-plan-output').innerHTML =
+          '<div class="tcard" style="margin-top:0"><div style="font-weight:700;font-size:14px;margin-bottom:10px">My Saved Diet Plan</div>' +
+          '<div style="white-space:pre-wrap;font-size:13px;line-height:1.8;color:var(--text)">' + cr.personal_diet_plan + '</div></div>';
+      }
+    }
+  } catch(e) { _myGoalFoodRestrict = []; }
+
+  // Populate body summary
+  var latest = D_MY_BODY[0] || null;
+  var sumEl = document.getElementById('my-diet-body-summary');
+  if (latest) {
+    sumEl.innerHTML = '<strong>Latest stats:</strong> ' +
+      (latest.weight ? 'Weight ' + latest.weight + 'kg' : '') +
+      (latest.height ? ' · Height ' + latest.height + 'cm' : '') +
+      (latest.fat_percentage ? ' · Fat ' + latest.fat_percentage + '%' : '') +
+      (latest.muscle_percentage ? ' · Muscle ' + latest.muscle_percentage + '%' : '') +
+      (latest.bmi ? ' · BMI ' + latest.bmi : '') +
+      ' <span style="font-size:11px;color:var(--muted)">(' + latest.date + ')</span>';
+  } else {
+    sumEl.innerHTML = '<span style="color:var(--danger)">No body stats recorded yet. Go to "My Body Stats" and add your first entry.</span>';
+  }
+
+  // Load saved goal
+  var savedGoal = localStorage.getItem('myGoal_' + COACH_ID) || 'build_muscle';
+  var savedAge = localStorage.getItem('myAge_' + COACH_ID) || '';
+  document.getElementById('my-goal').value = savedGoal;
+  document.getElementById('my-age').value = savedAge;
+
+  renderMyGoalFoods();
+}
+
+function renderMyGoalFoods() {
+  var goal = document.getElementById('my-goal').value;
+  var goalFilter = goal === 'build_muscle' || goal === 'improve_stamina' ? 'weight_gain' : 'weight_loss';
+  var foods = _myGoalFoodsAll.filter(function(f){ return f.goal === goalFilter || f.goal === 'both'; });
+  var el = document.getElementById('my-goal-foods-list');
+  if (!foods.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px">No foods in database yet. Ask supervisor to run seed SQL.</div>'; return; }
+
+  // Group by category
+  var groups = {};
+  foods.forEach(function(f) {
+    var cat = f.category === 'non-veg' ? 'Non-Veg' : f.category === 'both' ? 'Veg + Non-Veg' : 'Veg';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(f);
+  });
+
+  el.innerHTML = Object.keys(groups).map(function(cat) {
+    return '<div style="margin-bottom:16px"><div style="font-weight:700;font-size:12px;color:var(--muted);text-transform:uppercase;margin-bottom:8px">' + cat + '</div>' +
+      groups[cat].map(function(f) {
+        var restricted = _myGoalFoodRestrict.indexOf(f.name) !== -1;
+        return '<label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer">' +
+          '<input type="checkbox" ' + (!restricted ? 'checked' : '') + ' onchange="toggleMyFoodPref(\'' + f.name.replace(/'/g,"\\'") + '\',this)" style="margin-top:3px;flex-shrink:0">' +
+          '<div>' +
+            '<div style="font-weight:600;font-size:13px">' + f.name + '</div>' +
+            '<div style="font-size:11px;color:var(--muted)">' +
+              f.calories + ' kcal · ' + f.protein + 'g protein · ' + f.carbs + 'g carbs · ' + f.fat + 'g fat <span style="opacity:.6">per 100g</span>' +
+            '</div>' +
+          '</div>' +
+        '</label>';
+      }).join('') +
+    '</div>';
+  }).join('');
+}
+
+function toggleMyFoodPref(name, cb) {
+  if (!cb.checked) {
+    if (_myGoalFoodRestrict.indexOf(name) === -1) _myGoalFoodRestrict.push(name);
+  } else {
+    _myGoalFoodRestrict = _myGoalFoodRestrict.filter(function(n){ return n !== name; });
+  }
+  // Save to coaches table
+  dbUpdate('coaches', COACH_ID, { personal_food_restrict: JSON.stringify(_myGoalFoodRestrict) })
+    .catch(function(e){ console.warn('Food pref save error:', e); });
+}
+
+async function generateMyDietPlan() {
+  if (_myDietGenInFlight) return;
+  var groqKey = localStorage.getItem('groqKey') || localStorage.getItem('coach_groq_key');
+  if (!groqKey) { showToast('Set Groq API key in index.html Settings first', 'error'); return; }
+
+  var age = document.getElementById('my-age').value;
+  var goal = document.getElementById('my-goal').value;
+  var latest = D_MY_BODY[0] || {};
+
+  // Save preferences
+  localStorage.setItem('myGoal_' + COACH_ID, goal);
+  localStorage.setItem('myAge_' + COACH_ID, age);
+
+  var goalLabel = { build_muscle: 'Build Muscle', stay_fit: 'Stay Fit', lose_fat: 'Lose Body Fat', improve_stamina: 'Improve Stamina' }[goal] || goal;
+  var availFoods = _myGoalFoodsAll.filter(function(f){ return _myGoalFoodRestrict.indexOf(f.name) === -1; }).map(function(f){ return f.name; }).slice(0, 30).join(', ');
+
+  var prompt = 'You are a certified sports nutritionist. Create a practical 7-day diet plan.\n\n' +
+    'Coach Details:\n' +
+    '- Name: ' + COACH_NAME + '\n' +
+    '- Age: ' + (age || 'not provided') + '\n' +
+    '- Gender: ' + COACH_GENDER + '\n' +
+    '- Goal: ' + goalLabel + '\n' +
+    (latest.weight ? '- Weight: ' + latest.weight + ' kg\n' : '') +
+    (latest.height ? '- Height: ' + latest.height + ' cm\n' : '') +
+    (latest.fat_percentage ? '- Body Fat: ' + latest.fat_percentage + '%\n' : '') +
+    (latest.muscle_percentage ? '- Muscle Mass: ' + latest.muscle_percentage + '%\n' : '') +
+    (latest.bmi ? '- BMI: ' + latest.bmi + '\n' : '') +
+    '\nAvailable local foods: ' + (availFoods || 'standard Indian foods') + '\n\n' +
+    'Format: 7-day plan with Breakfast, Mid-Morning Snack, Lunch, Evening Snack, Dinner. ' +
+    'Include approximate calories and protein per meal. Keep it practical for South Indian (Nandyal, AP) lifestyle. ' +
+    'Add daily water intake target and 3 practical tips. Respond in English. Keep it concise.';
+
+  var btn = document.getElementById('my-diet-gen-btn');
+  btn.textContent = '⏳ Generating...'; btn.disabled = true;
+  _myDietGenInFlight = true;
+
+  try {
+    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1500, temperature: 0.7
+      })
+    });
+    if (!res.ok) { var er = await res.json().catch(function(){return{};}); throw new Error(er.error && er.error.message || res.statusText); }
+    var data = await res.json();
+    var plan = data.choices[0].message.content.trim();
+
+    // Save to coaches table
+    await dbUpdate('coaches', COACH_ID, { personal_diet_plan: plan });
+
+    document.getElementById('my-diet-plan-output').innerHTML =
+      '<div class="tcard" style="margin-top:0"><div style="font-weight:700;font-size:14px;margin-bottom:10px">My Diet Plan — ' + goalLabel + '</div>' +
+      '<div style="white-space:pre-wrap;font-size:13px;line-height:1.8;color:var(--text)">' + plan + '</div></div>';
+    showToast('Diet plan generated!', 'success');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    btn.textContent = '🤖 Generate My Diet Plan'; btn.disabled = false;
+    _myDietGenInFlight = false;
+  }
+}
+
+// ══════════════════════════════════════════
+//  MY FOOD LOG (coach personal)
+// ══════════════════════════════════════════
+var _myFLSelected = null;
+var _myFLFoods = [];
+var _myFLEntries = [];
+
+async function loadMyFoodLog() {
+  // Load foods
+  if (!_myFLFoods.length) {
+    try {
+      var rows = await dbGet('foods', 'name');
+      _myFLFoods = Array.isArray(rows) ? rows : [];
+    } catch(e) { _myFLFoods = []; }
+  }
+  // Load today's entries
+  var today = todayStr();
+  try {
+    var rows = await req('food_log_entries?coach_id=eq.' + COACH_ID + '&date=eq.' + today + '&order=created_at.asc');
+    _myFLEntries = Array.isArray(rows) ? rows : [];
+  } catch(e) { _myFLEntries = []; }
+
+  renderMyFLTotals();
+  renderMyFLEntries();
+}
+
+function myFlSearch() {
+  var q = (document.getElementById('my-fl-search').value||'').toLowerCase().trim();
+  var dd = document.getElementById('my-fl-dropdown');
+  if (!q) { dd.style.display = 'none'; return; }
+  var matches = _myFLFoods.filter(function(f){ return f.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 12);
+  if (!matches.length) { dd.style.display = 'none'; return; }
+  dd.style.display = 'block';
+  dd.innerHTML = matches.map(function(f) {
+    return '<div onclick="myFlSelectFood(\'' + f.id + '\')" style="padding:9px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'\'">'+
+      '<strong>' + f.name + '</strong>' +
+      '<span style="font-size:11px;color:var(--muted);margin-left:8px">' + f.calories + ' kcal · ' + f.protein + 'g prot</span>' +
+    '</div>';
+  }).join('');
+}
+
+function myFlSelectFood(id) {
+  _myFLSelected = _myFLFoods.find(function(f){ return f.id === id; });
+  if (!_myFLSelected) return;
+  document.getElementById('my-fl-search').value = _myFLSelected.name;
+  document.getElementById('my-fl-dropdown').style.display = 'none';
+  document.getElementById('my-fl-grams').value = '';
+  var prev = document.getElementById('my-fl-selected-preview');
+  prev.style.display = 'block';
+  prev.innerHTML = '<strong>' + _myFLSelected.name + '</strong> — per 100g: ' +
+    _myFLSelected.calories + ' kcal · ' + _myFLSelected.protein + 'g protein · ' +
+    _myFLSelected.carbs + 'g carbs · ' + _myFLSelected.fat + 'g fat';
+}
+
+function myFlUpdatePreview() {
+  if (!_myFLSelected) return;
+  var g = parseFloat(document.getElementById('my-fl-grams').value)||0;
+  var prev = document.getElementById('my-fl-selected-preview');
+  if (!g) {
+    prev.innerHTML = '<strong>' + _myFLSelected.name + '</strong> — per 100g: ' + _myFLSelected.calories + ' kcal · ' + _myFLSelected.protein + 'g protein';
+    return;
+  }
+  var cal = +(_myFLSelected.calories * g / 100).toFixed(1);
+  var prot = +(_myFLSelected.protein * g / 100).toFixed(1);
+  var carb = +(_myFLSelected.carbs * g / 100).toFixed(1);
+  var fat = +(_myFLSelected.fat * g / 100).toFixed(1);
+  prev.innerHTML = '<strong>' + _myFLSelected.name + '</strong> · ' + g + 'g = ' +
+    '<strong>' + cal + ' kcal</strong> · ' + prot + 'g protein · ' + carb + 'g carbs · ' + fat + 'g fat';
+}
+
+async function myFlAddEntry() {
+  if (!_myFLSelected) { showToast('Select a food first', 'error'); return; }
+  var grams = parseFloat(document.getElementById('my-fl-grams').value)||0;
+  if (!grams || grams <= 0) { showToast('Enter how many grams you ate', 'error'); return; }
+  var entry = {
+    coach_id: COACH_ID,
+    date: todayStr(),
+    food_id: _myFLSelected.id,
+    food_name: _myFLSelected.name,
+    grams: grams,
+    calories: +(_myFLSelected.calories * grams / 100).toFixed(1),
+    protein: +(_myFLSelected.protein * grams / 100).toFixed(1),
+    carbs: +(_myFLSelected.carbs * grams / 100).toFixed(1),
+    fat: +(_myFLSelected.fat * grams / 100).toFixed(1)
+  };
+  try {
+    var inserted = await dbInsert('food_log_entries', entry);
+    _myFLEntries.push(Array.isArray(inserted) && inserted[0] ? inserted[0] : entry);
+    document.getElementById('my-fl-search').value = '';
+    document.getElementById('my-fl-grams').value = '';
+    document.getElementById('my-fl-selected-preview').style.display = 'none';
+    document.getElementById('my-fl-dropdown').style.display = 'none';
+    _myFLSelected = null;
+    renderMyFLTotals();
+    renderMyFLEntries();
+    showToast('Meal logged!', 'success');
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function myFlDeleteEntry(id) {
+  try {
+    await dbDelete('food_log_entries', id);
+    _myFLEntries = _myFLEntries.filter(function(e){ return e.id !== id; });
+    renderMyFLTotals();
+    renderMyFLEntries();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function renderMyFLTotals() {
+  var totCal = 0, totProt = 0, totCarb = 0, totFat = 0;
+  _myFLEntries.forEach(function(e){ totCal += parseFloat(e.calories||0); totProt += parseFloat(e.protein||0); totCarb += parseFloat(e.carbs||0); totFat += parseFloat(e.fat||0); });
+  totCal = totCal.toFixed(0); totProt = totProt.toFixed(1); totCarb = totCarb.toFixed(1); totFat = totFat.toFixed(1);
+
+  var goal = localStorage.getItem('myGoal_' + COACH_ID) || 'build_muscle';
+  var targetCal = (goal === 'build_muscle' || goal === 'improve_stamina') ? 2800 : goal === 'stay_fit' ? 2200 : 1800;
+  var targetProt = goal === 'build_muscle' ? 160 : goal === 'stay_fit' ? 120 : 100;
+
+  function bar(val, target) {
+    var pct = Math.min(100, Math.round((parseFloat(val)/target)*100));
+    var col = pct >= 100 ? 'var(--success)' : pct >= 70 ? 'var(--accent)' : 'var(--primary)';
+    return '<div style="background:var(--surface2);border-radius:20px;height:8px;overflow:hidden;margin-top:4px">' +
+      '<div style="width:' + pct + '%;height:100%;background:' + col + ';border-radius:20px;transition:width .4s"></div></div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + pct + '% of goal (' + target + ')</div>';
+  }
+
+  document.getElementById('my-fl-totals-body').innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px">' +
+      '<div><div style="font-size:11px;font-weight:600;color:var(--muted)">CALORIES</div><div style="font-size:24px;font-weight:700;color:var(--primary)">' + totCal + '</div>' + bar(totCal, targetCal) + '</div>' +
+      '<div><div style="font-size:11px;font-weight:600;color:var(--muted)">PROTEIN (g)</div><div style="font-size:24px;font-weight:700;color:#2980b9">' + totProt + '</div>' + bar(totProt, targetProt) + '</div>' +
+      '<div><div style="font-size:11px;font-weight:600;color:var(--muted)">CARBS (g)</div><div style="font-size:24px;font-weight:700;color:var(--accent)">' + totCarb + '</div></div>' +
+      '<div><div style="font-size:11px;font-weight:600;color:var(--muted)">FAT (g)</div><div style="font-size:24px;font-weight:700;color:#8e44ad">' + totFat + '</div></div>' +
+    '</div>';
+}
+
+function renderMyFLEntries() {
+  var el = document.getElementById('my-fl-entries');
+  if (!_myFLEntries.length) { el.innerHTML = '<div class="empty"><div class="ei">📋</div>No meals logged yet today.</div>'; return; }
+  el.innerHTML = _myFLEntries.map(function(e) {
+    return '<div class="body-rec">' +
+      '<div>' +
+        '<div class="body-rec-date" style="font-weight:600">' + e.food_name + '</div>' +
+        '<div style="font-size:11px;color:var(--muted)">' + e.grams + 'g</div>' +
+      '</div>' +
+      '<div class="body-rec-vals">' +
+        '<div class="body-rec-val"><span>' + parseFloat(e.calories).toFixed(0) + '</span> kcal</div>' +
+        '<div class="body-rec-val"><span>' + parseFloat(e.protein).toFixed(1) + 'g</span> protein</div>' +
+        '<div class="body-rec-val"><span>' + parseFloat(e.carbs).toFixed(1) + 'g</span> carbs</div>' +
+        '<div class="body-rec-val"><span>' + parseFloat(e.fat).toFixed(1) + 'g</span> fat</div>' +
+      '</div>' +
+      (e.id ? '<button class="btn-d" onclick="myFlDeleteEntry(\'' + e.id + '\')">✕</button>' : '') +
+    '</div>';
+  }).join('');
+}
 </script>
+
+<!-- Workout Plan Modal -->
+<div class="modal-overlay" id="modal-workout">
+  <div class="modal-box">
+    <div class="modal-h">
+      <h3 id="workout-modal-title">New Workout Plan</h3>
+      <button class="modal-close" onclick="closeModal('workout')">×</button>
+    </div>
+    <input type="hidden" id="workout-plan-id">
+    <div class="fg">
+      <label>Customer *</label>
+      <select id="workout-cust-sel" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;outline:none"></select>
+    </div>
+    <div class="fg"><label>Plan Name *</label><input type="text" id="workout-plan-name" placeholder="e.g. Week 1 — Fat Loss Program"></div>
+    <div class="fg"><label>Start Date</label><input type="date" id="workout-start-date"></div>
+    <div class="fg">
+      <label>Exercises — one per line (Exercise • Sets × Reps)</label>
+      <textarea id="workout-exercises" rows="6" placeholder="Squats • 3 × 12&#10;Push-ups • 4 × 15&#10;Plank • 3 × 60sec&#10;Walking • 30 min"></textarea>
+    </div>
+    <div class="fg"><label>Diet / Extra Notes</label><textarea id="workout-plan-notes" rows="2" placeholder="Diet advice, special instructions..."></textarea></div>
+    <div class="mf">
+      <button class="btn-c" onclick="closeModal('workout')">Cancel</button>
+      <button class="btn-p" onclick="saveWorkoutPlan()">Save Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MY BODY STATS MODAL -->
+<div class="modal-overlay" id="modal-mybody">
+  <div class="modal-box">
+    <div class="modal-h">
+      <h3>Add My Body Stats</h3>
+      <button class="modal-close" onclick="closeModal('mybody')">×</button>
+    </div>
+    <input type="hidden" id="mybody-rec-id">
+    <div class="fg"><label>Date</label><input type="date" id="mybody-date"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Weight (kg)</label><input type="number" id="mybody-weight" step="0.1" placeholder="70.5"></div>
+      <div class="fg"><label>Height (cm)</label><input type="number" id="mybody-height" step="0.1" placeholder="170"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Body Fat %</label><input type="number" id="mybody-fat" step="0.1" placeholder="18"></div>
+      <div class="fg"><label>Muscle Mass %</label><input type="number" id="mybody-muscle" step="0.1" placeholder="35"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>BMI</label><input type="number" id="mybody-bmi" step="0.1" placeholder="24.2"></div>
+      <div class="fg"><label>Visceral Fat</label><input type="number" id="mybody-visceral" step="1" placeholder="8"></div>
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="mybody-notes" placeholder="How do you feel? Any changes?"></textarea></div>
+    <div class="mf">
+      <button class="btn-c" onclick="closeModal('mybody')">Cancel</button>
+      <button class="btn-p" onclick="saveMyBody()">Save Stats</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTES MODAL -->
+<div class="modal-overlay" id="modal-notes">
+  <div class="modal" style="max-width:480px;width:100%;background:#fff;border-radius:14px;padding:0;overflow:hidden">
+    <div class="mh" style="padding:16px 18px;border-bottom:1px solid #e5e7eb">
+      <div class="mt">📝 Session Notes — <span id="notes-cust-name"></span></div>
+      <button class="mc" onclick="document.getElementById('modal-notes').classList.remove('open')">✕</button>
+    </div>
+    <div style="padding:16px 18px">
+      <div id="notes-list" style="max-height:300px;overflow-y:auto;margin-bottom:12px"></div>
+      <textarea id="notes-input" rows="3" placeholder="Type session note, workout, diet advice..." style="width:100%;padding:9px 11px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;resize:vertical"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
+        <button onclick="document.getElementById('modal-notes').classList.remove('open')" style="padding:8px 16px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:pointer;font-size:13px">Close</button>
+        <button onclick="saveNote()" style="padding:8px 18px;background:#4f46e5;color:#fff;border:none;border-radius:7px;font-weight:600;cursor:pointer;font-size:13px">💾 Save Note</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

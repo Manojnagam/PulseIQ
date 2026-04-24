@@ -5,8 +5,25 @@ Wellness Hub — Supervisor Dashboard_files/
 check.js
 PulseIQ-v8 (1).html
 PulseIQ-Dashboard-fixed.html
+cloudflare_backup.html
 index (2).html
 index (3).html
+
+# Personal files (not part of the app)
+career/
+js-notes/
+portfolio/
+
+# Dead backend (pre-Supabase Node/Express/MongoDB phase)
+server.js
+package.json
+package-lock.json
+models/
+routes/
+controllers/
+middleware/
+config/
+src/
 
 # System
 .DS_Store

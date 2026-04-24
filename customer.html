@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard — Dharani's</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f5f2ee;--surface:#fff;--surface2:#f0ede8;--primary:#2d5a3d;--primary-light:#3d7a52;--accent:#e8a838;--text:#1a2e1f;--muted:#6b7c6f;--border:#ddd8d0;--danger:#c0392b;--danger-light:#fdf0ef;--success:#27ae60;--success-light:#eafaf1;--shadow:0 2px 12px rgba(45,90,61,.08);--radius:12px;--sw:210px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── LOGIN ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a28 0%,#2d5a3d 60%,#3d7a52 100%);padding:20px}
+.login-box{background:#fff;border-radius:20px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--primary)}
+.login-logo p{color:var(--muted);font-size:13px;margin-top:6px}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.login-field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;outline:none;transition:border .2s;letter-spacing:1px}
+.login-field input:focus{border-color:var(--primary)}
+.login-btn{width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s}
+.login-btn:hover{background:var(--primary-light)}
+.login-err{color:var(--danger);font-size:13px;text-align:center;margin-top:12px;min-height:18px}
+
+/* ── APP LAYOUT ── */
+#app{display:none;min-height:100vh}
+#sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:linear-gradient(180deg,#1a3a28 0%,#2d5a3d 100%);display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-logo h1{font-family:'DM Serif Display',serif;font-size:18px;color:#fff}
+.sb-logo span{color:var(--accent);font-size:11px;font-weight:600;display:block;margin-top:2px}
+.sb-badge{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px}
+.sb-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.sb-name{color:#fff;font-size:13px;font-weight:600;line-height:1.3}
+.sb-sub{color:rgba(255,255,255,.55);font-size:11px;margin-top:1px}
+.sb-nav{padding:12px 8px;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:8px;color:rgba(255,255,255,.75);cursor:pointer;transition:all .18s;font-weight:500;font-size:13px;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.18);color:#fff;font-weight:700}
+.nav-item .ic{font-size:16px;width:20px;text-align:center}
+.sb-bottom{padding:10px 12px;border-top:1px solid rgba(255,255,255,.1)}
+.sb-icon-btn{width:100%;padding:9px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer;transition:all .2s}
+.sb-icon-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+#main{margin-left:var(--sw);padding:24px;min-height:100vh}
+#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99}
+#menu-btn{display:none;position:fixed;top:14px;left:14px;z-index:101;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
+
+/* ── SECTIONS ── */
+.sec{display:none}.sec.active{display:block}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.pt{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text)}
+.ps{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* ── STATS ── */
+.stats{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.stat{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px 18px;flex:1;min-width:120px;box-shadow:var(--shadow)}
+.stat-l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-v{font-family:'DM Serif Display',serif;font-size:26px;color:var(--primary);margin-top:4px}
+
+/* ── CARDS ── */
+.tcard{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+.tcard h3{font-family:'DM Serif Display',serif;font-size:17px;margin-bottom:14px;color:var(--text)}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty .ei{font-size:40px;margin-bottom:10px}
+
+/* ── WELCOME CARD ── */
+.welcome-card{background:linear-gradient(135deg,#0f2318 0%,#1a3a28 50%,#2d5a3d 100%);border-radius:var(--radius);padding:22px 24px;margin-bottom:20px;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.25);position:relative;overflow:hidden}
+.welcome-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(232,168,56,.15) 0%,transparent 70%);pointer-events:none}
+.welcome-greeting{font-size:11px;color:rgba(255,255,255,.55);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.welcome-name{font-family:'DM Serif Display',serif;font-size:26px;color:#fff;margin-bottom:4px}
+.welcome-sub{font-size:13px;color:rgba(255,255,255,.65);line-height:1.5}
+
+/* ── MONTHLY REPORT ── */
+.report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.report-card h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px}
+.report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:14px}
+.report-stat{background:var(--surface2);border-radius:10px;padding:12px;text-align:center}
+.report-stat-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--primary)}
+.report-stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-top:2px}
+.report-month-nav{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.report-month-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:14px}
+.report-month-lbl{font-weight:600;font-size:14px;flex:1;text-align:center}
+
+/* ── COMP DAY EXPLAINER ── */
+.comp-banner{background:linear-gradient(135deg,#e8f4fd,#dbeeff);border:1px solid #b3d4f5;border-radius:var(--radius);padding:16px 18px;margin-bottom:16px}
+.comp-banner h4{font-size:14px;font-weight:700;color:#1a3a5c;margin-bottom:8px}
+.comp-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#2a4a6c;margin-bottom:6px}
+.comp-item:last-child{margin-bottom:0}
+
+/* ── REFERRAL TRACKER ── */
+.ref-card{background:linear-gradient(135deg,#fff8e1,#fef3c7);border:1.5px solid #f9c74f;border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.ref-card h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px;color:#7a5a00}
+.ref-sub{font-size:12px;color:#9a7a20;margin-bottom:14px}
+.ref-stats{display:flex;gap:12px;flex-wrap:wrap}
+.ref-stat{background:rgba(255,255,255,.7);border-radius:10px;padding:12px 16px;text-align:center;flex:1;min-width:80px}
+.ref-stat-val{font-family:'DM Serif Display',serif;font-size:28px;color:#b07800}
+.ref-stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#9a7a20;margin-top:2px}
+
+/* ── BODY CHART ── */
+.chart-wrap{margin-top:14px;position:relative;height:180px}
+
+/* ── COACH MESSAGE ── */
+.coach-msg-card{background:linear-gradient(135deg,#e8f4fd,#dbeeff);border:1px solid #b3d4f5;border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.coach-msg-from{font-size:11px;font-weight:700;color:#4a7a9b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.coach-msg-text{font-size:14px;line-height:1.7;color:#1a3a5c;font-style:italic;padding-left:12px;border-left:3px solid #4a9fd4}
+
+/* ── GOAL CARD ── */
+.goal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.transform-card{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.transform-card h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px;color:#166534}
+.transform-photos{display:flex;gap:12px;margin-bottom:14px}
+.transform-photo-box{flex:1;text-align:center}
+.transform-photo-box img{width:100%;max-width:140px;height:140px;object-fit:cover;border-radius:10px;border:2px solid #86efac}
+.transform-photo-label{font-size:11px;font-weight:700;color:#166534;margin-top:5px;text-transform:uppercase;letter-spacing:.5px}
+.transform-upload-area{border:2px dashed #86efac;border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:#f0fdf4;transition:background .2s}
+.transform-upload-area:hover{background:#dcfce7}
+.transform-btns{display:flex;gap:8px;flex-wrap:wrap}
+.goal-card h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.goal-bar-wrap{background:var(--surface2);border-radius:20px;height:12px;overflow:hidden;margin:10px 0 6px}
+.goal-bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--primary),var(--primary-light));transition:width .6s ease}
+.goal-bar-fill.done{background:linear-gradient(90deg,var(--success),#2ecc71)}
+.goal-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:12px}
+.goal-set-row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.goal-set-row input{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;outline:none}
+.goal-set-row input:focus{border-color:var(--primary)}
+.goal-set-btn{padding:8px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.goal-achieved{background:var(--success-light);border:1.5px solid #82c99a;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:700;color:var(--success);text-align:center;margin-top:8px}
+
+/* ── STREAK CARD ── */
+.streak-card{border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#fff8e1,#fef3c7);border:1.5px solid #f9c74f;box-shadow:var(--shadow)}
+.streak-flame{font-size:40px;line-height:1;flex-shrink:0}
+.streak-count{font-family:'DM Serif Display',serif;font-size:36px;color:#b07800;line-height:1}
+.streak-label{font-size:12px;font-weight:700;color:#7a5a00;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.streak-sub{font-size:12px;color:#9a7a20;margin-top:4px}
+.streak-card.cold{background:linear-gradient(135deg,#f0ede8,#e8e4de);border-color:var(--border)}
+.streak-card.cold .streak-count{color:var(--muted)}
+.streak-card.cold .streak-label{color:var(--muted)}
+.streak-card.cold .streak-sub{color:var(--muted)}
+
+/* ── RENEWAL BANNER ── */
+.renewal-banner{border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;animation:pulseWarn 2s infinite}
+.renewal-banner.warn{background:linear-gradient(135deg,#fff8e1,#fef3c7);border:1.5px solid #f9c74f}
+.renewal-banner.danger{background:linear-gradient(135deg,#fdf0ef,#fde8e8);border:1.5px solid #fca5a5}
+.renewal-banner-text{font-size:14px;font-weight:600;flex:1}
+.renewal-banner.warn .renewal-banner-text{color:#7a5a00}
+.renewal-banner.danger .renewal-banner-text{color:#c0392b}
+.renewal-banner-sub{font-size:12px;margin-top:2px;opacity:.8}
+@keyframes pulseWarn{0%,100%{box-shadow:0 2px 12px rgba(249,199,79,.2)}50%{box-shadow:0 4px 20px rgba(249,199,79,.5)}}
+
+/* ── PACK CARD ── */
+.pack-card{border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.pack-card.active{background:linear-gradient(135deg,#eafaf1,#d4efdf);border:1.5px solid #82c99a}
+.pack-card.expiring{background:linear-gradient(135deg,#fff8e1,#fef3c7);border:1.5px solid #f9c74f}
+.pack-card.expired{background:linear-gradient(135deg,#fdf0ef,#fde8e8);border:1.5px solid #fca5a5}
+.pack-days{font-family:'DM Serif Display',serif;font-size:52px;line-height:1;margin:6px 0 2px}
+.pack-days.active{color:var(--success)}
+.pack-days.expiring{color:#b07800}
+.pack-days.expired{color:var(--danger)}
+.pack-type-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.pack-bar-wrap{background:rgba(0,0,0,.08);border-radius:20px;height:8px;overflow:hidden;margin:14px 0 8px}
+.pack-bar-fill{height:100%;border-radius:20px;transition:width .6s ease}
+.pack-bar-fill.active{background:linear-gradient(90deg,var(--success),#2ecc71)}
+.pack-bar-fill.expiring{background:linear-gradient(90deg,#f9c74f,#f8961e)}
+.pack-bar-fill.expired{background:var(--danger)}
+.pack-meta{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
+
+/* ── ATTENDANCE CALENDAR ── */
+.att-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.att-cal-head{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;text-transform:uppercase}
+.att-cal-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:var(--surface2);color:var(--muted)}
+.att-cal-day.present{background:var(--success);color:#fff}
+.att-cal-day.absent{background:var(--danger-light);color:var(--danger);border:1px solid #fca5a5}
+.att-cal-day.comp{background:#e8f4fd;color:#1a6fa0;border:1px solid #b3d4f5}
+.att-cal-day.today{outline:2px solid var(--primary);outline-offset:1px}
+.att-cal-day.empty{background:transparent}
+.att-legend{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+.att-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.att-legend-dot{width:14px;height:14px;border-radius:3px}
+
+/* ── PROGRESS ── */
+.body-rec{background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.body-rec-date{font-weight:700;font-size:13px;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.body-rec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px}
+.body-rec-stat{background:#fff;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)}
+.body-rec-stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600}
+.body-rec-stat-val{font-family:'DM Serif Display',serif;font-size:20px;color:var(--primary);margin-top:2px}
+.diff-down{color:var(--success);font-size:11px;font-weight:700}
+.diff-up{color:var(--danger);font-size:11px;font-weight:700}
+
+/* ── PACK HISTORY ── */
+.pack-timeline{position:relative;padding-left:28px}
+.pack-timeline::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:2px;background:var(--border)}
+.pack-item{margin-bottom:16px;position:relative}
+.pack-dot{position:absolute;left:-28px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.pack-dot.active{background:var(--success)}.pack-dot.done{background:var(--primary)}
+.pack-box{background:var(--surface2);border-radius:8px;padding:10px 14px;border:1px solid var(--border)}
+.pack-box.active-pack{border-color:var(--success);background:var(--success-light)}
+
+/* ── COACH CARD ── */
+.coach-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);display:flex;align-items:center;gap:18px;margin-bottom:16px}
+.coach-avatar-lg{width:64px;height:64px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;flex-shrink:0}
+.coach-name{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text)}
+.coach-role{font-size:12px;color:var(--muted);margin-top:3px;margin-bottom:14px}
+.wa-btn{background:#25D366;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .2s}
+.wa-btn:hover{background:#1da851}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-item{padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.15);animation:slideIn .3s ease;max-width:300px}
+.toast-item.success{background:#1a7a3c;color:#fff}
+.toast-item.error{background:#c0392b;color:#fff}
+.toast-item.info{background:#2d5a3d;color:#fff}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%);transition:transform .3s}
+  #sidebar.open{transform:translateX(0)}
+  #sb-overlay.open{display:block}
+  #main{margin-left:0;padding:60px 14px 20px}
+  #menu-btn{display:block}
+  .stats{gap:8px}
+  .stat{min-width:calc(50% - 4px)}
+  .coach-card{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<button id="menu-btn" onclick="toggleSidebar()">☰</button>
+<div id="sb-overlay" onclick="toggleSidebar()"></div>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>🌿 Dharani's</h1>
+      <p>Client Dashboard — Enter your details to continue</p>
+    </div>
+    <div class="login-field">
+      <label>Mobile Number</label>
+      <input type="tel" id="login-mobile" placeholder="9876543210" maxlength="10"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>Date of Birth</label>
+      <input type="date" id="login-dob" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">View My Dashboard →</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <div id="sidebar">
+    <div class="sb-logo">
+      <h1>🌿 Dharani's</h1>
+      <span>Client Dashboard</span>
+    </div>
+    <div class="sb-badge" id="sb-badge">
+      <div class="sb-avatar" id="sb-avatar">?</div>
+      <div>
+        <div class="sb-name" id="sb-name">—</div>
+        <div class="sb-sub" id="sb-sub">Client</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <button class="nav-item active" onclick="goTo('overview',this)"><span class="ic">🏠</span>Overview</button>
+      <button class="nav-item" onclick="goTo('attendance',this)"><span class="ic">📅</span>My Attendance</button>
+      <button class="nav-item" onclick="goTo('progress',this)"><span class="ic">⚖️</span>My Progress</button>
+      <button class="nav-item" onclick="goTo('pack',this)"><span class="ic">📦</span>My Pack</button>
+      <button class="nav-item" onclick="goTo('coach',this)"><span class="ic">👨‍🏫</span>My Coach</button>
+      <button class="nav-item" onclick="goTo('report',this)"><span class="ic">📊</span>Monthly Report</button>
+      <button class="nav-item" onclick="goTo('referral',this)"><span class="ic">🎟️</span>My Referrals</button>
+    </nav>
+    <div class="sb-bottom">
+      <button class="sb-icon-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div id="main">
+
+    <!-- OVERVIEW -->
+    <div class="sec active" id="sec-overview">
+      <div id="ov-streak"></div>
+      <div id="ov-payment-banner"></div>
+      <div class="welcome-card">
+        <div class="welcome-greeting" id="ov-greeting">Welcome back</div>
+        <div class="welcome-name" id="ov-name">—</div>
+        <div class="welcome-sub" id="ov-sub">Loading your dashboard...</div>
+      </div>
+      <div class="stats" id="ov-stats"></div>
+      <div id="ov-coach-msg"></div>
+      <div id="ov-transformation"></div>
+      <div id="ov-goal-card"></div>
+      <div id="ov-renewal-banner"></div>
+      <div id="ov-pack"></div>
+      <div class="tcard" id="ov-coach-card" style="display:none">
+        <h3>👨‍🏫 Your Coach</h3>
+        <div id="ov-coach-body"></div>
+      </div>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div class="sec" id="sec-attendance">
+      <div class="ph">
+        <div><div class="pt">My Attendance</div><div class="ps">Your daily check-in history</div></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="changeMonth(-1)" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">‹</button>
+          <span id="att-month-lbl" style="font-weight:600;font-size:14px;min-width:130px;text-align:center"></span>
+          <button onclick="changeMonth(1)" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">›</button>
+        </div>
+      </div>
+      <div class="stats" id="att-stats"></div>
+      <div class="tcard">
+        <div class="att-cal" id="att-cal-heads">
+          <div class="att-cal-head">Sun</div><div class="att-cal-head">Mon</div><div class="att-cal-head">Tue</div>
+          <div class="att-cal-head">Wed</div><div class="att-cal-head">Thu</div><div class="att-cal-head">Fri</div>
+          <div class="att-cal-head">Sat</div>
+        </div>
+        <div class="att-cal" id="att-cal"></div>
+        <div class="att-legend">
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--success)"></div>Present</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--danger-light);border:1px solid #fca5a5"></div>Absent</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>No record</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="sec" id="sec-progress">
+      <div class="ph">
+        <div><div class="pt">My Progress</div><div class="ps">Body composition measurements over time</div></div>
+      </div>
+      <div class="stats" id="prog-stats"></div>
+      <div class="tcard" id="prog-chart-card" style="display:none">
+        <h3>📈 Weight Over Time</h3>
+        <div class="chart-wrap"><canvas id="weight-chart"></canvas></div>
+      </div>
+      <div id="prog-records"></div>
+    </div>
+
+    <!-- PACK -->
+    <div class="sec" id="sec-pack">
+      <div class="ph">
+        <div><div class="pt">My Pack</div><div class="ps">Membership details & history</div></div>
+      </div>
+      <div id="pack-current"></div>
+      <div class="tcard" id="pack-history-card" style="display:none">
+        <h3>Pack History</h3>
+        <div class="pack-timeline" id="pack-history"></div>
+      </div>
+    </div>
+
+    <!-- COACH -->
+    <div class="sec" id="sec-coach">
+      <div class="ph">
+        <div><div class="pt">My Coach</div><div class="ps">Your assigned wellness coach</div></div>
+      </div>
+      <div id="coach-detail"></div>
+    </div>
+
+    <!-- MONTHLY REPORT -->
+    <div class="sec" id="sec-report">
+      <div class="ph">
+        <div><div class="pt">Monthly Report</div><div class="ps">Your progress month by month</div></div>
+      </div>
+      <div class="report-card">
+        <div class="report-month-nav">
+          <button class="report-month-btn" onclick="changeReportMonth(-1)">‹</button>
+          <span class="report-month-lbl" id="report-month-lbl"></span>
+          <button class="report-month-btn" onclick="changeReportMonth(1)">›</button>
+        </div>
+        <div class="report-grid" id="report-grid"></div>
+        <div id="report-body-change"></div>
+        <div id="report-comp-banner"></div>
+      </div>
+    </div>
+
+    <!-- REFERRALS -->
+    <div class="sec" id="sec-referral">
+      <div class="ph">
+        <div><div class="pt">My Referrals</div><div class="ps">Friends you've brought to Dharani's</div></div>
+      </div>
+      <div id="referral-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+var COUNTRY_CODE = '91';
+
+var CUST = null;
+var DATA = { attendance:[], body:[], packs:[], coach:null, payment:null };
+var _attYear = null, _attMonth = null, _bodyChart = null;
+
+// ── SUPABASE ──
+async function req(method, table, body, params) {
+  var url = SB_URL + '/rest/v1/' + table + (params ? '?' + params : '');
+  var opts = {
+    method: method,
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  var r = await fetch(url, opts);
+  if (!r.ok) throw new Error(await r.text());
+  var t = await r.text();
+  return t ? JSON.parse(t) : [];
+}
+
+// ── TOAST ──
+function toast(msg, type) {
+  var d = document.createElement('div');
+  d.className = 'toast-item ' + (type || 'info');
+  d.textContent = msg;
+  document.getElementById('toast').appendChild(d);
+  setTimeout(function(){ d.remove(); }, 3500);
+}
+
+// ── SIDEBAR ──
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('open');
+}
+
+// ── NAV ──
+function goTo(sec, btn) {
+  document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('sec-' + sec).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  if (window.innerWidth <= 768) toggleSidebar();
+  if (sec === 'attendance') renderAttCalendar();
+  if (sec === 'progress')   renderProgress();
+  if (sec === 'pack')       renderPack();
+  if (sec === 'coach')      renderCoach();
+  if (sec === 'report')     renderReport();
+  if (sec === 'referral')   renderReferral();
+}
+
+// ── HELPERS ──
+function parsePack(packType) {
+  if (!packType) return 30;
+  var t = packType.toLowerCase();
+  if (/\b26\b/.test(t)) return 26;
+  if (/\b3\b/.test(t) && !/\b30\b/.test(t)) return 3;
+  return 30;
+}
+
+function getServingsLeft() {
+  if (!CUST || !CUST.pack_type || !CUST.pack_start_date) return null;
+  var total = parsePack(CUST.pack_type);
+  var used = DATA.attendance.filter(function(a) {
+    return a.status === 'present' && a.date >= CUST.pack_start_date;
+  }).length;
+  return total - used;
+}
+
+function fmtDate(str) {
+  if (!str) return '—';
+  return new Date(str).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function initials(name) {
+  return (name || '?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+}
+
+// ── LOGIN ──
+async function doLogin() {
+  var mobile = document.getElementById('login-mobile').value.trim();
+  var dob    = document.getElementById('login-dob').value.trim();
+  var errEl  = document.getElementById('login-err');
+  errEl.textContent = '';
+  if (mobile.length < 10) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
+  if (!dob) { errEl.textContent = 'Enter your date of birth.'; return; }
+  try {
+    var results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent(mobile) + '&limit=1');
+    if (!results.length) { errEl.textContent = 'No client found with this number. Contact your coach.'; return; }
+    var cust = results[0];
+    if (!cust.dob || cust.dob !== dob) { errEl.textContent = 'Date of birth does not match. Contact your coach.'; return; }
+    CUST = cust;
+    sessionStorage.setItem('custId', CUST.id);
+    launchApp();
+  } catch(e) {
+    errEl.textContent = 'Connection error. Try again.';
+  }
+}
+
+async function launchApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('sb-avatar').textContent = initials(CUST.name);
+  document.getElementById('sb-name').textContent = CUST.name;
+  document.getElementById('sb-sub').textContent = 'Client';
+  await loadData();
+  renderOverview();
+}
+
+async function loadData() {
+  try {
+    var att = await req('GET', 'attendance', null, 'customer_id=eq.' + CUST.id + '&order=date.desc');
+    DATA.attendance = att || [];
+  } catch(e) { console.error('attendance load failed', e); }
+
+  try {
+    var body = await req('GET', 'body_composition', null, 'customer_id=eq.' + CUST.id + '&order=date.desc');
+    DATA.body = body || [];
+  } catch(e) { console.error('body_composition load failed', e); }
+
+  try {
+    var packs = await req('GET', 'pack_history', null, 'customer_id=eq.' + CUST.id + '&order=start_date.desc');
+    DATA.packs = packs || [];
+  } catch(e) { console.error('pack_history load failed', e); }
+
+  try {
+    var payRec = await req('GET', 'payments', null, 'person_id=eq.' + CUST.id + '&order=payment_date.desc&limit=1');
+    DATA.payment = (payRec && payRec[0]) ? payRec[0] : null;
+  } catch(e) { console.error('payment load failed', e); }
+
+  try {
+    // Find coach by referred_by_id (whoever enrolled this customer)
+    if (CUST.referred_by_id) {
+      var byRef = await req('GET', 'coaches', null, 'id=eq.' + CUST.referred_by_id + '&limit=1');
+      DATA.coach = byRef[0] || null;
+    }
+    // Fallback: use external referrer name as coach
+    if (!DATA.coach && CUST.external_referrer_name) {
+      DATA.coach = { name: CUST.external_referrer_name, contact: CUST.external_referrer_phone || null };
+    }
+  } catch(e) { console.error('coach load failed', e); }
+}
+
+// ── OVERVIEW ──
+function renderPaymentBanner() {
+  var el = document.getElementById('ov-payment-banner');
+  if (!el) return;
+  var p = DATA.payment;
+  if (!p) { el.innerHTML = ''; return; }
+  var bal = Math.max(0, Number(p.total_amount) - Number(p.amount_paid));
+  if (bal <= 0) { el.innerHTML = ''; return; }
+  var today = new Date().toISOString().split('T')[0];
+  var isOverdue = p.due_date && p.due_date < today;
+  var bgColor = isOverdue ? 'linear-gradient(135deg,#fef2f2,#fee2e2)' : 'linear-gradient(135deg,#fffbeb,#fef3c7)';
+  var borderColor = isOverdue ? '#fca5a5' : '#fcd34d';
+  var icon = isOverdue ? '🔴' : '⚠️';
+  var dueText = p.due_date ? ' due by ' + new Date(p.due_date).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : '';
+  el.innerHTML = '<div style="background:'+bgColor+';border:1.5px solid '+borderColor+';border-radius:12px;padding:14px 18px;margin-bottom:16px">' +
+    '<div style="font-weight:700;font-size:14px;margin-bottom:4px">' + icon + ' Outstanding Balance</div>' +
+    '<div style="font-size:13px;color:#374151">You have a balance of <strong style="color:#dc2626">₹' + bal.toLocaleString('en-IN') + '</strong>' + dueText + '. Please contact your coach to clear it.</div>' +
+  '</div>';
+}
+
+function renderOverview() {
+  var left = getServingsLeft();
+  var todayStr = new Date().toISOString().split('T')[0];
+  var todayAtt  = DATA.attendance.find(function(a){ return a.date === todayStr; });
+  var totalPres = DATA.attendance.filter(function(a){ return a.status === 'present'; }).length;
+  var hour = new Date().getHours();
+  var greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+  renderPaymentBanner();
+  document.getElementById('ov-greeting').textContent = greet;
+  document.getElementById('ov-name').textContent = (CUST.name || '').split(' ')[0];
+
+  var subText = left === null ? 'No active pack' :
+                left > 5     ? left + ' servings remaining in your pack' :
+                left > 0     ? '⚠️ Pack almost done — ' + left + ' servings left' :
+                               '❌ Your pack is finished';
+  document.getElementById('ov-sub').textContent = subText;
+
+  var leftColor = left === null ? 'var(--muted)' : left > 5 ? 'var(--success)' : left > 0 ? '#b07800' : 'var(--danger)';
+  var todayText = todayAtt ? (todayAtt.status === 'present' ? '✅ Present' : '🎁 Complementary') : '—';
+
+  document.getElementById('ov-stats').innerHTML =
+    '<div class="stat"><div class="stat-l">Servings Left</div><div class="stat-v" style="color:' + leftColor + '">' + (left !== null ? Math.max(0,left) : '—') + '</div></div>' +
+    '<div class="stat"><div class="stat-l">Total Sessions</div><div class="stat-v">' + totalPres + '</div></div>' +
+    '<div class="stat"><div class="stat-l">Today</div><div class="stat-v" style="font-size:16px;margin-top:8px">' + todayText + '</div></div>';
+
+  renderStreak();
+  renderCoachMessage();
+  renderTransformation();
+  renderGoalCard();
+  buildPackCard(document.getElementById('ov-pack'));
+  renderRenewalBanner(left);
+
+  if (DATA.coach) {
+    var c = DATA.coach;
+    document.getElementById('ov-coach-card').style.display = '';
+    document.getElementById('ov-coach-body').innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">' +
+      '<div style="width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">' + initials(c.name) + '</div>' +
+      '<div><div style="font-weight:700;font-size:14px">' + c.name + '</div><div style="font-size:12px;color:var(--muted)">Your Coach</div></div>' +
+      (c.contact ? '<a href="https://wa.me/' + COUNTRY_CODE + c.contact.replace(/\D/g,'') + '" target="_blank" style="margin-left:auto"><button class="wa-btn">💬 WhatsApp</button></a>' : '') +
+      '</div>';
+  }
+}
+
+// ── COACH MESSAGE ──
+function renderCoachMessage() {
+  var el = document.getElementById('ov-coach-msg');
+  if (!DATA.coach || !DATA.coach.message) { el.innerHTML = ''; return; }
+  el.innerHTML =
+    '<div class="coach-msg-card">' +
+    '<div class="coach-msg-from">💬 Message from ' + DATA.coach.name + '</div>' +
+    '<div class="coach-msg-text">' + DATA.coach.message + '</div>' +
+    '</div>';
+}
+
+// ── TRANSFORMATION PHOTOS ──
+function renderTransformation() {
+  var el = document.getElementById('ov-transformation');
+  if (!el) return;
+  var before = CUST.photo_before || null;
+  var after  = CUST.photo_after  || null;
+  if (!before && !after) { el.innerHTML = ''; return; }
+
+  var photosHtml = '<div class="transform-photos">';
+  if (before) {
+    photosHtml += '<div class="transform-photo-box"><img src="'+before+'" alt="Before"><div class="transform-photo-label">Before</div></div>';
+  }
+  if (after) {
+    photosHtml += '<div class="transform-photo-box"><img src="'+after+'" alt="After"><div class="transform-photo-label">After</div></div>';
+  } else {
+    photosHtml += '<div class="transform-photo-box"><div class="transform-upload-area" onclick="document.getElementById(\'after-photo-input\').click()"><div style="font-size:28px;margin-bottom:6px">📸</div><div style="font-size:13px;font-weight:600;color:#166534">Upload After Photo</div><div style="font-size:11px;color:#4ade80;margin-top:2px">Tap to share your transformation</div></div></div>';
+  }
+  photosHtml += '</div>';
+
+  var btnsHtml = '<div class="transform-btns">';
+  if (!after) {
+    btnsHtml += '<input type="file" id="after-photo-input" accept="image/*" style="display:none" onchange="uploadAfterPhoto()">';
+    btnsHtml += '<button class="wa-btn" onclick="document.getElementById(\'after-photo-input\').click()" style="background:linear-gradient(135deg,#166534,#15803d)">📸 Upload After Photo</button>';
+  }
+  if (before && after) {
+    var shareMsg = encodeURIComponent('Check out my wellness transformation at Dharani\'s Wellness Center! 🌿💪\n\nMy progress dashboard: https://pulseiq-app.nagam-kumar.workers.dev/customer.html');
+    btnsHtml += '<a href="https://api.whatsapp.com/send?text='+shareMsg+'" target="_blank"><button class="wa-btn">💚 Share on WhatsApp</button></a>';
+  }
+  btnsHtml += '</div>';
+
+  el.innerHTML = '<div class="transform-card"><h3>✨ Transformation</h3>' + photosHtml + btnsHtml + '</div>';
+}
+
+async function uploadAfterPhoto() {
+  var file = document.getElementById('after-photo-input').files[0];
+  if (!file) return;
+  var el = document.getElementById('ov-transformation');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Uploading photo...</div>';
+  try {
+    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    var path = CUST.id + '/after_' + Date.now() + '.' + ext;
+    var res = await fetch(SB_URL + '/storage/v1/object/customer-photos/' + path, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' },
+      body: file
+    });
+    if (!res.ok) { var t = await res.text(); throw new Error(t); }
+    var photoUrl = SB_URL + '/storage/v1/object/public/customer-photos/' + path;
+    await req('PATCH', 'customers', { photo_after: photoUrl }, 'id=eq.' + CUST.id);
+    CUST.photo_after = photoUrl;
+    renderTransformation();
+    toast('After photo uploaded! Your transformation is visible.', 'success');
+  } catch(e) { toast('Upload failed: ' + e.message, 'error'); renderTransformation(); }
+}
+
+// ── GOAL ──
+function renderGoalCard() {
+  var el = document.getElementById('ov-goal-card');
+  if (!DATA.body.length) { el.innerHTML = ''; return; }
+  var startWeight  = parseFloat(DATA.body[DATA.body.length - 1].weight) || null;
+  var currentWeight= parseFloat(DATA.body[0].weight) || null;
+  var goalKey      = 'weightGoal_' + CUST.id;
+  var goalWeight   = parseFloat(localStorage.getItem(goalKey)) || null;
+  if (!startWeight || !currentWeight) { el.innerHTML = ''; return; }
+
+  var inputHtml =
+    '<div class="goal-set-row">' +
+    '<input type="number" id="goal-input" placeholder="Enter goal weight (kg)" step="0.1" value="' + (goalWeight || '') + '">' +
+    '<button class="goal-set-btn" onclick="saveGoal()">Set Goal</button>' +
+    '</div>';
+
+  if (!goalWeight) {
+    el.innerHTML = '<div class="goal-card"><h3>🎯 Set Your Weight Goal</h3>' +
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:8px">Current weight: <strong>' + currentWeight + ' kg</strong></div>' +
+      inputHtml + '</div>';
+    return;
+  }
+
+  var gaining   = goalWeight > startWeight;
+  var totalDiff = Math.abs(goalWeight - startWeight);
+  var progress  = gaining ? (currentWeight - startWeight) : (startWeight - currentWeight);
+  var pct       = totalDiff <= 0 ? 100 : Math.max(0, Math.min(100, (progress / totalDiff) * 100));
+  var achieved  = gaining ? currentWeight >= goalWeight : currentWeight <= goalWeight;
+  var changeAbs = Math.abs(currentWeight - startWeight).toFixed(1);
+  var changeLabel = gaining
+    ? 'Gained ' + changeAbs + ' kg so far'
+    : 'Lost ' + changeAbs + ' kg so far';
+  el.innerHTML =
+    '<div class="goal-card">' +
+    '<h3>🎯 Weight Goal</h3>' +
+    '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">' +
+    '<span>Start: <strong>' + startWeight + ' kg</strong></span>' +
+    '<span>Now: <strong>' + currentWeight + ' kg</strong></span>' +
+    '<span>Goal: <strong>' + goalWeight + ' kg</strong></span>' +
+    '</div>' +
+    '<div class="goal-bar-wrap"><div class="goal-bar-fill ' + (achieved ? 'done' : '') + '" style="width:' + pct + '%"></div></div>' +
+    '<div class="goal-meta"><span>' + changeLabel + '</span><span>' + pct.toFixed(0) + '% to goal</span></div>' +
+    (achieved ? '<div class="goal-achieved">🎉 Goal achieved! You reached ' + goalWeight + ' kg!</div>' : '') +
+    inputHtml + '</div>';
+}
+
+function saveGoal() {
+  var val = parseFloat(document.getElementById('goal-input').value);
+  if (!val || val <= 0) return;
+  localStorage.setItem('weightGoal_' + CUST.id, val);
+  renderGoalCard();
+}
+
+// ── STREAK ──
+function calcStreak() {
+  var presentDates = DATA.attendance
+    .filter(function(a){ return a.status === 'present'; })
+    .map(function(a){ return a.date; })
+    .sort().reverse();
+  if (!presentDates.length) return 0;
+  var streak = 0;
+  var check = new Date(); check.setHours(0,0,0,0);
+  // allow today or yesterday as streak start
+  var todayStr = check.toISOString().split('T')[0];
+  var yestStr  = new Date(check - 86400000).toISOString().split('T')[0];
+  if (presentDates[0] !== todayStr && presentDates[0] !== yestStr) return 0;
+  var prev = presentDates[0];
+  for (var i = 0; i < presentDates.length; i++) {
+    var diff = Math.round((new Date(prev) - new Date(presentDates[i])) / 86400000);
+    if (diff <= 1) { streak++; prev = presentDates[i]; }
+    else break;
+  }
+  return streak;
+}
+
+function renderStreak() {
+  var streak = calcStreak();
+  var el = document.getElementById('ov-streak');
+  var isHot = streak >= 3;
+  var flame = streak >= 7 ? '🔥' : streak >= 3 ? '⚡' : '💪';
+  var msg   = streak === 0 ? 'Come in today to start your streak!'
+            : streak === 1 ? 'Good start — come back tomorrow to keep it going!'
+            : streak < 7  ? 'Keep it up — don\'t break the chain!'
+            : 'Amazing consistency — you\'re on fire!';
+  el.innerHTML =
+    '<div class="streak-card ' + (isHot ? '' : 'cold') + '">' +
+    '<div class="streak-flame">' + flame + '</div>' +
+    '<div><div class="streak-count">' + streak + '</div>' +
+    '<div class="streak-label">Day Streak</div>' +
+    '<div class="streak-sub">' + msg + '</div></div>' +
+    '</div>';
+}
+
+// ── RENEWAL BANNER ──
+function renderRenewalBanner(left) {
+  var el = document.getElementById('ov-renewal-banner');
+  if (left === null || left > 5) { el.innerHTML = ''; return; }
+  var coachWa = DATA.coach && DATA.coach.contact
+    ? 'https://wa.me/' + COUNTRY_CODE + DATA.coach.contact.replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I would like to renew my pack at Dharani\'s Wellness Center.')
+    : null;
+  var cls  = left > 0 ? 'warn' : 'danger';
+  var icon = left > 0 ? '⚠️' : '🚨';
+  var msg  = left > 0
+    ? icon + ' Only <strong>' + left + ' servings left</strong> — renew before your pack runs out!'
+    : icon + ' <strong>Your pack is finished.</strong> Renew now to continue your sessions.';
+  var sub  = left > 0 ? 'Don\'t break your progress — renew today.' : 'Contact your coach to get started again.';
+  el.innerHTML =
+    '<div class="renewal-banner ' + cls + '">' +
+    '<div><div class="renewal-banner-text">' + msg + '</div><div class="renewal-banner-sub">' + sub + '</div></div>' +
+    (coachWa ? '<a href="' + coachWa + '" target="_blank"><button class="wa-btn">💬 Renew via WhatsApp</button></a>' : '') +
+    '</div>';
+}
+
+// ── PACK CARD ──
+function buildPackCard(container) {
+  var left = getServingsLeft();
+  if (left === null) {
+    container.innerHTML = '<div class="tcard"><div class="empty"><div class="ei">📦</div>No active pack found</div></div>';
+    return;
+  }
+  var total = parsePack(CUST.pack_type);
+  var cls   = left > 5 ? 'active' : left > 0 ? 'expiring' : 'expired';
+  var lbl   = left > 5 ? 'Servings Remaining' : left > 0 ? 'Almost Done — Renew Soon!' : 'Pack Finished';
+  var pct   = Math.max(0, Math.min(100, (left / total) * 100));
+  container.innerHTML =
+    '<div class="pack-card ' + cls + '">' +
+    '<div class="pack-type-label">' + (CUST.pack_type || 'Pack') + '</div>' +
+    '<div class="pack-days ' + cls + '">' + Math.max(0, left) + '</div>' +
+    '<div class="pack-type-label">' + lbl + '</div>' +
+    '<div class="pack-bar-wrap"><div class="pack-bar-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+    '<div class="pack-meta"><span>Started ' + fmtDate(CUST.pack_start_date) + '</span><span>' + total + ' total servings</span></div>' +
+    '</div>';
+}
+
+// ── ATTENDANCE ──
+function renderAttCalendar() {
+  var now = new Date();
+  if (_attYear === null) { _attYear = now.getFullYear(); _attMonth = now.getMonth(); }
+  document.getElementById('att-month-lbl').textContent =
+    new Date(_attYear, _attMonth, 1).toLocaleDateString('en-IN', { month:'long', year:'numeric' });
+
+  var presentSet = new Set(DATA.attendance.filter(function(a){ return a.status==='present'; }).map(function(a){ return a.date; }));
+  var compSet    = new Set(DATA.attendance.filter(function(a){ return a.status==='complementary'; }).map(function(a){ return a.date; }));
+  var todayStr   = new Date().toISOString().split('T')[0];
+
+  var firstDay    = new Date(_attYear, _attMonth, 1).getDay();
+  var daysInMonth = new Date(_attYear, _attMonth + 1, 0).getDate();
+
+  var monthPres = DATA.attendance.filter(function(a){
+    var d = new Date(a.date);
+    return d.getFullYear()===_attYear && d.getMonth()===_attMonth && a.status==='present';
+  }).length;
+
+  document.getElementById('att-stats').innerHTML =
+    '<div class="stat"><div class="stat-l">This Month</div><div class="stat-v">' + monthPres + '</div></div>' +
+    '<div class="stat"><div class="stat-l">All Time</div><div class="stat-v">' + DATA.attendance.filter(function(a){return a.status==='present';}).length + '</div></div>';
+
+  var cal = document.getElementById('att-cal');
+  cal.innerHTML = '';
+  for (var i = 0; i < firstDay; i++) cal.innerHTML += '<div class="att-cal-day empty"></div>';
+  for (var d = 1; d <= daysInMonth; d++) {
+    var ds = _attYear + '-' + String(_attMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    var cls = presentSet.has(ds) ? 'present' : compSet.has(ds) ? 'comp' : '';
+    if (ds === todayStr) cls += ' today';
+    cal.innerHTML += '<div class="att-cal-day ' + cls.trim() + '">' + d + '</div>';
+  }
+}
+
+function changeMonth(dir) {
+  _attMonth += dir;
+  if (_attMonth < 0)  { _attMonth = 11; _attYear--; }
+  if (_attMonth > 11) { _attMonth = 0;  _attYear++; }
+  renderAttCalendar();
+}
+
+// ── PROGRESS ──
+function renderProgress() {
+  var records = DATA.body;
+  if (!records.length) {
+    document.getElementById('prog-stats').innerHTML = '';
+    document.getElementById('prog-records').innerHTML = '<div class="tcard"><div class="empty"><div class="ei">⚖️</div>No body composition records yet</div></div>';
+    return;
+  }
+  var latest = records[0];
+  var lw = parseFloat(latest.weight) || 0;
+  var latestFatKg = (latest.fat_percentage && lw) ? ((parseFloat(latest.fat_percentage)/100)*lw).toFixed(1) : null;
+  var latestMusKg = (latest.muscle_percentage && lw) ? ((parseFloat(latest.muscle_percentage)/100)*lw).toFixed(1) : null;
+  document.getElementById('prog-stats').innerHTML =
+    '<div class="stat"><div class="stat-l">Weight</div><div class="stat-v">' + (latest.weight || '—') + '<span style="font-size:14px;font-family:DM Sans"> kg</span></div></div>' +
+    (latestFatKg ? '<div class="stat"><div class="stat-l">Body Fat</div><div class="stat-v" style="color:var(--danger)">' + latestFatKg + '<span style="font-size:14px;font-family:DM Sans"> kg</span></div></div>' : '') +
+    (latestMusKg ? '<div class="stat"><div class="stat-l">Muscle</div><div class="stat-v" style="color:var(--success)">' + latestMusKg + '<span style="font-size:14px;font-family:DM Sans"> kg</span></div></div>' : '') +
+    '<div class="stat"><div class="stat-l">BMI</div><div class="stat-v">' + (latest.bmi || '—') + '</div></div>';
+
+  // Feature 8 — Weight chart
+  var chartCard = document.getElementById('prog-chart-card');
+  if (records.length >= 2) {
+    chartCard.style.display = '';
+    var chartData = records.slice().reverse();
+    var labels = chartData.map(function(r){ return fmtDate(r.date); });
+    var weights = chartData.map(function(r){ return parseFloat(r.weight) || null; });
+    if (_bodyChart) _bodyChart.destroy();
+    _bodyChart = new Chart(document.getElementById('weight-chart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{ label: 'Weight (kg)', data: weights, borderColor: '#2d5a3d', backgroundColor: 'rgba(45,90,61,.08)', borderWidth: 2.5, pointBackgroundColor: '#2d5a3d', pointRadius: 4, tension: 0.3, fill: true }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { color: '#f0ede8' } }, x: { grid: { display: false } } } }
+    });
+  } else { chartCard.style.display = 'none'; }
+
+  document.getElementById('prog-records').innerHTML = records.map(function(r, i) {
+    var prev   = records[i+1];
+    var w      = parseFloat(r.weight) || 0;
+    var fatKg  = (r.fat_percentage && w) ? ((parseFloat(r.fat_percentage)/100)*w).toFixed(1) : null;
+    var musKg  = (r.muscle_percentage && w) ? ((parseFloat(r.muscle_percentage)/100)*w).toFixed(1) : null;
+    var vf     = r.visceral_fat ? parseFloat(r.visceral_fat).toFixed(2) : null;
+
+    // prev diffs
+    var pw     = prev ? parseFloat(prev.weight)||0 : 0;
+    var wd     = (prev && r.weight && prev.weight) ? (parseFloat(r.weight) - parseFloat(prev.weight)).toFixed(1) : null;
+    var pFatKg = (prev && prev.fat_percentage && pw) ? ((parseFloat(prev.fat_percentage)/100)*pw) : null;
+    var fatDiff= (fatKg && pFatKg) ? (parseFloat(fatKg) - pFatKg).toFixed(1) : null;
+    var pMusKg = (prev && prev.muscle_percentage && pw) ? ((parseFloat(prev.muscle_percentage)/100)*pw) : null;
+    var musDiff= (musKg && pMusKg) ? (parseFloat(musKg) - pMusKg).toFixed(1) : null;
+
+    var diffHtml = wd !== null
+      ? '<span class="' + (parseFloat(wd)<0?'diff-down':'diff-up') + '">' + (parseFloat(wd)<0?'↓ ':'↑ ') + Math.abs(wd) + ' kg</span>'
+      : '';
+
+    function statBox(lbl, val, unit, diff, lowerIsBetter) {
+      if (!val) return '';
+      var diffHtml = '';
+      if (diff !== null) {
+        var cls = (lowerIsBetter ? parseFloat(diff)<0 : parseFloat(diff)>0) ? 'diff-down' : 'diff-up';
+        diffHtml = '<div class="' + cls + '" style="font-size:10px;margin-top:2px">' + (parseFloat(diff)<0?'↓ ':'↑ ') + Math.abs(diff) + ' kg</div>';
+      }
+      return '<div class="body-rec-stat"><div class="body-rec-stat-lbl">' + lbl + '</div>' +
+        '<div class="body-rec-stat-val">' + val + '<span style="font-size:11px">' + unit + '</span></div>' +
+        diffHtml + '</div>';
+    }
+
+    return '<div class="body-rec">' +
+      '<div class="body-rec-date"><span>' + fmtDate(r.date) + '</span>' + diffHtml + '</div>' +
+      '<div class="body-rec-grid">' +
+      statBox('Weight',   r.weight,         ' kg',  wd,      true) +
+      statBox('Body Fat', fatKg,            ' kg',  fatDiff, true) +
+      statBox('Muscle',   musKg,            ' kg',  musDiff, false) +
+      statBox('Belly Fat',vf,               ' kg',  null,    true) +
+      (r.bmi ? '<div class="body-rec-stat"><div class="body-rec-stat-lbl">BMI</div><div class="body-rec-stat-val">' + r.bmi + '</div></div>' : '') +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:6px">' +
+      (r.fat_percentage ? 'Fat: ' + r.fat_percentage + '%' : '') +
+      (r.muscle_percentage ? '  ·  Muscle: ' + r.muscle_percentage + '%' : '') +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+// ── PACK ──
+function renderPack() {
+  buildPackCard(document.getElementById('pack-current'));
+  var packs = DATA.packs;
+  if (!packs.length) return;
+  document.getElementById('pack-history-card').style.display = '';
+  document.getElementById('pack-history').innerHTML = packs.map(function(p, i) {
+    var isActive = i === 0;
+    return '<div class="pack-item">' +
+      '<div class="pack-dot ' + (isActive ? 'active' : 'done') + '">' + (isActive ? '✓' : (packs.length - i)) + '</div>' +
+      '<div class="pack-box ' + (isActive ? 'active-pack' : '') + '">' +
+      '<div style="font-weight:700;font-size:13px">' + (p.pack_name || (p.pack_days + '-Day Pack')) +
+        (isActive ? ' <span style="background:var(--success);color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;font-weight:700;margin-left:6px">Active</span>' : '') +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--muted);margin-top:3px">' + fmtDate(p.start_date) + ' → ' + fmtDate(p.end_date) + '</div>' +
+      (p.price ? '<div style="font-size:13px;color:var(--primary);font-weight:700;margin-top:4px">₹' + p.price + '</div>' : '') +
+      '</div></div>';
+  }).join('');
+}
+
+// ── COACH ──
+function renderCoach() {
+  var el = document.getElementById('coach-detail');
+  if (!DATA.coach) {
+    el.innerHTML = '<div class="tcard"><div class="empty"><div class="ei">👨‍🏫</div>No coach assigned yet</div></div>';
+    return;
+  }
+  var c = DATA.coach;
+  el.innerHTML =
+    '<div class="coach-card">' +
+    '<div class="coach-avatar-lg">' + initials(c.name) + '</div>' +
+    '<div>' +
+    '<div class="coach-name">' + c.name + '</div>' +
+    '<div class="coach-role">Your Wellness Coach</div>' +
+    (c.contact ? '<a href="https://wa.me/' + COUNTRY_CODE + c.contact.replace(/\D/g,'') + '" target="_blank"><button class="wa-btn">💬 WhatsApp Coach</button></a>' : '') +
+    '</div></div>' +
+    (c.contact ? '<div class="tcard"><h3>Contact</h3><div style="font-size:14px;color:var(--text)">📱 ' + c.contact + '</div></div>' : '');
+}
+
+// ── MONTHLY REPORT (Feature 5) ──
+var _reportYear = null, _reportMonth = null;
+
+function renderReport() {
+  var now = new Date();
+  if (_reportYear === null) { _reportYear = now.getFullYear(); _reportMonth = now.getMonth(); }
+  document.getElementById('report-month-lbl').textContent =
+    new Date(_reportYear, _reportMonth, 1).toLocaleDateString('en-IN', { month:'long', year:'numeric' });
+
+  var monthStr = _reportYear + '-' + String(_reportMonth+1).padStart(2,'0');
+  var monthAtt = DATA.attendance.filter(function(a){
+    return a.date && a.date.startsWith(monthStr) && a.status === 'present';
+  });
+  var monthComp = DATA.attendance.filter(function(a){
+    return a.date && a.date.startsWith(monthStr) && a.status === 'complementary';
+  });
+  var monthBody = DATA.body.filter(function(b){ return b.date && b.date.startsWith(monthStr); });
+  var weightChange = null;
+  if (monthBody.length >= 2) {
+    weightChange = (parseFloat(monthBody[0].weight) - parseFloat(monthBody[monthBody.length-1].weight)).toFixed(1);
+  } else if (monthBody.length === 1 && DATA.body.length > 1) {
+    var prev = DATA.body.find(function(b){ return !b.date.startsWith(monthStr); });
+    if (prev) weightChange = (parseFloat(monthBody[0].weight) - parseFloat(prev.weight)).toFixed(1);
+  }
+
+  var streakInMonth = 0, maxStreak = 0, cur = 0;
+  var days = monthAtt.map(function(a){ return a.date; }).sort();
+  for (var i = 0; i < days.length; i++) {
+    if (i === 0) { cur = 1; }
+    else {
+      var diff = Math.round((new Date(days[i]) - new Date(days[i-1])) / 86400000);
+      cur = diff === 1 ? cur + 1 : 1;
+    }
+    if (cur > maxStreak) maxStreak = cur;
+  }
+
+  document.getElementById('report-grid').innerHTML =
+    '<div class="report-stat"><div class="report-stat-val">' + monthAtt.length + '</div><div class="report-stat-lbl">Sessions</div></div>' +
+    '<div class="report-stat"><div class="report-stat-val">' + maxStreak + '</div><div class="report-stat-lbl">Best Streak</div></div>' +
+    (weightChange !== null ? '<div class="report-stat"><div class="report-stat-val" style="color:' + (parseFloat(weightChange)<0?'var(--success)':'var(--danger)') + '">' + (parseFloat(weightChange)<0?'↓':'↑') + Math.abs(weightChange) + '</div><div class="report-stat-lbl">kg change</div></div>' : '') +
+    '<div class="report-stat"><div class="report-stat-val">' + monthComp.length + '</div><div class="report-stat-lbl">Free Days</div></div>';
+
+  // Complementary day explainer (Feature 6)
+  var compEl = document.getElementById('report-comp-banner');
+  if (monthComp.length > 0) {
+    compEl.innerHTML =
+      '<div class="comp-banner">' +
+      '<h4>🎁 You used ' + monthComp.length + ' complementary day' + (monthComp.length>1?'s':'') + ' this month</h4>' +
+      '<div class="comp-item"><span>🥤</span><span>Free protein shake</span></div>' +
+      '<div class="comp-item"><span>💬</span><span>One-on-one counselling with your coach</span></div>' +
+      '<div class="comp-item"><span>⚖️</span><span>Free body composition checkup</span></div>' +
+      '<div class="comp-item"><span style="font-size:11px;color:var(--muted)">These are available on your first or gifted day — ask your coach if you haven\'t claimed them.</span></div>' +
+      '</div>';
+  } else { compEl.innerHTML = ''; }
+}
+
+function changeReportMonth(dir) {
+  _reportMonth += dir;
+  if (_reportMonth < 0)  { _reportMonth = 11; _reportYear--; }
+  if (_reportMonth > 11) { _reportMonth = 0;  _reportYear++; }
+  renderReport();
+}
+
+// ── REFERRAL TRACKER (Feature 7) ──
+async function renderReferral() {
+  var el = document.getElementById('referral-body');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Loading...</div>';
+  try {
+    var coupons = await req('GET', 'coupons', null, 'coach_id=eq.' + CUST.id + '&type=eq.earn&order=created_at.desc');
+    var invites = coupons.filter(function(c){ return c.reason === 'invite'; });
+    var packEarns = coupons.filter(function(c){ return c.reason === 'pack_taken'; });
+    var totalCoupons = coupons.reduce(function(s,c){ return s + (parseInt(c.quantity)||0); }, 0);
+    el.innerHTML =
+      '<div class="ref-card">' +
+      '<h3>🎟️ Your Referral Rewards</h3>' +
+      '<div class="ref-sub">Every friend you refer earns you coupons. Coupons can be used to extend your pack.</div>' +
+      '<div class="ref-stats">' +
+      '<div class="ref-stat"><div class="ref-stat-val">' + invites.length + '</div><div class="ref-stat-lbl">Friends Referred</div></div>' +
+      '<div class="ref-stat"><div class="ref-stat-val">' + packEarns.length + '</div><div class="ref-stat-lbl">Joined a Pack</div></div>' +
+      '<div class="ref-stat"><div class="ref-stat-val">' + totalCoupons + '</div><div class="ref-stat-lbl">Coupons Earned</div></div>' +
+      '</div></div>' +
+      (invites.length ? '<div class="tcard"><h3>People You Referred</h3>' +
+        invites.map(function(c){ return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">👤 ' + (c.referred_person||'—') + '</div>'; }).join('') +
+        '</div>' : '<div class="tcard"><div class="empty"><div class="ei">🤝</div>No referrals yet<div style="font-size:13px;margin-top:8px">Refer a friend and earn 1 coupon. If they join a pack, earn 3 more!</div></div></div>');
+  } catch(e) {
+    el.innerHTML = '<div class="tcard"><div class="empty"><div class="ei">🎟️</div>Referral data not available</div></div>';
+  }
+}
+
+// ── LOGOUT ──
+function logout() {
+  CUST = null; DATA = { attendance:[], body:[], packs:[], coach:null };
+  _attYear = null; _attMonth = null;
+  sessionStorage.clear();
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-mobile').value = '';
+}
+
+// ── BOOT ──
+window.addEventListener('DOMContentLoaded', async function() {
+  var savedId = sessionStorage.getItem('custId');
+  if (savedId) {
+    try {
+      var res = await req('GET', 'customers', null, 'id=eq.' + encodeURIComponent(savedId) + '&limit=1');
+      if (res.length) { CUST = res[0]; launchApp(); return; }
+    } catch(e) {}
+  }
+  document.getElementById('login-screen').style.display = 'flex';
+});
+</script>
+</body>
+</html>
