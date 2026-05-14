@@ -606,7 +606,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-analytics')"><span>Analytics & Reports</span><span class="nav-arrow">▾</span></div>
       <div id="g-analytics" style="display:none">
         <button class="nav-item" onclick="goTo('analytics',this)"><span class="ic">📈</span><span data-t="nav_analytics">Analytics</span></button>
-        <button class="nav-item" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span><span data-t="nav_bizanalyst">Biz Analyst</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span><span data-t="nav_bizanalyst">Biz Analyst</span></button>
         <button class="nav-item" onclick="goTo('notifications',this)"><span class="ic">🔔</span><span data-t="nav_notifications">Notifications</span></button>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
@@ -615,9 +615,9 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
         <button class="nav-item" onclick="goTo('coupons',this)"><span class="ic">🎟️</span><span data-t="nav_coupons">Coupons</span></button>
         <button class="nav-item" onclick="goTo('payments',this)"><span class="ic">💳</span><span data-t="nav_payments">Payments</span></button>
         <button class="nav-item" onclick="goTo('expenses',this)"><span class="ic">🧾</span><span data-t="nav_expenses">Expense Tracker</span></button>
-        <button class="nav-item" onclick="goTo('pintracker',this)"><span class="ic">🏅</span><span data-t="nav_pintracker">Pin Tracker</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('pintracker',this)"><span class="ic">🏅</span><span data-t="nav_pintracker">Pin Tracker</span></button>
         <button class="nav-item" onclick="goTo('goals',this)"><span class="ic">🎯</span><span data-t="nav_goals">Goal Setting</span></button>
-        <button class="nav-item" onclick="goTo('orgtree',this)"><span class="ic">🌳</span><span data-t="nav_orgtree">Org Tree</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('orgtree',this)"><span class="ic">🌳</span><span data-t="nav_orgtree">Org Tree</span></button>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-setup')"><span data-t="nav_setup">Setup</span><span class="nav-arrow">▾</span></div>
       <div id="g-setup" style="display:none">
@@ -2834,6 +2834,9 @@ function updateCenterSwitcher() {
   });
   sel.innerHTML = opts;
   if(prev && !D.centers.some(function(c){return c.id===prev;})) { ACTIVE_CENTER=''; localStorage.removeItem('activeCenter'); }
+  // Hide supervisor-only nav items for center-PIN users
+  var isSuper = isSupervisor();
+  document.querySelectorAll('.nav-supervisor-only').forEach(function(el){ el.style.display = isSuper ? '' : 'none'; });
 }
 
 // Helper: filter array by wellness_center_id matching ACTIVE_CENTER
@@ -3642,6 +3645,9 @@ function isSupervisor() {
 }
 
 function goTo(name, el) {
+  if (!isSupervisor() && ['orgtree','pintracker','bizanalyst'].indexOf(name) > -1) {
+    showToast('This section is for supervisors only', 'error'); return;
+  }
   document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active')});
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
   var sec = document.getElementById('sec-'+name);
@@ -7729,7 +7735,7 @@ function auditLog(action, entity, detail) {
     var ctr = D.centers.find(function(c){return c.id===window._centerAuth.centerId;});
     if (ctr) actor = ctr.name + ' (coach login)';
   }
-  var entry = { ts: new Date().toISOString(), actor: actor, action: action, entity: entity, detail: detail };
+  var entry = { ts: new Date().toISOString(), actor: actor, action: action, entity: entity, detail: detail, centerId: ACTIVE_CENTER || null };
   var log = JSON.parse(localStorage.getItem('auditLog') || '[]');
   log.unshift(entry);
   if (log.length > 500) log = log.slice(0, 500);
@@ -7741,6 +7747,7 @@ function renderAuditLog() {
   var ef = (document.getElementById('audit-filter')||{}).value || '';
   q = q.toLowerCase();
   var filtered = log.filter(function(e){
+    if (ACTIVE_CENTER && e.centerId && e.centerId !== ACTIVE_CENTER) return false;
     if (ef && e.entity !== ef) return false;
     if (q && !(e.actor||'').toLowerCase().includes(q) && !(e.action||'').toLowerCase().includes(q) && !(e.entity||'').toLowerCase().includes(q) && !(e.detail||'').toLowerCase().includes(q)) return false;
     return true;
@@ -8728,13 +8735,15 @@ function renderBizAnalyst() {
   var month = (document.getElementById('biz-month')||{}).value || new Date().toISOString().substring(0,7);
   var todayStr = new Date().toISOString().split('T')[0];
 
-  // ── Org Summary ──
+  // ── Org Summary — scoped to active center ──
+  var _bizCusts = filterByCenter(D.customers);
+  var _bizCustIds = _bizCusts.map(function(c){return c.id;});
   var totalPersonalVP = getPersonalVP(month);
   var totalOrgVP = getOrgVP(month);
   var totalVP = totalPersonalVP + totalOrgVP;
-  var allActiveCusts = D.customers.filter(function(c){ return getDaysLeft(c).active; }).length;
-  var allInactive = D.customers.filter(function(c){ return isInactive(c.id); }).length;
-  var monthRenewals = (D.packHistory||[]).filter(function(h){ return h.start_date&&h.start_date.startsWith(month); }).length;
+  var allActiveCusts = _bizCusts.filter(function(c){ return getDaysLeft(c).active; }).length;
+  var allInactive = _bizCusts.filter(function(c){ return isInactive(c.id); }).length;
+  var monthRenewals = (D.packHistory||[]).filter(function(h){ return h.start_date&&h.start_date.startsWith(month)&&(!ACTIVE_CENTER||_bizCustIds.indexOf(h.customer_id)>-1); }).length;
 
   document.getElementById('biz-org-summary').innerHTML =
     '<div class="stats" style="margin-bottom:0">' +
@@ -8746,8 +8755,12 @@ function renderBizAnalyst() {
     '<div class="stat"><div class="stat-ic">🔄</div><div class="stat-l">Renewals This Month</div><div class="stat-v" style="color:var(--success)">'+monthRenewals+'</div></div>' +
     '</div>';
 
-  // ── Per-coach cards ──
-  var coachData = D.coaches.map(function(coach) {
+  // ── Per-coach cards — scoped to active center ──
+  var coachData = D.coaches.filter(function(coach){
+    if(!ACTIVE_CENTER) return true;
+    var center = D.centers.find(function(c){ return c.owner_id===coach.id; });
+    return center && center.id === ACTIVE_CENTER;
+  }).map(function(coach) {
     var center = D.centers.find(function(c){ return c.owner_id===coach.id; });
     var cid = center ? center.id : null;
     var custs = D.customers.filter(function(c){ return c.wellness_center_id===cid; });
@@ -9002,7 +9015,14 @@ function renderCouponView(){
 }
 function renderCoupons(){
   var cid=document.getElementById('coupon-coach-sel')?document.getElementById('coupon-coach-sel').value:'';
-  var rows=(D.coupons||[]).filter(function(x){return!cid||x.coach_id===cid;});
+  var _centerPersonIds=null;
+  if(ACTIVE_CENTER){
+    var _ccIds=filterByCenter(D.customers).map(function(c){return c.id;});
+    var _coIds=D.coaches.filter(function(co){return D.centers.some(function(ct){return ct.id===ACTIVE_CENTER&&ct.owner_id===co.id;});}).map(function(co){return co.id;});
+    _centerPersonIds=_ccIds.concat(_coIds);
+  }
+  var allCoupons=(_centerPersonIds?(D.coupons||[]).filter(function(x){return _centerPersonIds.indexOf(x.coach_id)>-1;}):(D.coupons||[]));
+  var rows=allCoupons.filter(function(x){return!cid||x.coach_id===cid;});
   var tb=document.getElementById('coupon-body');if(!tb)return;
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">🎟️</div><p>No coupons yet.</p></div></td></tr>';return;}
   rows.sort(function(a,b){return new Date(b.date||b.created_at)-new Date(a.date||a.created_at);});
@@ -9016,16 +9036,16 @@ function renderCoupons(){
       +'<td>'+(r.date||'—')+'</td><td>'+(r.referred_person||'—')+'</td>'
       +'<td><button class="btn-d" onclick="delCoupon(\''+r.id+'\')">Del</button></td></tr>';
   }).join('');
-  // Stats: count across ALL people who have coupons
-  var allPersonIds={};
-  (D.coupons||[]).forEach(function(x){ allPersonIds[x.coach_id]=true; });
+  // Stats: scoped to active center
+  var statsPersonIds={};
+  allCoupons.forEach(function(x){ statsPersonIds[x.coach_id]=true; });
   var total=0;
-  Object.keys(allPersonIds).forEach(function(pid){ total+=getCouponBalance(pid).balance; });
+  Object.keys(statsPersonIds).forEach(function(pid){ total+=getCouponBalance(pid).balance; });
   var el=document.getElementById('coupon-stats');
   if(el)el.innerHTML='<div class="stat"><div class="stat-l">Total Earned</div><div class="stat-v">'+
-    (D.coupons||[]).filter(function(x){return x.type==='earn';}).reduce(function(s,x){return s+Number(x.quantity);},0)+'</div></div>'+
+    allCoupons.filter(function(x){return x.type==='earn';}).reduce(function(s,x){return s+Number(x.quantity);},0)+'</div></div>'+
     '<div class="stat"><div class="stat-l">Total Used</div><div class="stat-v">'+
-    (D.coupons||[]).filter(function(x){return x.type==='use';}).reduce(function(s,x){return s+Number(x.quantity);},0)+'</div></div>'+
+    allCoupons.filter(function(x){return x.type==='use';}).reduce(function(s,x){return s+Number(x.quantity);},0)+'</div></div>'+
     '<div class="stat"><div class="stat-l">Outstanding</div><div class="stat-v" style="color:var(--accent)">'+total+'</div></div>';
 }
 async function saveCoupon(){
@@ -9166,7 +9186,14 @@ function calcBalance(){
 }
 function renderPayments(){
   var q=(document.getElementById('payment-search')||{value:''}).value.toLowerCase();
-  var rows=(D.payments||[]).filter(function(p){return(p.person_name||'').toLowerCase().includes(q)||(p.description||'').toLowerCase().includes(q);});
+  var allPayments=(D.payments||[]);
+  if(ACTIVE_CENTER){
+    var _pCustIds=filterByCenter(D.customers).map(function(c){return c.id;});
+    var _pCoachIds=D.coaches.filter(function(co){return D.centers.some(function(ct){return ct.id===ACTIVE_CENTER&&ct.owner_id===co.id;});}).map(function(co){return co.id;});
+    var _pPersonIds=_pCustIds.concat(_pCoachIds);
+    allPayments=allPayments.filter(function(p){return _pPersonIds.indexOf(p.person_id)>-1;});
+  }
+  var rows=allPayments.filter(function(p){return(p.person_name||'').toLowerCase().includes(q)||(p.description||'').toLowerCase().includes(q);});
   var tb=document.getElementById('payment-body');if(!tb)return;
   if(!rows.length){tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">💳</div><p>No payments yet.</p></div></td></tr>';return;}
   rows.sort(function(a,b){return new Date(b.payment_date)-new Date(a.payment_date);});
@@ -9189,12 +9216,12 @@ function renderPayments(){
       +'<button class="btn-e" onclick="editPayment(\''+p.id+'\')">Edit</button>'
       +'<button class="btn-d" onclick="delPayment(\''+p.id+'\')">Del</button></div></td></tr>';
   }).join('');
-  var totalBal=(D.payments||[]).reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0);
-  var overdueCount=(D.payments||[]).filter(function(p){return Math.max(0,Number(p.total_amount)-Number(p.amount_paid))>0&&p.due_date&&p.due_date<today;}).length;
+  var totalBal=allPayments.reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0);
+  var overdueCount=allPayments.filter(function(p){return Math.max(0,Number(p.total_amount)-Number(p.amount_paid))>0&&p.due_date&&p.due_date<today;}).length;
   var el=document.getElementById('payment-stats');
   if(el)el.innerHTML='<div class="stat"><div class="stat-l">Outstanding</div><div class="stat-v" style="color:var(--danger)">₹'+totalBal.toLocaleString('en-IN')+'</div></div>'
     +'<div class="stat"><div class="stat-l">Overdue</div><div class="stat-v" style="color:var(--danger)">'+overdueCount+'</div></div>'
-    +'<div class="stat"><div class="stat-l">Records</div><div class="stat-v">'+(D.payments||[]).length+'</div></div>';
+    +'<div class="stat"><div class="stat-l">Records</div><div class="stat-v">'+allPayments.length+'</div></div>';
 }
 // ── CUSTOMER PAYMENT MODAL HELPERS ──
 // ── COACH PAYMENT SETUP (for existing coaches) ──
@@ -10508,17 +10535,20 @@ function renderGoals() {
   if (gaEl && !gaEl.value) gaEl.value = goals.attendance || '';
   if (glEl && !glEl.value) glEl.value = goals.leads || '';
 
-  // Calculate actuals
-  var newMembers  = D.customers.filter(function(c){ return (c.created_at||'').startsWith(ym) || (c.join_date||'').startsWith(ym); }).length;
+  // Calculate actuals — scoped to active center
+  var _gcusts = filterByCenter(D.customers);
+  var _gatt   = filterByCenterViaCustomer(D.attendance);
+  var _gleads = ACTIVE_CENTER ? (D.leads||[]).filter(function(l){return l.center_id===ACTIVE_CENTER;}) : (D.leads||[]);
+  var newMembers  = _gcusts.filter(function(c){ return (c.created_at||'').startsWith(ym) || (c.join_date||'').startsWith(ym); }).length;
   var todayStr    = new Date().toISOString().split('T')[0];
   // Attendance avg this month
   var monthDays   = Math.max(d.getDate(), 1);
-  var monthAttTotal = D.attendance.filter(function(a){ return a.date && a.date.startsWith(ym) && a.status==='present'; }).length;
+  var monthAttTotal = _gatt.filter(function(a){ return a.date && a.date.startsWith(ym) && a.status==='present'; }).length;
   var avgDailyAtt = Math.round(monthAttTotal / monthDays);
   // Revenue estimate from pack prices
-  var monthRevenue = D.customers.filter(function(c){ return (c.created_at||'').startsWith(ym) || (c.join_date||'').startsWith(ym); })
+  var monthRevenue = _gcusts.filter(function(c){ return (c.created_at||'').startsWith(ym) || (c.join_date||'').startsWith(ym); })
     .reduce(function(s,c){ var days=parseInt((c.pack_type||'').split(' ')[0])||0; var price=days===26?2600:days===3?300:days===30?3000:0; return s+price; }, 0);
-  var leadsConverted = (D.leads||[]).filter(function(l){ return l.status==='Joined' && (l.created_at||'').startsWith(ym); }).length;
+  var leadsConverted = _gleads.filter(function(l){ return l.status==='Joined' && (l.created_at||'').startsWith(ym); }).length;
 
   function progressCard(label, icon, actual, target, color, unit) {
     var pct = target ? Math.min(Math.round((actual/target)*100), 100) : 0;
@@ -11506,7 +11536,7 @@ async function saveContest() {
   var startD = new Date(start);
   var endD   = new Date(startD); endD.setDate(endD.getDate() + days);
   var endDate = endD.toISOString().slice(0,10);
-  var payload = { name:name, type:type, start_date:start, end_date:endDate, duration_days:days, prize_amount:prize||0, entry_fee:entryFee||0, senior_amount:seniorAmt||0, description:desc, status:'active' };
+  var payload = { name:name, type:type, start_date:start, end_date:endDate, duration_days:days, prize_amount:prize||0, entry_fee:entryFee||0, senior_amount:seniorAmt||0, description:desc, status:'active', wellness_center_id:ACTIVE_CENTER||null };
   try {
     if (id) {
       await dbUpdate('contests', id, payload);
@@ -11553,7 +11583,10 @@ function filterContestType(type, el) {
 
 function renderContests() {
   var filter = _contestTypeFilter;
-  var all = D.contests.filter(function(c){ return filter==='all' || c.type===filter; });
+  var all = D.contests.filter(function(c){
+    if(ACTIVE_CENTER && c.wellness_center_id && c.wellness_center_id !== ACTIVE_CENTER) return false;
+    return filter==='all' || c.type===filter;
+  });
   var active    = all.filter(function(c){ return c.status !== 'completed'; });
   var completed = all.filter(function(c){ return c.status === 'completed'; });
   var today = new Date(); today.setHours(0,0,0,0);
