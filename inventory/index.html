@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dharani's — Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f2ee;--surface:#fff;--surface2:#f0ede8;--primary:#2d5a3d;--primary-light:#3d7a52;--accent:#e8a838;--accent-light:#fdf3dc;--text:#1a2e1f;--muted:#6b7c6f;--border:#ddd8d0;--danger:#c0392b;--danger-light:#fdf0ef;--success:#27ae60;--success-light:#eafaf1;--shadow:0 2px 12px rgba(45,90,61,.08);--radius:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+/* SETUP */
+#setup{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3326,#2d5a3d,#3d7a52);padding:20px}
+.card{background:#fff;border-radius:20px;padding:48px 40px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.logo{font-family:'DM Serif Display',serif;font-size:28px;color:var(--primary);margin-bottom:4px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:32px}
+.card label{display:block;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px;margin-top:16px}
+.card input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text)}
+.card input:focus{outline:none;border-color:var(--primary)}
+.setup-btn{width:100%;margin-top:24px;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.setup-btn:hover{background:var(--primary-light)}
+.err{color:var(--danger);font-size:12px;margin-top:8px;display:none}
+/* APP */
+#app{display:none;min-height:100vh;padding:26px;max-width:1200px;margin:0 auto}
+/* HEADER */
+.app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.app-logo{font-family:'DM Serif Display',serif;font-size:22px;color:var(--primary)}
+.app-logo span{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--accent);display:block;margin-top:2px}
+.disc-btn{padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit}
+.disc-btn:hover{color:var(--danger);border-color:var(--danger)}
+/* PAGE */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px}
+.pt{font-family:'DM Serif Display',serif;font-size:25px}
+.ps{color:var(--muted);font-size:13px;margin-top:2px}
+.btn-p{padding:9px 18px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-p:hover{background:var(--primary-light)}
+.btn-e{padding:6px 13px;background:var(--surface);border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--text)}
+.btn-e:hover{border-color:var(--primary);color:var(--primary)}
+.btn-c{padding:9px 18px;background:var(--surface2);color:var(--muted);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer}
+.btn-d{padding:6px 13px;background:var(--danger-light);border:1.5px solid var(--danger);border-radius:7px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--danger)}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px;margin-bottom:22px}
+.stat{background:var(--surface);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.stat-l{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
+.stat-v{font-family:'DM Serif Display',serif;font-size:28px;color:var(--primary);margin-top:3px}
+/* TABS */
+.tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.tab-btn{padding:8px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s}
+.tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* TABLE CARD */
+.tcard{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:18px;overflow:hidden}
+.ttoolbar{padding:14px 18px;border-bottom:1px solid var(--surface2);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.twrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--surface2);font-size:13px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;background:var(--surface2)}
+tr:last-child td{border-bottom:none}
+.acts{display:flex;gap:5px}
+/* FORM */
+.fr{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.fg{flex:1;min-width:140px;margin-bottom:0}
+.fg label{display:block;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px}
+.mf{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+/* SEARCH */
+.search{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);flex:1;min-width:160px}
+.search:focus{outline:none;border-color:var(--primary)}
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.bg{background:var(--success-light);color:var(--success)}
+.br{background:var(--danger-light);color:var(--danger)}
+.by{background:var(--accent-light);color:#b07800}
+/* INVENTORY STOCK CARDS */
+.inv-drop{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:8px;max-height:240px;overflow-y:auto;z-index:300;box-shadow:0 4px 12px rgba(0,0,0,.13);display:none;margin-top:2px}
+.inv-drop-cat{padding:5px 12px;background:var(--surface2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border);position:sticky;top:0}
+.inv-drop-item{padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--surface2);color:var(--text)}
+.inv-drop-item:hover{background:var(--accent-light);color:var(--primary)}
+.inv-stock-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.inv-stock-card.low{border-left:3px solid var(--accent)}
+.inv-stock-card.out{border-left:3px solid var(--danger)}
+.inv-usage-card{background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.inv-usage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}
+.inv-usage-stat{background:#fff;border-radius:8px;padding:10px 12px;text-align:center}
+.inv-usage-stat-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.inv-usage-stat-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--primary);margin-top:2px}
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.ei{font-size:36px;margin-bottom:10px}
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--primary);color:#fff;padding:11px 22px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);opacity:0;transition:all .3s;z-index:9999;pointer-events:none}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* QUICK MODAL */
+.qm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:16px}
+.qm-box{background:#fff;border-radius:16px;padding:24px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:qm-in .15s ease}
+@keyframes qm-in{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.qm-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.qm-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:3px}
+.qm-name{font-family:'DM Serif Display',serif;font-size:17px;color:var(--text);line-height:1.2}
+.qm-x{background:none;border:none;font-size:17px;cursor:pointer;color:var(--muted);padding:4px 7px;border-radius:6px;line-height:1}
+.qm-x:hover{background:var(--surface2)}
+.qm-info{border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:12px;font-weight:500}
+.qm-info.hint{background:var(--accent-light);color:#7a5c00}
+.qm-info.warn{background:var(--danger-light);color:var(--danger)}
+.qm-lbl{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px}
+.qm-inp{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;color:var(--text);box-sizing:border-box}
+.qm-inp:focus{outline:none;border-color:var(--primary)}
+.qm-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.qm-field{margin-bottom:12px}
+.qm-btns{display:flex;gap:8px;margin-top:4px}
+.qm-cancel{padding:12px 16px;background:var(--surface2);color:var(--muted);border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;cursor:pointer}
+.qm-save{flex:1;padding:12px;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.qm-save:disabled{opacity:.6;cursor:not-allowed}
+.qm-save.in-mode{background:var(--primary);color:#fff}
+.qm-save.in-mode:not(:disabled):hover{background:var(--primary-light)}
+.qm-save.out-mode{background:var(--danger);color:#fff}
+.qm-save.out-mode:not(:disabled):hover{background:#a93226}
+/* STOCK CARD BUTTONS */
+.card-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.card-btn-in{padding:7px;background:var(--success-light);color:var(--success);border:1.5px solid var(--success);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;width:100%}
+.card-btn-in:hover{background:var(--success);color:#fff}
+.card-btn-out{padding:7px;background:var(--danger-light);color:var(--danger);border:1.5px solid var(--danger);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;width:100%}
+.card-btn-out:hover{background:var(--danger);color:#fff}
+/* RECENT MOVES */
+.rmove{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border-radius:8px;font-size:13px;margin-bottom:6px}
+.rmove-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;min-width:32px;text-align:center}
+.rmove-in{background:var(--success-light);color:var(--success)}
+.rmove-out{background:var(--danger-light);color:var(--danger)}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup">
+  <div class="card">
+    <div class="logo">📦 Inventory</div>
+    <div class="sub">Dharani's — Private inventory tracker</div>
+    <label>Supabase URL</label>
+    <input type="url" id="sb-url" placeholder="https://xxxx.supabase.co" autocomplete="off">
+    <label>Supabase Anon Key</label>
+    <input type="password" id="sb-key" placeholder="eyJ..." autocomplete="off">
+    <div class="err" id="setup-err"></div>
+    <button class="setup-btn" id="conn-btn" onclick="doConnect()">Connect →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="app-header">
+    <div class="app-logo">📦 Inventory<span id="inv-center-label">Inventory</span></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <select id="inv-center-select" onchange="switchInvCenter()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:var(--surface);cursor:pointer;min-width:140px">
+        <option value="">All Centers</option>
+      </select>
+      <button class="disc-btn" onclick="doDisconnect()">⚡ Disconnect</button>
+    </div>
+  </div>
+
+  <!-- PAGE HEADER -->
+  <div class="ph">
+    <div><div class="pt">Inventory</div><div class="ps">Track products, stock movements and daily usage</div></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats" id="inventory-stats">
+    <div class="stat"><div class="stat-l">Total Products</div><div class="stat-v">58</div></div>
+    <div class="stat"><div class="stat-l">Low Stock</div><div class="stat-v" style="color:var(--success)">0</div></div>
+    <div class="stat"><div class="stat-l">Out of Stock</div><div class="stat-v" style="color:var(--danger)">58</div></div>
+    <div class="stat" style="cursor:pointer" onclick="shareReorderWhatsApp()"><div class="stat-l">📲 Reorder List</div><div class="stat-v" style="font-size:16px;margin-top:4px;color:#25D366">58 items</div></div>
+  </div>
+
+  <!-- RECENT MOVES -->
+  <div style="background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);padding:16px 18px;margin-bottom:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="font-weight:700;font-size:13px">Recent Movements</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-p" style="font-size:12px;padding:6px 14px" onclick="switchInvTab('in',document.getElementById('inv-tab-in'))">➕ Full Stock In</button>
+        <button style="padding:6px 14px;background:var(--danger-light);color:var(--danger);border:1.5px solid var(--danger);border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer" onclick="switchInvTab('out',document.getElementById('inv-tab-out'))">➖ Full Stock Out</button>
+      </div>
+    </div>
+    <div id="recent-moves"><div style="color:var(--muted);font-size:13px">Loading...</div></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" id="inv-tab-stock" onclick="switchInvTab('stock',this)">📦 Current Stock</button>
+    <button class="tab-btn" id="inv-tab-in" onclick="switchInvTab('in',this)">➕ Stock In</button>
+    <button class="tab-btn" id="inv-tab-out" onclick="switchInvTab('out',this)">➖ Stock Out</button>
+    <button class="tab-btn" id="inv-tab-usage" onclick="switchInvTab('usage',this)">📊 Daily Usage</button>
+  </div>
+
+  <!-- Current Stock -->
+  <div id="inv-sec-stock">
+    <div class="tcard">
+      <div class="ttoolbar" style="flex-wrap:wrap;gap:9px">
+        <input class="search" id="inventory-search" placeholder="🔍 Search products..." oninput="renderCurrentStock()" style="flex:2;min-width:160px">
+        <select id="inventory-cat-filter" onchange="renderCurrentStock()" style="padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+          <option value="">All Categories</option>
+          <option>Shake Products</option>
+          <option>Children's Health</option>
+          <option>Supplements</option>
+          <option>Accessories</option>
+          <option>Outer Nutrition</option>
+        </select>
+      </div>
+      <div id="inv-stock-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:16px"></div>
+    </div>
+  </div>
+
+  <!-- Stock In -->
+  <div id="inv-sec-in" style="display:none">
+    <div class="tcard" style="padding:20px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-family:'DM Serif Display',serif;font-size:17px" id="inv-in-title">➕ Add Stock In</div>
+        <button class="btn-p" onclick="addBatchRow()" style="font-size:12px;padding:6px 13px">+ Add Row</button>
+      </div>
+      <div class="fr" style="margin-bottom:12px">
+        <div class="fg"><label>Date for all entries *</label><input type="date" id="inv-in-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label>Notes (applies to all)</label><input type="text" id="inv-in-notes" placeholder="e.g. Order #42" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <div id="inv-batch-rows"></div>
+      <input type="hidden" id="inv-in-id">
+      <div class="mf"><button class="btn-c" onclick="resetInvIn()">Clear All</button><button class="btn-p" onclick="saveStockIn()">💾 Save All Stock In</button></div>
+    </div>
+    <div class="tcard">
+      <div class="ttoolbar"><span style="font-weight:600;font-size:13px">Stock In History</span></div>
+      <div class="twrap"><table>
+        <thead><tr><th>Date</th><th>Product</th><th>Category</th><th>Qty</th><th>Unit</th><th>Cost (₹)</th><th>Expiry</th><th>Notes</th><th>Actions</th></tr></thead>
+        <tbody id="inv-in-body"><tr><td colspan="9"><div class="empty"><div class="ei">➕</div><p>No stock in records yet.</p></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Stock Out -->
+  <div id="inv-sec-out" style="display:none">
+    <div class="tcard" style="padding:20px;margin-bottom:16px">
+      <div style="font-family:'DM Serif Display',serif;font-size:17px;margin-bottom:14px" id="inv-out-title">➖ Add Stock Out</div>
+      <div class="fr">
+        <div class="fg" style="position:relative">
+          <label>Product *</label>
+          <input type="text" id="inv-out-search" placeholder="Type to search product..." oninput="filterInvDrop('out')" onfocus="showInvDrop('out')" autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text)">
+          <div id="inv-out-drop" class="inv-drop"></div>
+          <input type="hidden" id="inv-out-pid">
+        </div>
+        <div class="fg"><label>Date *</label><input type="date" id="inv-out-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Quantity *</label><input type="number" step="0.01" id="inv-out-qty" placeholder="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label>Unit</label><select id="inv-out-unit" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)"><option value="boxes">boxes</option><option value="pcs">pcs</option><option value="bottles">bottles</option><option value="sachets">sachets</option><option value="strips">strips</option><option value="grams">grams</option><option value="kg">kg</option><option value="liters">liters</option><option value="ml">ml</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Sale Price (₹)</label><input type="number" step="0.01" id="inv-out-sale" placeholder="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label>Notes</label><input type="text" id="inv-out-notes" placeholder="Optional" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <input type="hidden" id="inv-out-id">
+      <div class="mf"><button class="btn-c" onclick="resetInvOut()">Cancel</button><button class="btn-p" onclick="saveStockOut()">Add Stock Out</button></div>
+    </div>
+    <div class="tcard">
+      <div class="ttoolbar"><span style="font-weight:600;font-size:13px">Stock Out History</span></div>
+      <div class="twrap"><table>
+        <thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Unit</th><th>Sale (₹)</th><th>Notes</th><th>Actions</th></tr></thead>
+        <tbody id="inv-out-body"><tr><td colspan="7"><div class="empty"><div class="ei">➖</div><p>No stock out records yet.</p></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Daily Usage -->
+  <div id="inv-sec-usage" style="display:none">
+    <div class="tcard" style="padding:20px;margin-bottom:16px">
+      <div style="font-family:'DM Serif Display',serif;font-size:17px;margin-bottom:16px">📅 End of Day Log</div>
+      <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px">
+        <div class="fg" style="flex:1;margin-bottom:0">
+          <label>Date *</label>
+          <input type="date" id="inv-sum-date" onchange="autoFillFromAttendance(this.value)" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+        </div>
+        <button onclick="autoFillFromAttendance(document.getElementById('inv-sum-date').value)" style="padding:9px 14px;background:var(--accent-light);color:var(--primary);border:1.5px solid var(--primary);border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;white-space:nowrap">⟳ Auto-fill from Attendance</button>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Shakes Given Today</div>
+        <div class="fr">
+          <div class="fg"><label>Weight Gain shakes</label><input type="number" id="inv-wg" value="0" min="0" oninput="updateShakeTotals()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg"><label>Weight Loss shakes</label><input type="number" id="inv-wl" value="0" min="0" oninput="updateShakeTotals()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg"><label>Total Customers</label><input type="number" id="inv-custs" value="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        </div>
+        <div class="fr" style="margin-top:10px">
+          <div class="fg" style="max-width:140px">
+            <label>Extra shakes <span style="color:var(--muted);font-weight:400">(outside attendance)</span></label>
+            <input type="number" id="inv-wg-extra" value="0" min="0" oninput="updateShakeTotals()" style="width:100%;padding:9px 11px;border:1.5px solid var(--primary);border-radius:8px;font-family:inherit;font-size:13px">
+          </div>
+          <div class="fg">
+            <label>Who got extra shakes?</label>
+            <input type="text" id="inv-extra-reason" placeholder="e.g. Mom, visitor, pack ending bonus" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          </div>
+        </div>
+        <div id="inv-shake-preview" style="margin-top:10px;font-size:13px"></div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Flavours / Products Used Today</div>
+          <button onclick="addUsageRow()" style="font-size:12px;padding:6px 14px;background:var(--accent-light);color:var(--primary);border:1.5px solid var(--primary);border-radius:7px;cursor:pointer;font-family:inherit">+ Add Product</button>
+        </div>
+        <div id="inv-usage-rows"></div>
+        <div id="inv-usage-rows-empty" style="color:var(--muted);font-size:13px;padding:8px 4px;font-style:italic">No products added yet — click "+ Add Product" to log which flavours were used today</div>
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label>Notes <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+        <input type="text" id="inv-sum-notes" placeholder="e.g. Chocolate ran out at noon" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+      </div>
+      <input type="hidden" id="inv-sum-id">
+      <input type="hidden" id="inv-usage-id">
+      <input type="hidden" id="inv-wl-extra" value="0">
+      <div class="mf">
+        <button class="btn-c" onclick="resetDailyUsage()">Reset</button>
+        <button class="btn-p" onclick="saveAllUsage()">💾 Save Everything</button>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="ttoolbar"><span style="font-weight:600;font-size:13px">Daily Usage History</span></div>
+      <div id="inv-usage-body" style="padding:4px 16px 16px"><div class="empty"><div class="ei">📊</div><p>No usage records yet.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK MODAL -->
+<div id="qm-overlay" class="qm-overlay" style="display:none" onclick="if(event.target===this)closeQm()">
+  <div class="qm-box">
+    <div class="qm-head">
+      <div>
+        <div class="qm-type" id="qm-type-lbl">STOCK IN</div>
+        <div class="qm-name" id="qm-pname-lbl"></div>
+      </div>
+      <button class="qm-x" onclick="closeQm()">✕</button>
+    </div>
+    <div id="qm-info" class="qm-info" style="display:none"></div>
+    <div class="qm-row">
+      <div>
+        <label class="qm-lbl">Quantity *</label>
+        <input class="qm-inp" type="number" id="qm-qty" step="0.01" min="0.01" placeholder="0" oninput="updateQmInfo()" onkeydown="if(event.key==='Enter')saveQm()">
+      </div>
+      <div>
+        <label class="qm-lbl">Unit</label>
+        <select class="qm-inp" id="qm-unit">
+          <option>boxes</option><option>pcs</option><option>bottles</option><option>sachets</option><option>strips</option><option>grams</option><option>kg</option><option>liters</option><option>ml</option><option>sets</option>
+        </select>
+      </div>
+    </div>
+    <div class="qm-field">
+      <label class="qm-lbl">Date</label>
+      <input class="qm-inp" type="date" id="qm-date">
+    </div>
+    <div id="qm-cost-field" class="qm-field">
+      <label class="qm-lbl">Cost Price ₹ (optional)</label>
+      <input class="qm-inp" type="number" id="qm-cost" step="0.01" placeholder="0">
+    </div>
+    <div id="qm-expiry-field" class="qm-field">
+      <label class="qm-lbl">Expiry Date (optional)</label>
+      <input class="qm-inp" type="date" id="qm-expiry">
+    </div>
+    <div id="qm-sale-field" class="qm-field" style="display:none">
+      <label class="qm-lbl">Sale Price ₹ (optional)</label>
+      <input class="qm-inp" type="number" id="qm-sale" step="0.01" placeholder="0">
+    </div>
+    <div class="qm-field">
+      <label class="qm-lbl">Notes (optional)</label>
+      <input class="qm-inp" type="text" id="qm-notes" placeholder="e.g. Order #42" onkeydown="if(event.key==='Enter')saveQm()">
+    </div>
+    <input type="hidden" id="qm-pid">
+    <input type="hidden" id="qm-pname-hid">
+    <input type="hidden" id="qm-mode">
+    <div class="qm-btns">
+      <button class="qm-cancel" onclick="closeQm()">Cancel</button>
+      <button class="qm-save in-mode" id="qm-save-btn" onclick="saveQm()">✅ Add Stock In</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CREDENTIALS & STATE ──
+var SB_URL = null, SB_KEY = null;
+var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
+var D = { stockIn:[], stockOut:[], dailyUsage:[], currentStock:{}, attendance:[], customers:[], centers:[] };
+var ACTIVE_INV_CENTER = localStorage.getItem('inv_active_center') || '';
+
+function getCredentials() {
+  if (!SB_URL) SB_URL = (localStorage.getItem('inv_sb_url') || '').replace(/\/$/, '');
+  if (!SB_KEY) SB_KEY = localStorage.getItem('inv_sb_key') || '';
+  return SB_URL && SB_KEY;
+}
+
+// ── SUPABASE REST ──
+async function req(method, table, body, filter) {
+  getCredentials();
+  var url = SB_URL + '/rest/v1/' + table + (filter || '');
+  var headers = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+  var opts = { method: method, headers: headers };
+  if (body) opts.body = JSON.stringify(body);
+  var res = await fetch(url, opts);
+  if (res.status === 204) return [];
+  var data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'HTTP ' + res.status);
+  return data;
+}
+async function dbGet(table, order, extraFilter) {
+  order = order || 'created_at';
+  var filter = '?order='+order+'.desc' + (extraFilter ? '&' + extraFilter : '');
+  try { var r = await req('GET', table, null, filter); return Array.isArray(r) ? r : []; }
+  catch(e) { console.error(table, e); return []; }
+}
+async function dbInsert(table, data) { return req('POST', table, data); }
+async function dbUpdate(table, id, data) { return req('PATCH', table, data, '?id=eq.'+id); }
+async function dbDelete(table, id) { return req('DELETE', table, null, '?id=eq.'+id); }
+
+// ── CONNECT / DISCONNECT ──
+async function doConnect() {
+  var url = document.getElementById('sb-url').value.trim();
+  var key = document.getElementById('sb-key').value.trim();
+  var errEl = document.getElementById('setup-err');
+  errEl.style.display = 'none';
+  if (!url || !key) { errEl.textContent = 'Enter both URL and Key'; errEl.style.display = 'block'; return; }
+  var btn = document.getElementById('conn-btn');
+  btn.textContent = 'Connecting...'; btn.disabled = true;
+  SB_URL = url.replace(/\/$/, ''); SB_KEY = key;
+  try {
+    var res = await fetch(SB_URL + '/rest/v1/inventory_stock_in?limit=1', { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } });
+    if (res.status === 401) { errEl.textContent = 'Invalid API Key.'; errEl.style.display='block'; SB_URL=null; SB_KEY=null; btn.textContent='Connect →'; btn.disabled=false; return; }
+    localStorage.setItem('inv_sb_url', url);
+    localStorage.setItem('inv_sb_key', key);
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    await loadInventory();
+  } catch(e) { errEl.textContent = 'Connection failed: ' + e.message; errEl.style.display='block'; SB_URL=null; SB_KEY=null; }
+  btn.textContent = 'Connect →'; btn.disabled = false;
+}
+function doDisconnect() {
+  localStorage.removeItem('inv_sb_url'); localStorage.removeItem('inv_sb_key');
+  SB_URL=null; SB_KEY=null;
+  document.getElementById('setup').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function renderCenterSelect() {
+  var sel = document.getElementById('inv-center-select');
+  if (!sel) return;
+  var prev = sel.value || ACTIVE_INV_CENTER;
+  sel.innerHTML = '<option value="">All Centers</option>' +
+    D.centers.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  sel.value = prev;
+  if (!sel.value) ACTIVE_INV_CENTER = '';
+  // Update logo subtitle
+  var lbl = document.getElementById('inv-center-label');
+  if (lbl) {
+    if (ACTIVE_INV_CENTER) {
+      var ac = D.centers.find(function(c){ return c.id === ACTIVE_INV_CENTER; });
+      lbl.textContent = ac ? ac.name : 'Inventory';
+    } else {
+      lbl.textContent = D.centers.length > 1 ? 'All Centers' : (D.centers[0] ? D.centers[0].name : 'Inventory');
+    }
+  }
+}
+
+function switchInvCenter() {
+  var sel = document.getElementById('inv-center-select');
+  ACTIVE_INV_CENTER = sel ? sel.value : '';
+  if (ACTIVE_INV_CENTER) localStorage.setItem('inv_active_center', ACTIVE_INV_CENTER);
+  else localStorage.removeItem('inv_active_center');
+  renderCenterSelect();
+  loadInventory();
+}
+
+function getInvCenterId() {
+  return ACTIVE_INV_CENTER || null;
+}
+
+// ── TOAST ──
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast '+(type||'success')+' show';
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// ── LOAD ALL ──
+async function loadInventory() {
+  getCredentials(); if (!SB_URL || !SB_KEY) return;
+  // Load centers first (best-effort)
+  try {
+    var cRes = await dbGet('wellness_centers', 'name');
+    D.centers = Array.isArray(cRes) ? cRes : [];
+    renderCenterSelect();
+  } catch(e) { D.centers = []; }
+  var cFilter = ACTIVE_INV_CENTER ? 'wellness_center_id=eq.' + ACTIVE_INV_CENTER : null;
+  try {
+    var [sin, sout, usage, balRes, att, custs] = await Promise.all([
+      dbGet('inventory_stock_in', 'date', cFilter),
+      dbGet('inventory_stock_out', 'date', cFilter),
+      dbGet('inventory_daily_usage', 'date', cFilter),
+      dbGet('inventory_stock_balance', 'product_id'),
+      dbGet('attendance', 'date'),
+      dbGet('customers', 'name')
+    ]);
+    D.stockIn    = Array.isArray(sin)   ? sin   : [];
+    D.stockOut   = Array.isArray(sout)  ? sout  : [];
+    D.dailyUsage = Array.isArray(usage) ? usage : [];
+    D.attendance = Array.isArray(att)   ? att   : [];
+    D.customers  = Array.isArray(custs) ? custs : [];
+    D.currentStock = {};
+    PRODUCTS_DB.forEach(function(p){ D.currentStock[p.id] = {qty:0, unit:p.defaultUnit}; });
+    if (Array.isArray(balRes) && balRes.length > 0) {
+      balRes.forEach(function(b){ if(D.currentStock[b.product_id]) D.currentStock[b.product_id].qty = Math.max(0, Number(b.quantity)||0); });
+    } else {
+      D.stockIn.forEach(function(r){ if(D.currentStock[r.product_id]) D.currentStock[r.product_id].qty += Number(r.quantity)||0; });
+      D.stockOut.forEach(function(r){ if(D.currentStock[r.product_id]) D.currentStock[r.product_id].qty = Math.max(0, D.currentStock[r.product_id].qty - (Number(r.quantity)||0)); });
+    }
+  } catch(e) { D.stockIn=[]; D.stockOut=[]; D.dailyUsage=[]; D.currentStock={}; }
+  renderCurrentStock();
+  renderRecentMoves();
+  renderStockInHistory();
+  renderStockOutHistory();
+  renderDailyUsageHistory();
+  resetDailyUsage();
+}
+
+// ── PRODUCT DATABASE ──
+var PRODUCTS_DB = (function(){
+  var cats = {
+    "Shake Products":[
+      {id:"f1-500-paan",name:"Formula 1 500g - Paan",defaultUnit:"boxes",threshold:2,gramsPerBox:500,gramsPerScoop:26},
+      {id:"f1-500-vanilla",name:"Formula 1 500g - Vanilla",defaultUnit:"boxes",threshold:2,gramsPerBox:500,gramsPerScoop:26},
+      {id:"f1-500-mango",name:"Formula 1 500g - Mango",defaultUnit:"boxes",threshold:2,gramsPerBox:500,gramsPerScoop:26},
+      {id:"f1-500-strawberry",name:"Formula 1 500g - Strawberry",defaultUnit:"boxes",threshold:2,gramsPerBox:500,gramsPerScoop:26},
+      {id:"f1-500-chocolate",name:"Formula 1 500g - Chocolate",defaultUnit:"boxes",threshold:2,gramsPerBox:500,gramsPerScoop:26},
+      {id:"f1-500-kulfi",name:"Formula 1 500g - Kulfi",defaultUnit:"boxes",threshold:2,gramsPerBox:500,gramsPerScoop:26},
+      {id:"f1-500-rose-kheer",name:"Formula 1 500g - Rose Kheer",defaultUnit:"boxes",threshold:2,gramsPerBox:500,gramsPerScoop:26},
+      {id:"f1-500-banana-caramel",name:"Formula 1 500g - Banana Caramel",defaultUnit:"boxes",threshold:2,gramsPerBox:500,gramsPerScoop:26},
+      {id:"f1-500-orange",name:"Formula 1 500g - Orange",defaultUnit:"boxes",threshold:2,gramsPerBox:500,gramsPerScoop:26},
+      {id:"f1-750-kulfi",name:"Formula 1 750g - Kulfi",defaultUnit:"boxes",threshold:2,gramsPerBox:750,gramsPerScoop:26},
+      {id:"f1-750-mango",name:"Formula 1 750g - Mango",defaultUnit:"boxes",threshold:2,gramsPerBox:750,gramsPerScoop:26},
+      {id:"f1-750-rose-kheer",name:"Formula 1 750g - Rose Kheer",defaultUnit:"boxes",threshold:2,gramsPerBox:750,gramsPerScoop:26},
+      {id:"f1-750-vanilla",name:"Formula 1 750g - Vanilla",defaultUnit:"boxes",threshold:2,gramsPerBox:750,gramsPerScoop:26},
+      {id:"protein-200",name:"Protein 200g",defaultUnit:"boxes",threshold:2,gramsPerBox:200,gramsPerScoop:25},
+      {id:"protein-400",name:"Protein 400g",defaultUnit:"boxes",threshold:2,gramsPerBox:400,gramsPerScoop:25},
+      {id:"shakemate",name:"Shakemate",defaultUnit:"boxes",threshold:2,gramsPerBox:200,gramsPerScoop:5},
+      {id:"afresh-50-peach",name:"Afresh 50g - Peach",defaultUnit:"boxes",threshold:3,gramsPerBox:50,gramsPerScoop:3},
+      {id:"afresh-50-cinnamon",name:"Afresh 50g - Cinnamon",defaultUnit:"boxes",threshold:3,gramsPerBox:50,gramsPerScoop:3},
+      {id:"afresh-50-elaichi",name:"Afresh 50g - Elaichi",defaultUnit:"boxes",threshold:3,gramsPerBox:50,gramsPerScoop:3},
+      {id:"afresh-50-ginger",name:"Afresh 50g - Ginger",defaultUnit:"boxes",threshold:3,gramsPerBox:50,gramsPerScoop:3},
+      {id:"afresh-50-lemon",name:"Afresh 50g - Lemon",defaultUnit:"boxes",threshold:3,gramsPerBox:50,gramsPerScoop:3},
+      {id:"afresh-50-tulsi",name:"Afresh 50g - Tulsi",defaultUnit:"boxes",threshold:3,gramsPerBox:50,gramsPerScoop:3},
+      {id:"afresh-50-kashmiri-kahwa",name:"Afresh 50g - Kashmiri Kahwa",defaultUnit:"boxes",threshold:3,gramsPerBox:50,gramsPerScoop:3}
+    ],
+    "Children's Health":[
+      {id:"dinoshake-strawberry",name:"Dinoshake Strawberry 200g",defaultUnit:"boxes",threshold:2},
+      {id:"dinoshake-chocolate",name:"Dinoshake Chocolate 200g",defaultUnit:"boxes",threshold:2}
+    ],
+    "Supplements":[
+      {id:"softgels-omega3",name:"Softgels - Omega 3",defaultUnit:"boxes",threshold:2},
+      {id:"cell-activator",name:"Cell Activator",defaultUnit:"boxes",threshold:2},
+      {id:"cell-u-loss",name:"Cell-U-Loss",defaultUnit:"boxes",threshold:2},
+      {id:"multivitamin",name:"Multivitamin",defaultUnit:"boxes",threshold:2},
+      {id:"brain-health",name:"Brain Health",defaultUnit:"boxes",threshold:2},
+      {id:"immune-health",name:"Immune Health",defaultUnit:"boxes",threshold:2},
+      {id:"triphala",name:"Triphala",defaultUnit:"boxes",threshold:2},
+      {id:"herbal-control",name:"Herbal Control",defaultUnit:"boxes",threshold:2},
+      {id:"niteworks",name:"Niteworks",defaultUnit:"boxes",threshold:2},
+      {id:"beta-heart-vanilla",name:"Beta Heart Vanilla",defaultUnit:"boxes",threshold:2},
+      {id:"aloe-plus",name:"Aloe Plus",defaultUnit:"boxes",threshold:2},
+      {id:"active-fiber-complex",name:"Active Fiber Complex",defaultUnit:"boxes",threshold:2},
+      {id:"herbal-aloe-concentrate",name:"Herbal Aloe Concentrate",defaultUnit:"boxes",threshold:2},
+      {id:"activated-fiber-90",name:"Activated Fiber 90 Tablets",defaultUnit:"boxes",threshold:2},
+      {id:"simply-probiotic",name:"Simply Probiotic",defaultUnit:"boxes",threshold:2},
+      {id:"joint-support",name:"Joint Support",defaultUnit:"boxes",threshold:2},
+      {id:"herbalife-calcium",name:"Herbalife Calcium Tablets",defaultUnit:"boxes",threshold:2},
+      {id:"hn-skin-booster-30",name:"HN-Skin Booster 30 Servings",defaultUnit:"boxes",threshold:2},
+      {id:"hn-skin-booster-canister",name:"HN-Skin Booster Canister 300g",defaultUnit:"boxes",threshold:2},
+      {id:"womans-choice",name:"Woman's Choice",defaultUnit:"boxes",threshold:2},
+      {id:"male-factor",name:"Male Factor+",defaultUnit:"boxes",threshold:2},
+      {id:"ocular-defense",name:"Ocular Defense",defaultUnit:"boxes",threshold:2},
+      {id:"sleep-enhance",name:"Sleep Enhance Hibiscus 30g",defaultUnit:"boxes",threshold:2},
+      {id:"liftoff-watermelon",name:"LiftOff Watermelon 5g x 30",defaultUnit:"boxes",threshold:2},
+      {id:"h24-hydrate",name:"H24 Hydrate",defaultUnit:"boxes",threshold:2},
+      {id:"h24-rebuild",name:"H24 Rebuild Strength",defaultUnit:"boxes",threshold:2},
+      {id:"tablet-box-medium",name:"Tablet Box Medium Size",defaultUnit:"boxes",threshold:5}
+    ],
+    "Accessories":[
+      {id:"paper-cups-350ml",name:"Paper Cups 350ml (Set of 100)",defaultUnit:"sets",threshold:2},
+      {id:"hln-shaker-cup",name:"HLN Improved Shaker Cup",defaultUnit:"boxes",threshold:5}
+    ],
+    "Outer Nutrition":[
+      {id:"vritilife-facial-toner",name:"Vritilife Facial Toner",defaultUnit:"boxes",threshold:3},
+      {id:"vritilife-facial-serum",name:"Vritilife Facial Serum",defaultUnit:"boxes",threshold:3},
+      {id:"vritilife-moisturizer",name:"Vritilife Moisturizer",defaultUnit:"boxes",threshold:3},
+      {id:"vritilife-facial-cleanser",name:"Vritilife Facial Cleanser",defaultUnit:"boxes",threshold:3}
+    ]
+  };
+  var flat = [];
+  Object.keys(cats).forEach(function(cat){ cats[cat].forEach(function(p){ flat.push(Object.assign({},p,{category:cat})); }); });
+  return flat;
+})();
+
+function getProductById(pid) { return PRODUCTS_DB.find(function(p){ return p.id===pid; }); }
+
+// ── INVENTORY TABS ──
+function switchInvTab(name, el) {
+  ['stock','in','out','usage'].forEach(function(t){
+    document.getElementById('inv-sec-'+t).style.display = t===name ? 'block' : 'none';
+    document.getElementById('inv-tab-'+t).classList.toggle('active', t===name);
+  });
+  if (name==='in') {
+    var rows = document.getElementById('inv-batch-rows');
+    if (rows && rows.children.length === 0 && !document.getElementById('inv-in-id').value) addBatchRow();
+  }
+}
+
+// ── SEARCHABLE PRODUCT DROPDOWN ──
+function showInvDrop(type) { filterInvDrop(type); document.getElementById('inv-'+type+'-drop').style.display='block'; }
+function filterInvDrop(type) {
+  var q = document.getElementById('inv-'+type+'-search').value.toLowerCase();
+  var drop = document.getElementById('inv-'+type+'-drop');
+  var cats = {};
+  PRODUCTS_DB.forEach(function(p){
+    if (!q || p.name.toLowerCase().includes(q)) {
+      if (!cats[p.category]) cats[p.category] = [];
+      cats[p.category].push(p);
+    }
+  });
+  var html = '';
+  Object.keys(cats).forEach(function(cat){
+    html += '<div class="inv-drop-cat">'+cat+'</div>';
+    cats[cat].forEach(function(p){
+      html += '<div class="inv-drop-item" onclick="selectInvProduct(\''+type+'\',\''+p.id+'\',\''+p.name.replace(/'/g,"&#39;")+'\',\''+p.defaultUnit+'\')">'+p.name+'</div>';
+    });
+  });
+  if (!html) html = '<div style="padding:10px 12px;color:var(--muted);font-size:13px">No products found</div>';
+  drop.innerHTML = html;
+  drop.style.display = 'block';
+}
+function selectInvProduct(type, pid, pname, unit) {
+  document.getElementById('inv-'+type+'-search').value = pname;
+  document.getElementById('inv-'+type+'-pid').value = pid;
+  document.getElementById('inv-'+type+'-drop').style.display = 'none';
+  var unitEl = document.getElementById('inv-'+type+'-unit');
+  if (unitEl && !unitEl.value) unitEl.value = unit;
+}
+document.addEventListener('click', function(e) {
+  ['in','out','usage'].forEach(function(t){
+    var drop = document.getElementById('inv-'+t+'-drop');
+    var inp = document.getElementById('inv-'+t+'-search');
+    if (drop && inp && !drop.contains(e.target) && e.target !== inp) drop.style.display='none';
+  });
+});
+
+// ── RENDER CURRENT STOCK ──
+function renderCurrentStock() {
+  var q = (document.getElementById('inventory-search')||{value:''}).value.toLowerCase();
+  var cat = (document.getElementById('inventory-cat-filter')||{value:''}).value;
+  var products = PRODUCTS_DB.filter(function(p){
+    return (!cat || p.category===cat) && (!q || p.name.toLowerCase().includes(q));
+  });
+  products.sort(function(a,b){
+    var qa = D.currentStock && D.currentStock[a.id] ? Math.max(0, D.currentStock[a.id].qty) : 0;
+    var qb = D.currentStock && D.currentStock[b.id] ? Math.max(0, D.currentStock[b.id].qty) : 0;
+    return qa - qb;
+  });
+  var totalLow=0, totalOut=0, reorderList=[];
+  var html = products.map(function(p){
+    var stock = (D.currentStock && D.currentStock[p.id]) ? D.currentStock[p.id] : {qty:0, unit:p.defaultUnit};
+    var qty = Math.max(0, stock.qty);
+    var isOut = qty <= 0;
+    var isLow = !isOut && qty <= p.threshold;
+    if (isOut) { totalOut++; reorderList.push({name:p.name,qty:qty,unit:stock.unit,status:'OUT'}); }
+    if (isLow) { totalLow++; reorderList.push({name:p.name,qty:qty.toFixed(0),unit:stock.unit,status:'LOW'}); }
+    var cls = isOut ? 'out' : (isLow ? 'low' : '');
+    var badge = isOut ? '<span class="badge br">Out</span>' : (isLow ? '<span class="badge by">Low</span>' : '<span class="badge bg">OK</span>');
+    var shakesHint = '';
+    if (p.gramsPerScoop && p.gramsPerBox && qty > 0) {
+      var gramsTotal = qty * p.gramsPerBox;
+      var shakesLeft = Math.floor(gramsTotal / (p.gramsPerScoop * 2));
+      shakesHint = '<div style="font-size:11px;color:var(--primary);font-weight:600;margin-top:4px">~'+shakesLeft+' shakes left</div>';
+    }
+    var qtyDisplay = Number.isInteger(qty) ? qty : qty.toFixed(2);
+    var safeName = p.name.replace(/'/g,"&#39;");
+    return '<div class="inv-stock-card '+cls+'">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:4px">'
+        +'<div style="font-weight:600;font-size:13px;flex:1;line-height:1.3">'+p.name+'</div>'+badge
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-bottom:8px">'+p.category+'</div>'
+      +'<div style="font-family:\'DM Serif Display\',serif;font-size:26px;color:'+(isOut?'var(--danger)':(isLow?'#b07800':'var(--primary))'))+'">'+qtyDisplay+'<span style="font-family:\'DM Sans\',sans-serif;font-size:12px;margin-left:4px">'+stock.unit+'</span></div>'
+      +shakesHint
+      +'<div class="card-btns">'
+        +'<button class="card-btn-in" onclick="openQm(\''+p.id+'\',\''+safeName+'\',\''+p.defaultUnit+'\',\'in\')">+ Stock In</button>'
+        +'<button class="card-btn-out" onclick="openQm(\''+p.id+'\',\''+safeName+'\',\''+p.defaultUnit+'\',\'out\')">− Stock Out</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  if (!html) html = '<div class="empty" style="grid-column:1/-1"><div class="ei">📦</div><p>No products match your search.</p></div>';
+  document.getElementById('inv-stock-grid').innerHTML = html;
+  window._reorderList = reorderList;
+  var total = PRODUCTS_DB.length;
+  document.getElementById('inventory-stats').innerHTML =
+    '<div class="stat"><div class="stat-l">Total Products</div><div class="stat-v">'+total+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Low Stock</div><div class="stat-v" style="color:'+(totalLow>0?'var(--accent)':'var(--success)')+'">'+totalLow+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Out of Stock</div><div class="stat-v" style="color:'+(totalOut>0?'var(--danger)':'var(--success)')+'">'+totalOut+'</div></div>'+
+    '<div class="stat" style="cursor:pointer" onclick="shareReorderWhatsApp()"><div class="stat-l">📲 Reorder List</div><div class="stat-v" style="font-size:16px;margin-top:4px;color:#25D366">'+(reorderList.length > 0 ? reorderList.length+' items' : '✅ All good')+'</div></div>';
+}
+
+// ── RENDER STOCK IN HISTORY ──
+function renderStockInHistory() {
+  var tb = document.getElementById('inv-in-body');
+  if (!tb) return;
+  if (!D.stockIn || !D.stockIn.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">➕</div><p>No stock in records yet.</p></div></td></tr>'; return; }
+  var sorted = D.stockIn.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  tb.innerHTML = sorted.map(function(r){
+    var p = getProductById(r.product_id);
+    return '<tr><td>'+r.date+'</td><td><strong>'+(r.product_name||r.product_id)+'</strong></td><td style="color:var(--muted);font-size:12px">'+(p?p.category:'—')+'</td><td>'+r.quantity+'</td><td>'+(r.unit||'—')+'</td><td>'+(r.cost_price?'₹'+Number(r.cost_price).toLocaleString('en-IN'):'—')+'</td><td>'+(r.expiry_date||'—')+'</td><td>'+(r.notes||'—')+'</td><td><div class="acts"><button class="btn-e" onclick="editStockIn(\''+r.id+'\')">Edit</button><button class="btn-d" onclick="delStockIn(\''+r.id+'\')">Delete</button></div></td></tr>';
+  }).join('');
+}
+
+// ── RENDER STOCK OUT HISTORY ──
+function renderStockOutHistory() {
+  var tb = document.getElementById('inv-out-body');
+  if (!tb) return;
+  if (!D.stockOut || !D.stockOut.length) { tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">➖</div><p>No stock out records yet.</p></div></td></tr>'; return; }
+  var sorted = D.stockOut.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  tb.innerHTML = sorted.map(function(r){
+    return '<tr><td>'+r.date+'</td><td><strong>'+(r.product_name||r.product_id)+'</strong></td><td>'+r.quantity+'</td><td>'+(r.unit||'—')+'</td><td>'+(r.sale_price?'₹'+Number(r.sale_price).toLocaleString('en-IN'):'—')+'</td><td>'+(r.notes||'—')+'</td><td><div class="acts"><button class="btn-e" onclick="editStockOut(\''+r.id+'\')">Edit</button><button class="btn-d" onclick="delStockOut(\''+r.id+'\')">Delete</button></div></td></tr>';
+  }).join('');
+}
+
+// ── RENDER DAILY USAGE HISTORY ──
+function renderDailyUsageHistory() {
+  var container = document.getElementById('inv-usage-body');
+  if (!container) return;
+  if (!D.dailyUsage || !D.dailyUsage.length) { container.innerHTML='<div class="empty"><div class="ei">📊</div><p>No usage records yet.</p></div>'; return; }
+  var sorted = D.dailyUsage.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  var byDate = {};
+  sorted.forEach(function(r){ if(!byDate[r.date]) byDate[r.date]=[]; byDate[r.date].push(r); });
+  container.innerHTML = Object.keys(byDate).sort().reverse().map(function(date){
+    var items = byDate[date];
+    var summaries = items.filter(function(i){return i.type==='summary';});
+    var summary = summaries[0];
+    var products = items.filter(function(i){return i.type==='product';});
+    var html = '<div class="inv-usage-card"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:14px">📅 '+date+'</strong><div style="display:flex;gap:6px">';
+    if (summary) html += '<button class="btn-e" onclick="editInvSum(\''+summary.id+'\')">Edit Summary</button><button class="btn-d" onclick="delInvSum(\''+summary.id+'\')">Delete</button>';
+    html += '</div></div>';
+    if (summaries.length > 1) html += '<div style="color:var(--danger);font-size:11px;font-weight:600;margin-bottom:6px">⚠️ '+summaries.length+' duplicate summaries for this date</div>';
+    if (summary) {
+      var wg=summary.weight_gain_shakes||0, wl=summary.weight_loss_shakes||0, tc=summary.total_customers||0;
+      html += '<div class="inv-usage-grid"><div class="inv-usage-stat"><div class="inv-usage-stat-lbl">Weight Gain</div><div class="inv-usage-stat-val" style="color:var(--primary)">'+wg+'</div></div><div class="inv-usage-stat"><div class="inv-usage-stat-lbl">Weight Loss</div><div class="inv-usage-stat-val" style="color:var(--danger)">'+wl+'</div></div><div class="inv-usage-stat"><div class="inv-usage-stat-lbl">Total Custs</div><div class="inv-usage-stat-val" style="color:var(--success)">'+tc+'</div></div><div class="inv-usage-stat"><div class="inv-usage-stat-lbl">Total Shakes</div><div class="inv-usage-stat-val">'+(wg+wl)+'</div></div></div>';
+      if (summary.notes) html += '<div style="margin-top:8px;font-size:12px;color:var(--muted)">'+summary.notes+'</div>';
+    }
+    summaries.slice(1).forEach(function(s){
+      var wg2=s.weight_gain_shakes||0, wl2=s.weight_loss_shakes||0;
+      html += '<div style="margin-top:6px;padding:8px 10px;background:var(--danger-light);border-radius:8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--danger)">Duplicate: WG '+wg2+' WL '+wl2+' = '+(wg2+wl2)+' shakes</span><button class="btn-d" onclick="delInvSum(\''+s.id+'\')" style="font-size:11px;padding:2px 8px">Delete</button></div>';
+    });
+    if (products.length) {
+      html += '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px"><div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Product Usage</div>';
+      products.forEach(function(r){
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--surface2)"><span style="font-size:13px">'+(r.product_name||r.product_id)+'</span><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600;color:var(--primary)">'+r.quantity+' '+(r.unit||'')+'</span><button class="btn-e" onclick="editInvUsage(\''+r.id+'\')" style="padding:2px 8px;font-size:11px">Edit</button><button class="btn-d" onclick="delInvUsage(\''+r.id+'\')" style="padding:2px 8px;font-size:11px">Del</button></div></div>';
+      });
+      html += '</div>';
+    }
+    return html+'</div>';
+  }).join('');
+}
+
+// ── BATCH STOCK IN ──
+var batchRowCount = 0;
+function addBatchRow(pid, pname, unit) {
+  batchRowCount++;
+  var rid = 'brow-'+batchRowCount;
+  var row = document.createElement('div');
+  row.id = rid;
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px;padding:10px 12px;background:var(--surface2);border-radius:8px;';
+  row.innerHTML = '<div style="position:relative">'
+    +'<label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Product *</label>'
+    +'<input type="text" id="'+rid+'-search" value="'+(pname||'')+'" placeholder="Search product..." oninput="filterBatchDrop(\''+rid+'\')" onfocus="filterBatchDrop(\''+rid+'\')" autocomplete="off" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/>'
+    +'<div id="'+rid+'-drop" class="inv-drop"></div>'
+    +'<input type="hidden" id="'+rid+'-pid" value="'+(pid||'')+'">'
+    +'</div>'
+    +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Qty *</label><input type="number" step="0.01" id="'+rid+'-qty" placeholder="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>'
+    +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Unit</label><select id="'+rid+'-unit" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)"><option value="boxes">boxes</option><option value="pcs">pcs</option><option value="bottles">bottles</option><option value="sachets">sachets</option><option value="strips">strips</option><option value="grams">grams</option><option value="kg">kg</option><option value="liters">liters</option><option value="ml">ml</option></select></div>'
+    +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Cost (₹)</label><input type="number" step="0.01" id="'+rid+'-cost" placeholder="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>'
+    +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Expiry</label><input type="date" id="'+rid+'-expiry" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>'
+    +'<button onclick="document.getElementById(\''+rid+'\').remove()" style="padding:8px 10px;background:var(--danger-light);color:var(--danger);border:none;border-radius:8px;cursor:pointer;font-size:16px;margin-bottom:1px">✕</button>';
+  document.getElementById('inv-batch-rows').appendChild(row);
+  document.addEventListener('click', function(e){
+    var drop = document.getElementById(rid+'-drop');
+    var inp = document.getElementById(rid+'-search');
+    if(drop && inp && !drop.contains(e.target) && e.target!==inp) drop.style.display='none';
+  });
+}
+function filterBatchDrop(rid) {
+  var q = document.getElementById(rid+'-search').value.toLowerCase();
+  var drop = document.getElementById(rid+'-drop');
+  var cats = {};
+  PRODUCTS_DB.forEach(function(p){
+    if(!q || p.name.toLowerCase().includes(q)){ if(!cats[p.category]) cats[p.category]=[]; cats[p.category].push(p); }
+  });
+  var html='';
+  Object.keys(cats).forEach(function(cat){
+    html+='<div class="inv-drop-cat">'+cat+'</div>';
+    cats[cat].forEach(function(p){
+      html+='<div class="inv-drop-item" onclick="selectBatchProduct(\''+rid+'\',\''+p.id+'\',\''+p.name.replace(/'/g,'&#39;')+'\',\''+p.defaultUnit+'\')">'+p.name+'</div>';
+    });
+  });
+  if(!html) html='<div style="padding:10px 12px;color:var(--muted);font-size:13px">No products found</div>';
+  drop.innerHTML=html; drop.style.display='block';
+}
+function selectBatchProduct(rid,pid,pname,unit){
+  document.getElementById(rid+'-search').value=pname;
+  document.getElementById(rid+'-pid').value=pid;
+  document.getElementById(rid+'-drop').style.display='none';
+  var u=document.getElementById(rid+'-unit'); if(u&&!u.value) u.value=unit;
+  document.getElementById(rid+'-qty').focus();
+}
+// ── QUICK MODAL ──
+var _qmOpen = false;
+
+function openQm(pid, pname, unit, mode) {
+  var p = getProductById(pid);
+  var stockEntry = (D.currentStock && D.currentStock[pid]) ? D.currentStock[pid] : {qty:0, unit:unit};
+  var curQty = Math.max(0, stockEntry.qty);
+
+  document.getElementById('qm-pid').value = pid;
+  document.getElementById('qm-pname-hid').value = pname;
+  document.getElementById('qm-mode').value = mode;
+
+  var isIn = mode === 'in';
+  document.getElementById('qm-type-lbl').textContent = isIn ? '➕ STOCK IN' : '➖ STOCK OUT';
+  document.getElementById('qm-pname-lbl').textContent = pname;
+
+  document.getElementById('qm-qty').value = '';
+  document.getElementById('qm-unit').value = unit;
+  document.getElementById('qm-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('qm-cost').value = '';
+  document.getElementById('qm-expiry').value = '';
+  document.getElementById('qm-sale').value = '';
+  document.getElementById('qm-notes').value = '';
+
+  document.getElementById('qm-cost-field').style.display = isIn ? 'block' : 'none';
+  document.getElementById('qm-expiry-field').style.display = isIn ? 'block' : 'none';
+  document.getElementById('qm-sale-field').style.display = isIn ? 'none' : 'block';
+
+  var infoEl = document.getElementById('qm-info');
+  infoEl.style.display = 'none'; infoEl.className = 'qm-info';
+  if (!isIn) {
+    infoEl.className = 'qm-info ' + (curQty <= 0 ? 'warn' : 'hint');
+    infoEl.textContent = curQty <= 0
+      ? '⚠️ Currently out of stock!'
+      : '📦 In stock: ' + (Number.isInteger(curQty) ? curQty : curQty.toFixed(2)) + ' ' + stockEntry.unit;
+    infoEl.style.display = 'block';
+  }
+
+  var btn = document.getElementById('qm-save-btn');
+  btn.textContent = isIn ? '✅ Add Stock In' : '✅ Remove Stock';
+  btn.className = 'qm-save ' + (isIn ? 'in-mode' : 'out-mode');
+  btn.disabled = false;
+
+  var overlay = document.getElementById('qm-overlay');
+  overlay.style.display = 'flex';
+  _qmOpen = true;
+  setTimeout(function(){ document.getElementById('qm-qty').focus(); }, 80);
+}
+
+function closeQm() {
+  document.getElementById('qm-overlay').style.display = 'none';
+  _qmOpen = false;
+}
+
+function updateQmInfo() {
+  var mode = document.getElementById('qm-mode').value;
+  var pid = document.getElementById('qm-pid').value;
+  var qty = Number(document.getElementById('qm-qty').value) || 0;
+  var p = getProductById(pid);
+  var infoEl = document.getElementById('qm-info');
+  var curEntry = (D.currentStock && D.currentStock[pid]) ? D.currentStock[pid] : {qty:0, unit:''};
+  var curQty = Math.max(0, curEntry.qty);
+
+  if (qty <= 0) {
+    // Default info
+    if (mode === 'out') {
+      infoEl.className = 'qm-info ' + (curQty <= 0 ? 'warn' : 'hint');
+      infoEl.textContent = curQty <= 0 ? '⚠️ Currently out of stock!' : '📦 In stock: ' + (Number.isInteger(curQty) ? curQty : curQty.toFixed(2)) + ' ' + curEntry.unit;
+      infoEl.style.display = 'block';
+    } else {
+      infoEl.style.display = 'none';
+    }
+    return;
+  }
+
+  if (p && p.gramsPerScoop && p.gramsPerBox) {
+    var newQty = mode === 'in' ? curQty + qty : Math.max(0, curQty - qty);
+    var shakes = Math.floor((newQty * p.gramsPerBox) / (p.gramsPerScoop * 2));
+    var addedShakes = Math.floor((qty * p.gramsPerBox) / (p.gramsPerScoop * 2));
+    var overstock = mode === 'out' && qty > curQty;
+    infoEl.className = 'qm-info ' + (overstock ? 'warn' : 'hint');
+    infoEl.textContent = mode === 'in'
+      ? '🥤 Adds ~' + addedShakes + ' shakes → ~' + shakes + ' total after saving'
+      : (overstock ? '⚠️ Exceeds stock! ' : '🥤 After removal: ~' + shakes + ' shakes remaining');
+  } else if (mode === 'out') {
+    var over = qty > curQty;
+    infoEl.className = 'qm-info ' + (over ? 'warn' : 'hint');
+    var rem = curQty - qty;
+    infoEl.textContent = over
+      ? '⚠️ Exceeds current stock (' + (Number.isInteger(curQty)?curQty:curQty.toFixed(2)) + ' ' + curEntry.unit + ')'
+      : '📦 After removal: ' + (Number.isInteger(rem)?rem:rem.toFixed(2)) + ' ' + curEntry.unit + ' remaining';
+  } else {
+    infoEl.style.display = 'none';
+    return;
+  }
+  infoEl.style.display = 'block';
+}
+
+async function saveQm() {
+  getCredentials();
+  if (!SB_URL || !SB_KEY) { showToast('Not connected', 'error'); return; }
+  var pid = document.getElementById('qm-pid').value;
+  var pname = document.getElementById('qm-pname-hid').value;
+  var qty = Number(document.getElementById('qm-qty').value);
+  var unit = document.getElementById('qm-unit').value;
+  var date = document.getElementById('qm-date').value;
+  var notes = document.getElementById('qm-notes').value.trim() || null;
+  var mode = document.getElementById('qm-mode').value;
+  if (!qty || qty <= 0) { showToast('Enter a valid quantity', 'error'); document.getElementById('qm-qty').focus(); return; }
+  if (!date) { showToast('Date required', 'error'); return; }
+  var btn = document.getElementById('qm-save-btn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+  try {
+    var cid = getInvCenterId();
+    if (mode === 'in') {
+      var cost = document.getElementById('qm-cost').value || null;
+      var expiry = document.getElementById('qm-expiry').value || null;
+      var inPayload = {product_id:pid, product_name:pname, quantity:qty, unit:unit, date:date, notes:notes, cost_price:cost, expiry_date:expiry};
+      if (cid) inPayload.wellness_center_id = cid;
+      await dbInsert('inventory_stock_in', inPayload);
+      showToast('Stock In saved!');
+    } else {
+      var sale = document.getElementById('qm-sale').value || null;
+      var outPayload = {product_id:pid, product_name:pname, quantity:qty, unit:unit, date:date, notes:notes, sale_price:sale};
+      if (cid) outPayload.wellness_center_id = cid;
+      await dbInsert('inventory_stock_out', outPayload);
+      showToast('Stock Out saved!');
+    }
+    closeQm();
+    await loadInventory();
+  } catch(e) {
+    showToast('Error: '+e.message, 'error');
+    btn.textContent = mode==='in' ? '✅ Add Stock In' : '✅ Remove Stock';
+    btn.disabled = false;
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && _qmOpen) closeQm();
+});
+
+// ── RECENT MOVES ──
+function renderRecentMoves() {
+  var el = document.getElementById('recent-moves');
+  if (!el) return;
+  var moves = [];
+  D.stockIn.forEach(function(r){ moves.push({type:'in', name:r.product_name||r.product_id, qty:r.quantity, unit:r.unit||'', date:r.date, ts:r.created_at||r.date}); });
+  D.stockOut.forEach(function(r){ moves.push({type:'out', name:r.product_name||r.product_id, qty:r.quantity, unit:r.unit||'', date:r.date, ts:r.created_at||r.date}); });
+  moves.sort(function(a,b){ return (b.ts>a.ts?1:b.ts<a.ts?-1:0); });
+  var recent = moves.slice(0, 8);
+  if (!recent.length) { el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:4px 0">No movements yet — add stock in or out from the product cards above.</div>'; return; }
+  el.innerHTML = recent.map(function(m){
+    var tag = m.type==='in' ? '<span class="rmove-tag rmove-in">+IN</span>' : '<span class="rmove-tag rmove-out">−OUT</span>';
+    var color = m.type==='in' ? 'var(--success)' : 'var(--danger)';
+    var sign = m.type==='in' ? '+' : '−';
+    return '<div class="rmove">'+tag+'<span style="flex:1;font-weight:500">'+m.name+'</span><span style="font-weight:700;color:'+color+'">'+sign+m.qty+' '+m.unit+'</span><span style="color:var(--muted);font-size:11px;white-space:nowrap;margin-left:8px">'+m.date+'</span></div>';
+  }).join('');
+}
+
+// ── SAVE STOCK IN ──
+async function saveStockIn() {
+  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  var editId = document.getElementById('inv-in-id').value;
+  var date = document.getElementById('inv-in-date').value;
+  var notes = document.getElementById('inv-in-notes').value.trim()||null;
+  if (!date) { showToast('Please select a date','error'); return; }
+  var rows = document.getElementById('inv-batch-rows').children;
+  if (!editId && rows.length === 0) { showToast('Add at least one product row','error'); return; }
+  var payloads = []; var hasError = false;
+  Array.from(rows).forEach(function(row){
+    var rid = row.id;
+    var pid = document.getElementById(rid+'-pid').value;
+    var pname = document.getElementById(rid+'-search').value.trim();
+    var qty = document.getElementById(rid+'-qty').value;
+    if (!pid || !qty) { showToast('Fill product and quantity for all rows','error'); hasError=true; return; }
+    var p = { product_id:pid, product_name:pname, quantity:Number(qty), unit:document.getElementById(rid+'-unit').value.trim()||null, date:date, notes:notes, cost_price:document.getElementById(rid+'-cost').value||null, expiry_date:document.getElementById(rid+'-expiry').value||null };
+    var scid = getInvCenterId(); if (scid) p.wellness_center_id = scid;
+    payloads.push(p);
+  });
+  if (hasError) return;
+  try {
+    if (editId) { if(payloads[0]) await dbUpdate('inventory_stock_in', editId, payloads[0]); }
+    else { await Promise.all(payloads.map(function(p){ return dbInsert('inventory_stock_in', p); })); }
+    showToast(editId ? 'Stock In updated!' : payloads.length+' item(s) added!');
+    resetInvIn(); await loadInventory();
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+function resetInvIn() {
+  document.getElementById('inv-in-id').value='';
+  document.getElementById('inv-in-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('inv-in-notes').value='';
+  document.getElementById('inv-batch-rows').innerHTML='';
+  batchRowCount=0;
+  document.getElementById('inv-in-title').textContent='➕ Add Stock In';
+  addBatchRow();
+}
+async function editStockIn(id) {
+  var r = D.stockIn.find(function(x){return x.id===id;});
+  if (!r) return;
+  switchInvTab('in', document.getElementById('inv-tab-in'));
+  document.getElementById('inv-in-id').value=r.id;
+  document.getElementById('inv-in-date').value=r.date;
+  document.getElementById('inv-in-notes').value=r.notes||'';
+  document.getElementById('inv-batch-rows').innerHTML=''; batchRowCount=0;
+  addBatchRow(r.product_id, r.product_name||r.product_id, r.unit||'');
+  var rid='brow-'+batchRowCount;
+  document.getElementById(rid+'-qty').value=r.quantity;
+  document.getElementById(rid+'-cost').value=r.cost_price||'';
+  document.getElementById(rid+'-expiry').value=r.expiry_date||'';
+  document.getElementById('inv-in-title').textContent='✏️ Edit Stock In';
+}
+async function delStockIn(id) {
+  if (!confirm('Delete this Stock In record?')) return;
+  try { await dbDelete('inventory_stock_in',id); showToast('Deleted!'); await loadInventory(); } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
+// ── SAVE STOCK OUT ──
+async function saveStockOut() {
+  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  var id = document.getElementById('inv-out-id').value;
+  var pid = document.getElementById('inv-out-pid').value;
+  var pname = document.getElementById('inv-out-search').value.trim();
+  var qty = document.getElementById('inv-out-qty').value;
+  var date = document.getElementById('inv-out-date').value;
+  if (!pid || !qty || !date) { showToast('Product, quantity and date are required','error'); return; }
+  var payload = { product_id:pid, product_name:pname, quantity:Number(qty), unit:document.getElementById('inv-out-unit').value.trim()||null, date:date, notes:document.getElementById('inv-out-notes').value.trim()||null, sale_price:document.getElementById('inv-out-sale').value||null };
+  var ocid = getInvCenterId(); if (ocid && !id) payload.wellness_center_id = ocid;
+  try {
+    if (id) await dbUpdate('inventory_stock_out',id,payload); else await dbInsert('inventory_stock_out',payload);
+    showToast(id?'Stock Out updated!':'Stock Out added!'); resetInvOut(); await loadInventory();
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+function resetInvOut() {
+  ['inv-out-id','inv-out-pid'].forEach(function(i){document.getElementById(i).value='';});
+  ['inv-out-search','inv-out-qty','inv-out-sale','inv-out-notes'].forEach(function(i){document.getElementById(i).value='';});
+  document.getElementById('inv-out-unit').selectedIndex=0;
+  document.getElementById('inv-out-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('inv-out-title').textContent='➖ Add Stock Out';
+}
+async function editStockOut(id) {
+  var r = D.stockOut.find(function(x){return x.id===id;});
+  if (!r) return;
+  document.getElementById('inv-out-id').value=r.id;
+  document.getElementById('inv-out-search').value=r.product_name||r.product_id;
+  document.getElementById('inv-out-pid').value=r.product_id;
+  document.getElementById('inv-out-qty').value=r.quantity;
+  document.getElementById('inv-out-unit').value=r.unit||'';
+  document.getElementById('inv-out-date').value=r.date;
+  document.getElementById('inv-out-sale').value=r.sale_price||'';
+  document.getElementById('inv-out-notes').value=r.notes||'';
+  document.getElementById('inv-out-title').textContent='✏️ Edit Stock Out';
+  switchInvTab('out', document.getElementById('inv-tab-out'));
+}
+async function delStockOut(id) {
+  if (!confirm('Delete this Stock Out record?')) return;
+  try { await dbDelete('inventory_stock_out',id); showToast('Deleted!'); await loadInventory(); } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
+// ── DAILY USAGE ──
+function updateShakeTotals() {
+  var wg = Number(document.getElementById('inv-wg').value)||0;
+  var wl = Number(document.getElementById('inv-wl').value)||0;
+  var extra = Number(document.getElementById('inv-wg-extra').value)||0;
+  var total = wg + wl + extra;
+  var preview = document.getElementById('inv-shake-preview');
+  if (!preview) return;
+  if (total === 0) { preview.innerHTML = ''; return; }
+  var attDate = document.getElementById('inv-sum-date').value;
+  var attPresent = 0;
+  if (attDate && Array.isArray(D.attendance)) {
+    attPresent = D.attendance.filter(function(a){ return a.date===attDate && a.status==='present'; })
+      .reduce(function(sum,a){ return sum+(a.servings||1); }, 0);
+  }
+  var diff = total - attPresent;
+  var msg, color;
+  if (attPresent === 0) { msg = '📊 '+total+' shakes total'; color = 'var(--muted)'; }
+  else if (diff === 0) { msg = '✅ '+total+' shakes — matches attendance perfectly'; color = '#16a34a'; }
+  else if (diff > 0) { msg = '📊 '+total+' shakes — '+attPresent+' from attendance + '+diff+' extra'; color = 'var(--primary)'; }
+  else { msg = '⚠️ '+total+' shakes entered, but '+attPresent+' customers in attendance.'; color = 'var(--accent)'; }
+  preview.innerHTML = '<span style="color:'+color+'">'+msg+'</span>';
+}
+function autoFillFromAttendance(date) {
+  if (!date || !Array.isArray(D.attendance)) return;
+  var existingSummary = D.dailyUsage.find(function(r){ return r.type==='summary' && r.date===date; });
+  if (existingSummary) {
+    document.getElementById('inv-sum-id').value = existingSummary.id;
+    document.getElementById('inv-wg').value = existingSummary.weight_gain_shakes||0;
+    document.getElementById('inv-wl').value = existingSummary.weight_loss_shakes||0;
+    document.getElementById('inv-wg-extra').value = 0;
+    document.getElementById('inv-custs').value = existingSummary.total_customers||0;
+    document.getElementById('inv-sum-notes').value = existingSummary.notes||'';
+    updateShakeTotals();
+    showToast('Loaded existing summary for '+date);
+    return;
+  }
+  var present = D.attendance.filter(function(a){ return a.date===date && a.status==='present'; });
+  if (!present.length) return;
+  var wl=0, wg=0, uniqueCusts=new Set();
+  present.forEach(function(a){
+    var servings = a.servings||1;
+    var cust = D.customers.find(function(c){ return c.id===a.customer_id; });
+    var goal = cust ? (cust.goal||'') : '';
+    if (goal==='Weight Gain') wg += servings; else wl += servings;
+    if (a.customer_id) uniqueCusts.add(a.customer_id);
+  });
+  document.getElementById('inv-wg').value = wg;
+  document.getElementById('inv-wl').value = wl;
+  document.getElementById('inv-wg-extra').value = 0;
+  document.getElementById('inv-custs').value = uniqueCusts.size;
+  updateShakeTotals();
+  showToast('Auto-filled: '+wl+' WL + '+wg+' WG = '+(wl+wg)+' shakes');
+}
+
+// ── USAGE ROWS ──
+var usageRowCount = 0;
+function addUsageRow(pid, pname, unit, editId) {
+  usageRowCount++;
+  var rid = 'urow-'+usageRowCount;
+  var emptyMsg = document.getElementById('inv-usage-rows-empty');
+  if (emptyMsg) emptyMsg.style.display = 'none';
+  var row = document.createElement('div');
+  row.id = rid;
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 80px 36px;gap:8px;align-items:end;margin-bottom:8px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)';
+  row.innerHTML =
+    '<div style="position:relative">'
+    +'<label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Product / Flavour</label>'
+    +'<input type="text" id="'+rid+'-search" value="'+(pname||'')+'" placeholder="Search product..." oninput="filterUsageDrop(\''+rid+'\')" onfocus="filterUsageDrop(\''+rid+'\')" autocomplete="off" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">'
+    +'<div id="'+rid+'-drop" class="inv-drop"></div>'
+    +'<input type="hidden" id="'+rid+'-pid" value="'+(pid||'')+'">'
+    +'<input type="hidden" id="'+rid+'-editid" value="'+(editId||'')+'">'
+    +'</div>'
+    +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Qty</label>'
+    +'<input type="number" step="0.01" id="'+rid+'-qty" placeholder="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>'
+    +'<div><label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px">Unit</label>'
+    +'<input type="text" id="'+rid+'-unit" value="'+(unit||'scoops')+'" placeholder="scoops" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>'
+    +'<button onclick="removeUsageRow(\''+rid+'\')" style="padding:8px 10px;background:var(--danger-light);color:var(--danger);border:none;border-radius:8px;cursor:pointer;font-size:16px;align-self:flex-end">✕</button>';
+  document.getElementById('inv-usage-rows').appendChild(row);
+  document.addEventListener('click', function(e){
+    var drop = document.getElementById(rid+'-drop');
+    if (drop && !row.contains(e.target)) drop.style.display='none';
+  });
+}
+function removeUsageRow(rid) {
+  var row = document.getElementById(rid);
+  if (row) row.remove();
+  var rows = document.getElementById('inv-usage-rows');
+  if (rows && rows.children.length === 0) {
+    var emptyMsg = document.getElementById('inv-usage-rows-empty');
+    if (emptyMsg) emptyMsg.style.display = '';
+  }
+}
+function filterUsageDrop(rid) {
+  var q = document.getElementById(rid+'-search').value.toLowerCase();
+  var drop = document.getElementById(rid+'-drop');
+  var cats = {};
+  PRODUCTS_DB.filter(function(p){ return !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q); })
+    .forEach(function(p){ if(!cats[p.category]) cats[p.category]=[]; cats[p.category].push(p); });
+  var html='';
+  Object.keys(cats).forEach(function(cat){
+    html+='<div class="inv-drop-cat">'+cat+'</div>';
+    cats[cat].forEach(function(p){
+      html+='<div class="inv-drop-item" onclick="selectUsageProduct(\''+rid+'\',\''+p.id+'\',\''+p.name.replace(/'/g,"&#39;")+'\',\''+p.defaultUnit+'\')">'+p.name+'</div>';
+    });
+  });
+  if (!html) html='<div style="padding:10px 12px;color:var(--muted);font-size:13px">No products found</div>';
+  drop.innerHTML=html; drop.style.display='block';
+}
+function selectUsageProduct(rid, pid, pname, unit) {
+  document.getElementById(rid+'-search').value=pname;
+  document.getElementById(rid+'-pid').value=pid;
+  var unitEl=document.getElementById(rid+'-unit');
+  if(unitEl && unit) unitEl.value=unit;
+  var drop=document.getElementById(rid+'-drop');
+  if(drop) drop.style.display='none';
+}
+async function saveAllUsage() {
+  getCredentials();
+  if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  var date = document.getElementById('inv-sum-date').value;
+  if (!date) { showToast('Date is required','error'); return; }
+  var sumId = document.getElementById('inv-sum-id').value;
+  var wg = Number(document.getElementById('inv-wg').value)||0;
+  var wl = Number(document.getElementById('inv-wl').value)||0;
+  var extra = Number(document.getElementById('inv-wg-extra').value)||0;
+  var custs = Number(document.getElementById('inv-custs').value)||0;
+  var notesVal = document.getElementById('inv-sum-notes').value.trim();
+  var reasonEl = document.getElementById('inv-extra-reason');
+  var reasonVal = reasonEl ? reasonEl.value.trim() : '';
+  var fullNotes = notesVal;
+  if (reasonVal) fullNotes = (notesVal ? notesVal+' | ' : '')+'Extra: '+reasonVal;
+  if (!sumId) {
+    var existing = D.dailyUsage.find(function(r){ return r.type==='summary' && r.date===date; });
+    if (existing) sumId = existing.id;
+  }
+  var ucid = getInvCenterId();
+  var sumPayload = { type:'summary', date:date, weight_gain_shakes:wg+extra, weight_loss_shakes:wl, total_customers:custs, notes:fullNotes||null };
+  if (ucid) sumPayload.wellness_center_id = ucid;
+  var rowEls = document.getElementById('inv-usage-rows').children;
+  var usageItems = [];
+  for (var i=0; i<rowEls.length; i++) {
+    var rid = rowEls[i].id;
+    var pid = document.getElementById(rid+'-pid').value;
+    var pname = document.getElementById(rid+'-search').value.trim();
+    var qty = Number(document.getElementById(rid+'-qty').value)||0;
+    var unit = document.getElementById(rid+'-unit').value.trim()||'scoops';
+    var editId = document.getElementById(rid+'-editid').value;
+    if (!pid) { showToast('Select a product for row '+(i+1),'error'); return; }
+    if (!qty) { showToast('Enter quantity for '+pname,'error'); return; }
+    var upayload = { type:'product', product_id:pid, product_name:pname, quantity:qty, unit:unit, date:date };
+    if (ucid && !editId) upayload.wellness_center_id = ucid;
+    usageItems.push({ editId:editId, payload:upayload });
+  }
+  try {
+    if (sumId) await dbUpdate('inventory_daily_usage', sumId, sumPayload);
+    else await dbInsert('inventory_daily_usage', sumPayload);
+    for (var j=0; j<usageItems.length; j++) {
+      var item = usageItems[j];
+      if (item.editId) await dbUpdate('inventory_daily_usage', item.editId, item.payload);
+      else await dbInsert('inventory_daily_usage', item.payload);
+    }
+    showToast('Saved! '+(usageItems.length > 0 ? usageItems.length+' product(s) logged.' : 'Summary saved.'));
+    resetDailyUsage();
+    await loadInventory();
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+function resetDailyUsage() {
+  document.getElementById('inv-sum-id').value='';
+  document.getElementById('inv-usage-id').value='';
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('inv-sum-date').value=today;
+  ['inv-wg','inv-wl','inv-wg-extra','inv-custs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value='0'; });
+  document.getElementById('inv-sum-notes').value='';
+  var er=document.getElementById('inv-extra-reason'); if(er) er.value='';
+  document.getElementById('inv-usage-rows').innerHTML='';
+  usageRowCount=0;
+  var emptyMsg=document.getElementById('inv-usage-rows-empty');
+  if(emptyMsg) emptyMsg.style.display='';
+  var preview=document.getElementById('inv-shake-preview');
+  if(preview) preview.innerHTML='';
+}
+async function editInvSum(id) {
+  var r = D.dailyUsage.find(function(x){return x.id===id;});
+  if (!r) return;
+  document.getElementById('inv-sum-id').value=r.id;
+  document.getElementById('inv-sum-date').value=r.date;
+  document.getElementById('inv-wg').value=r.weight_gain_shakes||0;
+  document.getElementById('inv-wl').value=r.weight_loss_shakes||0;
+  document.getElementById('inv-custs').value=r.total_customers||0;
+  document.getElementById('inv-sum-notes').value=r.notes||'';
+  switchInvTab('usage', document.getElementById('inv-tab-usage'));
+}
+async function delInvSum(id) {
+  if (!confirm('Delete this daily summary?')) return;
+  try { await dbDelete('inventory_daily_usage',id); showToast('Deleted!'); await loadInventory(); } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+async function editInvUsage(id) {
+  var r = D.dailyUsage.find(function(x){return x.id===id;});
+  if (!r) return;
+  switchInvTab('usage', document.getElementById('inv-tab-usage'));
+  document.getElementById('inv-sum-date').value = r.date||'';
+  addUsageRow(r.product_id||'', r.product_name||r.product_id||'', r.unit||'scoops', r.id);
+  var rows = document.getElementById('inv-usage-rows');
+  if (rows && rows.lastChild) {
+    var lastRid = rows.lastChild.id;
+    var qtyEl = document.getElementById(lastRid+'-qty');
+    if (qtyEl) qtyEl.value = r.quantity||'';
+  }
+}
+async function delInvUsage(id) {
+  if (!confirm('Delete this usage record?')) return;
+  try { await dbDelete('inventory_daily_usage',id); showToast('Deleted!'); await loadInventory(); } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
+// ── WHATSAPP REORDER ──
+function shareReorderWhatsApp() {
+  var list = window._reorderList || [];
+  if (!list.length) { showToast('All products are well stocked! 🎉'); return; }
+  var msg = '📦 *Reorder List — '+new Date().toLocaleDateString('en-IN')+'*\n\n';
+  var out = list.filter(function(i){return i.status==='OUT';});
+  var low = list.filter(function(i){return i.status==='LOW';});
+  if (out.length) { msg += '🔴 *Out of Stock:*\n'; out.forEach(function(i){ msg += '• '+i.name+'\n'; }); msg+='\n'; }
+  if (low.length) { msg += '🟡 *Low Stock:*\n'; low.forEach(function(i){ msg += '• '+i.name+' ('+i.qty+' '+i.unit+' left)\n'; }); }
+  msg += '\nPlease arrange at the earliest 🙏';
+  window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(msg),'_blank');
+}
+
+// ── INIT ──
+window.onload = function() {
+  var url = localStorage.getItem('inv_sb_url');
+  var key = localStorage.getItem('inv_sb_key');
+  if (url && key) {
+    document.getElementById('sb-url').value = url;
+    document.getElementById('sb-key').value = key;
+    SB_URL = url.replace(/\/$/, ''); SB_KEY = key;
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadInventory();
+  }
+};
+</script>
+</body></html>

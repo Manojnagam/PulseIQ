@@ -261,13 +261,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="login-field">
       <label>Mobile Number</label>
-      <input type="tel" id="login-mobile" placeholder="9876543210" maxlength="10"
+      <input type="tel" id="login-mobile" placeholder="9876543210" maxlength="10" autocomplete="off"
         oninput="this.value=this.value.replace(/\D/g,'')"
         onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div class="login-field">
-      <label>Date of Birth</label>
-      <input type="date" id="login-dob" onkeydown="if(event.key==='Enter')doLogin()">
+      <label>Date of Birth <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+      <input type="date" id="login-dob" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="login-btn" onclick="doLogin()">View My Dashboard →</button>
     <div class="login-err" id="login-err"></div>
@@ -348,7 +348,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div class="att-legend">
           <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--success)"></div>Present</div>
           <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--danger-light);border:1px solid #fca5a5"></div>Absent</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:#e8f4fd;border:1px solid #b3d4f5"></div>Complementary</div>
           <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>No record</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--surface2);outline:2px solid var(--primary);outline-offset:1px"></div>Today</div>
         </div>
       </div>
     </div>
@@ -409,7 +411,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="sec" id="sec-diet">
       <div class="ph">
         <div><div class="pt">My Diet Plan</div><div class="ps">Personalised daily meal plan based on your goals</div></div>
-        <button onclick="openFoodPreferences()" style="padding:8px 14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #16a34a;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">⚙️ My Food Preferences</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="openFoodPreferences()" style="padding:8px 14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #16a34a;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">⚙️ Food Preferences</button>
+          <button onclick="openWishlistDirect()" style="padding:8px 14px;background:#fff7ed;color:#c2410c;border:1.5px solid #fb923c;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">🥩 Protein Wishlist</button>
+        </div>
       </div>
       <div id="diet-body"></div>
     </div>
@@ -422,9 +427,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <button onclick="closeFoodPreferences()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280">✕</button>
         </div>
         <!-- Tabs -->
-        <div style="display:flex;gap:0;border-bottom:2px solid #e5e7eb;margin-bottom:14px">
-          <button id="fp-tab-list" onclick="switchFoodPrefTab('list')" style="flex:1;padding:8px;background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;color:#16a34a;cursor:pointer;border-bottom:2px solid #16a34a;margin-bottom:-2px">✅ Available Foods</button>
-          <button id="fp-tab-add" onclick="switchFoodPrefTab('add')" style="flex:1;padding:8px;background:none;border:none;font-family:inherit;font-size:13px;font-weight:400;color:#6b7280;cursor:pointer">🎯 My Goal Foods</button>
+        <div style="display:flex;gap:0;border-bottom:2px solid #e5e7eb;margin-bottom:14px;overflow-x:auto">
+          <button id="fp-tab-list" onclick="switchFoodPrefTab('list')" style="flex:1;padding:8px;background:none;border:none;font-family:inherit;font-size:12px;font-weight:700;color:#16a34a;cursor:pointer;border-bottom:2px solid #16a34a;margin-bottom:-2px;white-space:nowrap">✅ Available</button>
+          <button id="fp-tab-add" onclick="switchFoodPrefTab('add')" style="flex:1;padding:8px;background:none;border:none;font-family:inherit;font-size:12px;font-weight:400;color:#6b7280;cursor:pointer;white-space:nowrap">🎯 Goal Foods</button>
+          <button id="fp-tab-wishlist" onclick="switchFoodPrefTab('wishlist')" style="flex:1;padding:8px;background:none;border:none;font-family:inherit;font-size:12px;font-weight:400;color:#6b7280;cursor:pointer;white-space:nowrap">🥩 Wishlist</button>
+          <button id="fp-tab-custom" onclick="switchFoodPrefTab('custom')" style="flex:1;padding:8px;background:none;border:none;font-family:inherit;font-size:12px;font-weight:400;color:#6b7280;cursor:pointer;white-space:nowrap">➕ Add Food</button>
         </div>
 
         <!-- Tab: Food List -->
@@ -455,6 +462,81 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
             <button onclick="closeFoodPreferences()" style="padding:12px 16px;background:#f3f4f6;border:none;border-radius:10px;font-family:inherit;font-size:14px;cursor:pointer">Cancel</button>
           </div>
           <p style="font-size:11px;color:#9ca3af;margin-top:8px;text-align:center">After saving, ask your coach to regenerate your diet plan using your available foods.</p>
+        </div>
+
+        <!-- Tab: Protein Wishlist -->
+        <div id="food-pref-tab-wishlist" style="display:none">
+          <p style="font-size:12px;color:#6b7280;margin-bottom:10px">Select high-protein South Indian foods you <strong>like and want to eat</strong>. Your coach will use this to plan your diet.</p>
+          <input id="wishlist-search" type="text" placeholder="🔍 Search foods..." oninput="renderWishlist()"
+            style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box;margin-bottom:10px;outline:none">
+          <div id="wishlist-list" style="max-height:320px;overflow-y:auto"></div>
+          <div style="margin-top:14px;display:flex;gap:8px">
+            <button onclick="saveWishlist()" style="flex:1;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">💾 Save Wishlist</button>
+            <button onclick="closeFoodPreferences()" style="padding:12px 16px;background:#f3f4f6;border:none;border-radius:10px;font-family:inherit;font-size:14px;cursor:pointer">Cancel</button>
+          </div>
+          <p style="font-size:11px;color:#9ca3af;margin-top:8px;text-align:center">Share this with your coach to get a personalised meal plan.</p>
+        </div>
+
+        <!-- Tab: Add Custom Food -->
+        <div id="food-pref-tab-custom" style="display:none">
+          <p style="font-size:12px;color:#6b7280;margin-bottom:12px">Can't find a food in the list? Add it here and it becomes available for everyone at your center.</p>
+          <div style="margin-bottom:10px">
+            <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Food Name *</label>
+            <div style="display:flex;gap:8px">
+              <input id="cf-name" type="text" placeholder="e.g. Sabudana, Nachni, Kaju..." oninput="document.getElementById('ai-suggest-status').textContent=''"
+                style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+              <button id="ai-suggest-btn" onclick="suggestNutrition()"
+                style="padding:9px 14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #16a34a;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">🤖 Suggest</button>
+            </div>
+            <div id="ai-suggest-status" style="font-size:11px;color:#6b7280;margin-top:5px;min-height:16px"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Calories (per 100g) *</label>
+              <input id="cf-calories" type="number" min="0" placeholder="e.g. 340"
+                style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Protein (g per 100g)</label>
+              <input id="cf-protein" type="number" min="0" step="0.1" placeholder="e.g. 12"
+                style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Carbs (g per 100g)</label>
+              <input id="cf-carbs" type="number" min="0" step="0.1" placeholder="e.g. 71"
+                style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Fat (g per 100g)</label>
+              <input id="cf-fat" type="number" min="0" step="0.1" placeholder="e.g. 1.9"
+                style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Category</label>
+              <select id="cf-category" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+                <option value="veg">🥦 Vegetarian</option>
+                <option value="non-veg">🍗 Non-Vegetarian</option>
+                <option value="both">🥚 Both</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Best for Meal</label>
+              <select id="cf-meal" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+                <option value="">Any meal</option>
+                <option value="breakfast">Breakfast</option>
+                <option value="mid_morning">Mid-Morning</option>
+                <option value="lunch">Lunch</option>
+                <option value="evening">Evening Snack</option>
+                <option value="dinner">Dinner</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onclick="submitCustomFood()" style="flex:1;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">➕ Add to Food List</button>
+            <button onclick="closeFoodPreferences()" style="padding:12px 16px;background:#f3f4f6;border:none;border-radius:10px;font-family:inherit;font-size:14px;cursor:pointer">Cancel</button>
+          </div>
         </div>
       </div>
     </div>
@@ -499,7 +581,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
     <div class="sec" id="sec-referral">
       <div class="ph">
-        <div><div class="pt">My Referrals</div><div class="ps">Friends you've brought to Dharani's</div></div>
+        <div><div class="pt">My Referrals</div><div class="ps" id="ref-subtitle">Friends you've brought to us</div></div>
       </div>
       <div id="referral-body"></div>
     </div>
@@ -517,12 +599,12 @@ function showToast(msg, type) {
   setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){ t.remove(); },300); }, 3000);
 }
 
-var SB_URL = localStorage.getItem('sb_url') || localStorage.getItem('coach_sb_url') || '';
-var SB_KEY = localStorage.getItem('sb_key') || localStorage.getItem('coach_sb_key') || '';
+var SB_URL = localStorage.getItem('sb_url') || localStorage.getItem('coach_sb_url') || 'https://erteibdxzdvsaujptxsd.supabase.co';
+var SB_KEY = localStorage.getItem('sb_key') || localStorage.getItem('coach_sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
 var COUNTRY_CODE = '91';
 
 var CUST = null;
-var DATA = { attendance:[], body:[], packs:[], coach:null, payment:null };
+var DATA = { attendance:[], body:[], packs:[], coach:null, payment:null, centerName:'' };
 var MEAL_LOGS = {}; // { "2026-04-19": { breakfast: true, mid_morning: false, ... } }
 var _attYear = null, _attMonth = null, _bodyChart = null;
 
@@ -535,6 +617,18 @@ async function req(method, table, body, params) {
   };
   if (body) opts.body = JSON.stringify(body);
   var r = await fetch(url, opts);
+  if (!r.ok) throw new Error(await r.text());
+  var t = await r.text();
+  return t ? JSON.parse(t) : [];
+}
+
+async function upsert(table, body) {
+  var url = SB_URL + '/rest/v1/' + table;
+  var r = await fetch(url, {
+    method: 'POST',
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(body)
+  });
   if (!r.ok) throw new Error(await r.text());
   var t = await r.text();
   return t ? JSON.parse(t) : [];
@@ -616,14 +710,25 @@ async function doLogin() {
   var errEl  = document.getElementById('login-err');
   errEl.textContent = '';
   if (mobile.length < 10) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
-  if (!dob) { errEl.textContent = 'Enter your date of birth.'; return; }
   try {
-    var results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent(mobile) + '&limit=1');
+    var results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent(mobile));
+    if (!results.length) {
+      results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent('91' + mobile));
+    }
     if (!results.length) { errEl.textContent = 'No client found with this number. Contact your coach.'; return; }
-    var cust = results[0];
-    if (!cust.dob || cust.dob !== dob) { errEl.textContent = 'Date of birth does not match. Contact your coach.'; return; }
+
+    var cust = null;
+    if (results.length === 1) {
+      var c = results[0];
+      if (c.dob && dob && c.dob !== dob) { errEl.textContent = 'Date of birth does not match. Contact your coach.'; return; }
+      cust = c;
+    } else {
+      if (!dob) { errEl.textContent = 'Multiple accounts use this number. Please enter your date of birth to identify yourself.'; return; }
+      cust = results.find(function(c) { return c.dob === dob; });
+      if (!cust) { errEl.textContent = 'Date of birth does not match any account on this number. Contact your coach.'; return; }
+    }
+
     CUST = cust;
-    localStorage.setItem('clientCustId', CUST.id);
     launchApp();
   } catch(e) {
     errEl.textContent = 'Connection error. Try again.';
@@ -631,11 +736,15 @@ async function doLogin() {
 }
 
 async function launchApp() {
+  DATA = { attendance:[], body:[], packs:[], coach:null, payment:null, centerName:'' };
+  MEAL_LOGS = {};
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('sb-avatar').textContent = initials(CUST.name);
   document.getElementById('sb-name').textContent = CUST.name;
   document.getElementById('sb-sub').textContent = 'Client';
+  document.getElementById('ov-name').textContent = (CUST.name || '').split(' ')[0];
+  document.getElementById('ov-sub').textContent = 'Loading your dashboard...';
   await loadData();
   renderOverview();
 }
@@ -648,8 +757,8 @@ async function loadData() {
 
   try {
     var body = await req('GET', 'body_composition', null, 'customer_id=eq.' + CUST.id + '&order=date.desc');
-    DATA.body = body || [];
-  } catch(e) { console.error('body_composition load failed', e); }
+    DATA.body = (body || []).filter(function(r){ return r.customer_id === CUST.id; });
+  } catch(e) { console.error('body_composition load failed', e); DATA.body = []; }
 
   try {
     var packs = await req('GET', 'pack_history', null, 'customer_id=eq.' + CUST.id + '&order=start_date.desc');
@@ -680,6 +789,17 @@ async function loadData() {
       DATA.coach = { name: CUST.external_referrer_name, contact: CUST.external_referrer_phone || null, _isCustomer: true };
     }
   } catch(e) { console.error('coach load failed', e); }
+
+  try {
+    if (CUST.wellness_center_id) {
+      var centers = await req('GET', 'wellness_centers', null, 'id=eq.' + CUST.wellness_center_id + '&limit=1');
+      if (centers && centers[0] && centers[0].name) DATA.centerName = centers[0].name;
+    }
+    if (!DATA.centerName) {
+      var allC = await req('GET', 'wellness_centers', null, 'limit=1');
+      if (allC && allC[0] && allC[0].name) DATA.centerName = allC[0].name;
+    }
+  } catch(e) { console.error('center load failed', e); }
 }
 
 // ── OVERVIEW ──
@@ -703,6 +823,14 @@ function renderPaymentBanner() {
 }
 
 function renderOverview() {
+  // Update sidebar branding with real center name
+  var cname = getClientCenterName();
+  var sbLogo = document.querySelector('#sidebar .sb-logo h1');
+  if (sbLogo) sbLogo.textContent = '🌿 ' + cname;
+  document.title = 'My Dashboard — ' + cname;
+  var refSub = document.getElementById('ref-subtitle');
+  if (refSub) refSub.textContent = 'Friends you\'ve brought to ' + cname;
+
   var left = getServingsLeft();
   var todayStr = new Date().toISOString().split('T')[0];
   var todayAtt  = DATA.attendance.find(function(a){ return a.date === todayStr; });
@@ -785,7 +913,7 @@ function renderTransformation() {
     btnsHtml += '<button class="wa-btn" onclick="document.getElementById(\'after-photo-input\').click()" style="background:linear-gradient(135deg,#166534,#15803d)">📸 Upload After Photo</button>';
   }
   if (before && after) {
-    var shareMsg = encodeURIComponent('Check out my wellness transformation at Dharani\'s Wellness Center! 🌿💪\n\nMy progress dashboard: https://pulseiq-app.nagam-kumar.workers.dev/customer.html');
+    var shareMsg = encodeURIComponent('Check out my wellness transformation at ' + getClientCenterName() + '! 🌿💪\n\nMy progress dashboard: https://pulseiq-app.nagam-kumar.workers.dev/customer.html');
     btnsHtml += '<a href="https://api.whatsapp.com/send?text='+shareMsg+'" target="_blank"><button class="wa-btn">💚 Share on WhatsApp</button></a>';
   }
   btnsHtml += '</div>';
@@ -913,7 +1041,7 @@ function renderRenewalBanner(left) {
   var el = document.getElementById('ov-renewal-banner');
   if (left === null || left > 5) { el.innerHTML = ''; return; }
   var coachWa = DATA.coach && DATA.coach.contact
-    ? 'https://wa.me/' + COUNTRY_CODE + DATA.coach.contact.replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I would like to renew my pack at Dharani\'s Wellness Center.')
+    ? 'https://wa.me/' + COUNTRY_CODE + DATA.coach.contact.replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I would like to renew my pack at ' + getClientCenterName() + '.')
     : null;
   var cls  = left > 0 ? 'warn' : 'danger';
   var icon = left > 0 ? '⚠️' : '🚨';
@@ -928,6 +1056,10 @@ function renderRenewalBanner(left) {
     '</div>';
 }
 
+function getClientCenterName() {
+  return DATA.centerName || 'Our Wellness Center';
+}
+
 // ── PACK CARD ──
 function buildPackCard(container) {
   var left = getServingsLeft();
@@ -940,13 +1072,29 @@ function buildPackCard(container) {
   var cls   = left > 5 ? 'active' : left > 0 ? 'expiring' : 'expired';
   var lbl   = left > 5 ? 'Servings Remaining' : left > 0 ? 'Almost Done — Renew Soon!' : 'Pack Finished';
   var pct   = Math.max(0, Math.min(100, (left / total) * 100));
+  var coachPhone = DATA.coach && DATA.coach.contact ? DATA.coach.contact.replace(/\D/g,'') : '';
+  if (coachPhone.length === 10) coachPhone = COUNTRY_CODE + coachPhone;
+  var centerName = getClientCenterName();
+  var packName = pack.pack_name || CUST.pack_type || 'Pack';
+  var actionBtns = '';
+  if (left <= 5 && coachPhone) {
+    var renewMsg = encodeURIComponent('Hi! I\'d like to renew my ' + packName + ' pack at ' + centerName + '. Could you please arrange it? Thank you! \uD83D\uDE4F');
+    actionBtns += '<a href="https://api.whatsapp.com/send?phone=' + coachPhone + '&text=' + renewMsg + '" target="_blank" style="text-decoration:none">'
+      + '<button style="margin-top:12px;width:100%;padding:10px;background:#25D366;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">💬 Request Renewal via WhatsApp</button></a>';
+  }
+  if (coachPhone) {
+    var helpMsg = encodeURIComponent('Hi! I have a question about my membership at ' + centerName + '. Could you help me?');
+    actionBtns += '<a href="https://api.whatsapp.com/send?phone=' + coachPhone + '&text=' + helpMsg + '" target="_blank" style="text-decoration:none">'
+      + '<button style="margin-top:8px;width:100%;padding:9px;background:transparent;color:var(--primary);border:1.5px solid var(--primary);border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">📞 Contact Coach</button></a>';
+  }
   container.innerHTML =
     '<div class="pack-card ' + cls + '">' +
-    '<div class="pack-type-label">' + (pack.pack_name || CUST.pack_type || 'Pack') + '</div>' +
+    '<div class="pack-type-label">' + packName + '</div>' +
     '<div class="pack-days ' + cls + '">' + Math.max(0, left) + '</div>' +
     '<div class="pack-type-label">' + lbl + '</div>' +
     '<div class="pack-bar-wrap"><div class="pack-bar-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
     '<div class="pack-meta"><span>Started ' + fmtDate(pack.start_date) + '</span><span>' + total + ' total servings</span></div>' +
+    (actionBtns ? '<div style="padding:0 4px">' + actionBtns + '</div>' : '') +
     '</div>';
 }
 
@@ -1205,7 +1353,7 @@ function renderCoach() {
     return;
   }
   var c = DATA.coach;
-  var roleLabel = c._isCustomer ? 'Referred you to Dharani\'s' : 'Your Wellness Coach';
+  var roleLabel = c._isCustomer ? 'Referred you to ' + getClientCenterName() : 'Your Wellness Coach';
   var waLabel   = c._isCustomer ? '💬 WhatsApp' : '💬 WhatsApp Coach';
   el.innerHTML =
     '<div class="coach-card">' +
@@ -1307,6 +1455,119 @@ async function renderReferral() {
   }
 }
 
+// ── PROTEIN WISHLIST ──
+var PROTEIN_FOODS_SI = [
+  { cat:'🐟 Fish & Seafood', items:[
+    {name:'Tuna',protein:29,note:'High protein, easy to cook'},
+    {name:'Sardines (Mathi)',protein:21,note:'Cheap, high omega-3'},
+    {name:'Rohu / Catla',protein:18,note:'Common freshwater fish'},
+    {name:'Mackerel (Bangda)',protein:19,note:'Coastal favourite'},
+    {name:'Pomfret',protein:18,note:'Premium fish'},
+    {name:'Prawn / Shrimp',protein:24,note:'Great with rice'},
+    {name:'Anchovy (Nethili)',protein:20,note:'Very cheap, high protein'},
+    {name:'Tilapia',protein:26,note:'Farm-raised, affordable'},
+    {name:'Crab',protein:18,note:'Coastal AP & Tamil Nadu'},
+    {name:'Squid',protein:16,note:'Coastal areas'}
+  ]},
+  { cat:'🍗 Poultry & Meat', items:[
+    {name:'Chicken Breast',protein:31,note:'Most popular protein source'},
+    {name:'Chicken Legs / Thighs',protein:26,note:'Cheaper than breast'},
+    {name:'Whole Egg',protein:13,note:'Best value complete protein'},
+    {name:'Egg White',protein:11,note:'Low fat, high protein'},
+    {name:'Mutton / Goat Meat',protein:25,note:'Common in South Indian diet'},
+    {name:'Nattu Kozhi (Country Chicken)',protein:28,note:'More protein than broiler'},
+    {name:'Quail (Kaada)',protein:25,note:'Available in AP/Telangana'},
+    {name:'Duck',protein:19,note:'Kerala & coastal areas'}
+  ]},
+  { cat:'🥛 Dairy', items:[
+    {name:'Paneer',protein:18,note:'Vegetarian favourite'},
+    {name:'Curd / Dahi',protein:4,note:'South Indian staple'},
+    {name:'Greek Yogurt',protein:10,note:'Available in cities'},
+    {name:'Milk (Skim)',protein:3,note:'Daily staple'}
+  ]},
+  { cat:'🌱 Legumes & Pulses', items:[
+    {name:'Soy Chunks',protein:52,note:'Cheapest high-protein food'},
+    {name:'Chana Dal',protein:13,note:'Cooked'},
+    {name:'Urad Dal',protein:11,note:'Used in idli/dosa batter'},
+    {name:'Toor Dal',protein:7,note:'Most common dal'},
+    {name:'Rajma (Kidney Beans)',protein:9,note:'Cooked'},
+    {name:'Black Chana',protein:9,note:'Cooked'},
+    {name:'Chickpeas',protein:9,note:'Great for sundal'},
+    {name:'Moong Dal',protein:7,note:'Easy to digest'},
+    {name:'Green Peas',protein:5,note:'Cooked'}
+  ]},
+  { cat:'🥜 Nuts & Seeds', items:[
+    {name:'Peanuts / Groundnuts',protein:26,note:'Cheap South Indian staple'},
+    {name:'Peanut Butter',protein:25,note:'Easy to make at home'},
+    {name:'Cashews',protein:18,note:'Grown in Kerala/AP'},
+    {name:'Sesame Seeds (Til)',protein:17,note:'Used in chutney & ladoo'},
+    {name:'Sunflower Seeds',protein:21,note:'Affordable'},
+    {name:'Almonds',protein:21,note:'Great snack'},
+    {name:'Pumpkin Seeds',protein:19,note:'Available in supermarkets'},
+    {name:'Flaxseeds',protein:18,note:'Health stores'}
+  ]},
+  { cat:'🥦 Vegetables', items:[
+    {name:'Drumstick Leaves (Moringa)',protein:9,note:'South Indian superfood'},
+    {name:'Edamame / Soybean',protein:11,note:'Cooked'},
+    {name:'Amaranth Leaves (Thotakura)',protein:3,note:'Very common in AP/Telangana'},
+    {name:'Tofu',protein:8,note:'Available in cities'},
+    {name:'Moong Sprouts',protein:3,note:'Easy to sprout at home'},
+    {name:'Chickpea Sprouts',protein:4,note:'Easy to sprout at home'}
+  ]},
+  { cat:'🍚 Traditional South Indian', items:[
+    {name:'Pesarattu (Moong Crepe)',protein:8,note:'High protein breakfast — AP/Telangana'},
+    {name:'Egg Dosa',protein:11,note:'Add 2 eggs to dosa batter'},
+    {name:'Sundal (Chickpea)',protein:7,note:'Tamil Nadu festival food'},
+    {name:'Ragi Mudde',protein:3,note:'Karnataka staple'},
+    {name:'Idli + Sambar',protein:7,note:'Classic South Indian breakfast'},
+    {name:'Sattu (Roasted Chana Flour)',protein:22,note:'Best value protein — ₹50/kg'}
+  ]}
+];
+
+var _wishlistSelected = {}; // { foodName: true/false }
+
+function loadWishlist() {
+  try {
+    var saved = localStorage.getItem('wishlist_' + CUST.id);
+    _wishlistSelected = saved ? JSON.parse(saved) : {};
+  } catch(e) { _wishlistSelected = {}; }
+}
+
+function saveWishlist() {
+  localStorage.setItem('wishlist_' + CUST.id, JSON.stringify(_wishlistSelected));
+  var count = Object.values(_wishlistSelected).filter(Boolean).length;
+  closeFoodPreferences();
+  showToast('Wishlist saved — ' + count + ' foods selected!', 'success');
+}
+
+function toggleWishlistItem(name, checked) {
+  _wishlistSelected[name] = checked;
+}
+
+function renderWishlist() {
+  var el = document.getElementById('wishlist-list'); if(!el) return;
+  var q = (document.getElementById('wishlist-search').value||'').toLowerCase();
+  var html = '';
+  PROTEIN_FOODS_SI.forEach(function(cat) {
+    var items = cat.items.filter(function(f){ return !q || f.name.toLowerCase().includes(q) || f.note.toLowerCase().includes(q); });
+    if(!items.length) return;
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#6b7280;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid #f3f4f6">'+cat.cat+'</div>';
+    items.forEach(function(f) {
+      var checked = !!_wishlistSelected[f.name];
+      html += '<label style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-radius:8px;cursor:pointer;'+(checked?'background:#f0fdf4':'')+'">'+
+        '<input type="checkbox" '+(checked?'checked':'')+' data-fname="'+f.name.replace(/"/g,'&quot;')+'" onchange="toggleWishlistItem(this.dataset.fname,this.checked);this.closest(\'label\').style.background=this.checked?\'#f0fdf4\':\'\'" style="width:16px;height:16px;accent-color:#16a34a;cursor:pointer;flex-shrink:0">'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:13px;font-weight:'+(checked?'600':'400')+';color:#111">'+f.name+'</div>'+
+          '<div style="font-size:11px;color:#6b7280">'+f.note+'</div>'+
+        '</div>'+
+        '<span style="font-size:11px;font-weight:700;color:#16a34a;white-space:nowrap">'+f.protein+'g protein</span>'+
+      '</label>';
+    });
+  });
+  if(!html) html = '<div style="text-align:center;padding:24px;color:#9ca3af;font-size:13px">No foods found</div>';
+  el.innerHTML = html;
+}
+
 // ── FOOD PREFERENCES ──
 var ALL_FOODS = [];
 var _foodPrefRestricted = []; // names currently restricted
@@ -1325,6 +1586,11 @@ function getClientGoal() {
 
 // High-protein food keywords — warn if too few remain
 var HIGH_PROTEIN_KEYWORDS = ['chicken','egg','fish','paneer','dal','rajma','chana','soya','tofu','protein','mutton','beef','prawn'];
+
+function openWishlistDirect() {
+  document.getElementById('food-pref-modal').style.display = 'block';
+  switchFoodPrefTab('wishlist');
+}
 
 async function openFoodPreferences() {
   if(!ALL_FOODS.length){
@@ -1348,11 +1614,20 @@ function closeFoodPreferences() {
 }
 
 function switchFoodPrefTab(tab) {
-  document.getElementById('food-pref-tab-list').style.display = tab==='list'?'block':'none';
-  document.getElementById('food-pref-tab-add').style.display  = tab==='add'?'block':'none';
-  document.getElementById('fp-tab-list').style.fontWeight = tab==='list'?'700':'400';
-  document.getElementById('fp-tab-add').style.fontWeight  = tab==='add'?'700':'400';
+  document.getElementById('food-pref-tab-list').style.display     = tab==='list'?'block':'none';
+  document.getElementById('food-pref-tab-add').style.display      = tab==='add'?'block':'none';
+  document.getElementById('food-pref-tab-wishlist').style.display = tab==='wishlist'?'block':'none';
+  document.getElementById('food-pref-tab-custom').style.display   = tab==='custom'?'block':'none';
+  var green = '#16a34a', gray = '#6b7280', greenBorder = '2px solid #16a34a', none = '2px solid transparent';
+  ['list','add','wishlist','custom'].forEach(function(t){
+    var el = document.getElementById('fp-tab-'+t); if(!el) return;
+    el.style.fontWeight = tab===t?'700':'400';
+    el.style.color = tab===t?green:gray;
+    el.style.borderBottom = tab===t?greenBorder:none;
+    el.style.marginBottom = '-2px';
+  });
   if (tab === 'add') { renderFpGoalBanner(); renderGoalFoods(); }
+  if (tab === 'wishlist') { loadWishlist(); renderWishlist(); }
 }
 
 function setFpGoal(goal) {
@@ -1735,28 +2010,16 @@ async function loadMealLogs() {
 
 async function toggleMealDone(mealType) {
   var today = new Date().toISOString().split('T')[0];
-  if(!MEAL_LOGS[today]) MEAL_LOGS[today] = {};
-  var current = !!MEAL_LOGS[today][mealType];
-  var newVal = !current;
+  if (!MEAL_LOGS[today]) MEAL_LOGS[today] = {};
+  var newVal = !MEAL_LOGS[today][mealType];
   MEAL_LOGS[today][mealType] = newVal;
-  renderDietPlan(); // instant UI update
+  renderDietPlan();
   try {
-    // upsert into meal_logs
-    await req('POST','meal_logs',{
-      customer_id: CUST.id,
-      date: today,
-      meal_type: mealType,
-      completed: newVal,
-      completed_at: newVal ? new Date().toISOString() : null
-    },'on_conflict=customer_id,date,meal_type');
-  } catch(e) {
-    // try update if insert failed
-    try {
-      var rows = await req('GET','meal_logs',null,'customer_id=eq.'+CUST.id+'&date=eq.'+today+'&meal_type=eq.'+mealType);
-      if(rows && rows[0]) await req('PATCH','meal_logs',{completed:newVal,completed_at:newVal?new Date().toISOString():null},'id=eq.'+rows[0].id);
-      else await req('POST','meal_logs',{customer_id:CUST.id,date:today,meal_type:mealType,completed:newVal,completed_at:newVal?new Date().toISOString():null});
-    } catch(e2){}
-  }
+    await upsert('meal_logs', {
+      customer_id: CUST.id, date: today, meal_type: mealType,
+      completed: newVal, completed_at: newVal ? new Date().toISOString() : null
+    });
+  } catch(e) { console.error('meal log save failed', e); }
 }
 
 // ── DIET PLAN ──
@@ -2043,13 +2306,11 @@ function renderFoodLogTotals() {
     '</div>'+
     (targetCal||targetPro ?
       '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Progress vs Diet Plan</div>'+
-      (targetCal ? '<div style="font-size:12px;color:var(--muted);margin-bottom:2px">Calories</div>'+bar(totalCal,targetCal,'',var_primary()) : '')+
+      (targetCal ? '<div style="font-size:12px;color:var(--muted);margin-bottom:2px">Calories</div>'+bar(totalCal,targetCal,'','var(--primary)') : '')+
       (targetPro ? '<div style="font-size:12px;color:var(--muted);margin-bottom:2px">Protein</div>'+bar(totalPro,targetPro,'g','#16a34a') : '')
     : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:4px 0">Ask your coach to generate a diet plan to see progress vs target.</div>')+
     '</div>';
 }
-
-function var_primary(){ return 'var(--primary)'; }
 
 function renderFoodLogEntries() {
   var el = document.getElementById('fl-entries');
@@ -2092,23 +2353,21 @@ document.addEventListener('click', function(evt) {
 
 // ── LOGOUT ──
 function logout() {
-  CUST = null; DATA = { attendance:[], body:[], packs:[], coach:null };
+  CUST = null;
+  DATA = { attendance:[], body:[], packs:[], coach:null, payment:null };
+  MEAL_LOGS = {};
   _attYear = null; _attMonth = null;
+  _reportYear = null; _reportMonth = null;
+  _dietDay = null;
+  FL_FOODS = []; FL_SELECTED = null; FL_ENTRIES = [];
+  ALL_FOODS = []; _foodPrefRestricted = []; _fpGoal = null;
+  if (_bodyChart) { _bodyChart.destroy(); _bodyChart = null; }
   localStorage.removeItem('clientCustId');
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-mobile').value = '';
+  location.reload();
 }
 
 // ── BOOT ──
-window.addEventListener('DOMContentLoaded', async function() {
-  var savedId = localStorage.getItem('clientCustId');
-  if (savedId) {
-    try {
-      var res = await req('GET', 'customers', null, 'id=eq.' + encodeURIComponent(savedId) + '&limit=1');
-      if (res.length) { CUST = res[0]; launchApp(); return; }
-    } catch(e) {}
-  }
+window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('login-screen').style.display = 'flex';
 });
 </script>

@@ -380,6 +380,168 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 .notif-critical{background:var(--danger-light);color:var(--danger)}
 .notif-warning{background:#fff3cd;color:#856404}
 .notif-info{background:#dbeafe;color:#1d4ed8}
+
+/* ── CONTESTS ── */
+.contest-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:all .2s}
+.contest-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(45,90,61,.14);border-color:var(--primary)}
+.contest-card-banner{padding:16px 18px;color:#fff;position:relative;overflow:hidden}
+.contest-card-banner::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.08);border-radius:50%}
+.contest-card-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;opacity:.8;margin-bottom:4px}
+.contest-card-name{font-size:16px;font-weight:700;line-height:1.3}
+.contest-card-prize{font-size:13px;margin-top:6px;opacity:.9}
+.contest-card-body{padding:14px 18px}
+.contest-days-bar{height:6px;background:var(--surface2);border-radius:10px;overflow:hidden;margin:8px 0}
+.contest-days-fill{height:100%;border-radius:10px;transition:width .6s ease}
+.contest-meta-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.contest-rank-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--surface2)}
+.contest-rank-row:last-child{border-bottom:none}
+.contest-rank-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.contest-rank-1{background:linear-gradient(135deg,#f9c74f,#f8961e);color:#fff}
+.contest-rank-2{background:linear-gradient(135deg,#b0b0b0,#888);color:#fff}
+.contest-rank-3{background:linear-gradient(135deg,#cd7f32,#a0522d);color:#fff}
+.contest-rank-n{background:var(--surface2);color:var(--muted)}
+.contest-type-chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:var(--surface);border:1.5px solid var(--border);color:var(--muted);transition:all .18s}
+.contest-type-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.contest-type-chip:hover{border-color:var(--primary);color:var(--primary)}
+.contest-completed-row{background:var(--surface);border-radius:10px;border:1px solid var(--border);padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;cursor:pointer;transition:all .2s}
+.contest-completed-row:hover{border-color:var(--primary);box-shadow:0 2px 10px rgba(45,90,61,.08)}
+.contest-detail-tab{padding:7px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s}
+.contest-detail-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.contest-detail-tab:hover:not(.active){border-color:var(--primary);color:var(--primary)}
+/* Tracker table */
+.tracker-wrap{overflow-x:auto}
+.tracker-tbl{width:100%;border-collapse:collapse;min-width:700px}
+.tracker-tbl th{background:var(--surface2);padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;white-space:nowrap;text-align:center}
+.tracker-tbl th:first-child{text-align:left}
+.tracker-tbl td{padding:10px 12px;border-bottom:1px solid var(--surface2);font-size:13px;vertical-align:middle;text-align:center}
+.tracker-tbl td:first-child{text-align:left;font-weight:600}
+.tracker-tbl tr:last-child td{border-bottom:none}
+.tracker-tbl tr:nth-child(even) td{background:#faf9f7}
+.tracker-tbl tr:hover td{background:var(--accent-light)!important}
+.tracker-toggle{width:32px;height:32px;border-radius:8px;border:2px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;display:inline-flex;align-items:center;justify-content:center;transition:all .18s;user-select:none}
+.tracker-toggle.on{background:var(--success-light);border-color:var(--success);color:var(--success)}
+.tracker-toggle.warn{background:#fff3cd;border-color:#f59e0b;color:#b45309}
+.tracker-toggle:hover{transform:scale(1.12)}
+.tracker-summary-bar{display:flex;gap:12px;flex-wrap:wrap;padding:12px 0;margin-bottom:12px;border-bottom:1px solid var(--surface2)}
+.tracker-summary-chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700}
+.senior-send-btn{padding:8px 18px;border-radius:8px;border:2px solid;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s}
+.senior-send-btn.pending{background:#fff3cd;border-color:#f59e0b;color:#92400e}
+.senior-send-btn.done{background:var(--success-light);border-color:var(--success);color:#065f46;cursor:default}
+
+/* ════════════════════════════════════════
+   GLOBAL UI POLISH
+   ════════════════════════════════════════ */
+
+/* Section entrance animation */
+.sec.active{animation:secIn .24s ease both}
+@keyframes secIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Page title accent */
+.pt{position:relative;padding-bottom:10px}
+.pt::after{content:'';display:block;width:28px;height:3px;background:linear-gradient(90deg,var(--accent),var(--primary));border-radius:2px;margin-top:5px}
+
+/* Stat cards — colored top strip + hover lift */
+.stat{border-top:3px solid var(--primary);transition:transform .2s,box-shadow .2s}
+.stat:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(45,90,61,.13)}
+
+/* Cards */
+.tcard{transition:box-shadow .2s,border-color .2s}
+.tcard:hover{box-shadow:0 4px 22px rgba(45,90,61,.1);border-color:#c8c4bc}
+.pin-card{transition:box-shadow .2s}
+.pin-card:hover{box-shadow:0 4px 22px rgba(45,90,61,.1)}
+
+/* Overview cards */
+.ov-card{transition:all .2s}
+.ov-card:hover{box-shadow:0 6px 22px rgba(45,90,61,.12);transform:translateY(-2px)}
+.ov-card-h{border-bottom:2px solid var(--surface2)}
+.ov-quick-btn{transition:all .18s}
+
+/* Buttons — lift + shadow on hover */
+.btn-p{transition:all .18s!important}
+.btn-p:hover{transform:translateY(-1px)!important;box-shadow:0 4px 14px rgba(45,90,61,.3)!important}
+.btn-p:active{transform:translateY(0)!important;box-shadow:none!important}
+.btn-e{transition:all .15s}
+.btn-e:hover{background:#d6e4ff;color:#1e40af}
+.btn-d{transition:all .15s}
+.btn-d:hover{background:#fecaca;transform:translateY(-1px)}
+
+/* Form inputs — focus glow */
+.fg input,.fg select,.fg textarea,.fr input,.fr select{transition:border-color .18s,box-shadow .18s}
+.fg input:focus,.fg select:focus,.fg textarea:focus,.fr input:focus,.fr select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(45,90,61,.09)}
+.search:focus{box-shadow:0 0 0 3px rgba(45,90,61,.09)}
+
+/* Nav active indicator bar */
+.nav-item{position:relative}
+.nav-item.active{border-left:3px solid var(--accent);padding-left:8px}
+.nav-item:not(.active){border-left:3px solid transparent;padding-left:8px}
+
+/* Table — alternating rows + accent hover */
+tbody tr:nth-child(even) td{background:#faf9f7}
+tbody tr:hover td{background:var(--accent-light)!important;transition:background .12s}
+
+/* Scrollbar polish */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:#bbb5ad}
+
+/* Badge micro-polish */
+.badge{transition:all .15s}
+.bg{box-shadow:0 1px 4px rgba(39,174,96,.15)}
+.br{box-shadow:0 1px 4px rgba(192,57,43,.15)}
+.by{box-shadow:0 1px 4px rgba(133,100,4,.12)}
+.bb{box-shadow:0 1px 4px rgba(43,92,230,.12)}
+
+/* Empty state icon bounce */
+.empty .ei,.ov-empty-icon{animation:iconBounce 2.4s ease-in-out infinite}
+@keyframes iconBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* Smooth modal entrance */
+.overlay.open .modal{animation:modalIn .22s ease both}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* Revenue mini cards hover */
+.ov-rev-card{transition:transform .18s,box-shadow .18s}
+.ov-rev-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+
+/* Retention / customer cards */
+.retention-card{transition:all .2s}
+.retention-card:hover{box-shadow:0 4px 16px rgba(45,90,61,.1);border-color:var(--primary)}
+
+/* ── MODAL ACCENT STRIPS ── */
+.modal{border-top:4px solid var(--primary)}
+#modal-body .modal{border-top:4px solid var(--success)}
+#modal-finance .modal{border-top:4px solid var(--accent)}
+#modal-coach .modal{border-top:4px solid #2b5ce6}
+#modal-coupon .modal,#modal-renew .modal{border-top:4px solid #7c3aed}
+
+/* ── FIELD HINT BADGES ── */
+.fhint{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;margin-top:5px;min-height:20px;transition:all .2s}
+.fhint-good{background:#d1fae5;color:#065f46}
+.fhint-warn{background:#fef3c7;color:#92400e}
+.fhint-bad{background:#fee2e2;color:#991b1b}
+.fhint-low{background:#dbeafe;color:#1e40af}
+
+/* ── HEALTH SCORE GAUGE ── */
+.hs-card{background:linear-gradient(135deg,#0f2318 0%,#1a3a28 50%,#2d5a3d 100%);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;color:#fff;display:flex;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+.hs-gauge{flex-shrink:0}
+.hs-info{flex:1;min-width:160px}
+.hs-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.55);margin-bottom:4px}
+.hs-score-big{font-size:32px;font-weight:700;color:#fff;line-height:1}
+.hs-grade-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:6px}
+.hs-breakdown{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
+.hs-metric{font-size:11px;color:rgba(255,255,255,.65)}
+.hs-metric span{color:#fff;font-weight:700}
+
+/* ── MODAL LIVE SCORE ── */
+.modal-hs-bar{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.modal-hs-ring{flex-shrink:0}
+.modal-hs-label{font-size:12px;color:var(--muted);font-weight:600}
+.modal-hs-val{font-size:20px;font-weight:700;color:var(--primary)}
+
+/* ── SIDEBAR GREETING ── */
+.sb-greeting{padding:10px 18px 0;font-size:11px;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+.sb-greeting-name{color:rgba(255,255,255,.9);font-size:13px;font-weight:700;margin-top:2px;margin-bottom:8px}
 </style>
 <script src="./index_files/chart.umd.min.js.download"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -415,8 +577,12 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 <div id="app" style="display: block;">
   <nav class="sidebar" id="sidebar">
     <div class="sb-logo">
-      <h1>🌿 Dharani's</h1>
+      <h1 id="sb-logo-h1">🌿 Dharani's</h1>
       <span>Supervisor Dashboard</span>
+    </div>
+    <div class="sb-greeting">
+      <div id="sb-greeting-time">Good morning</div>
+      <div class="sb-greeting-name" id="sb-greeting-name">Supervisor</div>
     </div>
     <div class="sb-nav">
       <div class="nav-lbl" onclick="toggleNavGroup('g-mgmt')"><span data-t="nav_management">Management</span><span class="nav-arrow">▾</span></div>
@@ -424,11 +590,11 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
         <button class="nav-item active" onclick="goTo(&#39;overview&#39;,this)"><span class="ic">🏠</span><span data-t="nav_overview">Overview</span></button>
         <button class="nav-item" onclick="goTo(&#39;centers&#39;,this)"><span class="ic">🏢</span><span data-t="nav_centers">Wellness Centers</span></button>
         <button class="nav-item" onclick="goTo(&#39;coaches&#39;,this)"><span class="ic">👨‍🏫</span><span data-t="nav_coaches">Coaches</span></button>
-        <button class="nav-item" onclick="goTo(&#39;inventory&#39;,this)"><span class="ic">📦</span><span data-t="nav_inventory">Inventory</span></button>
         <button id="nav-customers" class="nav-item" onclick="goTo(&#39;customers&#39;,this)"><span class="ic">👤</span><span data-t="nav_customers">Customers</span></button>
         <button class="nav-item" onclick="goTo(&#39;leads&#39;,this)"><span class="ic">📞</span><span data-t="nav_leads">Leads</span></button>
         <button class="nav-item" onclick="goTo(&#39;attendance&#39;,this)"><span class="ic">📅</span><span data-t="nav_attendance">Attendance</span></button>
         <button class="nav-item" onclick="goTo(&#39;body&#39;,this)"><span class="ic">⚖️</span><span data-t="nav_body">Body Composition</span></button>
+        <button class="nav-item" onclick="goTo(&#39;contests&#39;,this)"><span class="ic">🏆</span><span>Contests</span></button>
         <button class="nav-item" onclick="goTo(&#39;finance&#39;,this)"><span class="ic">💰</span><span data-t="nav_finance">Finance</span></button>
       </div>
       <button class="nav-item" onclick="goTo('agents',this)" style="border:1.5px solid #7c3aed;color:#7c3aed;margin-bottom:4px"><span class="ic">🤖</span><span>AI Agents</span></button>
@@ -541,9 +707,20 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
           <tbody id="coaches-body"><tr><td><strong>Nagam Venkata Bharath Kumar</strong></td><td>7670835537</td><td><span class="badge bg">Active</span></td><td>—</td><td>0</td><td>2026-03-29</td><td><div class="acts"><button class="btn-e" onclick="editCoach(&#39;13e76899-a8a8-41e2-9bc3-fd7850f2a3ee&#39;)">Edit</button><button class="btn-d" onclick="delRecord(&#39;coaches&#39;,&#39;13e76899-a8a8-41e2-9bc3-fd7850f2a3ee&#39;,&#39;coaches&#39;)">Delete</button></div></td></tr></tbody>
         </table></div>
       </div>
+      <!-- Commission Calculator -->
+      <div class="tcard" style="margin-top:16px">
+        <div class="ttoolbar" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div style="font-weight:700;font-size:14px">💰 Commission Calculator</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="comm-month" onchange="renderCommission()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></select>
+            <button class="btn-c" onclick="openCommissionSettings()" style="font-size:12px">⚙️ Rates</button>
+          </div>
+        </div>
+        <div id="commission-content"><div class="empty" style="padding:20px">Loading...</div></div>
+      </div>
     </div>
-    <!-- INVENTORY -->
-    <div class="sec" id="sec-inventory">
+    <!-- INVENTORY REMOVED — see inventory/index.html -->
+    <div class="sec" id="sec-inventory" style="display:none">
       <div class="ph">
         <div><div class="pt" data-t="pt_inventory">Inventory</div><div class="ps" data-t="ps_inventory">Track Herbalife products, stock movements and daily usage</div></div>
       </div>
@@ -978,6 +1155,61 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
       </div>
     </div>
 
+    <!-- CONTESTS -->
+    <div class="sec" id="sec-contests">
+      <div class="ph">
+        <div>
+          <div class="pt">🏆 Contests</div>
+          <div class="ps">21-day transformation challenges — weight loss, fat loss, muscle gain</div>
+        </div>
+        <button class="btn-p" onclick="openContestModal()">+ New Contest</button>
+      </div>
+
+      <!-- Contest type summary tabs -->
+      <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <div class="contest-type-chip active" onclick="filterContestType('all',this)">All</div>
+        <div class="contest-type-chip" onclick="filterContestType('weight_loss',this)">⬇️ Weight Loss</div>
+        <div class="contest-type-chip" onclick="filterContestType('weight_gain',this)">⬆️ Weight Gain</div>
+        <div class="contest-type-chip" onclick="filterContestType('fat_loss',this)">🔥 Fat Loss</div>
+        <div class="contest-type-chip" onclick="filterContestType('muscle_gain',this)">💪 Muscle Gain</div>
+      </div>
+
+      <!-- Active contests -->
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Active Challenges</div>
+      <div id="contests-active-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:24px">
+        <div class="empty" id="contests-active-empty"><div class="ei">🏆</div><p>No active contests. Create one!</p></div>
+      </div>
+
+      <!-- Completed contests -->
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Completed</div>
+      <div id="contests-completed-list">
+        <div class="empty" id="contests-completed-empty" style="padding:20px"><div style="font-size:24px">✅</div><p style="margin-top:6px">No completed contests yet</p></div>
+      </div>
+
+      <!-- Contest Detail Panel -->
+      <div id="contest-detail-panel" style="display:none;margin-top:20px">
+        <div class="tcard" style="padding:0;overflow:hidden">
+          <div id="contest-detail-header" style="padding:18px 20px;background:linear-gradient(135deg,#0f2318,#2d5a3d);color:#fff"></div>
+          <div style="padding:14px 20px 0">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+              <div style="display:flex;gap:8px">
+                <button class="contest-detail-tab active" id="cd-tab-leaderboard" onclick="switchContestTab('leaderboard')">🏆 Leaderboard</button>
+                <button class="contest-detail-tab" id="cd-tab-tracker" onclick="switchContestTab('tracker')">📋 Tracker</button>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn-p" style="font-size:12px;padding:7px 14px" onclick="openAddParticipantModal()">+ Participant</button>
+                <button class="btn-e" style="padding:7px 14px" onclick="closeContestDetail()">✕ Close</button>
+              </div>
+            </div>
+          </div>
+          <div style="padding:0 20px 18px">
+            <div id="contest-leaderboard"></div>
+            <div id="contest-tracker" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- FINANCE -->
     <div class="sec" id="sec-finance">
       <div class="ph">
@@ -1109,6 +1341,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
           <div style="flex:1;min-width:180px"><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px">Filter by Person</label><input type="hidden" id="coupon-coach-sel"><input type="text" id="coupon-filter-input" placeholder="Type to filter..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
           <div style="padding-top:18px"><button class="btn-c" onclick="sdClear('coupon-filter');document.getElementById('coupon-coach-sel').value='';renderCouponView()" style="font-size:12px">Clear</button></div>
           <div style="padding-top:18px"><button class="btn-p" style="background:#f9c74f;color:#333" onclick="openModal('coupon-renew')">🎟️ Renew with Coupons</button></div>
+          <div style="padding-top:18px"><button class="btn-p" style="background:#25D366;color:#fff;border-color:#25D366" onclick="openShakeRedeem()">🥤 Redeem Shakes</button></div>
         </div>
       </div>
       <div id="coupon-coach-card" style="display:none;margin-bottom:16px"></div>
@@ -1626,6 +1859,28 @@ create table if not exists lead_followups (
 );
 alter table lead_followups enable row level security;
 create policy "allow all" on lead_followups for all using (true);
+
+-- ==========================================
+-- 🏢 MULTI-CENTER FINANCE TRACKING (Run if you have 2+ centers)
+-- ==========================================
+ALTER TABLE finance
+ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id);
+-- After this, each finance record can be tagged to a center.
+-- Use the "Wellness Center" dropdown in Add Transaction to assign.
+
+-- ==========================================
+-- 📦 MULTI-CENTER INVENTORY TRACKING (Run if you use inventory across 2+ centers)
+-- ==========================================
+ALTER TABLE inventory_stock_in
+ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id);
+
+ALTER TABLE inventory_stock_out
+ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id);
+
+ALTER TABLE inventory_daily_usage
+ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id);
+-- After this, the Inventory app will show a center switcher dropdown.
+-- Select a center to view/add stock only for that center.
 </pre>
         <p style="margin-top:14px;font-size:12px;color:var(--muted)">✅ After running, refresh and all sections will work!</p>
       </div>
@@ -1639,7 +1894,7 @@ create policy "allow all" on lead_followups for all using (true);
           <button onclick="var m=document.getElementById('wc-menu');m.style.display=m.style.display==='block'?'none':'block'" style="background:#e8f4fd;color:#1a6fa0;border:1.5px solid #b3d4f5;border-radius:8px;padding:7px 14px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">💧 Water Cans ▾</button>
           <div id="wc-menu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;min-width:210px;overflow:hidden">
             <div onclick="quickAddWaterCans('home');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='#f5f2ee'" onmouseout="this.style.background=''">🏠 Home</div>
-            <div onclick="quickAddWaterCans('center');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px" onmouseover="this.style.background='#f5f2ee'" onmouseout="this.style.background=''">🌿 Dharani's Wellness Center</div>
+            <div onclick="quickAddWaterCans('center');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px" onmouseover="this.style.background='#f5f2ee'" onmouseout="this.style.background=''" id="wc-center-btn">🌿 Wellness Center</div>
           </div>
         </div>
         <button class="btn-p" onclick="openExpenseModal()">+ Add Expense</button>
@@ -1779,7 +2034,7 @@ create policy "allow all" on lead_followups for all using (true);
       </div>
       <div class="fr">
         <div class="fg"><label>Status</label><select id="coach-status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
-        <div class="fg"><label>Upline</label><input type="text" id="coach-upline" placeholder="Supervisor Name"></div>
+        <div class="fg"><label>Upline Coach</label><select id="coach-upline-sel" onfocus="updateCoachUplineSelects(document.getElementById('coach-id').value)" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— No upline (Root) —</option></select></div>
       </div>
       <div class="fr">
         <div class="fg"><label>Date of Birth</label><input type="date" id="coach-dob"></div>
@@ -1814,7 +2069,6 @@ create policy "allow all" on lead_followups for all using (true);
         </div>
         <div class="fr">
           <div class="fg"><label>Pack Price (₹)</label><input type="number" id="coach-pack-price" placeholder="5600" oninput="onCoachPackPriceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
-          <div class="fg"><label>Upline Coach</label><select id="coach-upline-sel" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">No upline (Root)</option></select></div>
         </div>
         <!-- Payment section — shown for new coaches with a pack price -->
         <div id="coach-pay-section" style="display:none;border-top:1px solid var(--border);margin-top:14px;padding-top:12px">
@@ -2074,6 +2328,36 @@ create policy "allow all" on lead_followups for all using (true);
   </div>
 </div>
 
+<!-- Commission Rates Modal -->
+<div class="overlay" id="modal-commission-rates">
+  <div class="modal" style="max-width:420px">
+    <div class="mh">
+      <div class="mt">⚙️ Commission Rates</div>
+      <button class="mc" onclick="closeModal('commission-rates')">✕</button>
+    </div>
+    <div class="mb">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">Set the % of pack price paid to coaches for new enrollments and renewals they manage.</p>
+      <div style="display:grid;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="flex:1;font-size:13px;font-weight:600">Default rate (all packs)</label>
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="number" id="comm-rate-default" min="0" max="100" step="0.5" value="10" style="width:70px;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;text-align:right">
+            <span style="font-size:13px;color:var(--muted)">%</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);background:var(--surface2);border-radius:8px;padding:10px">
+          💡 Override per pack type (leave blank to use default):
+        </div>
+        <div id="comm-pack-rates" style="display:grid;gap:8px"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:18px">
+        <button class="btn-p" style="flex:1" onclick="saveCommissionRates()">Save Rates</button>
+        <button class="btn-c" onclick="closeModal('commission-rates')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Renewal Agent Modal -->
 <div class="overlay" id="modal-renewal-agent">
   <div class="modal" style="max-width:560px;max-height:85vh;overflow-y:auto">
@@ -2174,12 +2458,25 @@ create policy "allow all" on lead_followups for all using (true);
     <div class="mh"><div class="mt">Body Composition Record</div><button class="mc" onclick="closeModal(&#39;body&#39;)">✕</button></div>
     <div class="mb">
       <input type="hidden" id="body-id">
+      <!-- Live Health Score Bar -->
+      <div class="modal-hs-bar" id="modal-hs-bar" style="display:none">
+        <div class="modal-hs-ring">
+          <svg viewBox="0 0 80 48" width="80" height="48">
+            <path d="M 8 44 A 34 34 0 0 1 72 44" fill="none" stroke="#e8e4e0" stroke-width="7" stroke-linecap="round"/>
+            <path id="modal-hs-arc" d="M 8 44 A 34 34 0 0 1 72 44" fill="none" stroke="#27ae60" stroke-width="7" stroke-linecap="round" stroke-dasharray="106.81" stroke-dashoffset="106.81"/>
+          </svg>
+        </div>
+        <div>
+          <div class="modal-hs-label">Health Score</div>
+          <div class="modal-hs-val"><span id="modal-hs-num">—</span> <span id="modal-hs-grade" style="font-size:11px;font-weight:700;padding:1px 8px;border-radius:20px"></span></div>
+        </div>
+      </div>
       <div class="fr">
         <div class="fg"><label>Customer *</label><select id="body-customer"><option value="">Select person</option></select></div>
         <div class="fg"><label>Date *</label><input type="date" id="body-date"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Height (cm)</label><input type="number" step="0.1" id="body-height" placeholder="170"></div>
+        <div class="fg"><label>Height (cm)</label><input type="number" step="0.1" id="body-height" placeholder="170" oninput="calcBody()"></div>
         <div class="fg"><label>Age</label><input type="number" id="body-age-field" placeholder="30"></div>
       </div>
       <div class="fr">
@@ -2188,14 +2485,23 @@ create policy "allow all" on lead_followups for all using (true);
           <label>Fat (%) <span style="color:var(--accent);font-size:11px">enter %</span></label>
           <input type="number" step="0.01" id="body-fat" placeholder="e.g. 22.5" oninput="calcBody()">
           <div id="body-fat-kg-display" style="font-size:11px;color:var(--primary);font-weight:600;margin-top:4px;min-height:16px;"></div>
+          <div id="body-fat-hint"></div>
         </div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Visceral Fat (kg) <span style="color:var(--accent);font-size:11px">auto-calculated</span></label><input type="number" step="0.01" id="body-visceral" placeholder="auto" readonly="" style="background:var(--surface2);color:var(--primary);font-weight:600;"></div>
+        <div class="fg">
+          <label>Visceral Fat (kg) <span style="color:var(--accent);font-size:11px">auto-calculated</span></label>
+          <input type="number" step="0.01" id="body-visceral" placeholder="auto" readonly="" style="background:var(--surface2);color:var(--primary);font-weight:600;">
+          <div id="body-visceral-hint"></div>
+        </div>
         <div class="fg"><label>BMR</label><input type="number" id="body-bmr" placeholder="1483"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>BMI</label><input type="number" step="0.1" id="body-bmi" placeholder="22.3"></div>
+        <div class="fg">
+          <label>BMI <span style="color:var(--accent);font-size:11px">(auto)</span></label>
+          <input type="number" step="0.1" id="body-bmi" placeholder="auto" oninput="this.dataset.manual=this.value?'1':'';calcBody()">
+          <div id="body-bmi-hint"></div>
+        </div>
         <div class="fg"><label>Body Age</label><input type="number" id="body-age" placeholder="25"></div>
       </div>
       <div class="fr">
@@ -2207,7 +2513,7 @@ create policy "allow all" on lead_followups for all using (true);
         <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="body-muscle" placeholder="e.g. 35.0"></div>
       </div>
       <div class="fg"><label>Notes</label><textarea id="body-notes" placeholder="Any observations..."></textarea></div>
-      <div class="mf"><button class="btn-c" onclick="closeModal(&#39;body&#39;)">Cancel</button><button class="btn-p" onclick="saveBody()">Save Record</button></div>
+      <div class="mf"><button class="btn-c" onclick="closeModal('body')">Cancel</button><button class="btn-p" onclick="saveBody()">Save Record</button></div>
     </div>
   </div>
 </div>
@@ -2226,6 +2532,7 @@ create policy "allow all" on lead_followups for all using (true);
         <div class="fg"><label>Date *</label><input type="date" id="fin-date"></div>
       </div>
       <div class="fg"><label>Description</label><input type="text" id="fin-desc" placeholder="Brief description"></div>
+      <div class="fg"><label>Wellness Center</label><select id="fin-center"><option value="">All Centers</option></select></div>
       <div class="mf"><button class="btn-c" onclick="closeModal(&#39;finance&#39;)">Cancel</button><button class="btn-p" onclick="saveFinance()">Save Transaction</button></div>
     </div>
   </div>
@@ -2503,6 +2810,7 @@ function _applySwitch(centerId) {
   if(typeof renderPayments==='function') renderPayments();
   if(typeof renderCustomers==='function') renderCustomers();
   updateCustSelects();
+  updateSidebarLogo();
   // Revert dropdown if switch was cancelled
   var sel = document.getElementById('center-switcher');
   if(sel) sel.value = centerId;
@@ -2534,12 +2842,30 @@ function filterByCenter(arr) {
   return arr.filter(function(item){ return item.wellness_center_id === ACTIVE_CENTER; });
 }
 
-// Helper: filter attendance/body/finance by customer's center
+// Helper: filter attendance/body by customer's center
 function filterByCenterViaCustomer(arr) {
   if(!ACTIVE_CENTER) return arr;
   var custIds = {};
   D.customers.forEach(function(c){ if(c.wellness_center_id===ACTIVE_CENTER) custIds[c.id]=true; });
   return arr.filter(function(item){ return custIds[item.customer_id]; });
+}
+
+// Helper: filter finance by wellness_center_id (requires finance to have the column)
+function filterFinanceByCenter(arr) {
+  if(!ACTIVE_CENTER) return arr;
+  return arr.filter(function(f){ return f.wellness_center_id === ACTIVE_CENTER; });
+}
+
+// Helper: get the active center's display name
+function getCenterName() {
+  if (ACTIVE_CENTER && D && D.centers) {
+    var ac = D.centers.find(function(x){ return x.id === ACTIVE_CENTER; });
+    if (ac && ac.name) return ac.name;
+  }
+  var op = (typeof OWNER_PROFILE !== 'undefined') ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+  if (op && op.center_name) return op.center_name;
+  if (D && D.centers && D.centers.length) return D.centers[0].name;
+  return 'Our Wellness Center';
 }
 var OWNER_PROFILE = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
 
@@ -2760,7 +3086,7 @@ function getFirstLineStatus() {
 // ── FINANCE CATEGORIES ──
 var FIN_CATS = {
   income: ['Pack sale to customer','Product sale to customer','Company cheque / royalty','Coach pack payment','Other income'],
-  expense: ['Products Purchase','Rent','Utilities','Equipment','Marketing','Staff','Other expense']
+  expense: ['Products Purchase','Rent','Utilities','Equipment','Marketing','Staff','Refund','Other expense']
 };
 function onFinTypeChange() {
   var type = document.getElementById('fin-type').value;
@@ -2887,7 +3213,7 @@ function getCredentials() {
   if (!SB_KEY) SB_KEY = localStorage.getItem('sb_key') || '';
   return SB_URL && SB_KEY;
 }
-var D = { centers:[], customers:[], attendance:[], body:[], finance:[], coaches:[], inventory:[], leads:[], leadFollowups:[], expenses:[] };
+var D = { centers:[], customers:[], attendance:[], body:[], finance:[], coaches:[], inventory:[], leads:[], leadFollowups:[], expenses:[], contests:[], contestParticipants:[] };
 var _leadTab = 'today';
 
 // ── SUPABASE REST ──
@@ -3040,7 +3366,7 @@ async function loadAll() {
   D.coupons=[]; D.payments=[]; D.packHistory=[];
   await Promise.all([loadCenters(),loadCoaches(),loadInventory(),loadCustomers(),
     loadAttendance(),loadBody(),loadFinance(),
-    loadCoupons(),loadPayments(),loadPackHistory(),loadLeads(),loadExpenses(),loadFoods()]);
+    loadCoupons(),loadPayments(),loadPackHistory(),loadLeads(),loadExpenses(),loadFoods(),loadContests()]);
   _daysLeftCache = {};  // all data loaded — recalculate with full attendance
   renderCustomers();    // re-render so days-left matches attendance data
   renderOverview();
@@ -3055,7 +3381,22 @@ async function loadCenters() {
   var pins = {};
   D.centers.forEach(function(c){ if(c.center_pin && c.type !== 'main') pins[c.id] = c.center_pin; });
   localStorage.setItem('centerPins', JSON.stringify(pins));
-  renderCenters(); updateCenterSelects(); updateCenterSwitcher();
+  renderCenters(); updateCenterSelects(); updateCenterSwitcher(); updateSidebarLogo();
+}
+function updateSidebarLogo() {
+  var cn = getCenterName();
+  var el = document.getElementById('sb-logo-h1') || document.querySelector('.sb-logo h1');
+  if (el) el.textContent = '🌿 ' + cn;
+  document.title = cn + ' — Supervisor Dashboard';
+  // Greeting
+  var h = new Date().getHours();
+  var greet = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
+  var gTime = document.getElementById('sb-greeting-time');
+  var gName = document.getElementById('sb-greeting-name');
+  if (gTime) gTime.textContent = greet;
+  if (gName) gName.textContent = cn;
+  var wcBtn = document.getElementById('wc-center-btn');
+  if (wcBtn) wcBtn.textContent = '🌿 ' + cn;
 }
 async function loadCustomers() {
   D.customers = await dbGet('customers');
@@ -3188,6 +3529,7 @@ sdInit('coupon-person', 'coupon-person-input', 'coupon-coach-id', null);
 sdInit('coupon-ref', 'coupon-ref-input', 'coupon-ref-person-id', null);
 sdInit('renew-person', 'renew-person-input', 'cr-coach', function(){ calcCouponRenewal(); });
 sdInit('coupon-filter', 'coupon-filter-input', 'coupon-coach-sel', function(){ renderCouponView(); });
+sdInit('shake-person', 'shake-person-input', 'sr-person-id', function(){ showShakeBalance(); });
 
 function updateCoachSelects() {
   sdSetItems('ref', getAllPersonItems({includeOwner:true, includeOther:true}));
@@ -3195,6 +3537,7 @@ function updateCoachSelects() {
   sdSetItems('coupon-ref', getAllPersonItems({}));
   sdSetItems('renew-person', getAllPersonItems({}));
   sdSetItems('coupon-filter', [{value:'', label:'— All People —', search:'all'}].concat(getAllPersonItems({})));
+  sdSetItems('shake-person', getAllPersonItems({}));
   updateProfileCoachSelect();
 }
 
@@ -3320,6 +3663,7 @@ function goTo(name, el) {
   if (name==='expenses')       { setTimeout(renderExpenses, 80); }
   if (name==='goals')          { setTimeout(renderGoals, 80); }
   if (name==='notifications')  { setTimeout(renderNotifications, 80); }
+  if (name==='coaches')        { setTimeout(initCommission, 80); }
 }
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
@@ -3343,8 +3687,17 @@ function openModal(type) {
       if(ACTIVE_CENTER) sel.value = ACTIVE_CENTER;
       else if(D.centers.length === 1) sel.value = D.centers[0].id;
     }
+    if(type==='coach') { updateCoachUplineSelects(document.getElementById('coach-id').value); }
   }
   if(type==='customer') updatePackOwnerSelect();
+  // Auto-select center in finance modal for new records
+  if(type==='finance') {
+    var fcen = document.getElementById('fin-center');
+    if(fcen && !document.getElementById('fin-id').value) {
+      if(ACTIVE_CENTER) fcen.value = ACTIVE_CENTER;
+      else if(D.centers.length === 1) fcen.value = D.centers[0].id;
+    }
+  }
   // Auto-fill customer in body modal from the selected customer in body section
   if(type==='body' && _selectedBodyCustId) {
     var bodyCust = document.getElementById('body-customer');
@@ -3385,6 +3738,8 @@ function updateCenterSelects() {
     var sel = document.getElementById(id);
     if(sel) sel.innerHTML = '<option value="">Select center</option>' + D.centers.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
   });
+  var finCen = document.getElementById('fin-center');
+  if(finCen) finCen.innerHTML = '<option value="">All Centers</option>' + D.centers.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
 }
 function updateCustSelects() {
   var _custs = filterByCenter(D.customers);
@@ -3463,6 +3818,49 @@ function isInactive(c) {
   return diff >= 7;
 }
 
+// ── CHURN RISK SCORING ──
+function getChurnRisk(custId) {
+  var c = D.customers.find(function(x){ return x.id === custId; });
+  if (!c) return { score: 0, level: 'healthy', label: '', reasons: [] };
+  var st = getDaysLeft(c);
+  if (!st.active) return { score: 0, level: 'healthy', label: '', reasons: [] };
+
+  var today = new Date().toISOString().split('T')[0];
+  var score = 0;
+  var reasons = [];
+
+  // Factor 1: Days since last attendance (0-40 pts)
+  var atts = D.attendance
+    .filter(function(a){ return a.customer_id === custId && a.status === 'present'; })
+    .sort(function(a,b){ return b.date.localeCompare(a.date); });
+  var daysSinceLast = atts.length
+    ? Math.floor((new Date(today) - new Date(atts[0].date)) / 86400000)
+    : 999;
+  if (daysSinceLast >= 14)      { score += 40; reasons.push('No visit in 14+ days'); }
+  else if (daysSinceLast >= 7)  { score += 25; reasons.push('No visit in 7+ days'); }
+  else if (daysSinceLast >= 4)  { score += 10; }
+
+  // Factor 2: Session utilisation vs expected (0-35 pts)
+  var packDays = st.total || 26;
+  var daysElapsed = Math.max(0, packDays - st.days);
+  var expectedSessions = daysElapsed > 0 ? Math.floor((daysElapsed / packDays) * st.total) : 0;
+  if (expectedSessions > 0) {
+    var ratio = atts.length / expectedSessions;
+    if (ratio < 0.30)      { score += 35; reasons.push('Very low session attendance'); }
+    else if (ratio < 0.60) { score += 20; reasons.push('Below average attendance'); }
+    else if (ratio < 0.80) { score += 10; }
+  }
+
+  // Factor 3: Pack days remaining but not attending (0-25 pts)
+  if (st.days >= 10 && daysSinceLast >= 7) { score += 25; reasons.push('Pack active but not attending'); }
+  else if (st.days >= 5 && daysSinceLast >= 5) { score += 10; }
+
+  score = Math.min(100, score);
+  var level  = score >= 60 ? 'critical' : score >= 30 ? 'at-risk' : 'healthy';
+  var label  = score >= 60 ? '🔴 Critical' : score >= 30 ? '🟡 At Risk' : '';
+  return { score: score, level: level, label: label, reasons: reasons };
+}
+
 // ── AI INSIGHTS ──
 async function generateWeeklySummary() {
   var apiKey = localStorage.getItem('groqKey');
@@ -3478,7 +3876,7 @@ async function generateWeeklySummary() {
   
   var totalCusts = D.customers.length;
   var weekAtt = D.attendance.filter(function(a){return a.date >= lastWeekStr && a.status === 'present';}).length;
-  var weekInc = D.finance.filter(function(f){return f.date >= lastWeekStr && f.type === 'income';}).reduce(function(s,f){return s+Number(f.amount)},0);
+  var weekInc = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance).filter(function(f){return f.date >= lastWeekStr && f.type === 'income';}).reduce(function(s,f){return s+Number(f.amount)},0);
   var newCusts = D.customers.filter(function(c){return (c.join_date||c.pack_start_date) >= lastWeekStr;}).length;
   var inactiveCount = D.customers.filter(function(c){return isInactive(c.id);}).length;
   
@@ -3507,6 +3905,7 @@ async function generateWeeklySummary() {
     div.innerHTML = '<div style="font-size:16px; margin-bottom:10px;"><strong>🤖 AI Business Summary:</strong></div><div style="color:var(--text)">' + aiText.replace(/\n/g, '<br/>') + '</div>';
   } catch(e) {
     div.innerHTML = '<div style="color:var(--danger)">Error generating summary: ' + e.message + '</div>';
+    showToast('AI summary failed: ' + e.message, 'error');
   }
   btn.disabled = false; btn.textContent = '✨ Generate AI Summary';
 }
@@ -3547,10 +3946,11 @@ async function runRenewalAgent() {
     container.querySelector('div div').innerHTML = 'Crafting message for <strong>' + c.name + '</strong> (' + (i+1) + ' of ' + expiring.length + ')...';
     try {
       var lang = c.preferred_language || WA_LANG || 'English';
+      var _cn = getCenterName();
       var langInstruction = lang === 'Telugu'
-        ? 'Write the entire message in Telugu script (తెలుగు). Do not use English except for the center name "Dharani\'s Wellness Center".'
+        ? 'Write the entire message in Telugu script (తెలుగు). Do not use English except for the center name "' + _cn + '".'
         : lang === 'Hindi'
-          ? 'Write the entire message in Hindi script (हिंदी). Do not use English except for the center name "Dharani\'s Wellness Center".'
+          ? 'Write the entire message in Hindi script (हिंदी). Do not use English except for the center name "' + _cn + '".'
           : 'Write in clear, friendly English.';
       var context = 'Customer name: ' + c.name + '\n' +
         'Pack: ' + (c.pack_type || 'unknown') + '\n' +
@@ -3564,7 +3964,7 @@ async function runRenewalAgent() {
         body: JSON.stringify({
           model: GROQ_MODEL,
           messages: [
-            { role: 'system', content: "You write WhatsApp renewal reminders for a wellness center called Dharani's Wellness Center. Write warm, personal, motivating messages under 80 words. No markdown, no asterisks. Address customer by first name. Mention days left and gently ask them to renew. End with 'Dharani's Wellness Center'. " + langInstruction },
+            { role: 'system', content: "You write WhatsApp renewal reminders for a wellness center called " + _cn + ". Write warm, personal, motivating messages under 80 words. No markdown, no asterisks. Address customer by first name. Mention days left and gently ask them to renew. End with '" + _cn + "'. " + langInstruction },
             { role: 'user', content: context }
           ],
           max_tokens: 280,
@@ -3577,6 +3977,7 @@ async function runRenewalAgent() {
       _renewalResults.push({ c: c, msg: msg, days: item.days, sessions: item.sessions, total: item.total, lang: lang });
     } catch(e) {
       _renewalResults.push({ c: c, msg: null, days: item.days, error: e.message });
+      showToast('Message failed for ' + c.name + ': ' + e.message, 'error');
     }
   }
 
@@ -3637,7 +4038,7 @@ async function regenRenewalMsg(i) {
       body: JSON.stringify({
         model: GROQ_MODEL,
         messages: [
-          { role: 'system', content: "Write a DIFFERENT WhatsApp renewal reminder for Dharani's Wellness Center. Under 80 words, warm, personal. No markdown. Use a different tone or opening line than before. " + (r.lang === 'Telugu' ? 'Write entirely in Telugu script (తెలుగు).' : r.lang === 'Hindi' ? 'Write entirely in Hindi script (हिंदी).' : 'Write in English.') },
+          { role: 'system', content: "Write a DIFFERENT WhatsApp renewal reminder for " + getCenterName() + ". Under 80 words, warm, personal. No markdown. Use a different tone or opening line than before. " + (r.lang === 'Telugu' ? 'Write entirely in Telugu script (తెలుగు).' : r.lang === 'Hindi' ? 'Write entirely in Hindi script (हिंदी).' : 'Write in English.') },
           { role: 'user', content: context }
         ],
         max_tokens: 220,
@@ -3678,8 +4079,9 @@ async function runGenericAgent(cfg) {
     if (statusEl) statusEl.innerHTML = 'Generating '+(i+1)+' of '+cfg.items.length+': <strong>'+cfg.labelFn(item)+'</strong>';
     var phone = cfg.phoneFn ? cfg.phoneFn(item) : null;
     var lang  = cfg.langFn  ? cfg.langFn(item)  : (WA_LANG || 'English');
-    var langLine = lang === 'Telugu' ? "Write entirely in Telugu script (తెలుగు). Keep only 'Dharani\\'s Wellness Center' in English."
-      : lang === 'Hindi'  ? "Write entirely in Hindi script (हिंदी). Keep only 'Dharani\\'s Wellness Center' in English."
+    var _cnAI = getCenterName();
+    var langLine = lang === 'Telugu' ? "Write entirely in Telugu script (తెలుగు). Keep only '" + _cnAI + "' in English."
+      : lang === 'Hindi'  ? "Write entirely in Hindi script (हिंदी). Keep only '" + _cnAI + "' in English."
       : 'Write in friendly English.';
     try {
       var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -3699,6 +4101,7 @@ async function runGenericAgent(cfg) {
       _agentResults.push({ item:item, msg:data.choices[0].message.content.trim(), lang:lang, phone:phone });
     } catch(e) {
       _agentResults.push({ item:item, msg:null, error:e.message, lang:lang, phone:phone });
+      showToast('Agent failed for ' + cfg.labelFn(item) + ': ' + e.message, 'error');
     }
   }
   _renderAgentOutput();
@@ -3791,7 +4194,7 @@ function runInactiveAgent() {
     },
     phoneFn: function(c){ return (c.contact||'').replace(/\D/g,'')||null; },
     langFn:  function(c){ return c.preferred_language||WA_LANG||'English'; },
-    systemPrompt: "You write WhatsApp messages for Dharani's Wellness Center to re-engage inactive customers. Warm, caring, motivating. Under 80 words. No markdown or asterisks. Address by first name. Acknowledge they haven't visited recently. Encourage return. End with 'Dharani's Wellness Center'.",
+    systemPrompt: "You write WhatsApp messages for " + getCenterName() + " to re-engage inactive customers. Warm, caring, motivating. Under 80 words. No markdown or asterisks. Address by first name. Acknowledge they haven't visited recently. Encourage return. End with '" + getCenterName() + "'.",
     contextFn: function(c) {
       var st   = getDaysLeft(c);
       var atts = D.attendance.filter(function(a){ return a.customer_id===c.id&&a.status==='present'; }).sort(function(a,b){ return b.date.localeCompare(a.date); });
@@ -3823,7 +4226,7 @@ function runBirthdayAgent() {
     urgencyFn:  function(){ return '🎂 Today'; },
     phoneFn: function(c){ return (c.contact||'').replace(/\D/g,'')||null; },
     langFn:  function(c){ return c.preferred_language||WA_LANG||'English'; },
-    systemPrompt: "Write a warm, joyful birthday WhatsApp for a wellness center customer. Under 60 words. Personal and celebratory. No markdown. Use first name. End with 'Dharani's Wellness Center'.",
+    systemPrompt: "Write a warm, joyful birthday WhatsApp for a wellness center customer. Under 60 words. Personal and celebratory. No markdown. Use first name. End with '" + getCenterName() + "'.",
     contextFn: function(c) {
       var age = c.dob ? (new Date().getFullYear()-parseInt(c.dob)) : null;
       return 'Customer: '+c.name+(age?'\nTurning: '+age+' years old':'')+(c.goal?'\nWellness goal: '+c.goal:'');
@@ -3852,7 +4255,7 @@ function runPaymentAgent() {
     urgencyFn:  function(x){ return x.p.due_date&&x.p.due_date<today ? '🔴 Overdue' : '⚠️ Pending'; },
     phoneFn: function(x){ return x.cust ? (x.cust.contact||'').replace(/\D/g,'')||null : null; },
     langFn:  function(x){ return (x.cust&&x.cust.preferred_language)||WA_LANG||'English'; },
-    systemPrompt: "Write a polite, professional payment reminder WhatsApp for a wellness center. Under 80 words. Friendly but clear. No markdown. Use customer name and mention the amount. End with 'Dharani's Wellness Center'.",
+    systemPrompt: "Write a polite, professional payment reminder WhatsApp for a wellness center. Under 80 words. Friendly but clear. No markdown. Use customer name and mention the amount. End with '" + getCenterName() + "'.",
     contextFn: function(x) {
       var daysOver = x.p.due_date ? Math.floor((new Date()-new Date(x.p.due_date))/(864e5)) : 0;
       return 'Customer: '+x.p.person_name+'\nOutstanding: ₹'+x.bal+'\n'+(x.p.due_date?'Due date: '+x.p.due_date+'\n':'')+(daysOver>0?'Days overdue: '+daysOver+'\n':'')+'Pack/Description: '+(x.p.description||'pack');
@@ -3890,7 +4293,7 @@ function runProgressAgent() {
     urgencyFn:  function(x){ return x.type==='sessions' ? '🏅 '+x.value+' sessions' : '⚖️ '+x.value+'kg'; },
     phoneFn: function(x){ return (x.c.contact||'').replace(/\D/g,'')||null; },
     langFn:  function(x){ return x.c.preferred_language||WA_LANG||'English'; },
-    systemPrompt: "Write an enthusiastic, heartfelt congratulations WhatsApp for a wellness center customer who hit a milestone. Under 80 words. Very motivating and celebratory. No markdown. Use their name and mention the specific achievement. End with 'Dharani's Wellness Center'.",
+    systemPrompt: "Write an enthusiastic, heartfelt congratulations WhatsApp for a wellness center customer who hit a milestone. Under 80 words. Very motivating and celebratory. No markdown. Use their name and mention the specific achievement. End with '" + getCenterName() + "'.",
     contextFn: function(x) {
       return 'Customer: '+x.c.name+'\nMilestone: '+x.milestone+(x.c.goal?'\nGoal: '+x.c.goal:'');
     }
@@ -3921,7 +4324,7 @@ function runCoachReportAgent() {
     urgencyFn:  function(x){ return x.inactive>0 ? '⚠️ '+x.inactive+' inactive' : '✅ All active'; },
     phoneFn: function(x){ return (x.co.contact||'').replace(/\D/g,'')||null; },
     langFn:  function(){ return WA_LANG||'English'; },
-    systemPrompt: "Write a brief weekly report WhatsApp message from a wellness center supervisor to a coach. Professional but warm. Under 100 words. No markdown. Include their stats clearly. End with 'Dharani's Wellness Center'.",
+    systemPrompt: "Write a brief weekly report WhatsApp message from a wellness center supervisor to a coach. Professional but warm. Under 100 words. No markdown. Include their stats clearly. End with '" + getCenterName() + "'.",
     contextFn: function(x) {
       return 'Coach name: '+x.co.name+'\nTotal customers: '+x.total+'\nAttendance this week: '+x.weekAtt+' sessions\nPacks expiring within 7 days: '+x.expiring+'\nInactive customers (7d+): '+x.inactive;
     }
@@ -3980,7 +4383,7 @@ function runWelcomeAgent() {
     urgencyFn:  function(c){ return c.join_date===today||c.pack_start_date===today ? '🆕 Today' : '📅 Yesterday'; },
     phoneFn: function(c){ return (c.contact||'').replace(/\D/g,'')||null; },
     langFn:  function(c){ return c.preferred_language||WA_LANG||'English'; },
-    systemPrompt: "Write a warm, welcoming WhatsApp message for a new wellness center customer on their first day. Enthusiastic, personal, encouraging. Under 80 words. No markdown. Use first name. Mention their pack and what to expect. End with 'Dharani's Wellness Center'.",
+    systemPrompt: "Write a warm, welcoming WhatsApp message for a new wellness center customer on their first day. Enthusiastic, personal, encouraging. Under 80 words. No markdown. Use first name. Mention their pack and what to expect. End with '" + getCenterName() + "'.",
     contextFn: function(c) {
       var coach = c.referred_by_id ? D.coaches.find(function(x){ return x.id===c.referred_by_id; }) : null;
       return 'Customer: '+c.name+'\nPack: '+(c.pack_type||'wellness pack')+'\nStart date: '+(c.pack_start_date||today)+(c.goal?'\nGoal: '+c.goal:'')+(coach?'\nCoach: '+coach.name:'')+(c.external_referrer_name?'\nReferred by: '+c.external_referrer_name:'');
@@ -3999,7 +4402,7 @@ async function runFinanceAnalystAgent() {
   var curMon      = today.toISOString().substring(0,7);
   var lastMon     = new Date(today.getFullYear(), today.getMonth()-1, 1).toISOString().substring(0,7);
   var twoMon      = new Date(today.getFullYear(), today.getMonth()-2, 1).toISOString().substring(0,7);
-  var _fin        = ACTIVE_CENTER ? filterByCenterViaCustomer(D.finance) : D.finance;
+  var _fin        = ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance;
 
   // ── Monthly income / expense totals ──
   var curInc=0, curExp=0, lastInc=0, lastExp=0, twoInc=0;
@@ -4247,6 +4650,7 @@ async function generateFinanceInsights() {
     '</div>';
   } catch(e) {
     outEl.innerHTML = '<div class="tcard" style="padding:16px;border-left:4px solid var(--danger)"><strong>Error:</strong> '+e.message+'</div>';
+    showToast('Finance AI error: ' + e.message, 'error');
   }
   btn.disabled = false; btn.textContent = '✨ AI Insights';
 }
@@ -4304,6 +4708,7 @@ async function askBodyAI(cid, rid) {
     content.innerHTML = '<strong>🤖 AI Analysis:</strong><div style="margin-top:8px">'+aiText.replace(/\n/g,'<br/>')+'</div>';
   } catch(e) {
     content.innerHTML = '<div style="color:var(--danger)">AI Error: '+e.message+'</div>';
+    showToast('Body AI error: ' + e.message, 'error');
   } finally {
     delete _aiInFlight[rid];
   }
@@ -4353,6 +4758,7 @@ async function doGroqReport(cid, systemPrompt, userPrompt, title) {
     };
   } catch(e) {
     document.getElementById('wai-content').innerHTML = '<div style="color:var(--danger)">Error generating report: ' + e.message + '</div>';
+    showToast('AI report error: ' + e.message, 'error');
   }
 }
 
@@ -4475,6 +4881,49 @@ function renderSupervisorWaterCard() {
 }
 
 // ── RENDER OVERVIEW ──
+// ── BODY COMPOSITION TREND ALERTS ──
+function computeBodyAlerts() {
+  var alerts = [];
+  var todayMs = new Date().setHours(0,0,0,0);
+  var _custs = filterByCenter(D.customers);
+  _custs.forEach(function(c) {
+    var st = getDaysLeft(c);
+    var recs = (D.body||[]).filter(function(b){ return b.customer_id === c.id && b.weight; })
+                           .sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
+    // No body scan in 21+ days for active customers
+    if (st.active) {
+      if (!recs.length) {
+        alerts.push({ cid:c.id, name:c.name, contact:c.contact, type:'no-scan', sev:'warn',
+          msg:'No body scan recorded yet' });
+      } else {
+        var daysSince = Math.floor((todayMs - new Date(recs[0].date)) / 86400000);
+        if (daysSince > 21) {
+          alerts.push({ cid:c.id, name:c.name, contact:c.contact, type:'overdue', sev:'warn',
+            msg:'No scan in ' + daysSince + ' days (last: ' + recs[0].date + ')' });
+        }
+      }
+    }
+    // Last 2 scans — weight gain or fat% spike within 14 days
+    if (recs.length >= 2) {
+      var latest = recs[0], prev = recs[1];
+      var span = Math.floor((new Date(latest.date) - new Date(prev.date)) / 86400000);
+      if (span > 0 && span <= 14) {
+        var wGain = Number(latest.weight) - Number(prev.weight);
+        var fGain = Number(latest.fat_percentage || 0) - Number(prev.fat_percentage || 0);
+        if (wGain > 2) {
+          alerts.push({ cid:c.id, name:c.name, contact:c.contact, type:'weight', sev:'critical',
+            msg:'⚖️ Weight +' + wGain.toFixed(1) + 'kg in ' + span + ' days (' + prev.weight + '→' + latest.weight + 'kg)' });
+        } else if (fGain >= 2) {
+          alerts.push({ cid:c.id, name:c.name, contact:c.contact, type:'fat', sev:'critical',
+            msg:'🍔 Fat% +' + fGain.toFixed(1) + 'pp in ' + span + ' days (' + prev.fat_percentage + '→' + latest.fat_percentage + '%)' });
+        }
+      }
+    }
+  });
+  // Critical alerts first, then warnings
+  return alerts.sort(function(a,b){ return (a.sev==='critical'?0:1)-(b.sev==='critical'?0:1); });
+}
+
 function renderOverview() {
   renderSupervisorVisionCard();
   renderSupervisorWaterCard();
@@ -4485,7 +4934,7 @@ function renderOverview() {
   // ── Filter by active center ──
   var _custs = filterByCenter(D.customers);
   var _att = filterByCenterViaCustomer(D.attendance);
-  var _fin = ACTIVE_CENTER ? filterByCenterViaCustomer(D.finance) : D.finance;
+  var _fin = ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance;
 
   // ── Compute customer stats ──
   var activeCusts=0, expCusts=0, inactiveCusts=0, expiringCusts=[], inactiveList=[];
@@ -4638,6 +5087,30 @@ function renderOverview() {
   if(inactiveList.length>10) rightHtml += '<div style="text-align:center;padding-top:8px"><span class="ov-link" onclick="goTo(\'customers\',document.querySelector(\'[onclick*=customers]\'))">View all '+inactiveList.length+' inactive →</span></div>';
   rightHtml += '</div></div>';
 
+  // ── Churn Risk ──
+  var riskList = _custs.map(function(c){ return { c:c, r:getChurnRisk(c.id) }; })
+    .filter(function(x){ return x.r.level !== 'healthy'; })
+    .sort(function(a,b){ return b.r.score - a.r.score; });
+  var critCount = riskList.filter(function(x){ return x.r.level==='critical'; }).length;
+  var atRiskCount = riskList.filter(function(x){ return x.r.level==='at-risk'; }).length;
+  rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid '+(critCount?'var(--danger)':'var(--accent)')+'"><div class="ov-card-h"><h3>⚠️ Churn Risk</h3><span class="ov-count" style="background:'+(critCount?'#fee2e2':'#fef9c3')+';color:'+(critCount?'#b91c1c':'#854d0e')+'">'+riskList.length+'</span></div><div class="ov-card-body">';
+  if(!riskList.length) { rightHtml += '<div class="ov-empty">All active customers are engaged!</div>'; }
+  else {
+    if(critCount||atRiskCount) rightHtml += '<div style="display:flex;gap:12px;margin-bottom:10px;font-size:12px">'+(critCount?'<span style="background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:20px;font-weight:700">🔴 '+critCount+' Critical</span>':'')+(atRiskCount?'<span style="background:#fef9c3;color:#854d0e;padding:3px 10px;border-radius:20px;font-weight:700">🟡 '+atRiskCount+' At Risk</span>':'')+'</div>';
+    rightHtml += riskList.slice(0,8).map(function(x){
+      var phone = (x.c.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
+      var msg = encodeURIComponent('Hi '+x.c.name+'! We noticed you haven\'t visited us recently. Your health journey matters — come back and let\'s pick up where we left off! 💪');
+      return '<div class="ov-row"><div class="ov-row-info">'
+        +'<div class="ov-row-name">'+x.c.name+'</div>'
+        +'<div class="ov-row-sub">'+x.r.reasons.join(' · ')+'</div>'
+        +'</div><div class="ov-row-actions">'
+        +(phone?'<button class="wa-btn" style="font-size:11px;padding:3px 8px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+msg+'\',\'_blank\')">💬</button>':'')
+        +'</div></div>';
+    }).join('');
+    if(riskList.length>8) rightHtml += '<div style="text-align:center;padding-top:8px"><span class="ov-link" onclick="goTo(\'customers\',document.querySelector(\'[onclick*=customers]\'))">View all '+riskList.length+' at-risk →</span></div>';
+  }
+  rightHtml += '</div></div>';
+
   // Coaches Summary
   var _coaches = filterByCenter(D.coaches);
   var activeCoaches = _coaches.filter(function(c){return (c.status||'Active')==='Active';}).length;
@@ -4681,6 +5154,21 @@ function renderOverview() {
       miniGoalRow('Avg Daily Att.', avgDailyAtt2, goals.attendance||0, '')+
       miniGoalRow('Leads Converted', leadsConv2, goals.leads||0, '')+
       '</div></div>';
+  }
+
+  var bodyAlerts = computeBodyAlerts();
+  if (bodyAlerts.length) {
+    rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid var(--danger)">';
+    rightHtml += '<div class="ov-card-h"><h3>🔬 Body Trend Alerts</h3><span class="ov-count" style="background:#fee2e2;color:#b91c1c">'+bodyAlerts.length+'</span></div>';
+    rightHtml += '<div class="ov-card-body">';
+    rightHtml += bodyAlerts.slice(0,8).map(function(a){
+      var phone = (a.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
+      var waMsg = encodeURIComponent('Hi '+a.name+'! We noticed: '+a.msg+'. Let\'s check in. \uD83D\uDC9A \u2014 '+getCenterName());
+      return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">'+a.name+'</div><div class="ov-row-sub">'+a.msg+'</div></div>'
+        +(phone?'<div class="ov-row-actions"><button class="wa-btn" style="font-size:11px;padding:3px 8px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+waMsg+'\',\'_blank\')">💬</button></div>':'')
+        +'</div>';
+    }).join('');
+    rightHtml += '</div></div>';
   }
 
   document.getElementById('ov-col-right').innerHTML = rightHtml;
@@ -4735,7 +5223,8 @@ function renderCoaches() {
     var payBtn = (hasPackPrice && !hasPaymentRecord)
       ? '<button class="btn-p" style="font-size:11px;padding:3px 8px;background:#e8a838;border-color:#e8a838;margin-right:4px" onclick="openCoachPaymentSetup(\''+c.id+'\')">💰 Record Payment</button>'
       : '';
-    return '<tr><td><strong>'+c.name+'</strong>'+pinHtml+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(st==='Active'?'bg':'br')+'">'+st+'</span></td><td>'+(c.upline||'—')+'</td><td>'+refs+'</td><td>'+(c.join_date||'—')+'</td><td><div class="acts">'+payBtn+'<button class="btn-e" onclick="editCoach(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'coaches\',\''+c.id+'\',\'coaches\')">Delete</button></div></td></tr>';
+    var renewBtn = c.pack_type ? '<button class="btn-p" style="font-size:11px;padding:3px 8px;margin-right:4px" onclick="openRenewForCoach(\''+c.id+'\')">🔄 Renew</button>' : '';
+    return '<tr><td><strong>'+c.name+'</strong>'+pinHtml+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(st==='Active'?'bg':'br')+'">'+st+'</span></td><td>'+(c.upline||'—')+'</td><td>'+refs+'</td><td>'+(c.join_date||'—')+'</td><td><div class="acts">'+payBtn+renewBtn+'<button class="btn-e" onclick="editCoach(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'coaches\',\''+c.id+'\',\'coaches\')">Delete</button></div></td></tr>';
   }).join('');
   document.getElementById('coaches-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Coaches</div><div class="stat-v">'+_coaches.length+'</div></div><div class="stat"><div class="stat-l">Active</div><div class="stat-v">'+_coaches.filter(function(c){return (c.status||'Active')==='Active';}).length+'</div></div>';
 }
@@ -5807,6 +6296,11 @@ function renderAttendance() {
       present.push('<div class="att-card" style="border-left:3px solid #f9c74f;cursor:default"><div class="att-card-name">'+p.name+' 🎁</div><div><span class="badge by">Complementary</span></div></div>');
       return;
     }
+    if(stst === 'coupon_shake') {
+      var csrv = att ? (Number(att.servings)||1) : 1;
+      present.push('<div class="att-card" style="border-left:3px solid #25D366;cursor:default"><div class="att-card-name">'+p.name+' 🥤</div><div><span class="badge" style="background:#25D366;color:#fff">Free Shake'+(csrv>1?' ×'+csrv:'')+'</span></div></div>');
+      return;
+    }
     var servBadge = stst==='present' && servings > 1 ? '<span class="badge" style="background:#6366f1;color:#fff;margin-left:6px">×'+servings+'</span>' : '';
     var resetHtml = stst==='present' ? ' ondblclick="event.stopPropagation();resetAtt(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\')"' : '';
     var cardHtml = '<div class="att-card" onclick="toggleAtt(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\',\''+stst+'\')"'+resetHtml+'>' +
@@ -5904,7 +6398,9 @@ function renderBody() {
       : '');
 
   profileCard.style.display = 'block';
-  profileCard.innerHTML = '<div class="body-profile">'
+  var latestVfKg = latest ? parseFloat(latest.visceral_fat) || 0 : 0;
+  profileCard.innerHTML = svBuildHealthScoreCard(latest ? latest.bmi : null, latest ? latest.fat_percentage : null, latestVfKg, latest ? latest.date : null) +
+    '<div class="body-profile">'
     +'<div class="body-profile-name">'+cust.name+'</div>'
     +'<div class="body-profile-meta">'
       +(cust.goal?'🎯 '+cust.goal+' &nbsp;·&nbsp; ':'')
@@ -6255,13 +6751,13 @@ function sendRecheckWA(cid) {
   var recs = D.body.filter(function(b){return b.customer_id===cid;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   var lastScan = recs.length ? recs[0].date : null;
   var days = lastScan ? Math.floor((new Date()-new Date(lastScan))/86400000) : null;
-  var msg = '🌿 *Body Scan Reminder — Dharani\'s Wellness Center*\n\n'
+  var msg = '🌿 *Body Scan Reminder — '+getCenterName()+'*\n\n'
     +'Hi *'+c.name+'*! 😊\n\n'
     +(days ? 'It\'s been *'+days+' days* since your last body scan.' : 'You haven\'t done a body scan yet!')
     +' Time for your weekly recheck! 📊\n\n'
     +'Regular scans help us track your progress accurately and adjust your plan for the best results.\n\n'
     +'📅 *Please visit the center this week for your scan.*\n\n'
-    +'_Your Dharani\'s Wellness Center Team_ 💚';
+    +'_Your '+getCenterName()+' Team_ 💚';
   var phone = c.contact.replace(/\D/g,'');
   if (phone.length===10) phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
@@ -6292,8 +6788,7 @@ function _getFinFiltered() {
   var from = document.getElementById('fin-from').value;
   var to   = document.getElementById('fin-to').value;
   var q    = document.getElementById('fin-search').value.toLowerCase();
-  // Finance records have no customer_id link, so never filter by center via customer
-  var base = D.finance;
+  var base = ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance;
   return base.filter(function(f){
     if (from && f.date < from) return false;
     if (to   && f.date > to)   return false;
@@ -6341,7 +6836,7 @@ function renderFinance() {
   renderCats(incCats, inc, 'fin-income-cats', 'var(--success)');
   renderCats(expCats, exp, 'fin-expense-cats', 'var(--danger)');
   // ── Monthly P&L chart ──
-  var all = ACTIVE_CENTER ? filterByCenterViaCustomer(D.finance) : D.finance;
+  var all = ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance;
   var monthMap = {};
   all.forEach(function(f){
     var ym = (f.date||'').slice(0,7); if(!ym) return;
@@ -6447,7 +6942,7 @@ function onCoachCenterChange() {
   var uplineSel = document.getElementById('coach-upline-sel');
   if (uplineSel) { uplineSel.value = center.owner_id; }
   var uplineTxt = D.coaches.find(function(c){return c.id===center.owner_id;});
-  if (uplineTxt) { document.getElementById('coach-upline').value = uplineTxt.name; showToast('Upline auto-filled: ' + uplineTxt.name, 'success'); }
+  if (uplineTxt) { showToast('Upline auto-filled: ' + uplineTxt.name, 'success'); }
 }
 
 // ── SAVE CUSTOMERS ──
@@ -6547,14 +7042,15 @@ async function saveCustomer() {
       var today = (payDateEl && payDateEl.value) ? payDateEl.value : new Date().toISOString().split('T')[0];
       var custName = payload.name;
       var custId = (Array.isArray(savedRecords) && savedRecords[0]) ? savedRecords[0].id : null;
+      var _custCenter = payload.wellness_center_id || null;
       if (payMode === 'full') {
-        await dbInsert('finance', { type:'income', description:custName+' — Pack sale', amount:packPrice, category:'Pack sale to customer', date:today });
+        await dbInsert('finance', { type:'income', description:custName+' — Pack sale', amount:packPrice, category:'Pack sale to customer', date:today, wellness_center_id:_custCenter });
         showToast('Customer added + ₹'+packPrice.toLocaleString('en-IN')+' income recorded!', 'success');
       } else if (payMode === 'partial') {
         var paidNow = Number(document.getElementById('customer-paid-now').value)||0;
         var dueDate = document.getElementById('customer-due-date').value||null;
         await dbInsert('payments', { person_id:custId, person_name:custName, total_amount:packPrice, amount_paid:paidNow, payment_date:today, due_date:dueDate, description:payload.pack_type||'Pack', notes:'Auto-created on customer add' });
-        if (paidNow > 0) await dbInsert('finance', { type:'income', description:custName+' — Partial pack payment', amount:paidNow, category:'Pack sale to customer', date:today });
+        if (paidNow > 0) await dbInsert('finance', { type:'income', description:custName+' — Partial pack payment', amount:paidNow, category:'Pack sale to customer', date:today, wellness_center_id:_custCenter });
         showToast('Customer added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
       } else {
         var dueDateNone = document.getElementById('customer-due-date') ? document.getElementById('customer-due-date').value||null : null;
@@ -6842,8 +7338,9 @@ document.getElementById('body-customer').addEventListener('change', async functi
 });
 
 function calcBody() {
-  var weight   = parseFloat(document.getElementById('body-weight').value);
-  var fatPct   = parseFloat(document.getElementById('body-fat').value);
+  var weight    = parseFloat(document.getElementById('body-weight').value);
+  var height    = parseFloat(document.getElementById('body-height').value);
+  var fatPct    = parseFloat(document.getElementById('body-fat').value);
   var subfatPct = parseFloat(document.getElementById('body-subfat').value);
 
   // Show Fat kg preview
@@ -6864,7 +7361,129 @@ function calcBody() {
     subfatKgDiv.textContent = '';
   }
 
+  // Auto-calculate BMI
+  var bmiEl = document.getElementById('body-bmi');
+  var bmi = 0;
+  if (!isNaN(weight) && !isNaN(height) && weight > 0 && height > 0 && !bmiEl.dataset.manual) {
+    var hm = height / 100;
+    bmi = parseFloat((weight / (hm * hm)).toFixed(1));
+    bmiEl.value = bmi;
+  } else {
+    bmi = parseFloat(bmiEl.value) || 0;
+  }
+
   calcVF();
+
+  // Field hint badges
+  var vfEl = document.getElementById('body-visceral');
+  var vfKg = parseFloat(vfEl ? vfEl.value : 0) || 0;
+  svSetBodyHint('body-bmi-hint',      svBmiHint(bmi));
+  svSetBodyHint('body-fat-hint',      svFatHint(isNaN(fatPct) ? 0 : fatPct));
+  svSetBodyHint('body-visceral-hint', svVfHint(vfKg));
+
+  // Live Health Score in modal
+  var score = svCalcHealthScore(bmi || 0, isNaN(fatPct) ? 0 : fatPct, vfKg);
+  svUpdateModalHealthScore(score);
+}
+
+function svSetBodyHint(id, hint) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (!hint) { el.innerHTML = ''; return; }
+  el.innerHTML = '<span class="fhint fhint-' + hint.cls + '">' + hint.icon + ' ' + hint.label + '</span>';
+}
+function svBmiHint(v) {
+  if (!v) return null;
+  if (v < 18.5) return {cls:'low',  icon:'⬇️', label:'Underweight'};
+  if (v < 25)   return {cls:'good', icon:'✅', label:'Normal'};
+  if (v < 30)   return {cls:'warn', icon:'⚠️', label:'Overweight'};
+  return              {cls:'bad',  icon:'🔴', label:'Obese'};
+}
+function svFatHint(v) {
+  if (!v) return null;
+  if (v < 8)   return {cls:'low',  icon:'⬇️', label:'Very Low Fat'};
+  if (v <= 25) return {cls:'good', icon:'✅', label:'Healthy Range'};
+  if (v <= 32) return {cls:'warn', icon:'⚠️', label:'Above Ideal'};
+  return             {cls:'bad',  icon:'🔴', label:'High Body Fat'};
+}
+function svVfHint(kg) {
+  if (!kg) return null;
+  if (kg <= 2) return {cls:'good', icon:'✅', label:'Low Risk'};
+  if (kg <= 4) return {cls:'warn', icon:'⚠️', label:'Moderate'};
+  return             {cls:'bad',  icon:'🔴', label:'High Risk'};
+}
+function svCalcHealthScore(bmi, fatPct, vfKg) {
+  var score = 0, total = 0;
+  if (bmi) {
+    total += 40;
+    if (bmi >= 18.5 && bmi <= 24.9) score += 40;
+    else if (bmi < 18.5) score += Math.max(0, 40 - (18.5 - bmi) * 5);
+    else score += Math.max(0, 40 - (bmi - 24.9) * 4);
+  }
+  if (fatPct) {
+    total += 35;
+    if (fatPct >= 8 && fatPct <= 25) score += 35;
+    else if (fatPct < 8) score += Math.max(0, 35 - (8 - fatPct) * 4);
+    else score += Math.max(0, 35 - (fatPct - 25) * 2);
+  }
+  if (vfKg > 0) {
+    total += 25;
+    if (vfKg <= 2) score += 25;
+    else if (vfKg <= 4) score += 15;
+    else if (vfKg <= 6) score += 8;
+  }
+  if (total === 0) return null;
+  return Math.round((score / total) * 100);
+}
+function svUpdateModalHealthScore(score) {
+  var bar     = document.getElementById('modal-hs-bar');
+  var numEl   = document.getElementById('modal-hs-num');
+  var arcEl   = document.getElementById('modal-hs-arc');
+  var gradeEl = document.getElementById('modal-hs-grade');
+  if (!bar) return;
+  if (score === null) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  numEl.textContent = score;
+  var maxDash = 106.81;
+  var offset  = maxDash * (1 - score / 100);
+  var color   = score >= 80 ? '#27ae60' : score >= 55 ? '#e8a838' : '#c0392b';
+  arcEl.style.stroke = color;
+  arcEl.style.strokeDashoffset = offset;
+  var grade = score >= 85 ? {t:'Excellent',bg:'#d1fae5',c:'#065f46'}
+            : score >= 70 ? {t:'Good',bg:'#d1fae5',c:'#065f46'}
+            : score >= 55 ? {t:'Fair',bg:'#fef3c7',c:'#92400e'}
+            : score >= 40 ? {t:'Poor',bg:'#fee2e2',c:'#991b1b'}
+            :               {t:'Critical',bg:'#fee2e2',c:'#991b1b'};
+  gradeEl.textContent = grade.t;
+  gradeEl.style.background = grade.bg;
+  gradeEl.style.color = grade.c;
+}
+function svBuildHealthScoreCard(bmi, fatPct, vfKg, date) {
+  var score = svCalcHealthScore(parseFloat(bmi)||0, parseFloat(fatPct)||0, parseFloat(vfKg)||0);
+  if (score === null) return '';
+  var color = score >= 80 ? '#27ae60' : score >= 55 ? '#e8a838' : '#c0392b';
+  var maxDash = 157.08;
+  var offset  = maxDash * (1 - score / 100);
+  var grade = score >= 85 ? {t:'Excellent',bg:'rgba(209,250,229,.3)',c:'#a7f3d0'}
+            : score >= 70 ? {t:'Good',bg:'rgba(209,250,229,.3)',c:'#a7f3d0'}
+            : score >= 55 ? {t:'Fair',bg:'rgba(254,243,199,.3)',c:'#fde68a'}
+            : score >= 40 ? {t:'Poor',bg:'rgba(254,226,226,.3)',c:'#fca5a5'}
+            :               {t:'Critical',bg:'rgba(254,226,226,.3)',c:'#fca5a5'};
+  return '<div class="hs-card">' +
+    '<div class="hs-gauge">' +
+      '<svg viewBox="0 0 120 72" width="120" height="72">' +
+        '<path d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="9" stroke-linecap="round"/>' +
+        '<path d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="' + color + '" stroke-width="9" stroke-linecap="round" stroke-dasharray="' + maxDash + '" stroke-dashoffset="' + offset + '"/>' +
+        '<text x="60" y="62" text-anchor="middle" font-size="20" font-weight="700" fill="#fff" font-family="DM Sans,sans-serif">' + score + '</text>' +
+      '</svg>' +
+    '</div>' +
+    '<div class="hs-info">' +
+      '<div class="hs-title">Health Score</div>' +
+      '<div class="hs-score-big">' + score + '<span style="font-size:16px;font-weight:400;color:rgba(255,255,255,.5)">/100</span></div>' +
+      '<div class="hs-grade-badge" style="background:' + grade.bg + ';color:' + grade.c + '">' + grade.t + '</div>' +
+      (date ? '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px">Last scan: ' + date + '</div>' : '') +
+    '</div>' +
+  '</div>';
 }
 
 function calcVF() {
@@ -6943,11 +7562,11 @@ function editBody(id) {
   document.getElementById('body-fat').value=b.fat_percentage||''; 
   document.getElementById('body-visceral').value=b.visceral_fat||''; 
   document.getElementById('body-bmr').value=b.bmr||''; 
-  document.getElementById('body-bmi').value=b.bmi||''; 
-  document.getElementById('body-age').value=b.body_age||''; 
-  document.getElementById('body-subfat').value=b.subcutaneous_fat_percentage||''; calcVF(); 
-  document.getElementById('body-muscle').value=b.muscle_percentage||''; 
-  document.getElementById('body-notes').value=b.notes||''; 
+  var bmiEl=document.getElementById('body-bmi'); bmiEl.value=b.bmi||''; bmiEl.dataset.manual=b.bmi?'1':'';
+  document.getElementById('body-age').value=b.body_age||'';
+  document.getElementById('body-subfat').value=b.subcutaneous_fat_percentage||''; calcVF();
+  document.getElementById('body-muscle').value=b.muscle_percentage||'';
+  document.getElementById('body-notes').value=b.notes||'';
   calcBody();
   openModal('body');
 }
@@ -6965,8 +7584,8 @@ async function saveCoach() {
     wellness_center_id:document.getElementById('coach-center').value||null,
     join_date:document.getElementById('coach-date').value||null,
     status:document.getElementById('coach-status').value||'Active',
-    upline:document.getElementById('coach-upline').value.trim(),
     upline_id:uplineSel?uplineSel.value||null:null,
+    upline:(function(){ if(!uplineSel||!uplineSel.value) return ''; var uc=D.coaches.find(function(c){return c.id===uplineSel.value;}); return uc?uc.name:''; })(),
     notes:document.getElementById('coach-notes').value.trim(),
     dob:document.getElementById('coach-dob').value||null,
     gender:document.getElementById('coach-gender').value||null,
@@ -6997,14 +7616,15 @@ async function saveCoach() {
       var coachName = payload.name;
       var coachId = (Array.isArray(savedCoach) && savedCoach[0]) ? savedCoach[0].id : null;
       var payMode = (document.getElementById('coach-pay-mode')||{value:'full'}).value;
+      var _coachCenter = payload.wellness_center_id || null;
       if (payMode === 'full') {
-        await dbInsert('finance', { type:'income', description:coachName+' — Coach pack sale', amount:packPrice, category:'Coach pack payment', date:today });
+        await dbInsert('finance', { type:'income', description:coachName+' — Coach pack sale', amount:packPrice, category:'Coach pack payment', date:today, wellness_center_id:_coachCenter });
         showToast('Coach added + ₹'+packPrice.toLocaleString('en-IN')+' income recorded!', 'success');
       } else if (payMode === 'partial') {
         var paidNow = Number((document.getElementById('coach-paid-now')||{value:0}).value)||0;
         var dueDate = (document.getElementById('coach-due-date')||{value:''}).value||null;
         await dbInsert('payments', { person_id:coachId, person_name:coachName, total_amount:packPrice, amount_paid:paidNow, payment_date:today, due_date:dueDate, description:(payload.pack_type||'Coach Pack'), notes:'Coach pack payment' });
-        if (paidNow > 0) await dbInsert('finance', { type:'income', description:coachName+' — Partial coach pack payment', amount:paidNow, category:'Coach pack payment', date:today });
+        if (paidNow > 0) await dbInsert('finance', { type:'income', description:coachName+' — Partial coach pack payment', amount:paidNow, category:'Coach pack payment', date:today, wellness_center_id:_coachCenter });
         showToast('Coach added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
       } else {
         var dueDateNone = (document.getElementById('coach-due-date')||{value:''}).value||null;
@@ -7022,10 +7642,10 @@ async function saveCoach() {
 function editCoach(id) {
   var c = D.coaches.find(function(x){return x.id===id;});
   document.getElementById('coach-id').value=c.id;
+  updateCoachUplineSelects(c.id); // refresh list — exclude self when editing
   document.getElementById('coach-name').value=c.name;
   document.getElementById('coach-contact').value=c.contact||'';
   document.getElementById('coach-status').value=c.status||'Active';
-  document.getElementById('coach-upline').value=c.upline||'';
   document.getElementById('coach-notes').value=c.notes||'';
   document.getElementById('coach-center').value=c.wellness_center_id||'';
   document.getElementById('coach-date').value=c.join_date||'';
@@ -7050,7 +7670,8 @@ function editCoach(id) {
 async function saveFinance() {
   getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('fin-id').value;
-  var payload = { type:document.getElementById('fin-type').value, description:document.getElementById('fin-desc').value.trim(), amount:document.getElementById('fin-amount').value, category:document.getElementById('fin-cat').value, date:document.getElementById('fin-date').value };
+  var finCenEl = document.getElementById('fin-center');
+  var payload = { type:document.getElementById('fin-type').value, description:document.getElementById('fin-desc').value.trim(), amount:document.getElementById('fin-amount').value, category:document.getElementById('fin-cat').value, date:document.getElementById('fin-date').value, wellness_center_id: (finCenEl && finCenEl.value) || null };
   if (!payload.amount||!payload.date) { showToast('Amount and date required','error'); return; }
   try {
     if(id) await dbUpdate('finance',id,payload); else await dbInsert('finance',payload);
@@ -7072,7 +7693,10 @@ function editFinance(id) {
   var found = Array.from(catSel.options).some(function(o){return o.value===savedCat||o.text===savedCat;});
   if (!found && savedCat) { var o = document.createElement('option'); o.text=savedCat; o.value=savedCat; catSel.add(o); }
   catSel.value=savedCat;
-  document.getElementById('fin-date').value=f.date; openModal('finance');
+  document.getElementById('fin-date').value=f.date;
+  var finCenEl2 = document.getElementById('fin-center');
+  if(finCenEl2) finCenEl2.value = f.wellness_center_id || '';
+  openModal('finance');
 }
 
 // ── DELETE ──
@@ -7094,7 +7718,6 @@ async function delRecord(table, id, section) {
     if(section==='body') await loadBody();
     if(section==='finance') await loadFinance();
     if(section==='coaches') await loadCoaches();
-    if(section==='inventory') await loadInventory();
     renderOverview();
   } catch(e) { showToast('Error: '+e.message,'error'); }
 }
@@ -7156,7 +7779,7 @@ function sendRenewalWA(cid) {
     var sign = wDiff < 0 ? '' : '+';
     progressLine = '\n\nYour progress so far: *'+sign+wDiff+'kg* from '+first.weight+'kg to '+latest.weight+'kg 💪';
   }
-  var msg = '🌿 *Dharani\'s Wellness Center Update*\n\nHi *'+c.name+'*! 😊\n\nYour *'+( c.pack_type||'wellness pack')+' ends in just '+st.days+' day'+(st.days===1?'':'s')+'*.'+progressLine+'\n\nDon\'t break your momentum — let\'s renew and keep going! 🙏\n\nReply here or visit the center to renew. 💚';
+  var msg = '🌿 *'+getCenterName()+' Update*\n\nHi *'+c.name+'*! 😊\n\nYour *'+( c.pack_type||'wellness pack')+' ends in just '+st.days+' day'+(st.days===1?'':'s')+'*.'+progressLine+'\n\nDon\'t break your momentum — let\'s renew and keep going! 🙏\n\nReply here or visit the center to renew. 💚';
   var phone = (c.contact||'').replace(/\D/g,'');
   if (phone.length===10) phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?'+(phone?'phone='+phone+'&':'')+'text='+encodeURIComponent(msg),'_blank');
@@ -7170,7 +7793,7 @@ function sendInactiveWA(cid) {
   var lastDate = atts.length ? atts.sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0].date : null;
   var since = lastDate ? 'since *'+lastDate+'*' : 'in a while';
   var goal = c.goal || 'your wellness goal';
-  var msg = '🌿 *We Miss You at Dharani\'s Wellness Center!*\n\nHi *'+c.name+'*! 😊\n\nWe haven\'t seen you '+since+'. Life gets busy — we totally understand! 🤗\n\nBut remember your goal: *'+goal+'* — every visit counts, even just 15 minutes!\n\nCome back tomorrow? Your body will thank you 💪\n\n_See you soon!_ 🌱';
+  var msg = '🌿 *We Miss You at '+getCenterName()+'!*\n\nHi *'+c.name+'*! 😊\n\nWe haven\'t seen you '+since+'. Life gets busy — we totally understand! 🤗\n\nBut remember your goal: *'+goal+'* — every visit counts, even just 15 minutes!\n\nCome back tomorrow? Your body will thank you 💪\n\n_See you soon!_ 🌱';
   var phone = (c.contact||'').replace(/\D/g,'');
   if (phone.length===10) phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?'+(phone?'phone='+phone+'&':'')+'text='+encodeURIComponent(msg),'_blank');
@@ -7201,7 +7824,7 @@ function sendMilestoneWA(cid) {
   var ms = getMilestones(cid);
   if (!ms.length) { showToast('No milestones yet for this customer','error'); return; }
   var msText = ms.map(function(m){return '🏆 '+m.label;}).join('\n');
-  var msg = '🌿 *Milestone Alert — Dharani\'s Wellness Center*\n\nHi *'+c.name+'*! 🎉\n\nYou\'ve achieved something amazing:\n\n'+msText+'\n\nYou are proof that consistency works! Keep going — your best results are still ahead 🚀\n\n_Your Dharani\'s Wellness Center Family_ 💚';
+  var msg = '🌿 *Milestone Alert — '+getCenterName()+'*\n\nHi *'+c.name+'*! 🎉\n\nYou\'ve achieved something amazing:\n\n'+msText+'\n\nYou are proof that consistency works! Keep going — your best results are still ahead 🚀\n\n_Your '+getCenterName()+' Family_ 💚';
   var phone = (c.contact||'').replace(/\D/g,'');
   if (phone.length===10) phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?'+(phone?'phone='+phone+'&':'')+'text='+encodeURIComponent(msg),'_blank');
@@ -7217,9 +7840,14 @@ function checkBirthdaysToday() {
   el.style.display='block';
   el.innerHTML = bdays.map(function(c){
     var phone=(c.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
-    var msg='🎂 *Happy Birthday \'+c.name+\'!*\n\nWishing you a wonderful birthday filled with joy and good health! 🌿💚\n\n_Your Dharani\'s Wellness Center Family_';
-    return '<span>🎂 <strong>'+c.name+'</strong> — Birthday Today! <button class="wa-btn" style="font-size:11px;padding:2px 7px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent('🎂 Happy Birthday '+c.name+'! 🌿 Wishing you great health and happiness. Your Dharani\'s Wellness Center family loves you! 💚')+'\',\'_blank\')">💬 Wish</button></span>';
+    return '<span>🎂 <strong>'+c.name+'</strong> — Birthday Today! <button class="wa-btn" style="font-size:11px;padding:2px 7px" onclick="sendBirthdayWA(\''+c.id+'\')">💬 Wish</button></span>';
   }).join(' &nbsp;|&nbsp; ');
+}
+function sendBirthdayWA(cid) {
+  var c = D.customers.find(function(x){return x.id===cid;}); if(!c||!c.contact) return;
+  var phone=(c.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
+  var msg='🎂 *Happy Birthday '+c.name+'!*\n\nWishing you a wonderful birthday filled with joy and great health! 🌿💚\n\n_Your '+getCenterName()+' Family_';
+  window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
 
 // ════════════════════════════════════════════════
@@ -7274,7 +7902,7 @@ function renderAnalytics() {
   var filtIds = filtCusts.map(function(c){return c.id;});
 
   // ── Filter finance ──
-  var filtFin = D.finance.filter(function(f){ return inRange(f.date); });
+  var filtFin = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance).filter(function(f){ return inRange(f.date); });
 
   // ── Filter attendance ──
   var filtAtt = D.attendance.filter(function(a){ return filtIds.indexOf(a.customer_id) > -1 && inRange(a.date); });
@@ -7326,7 +7954,7 @@ function renderAnalytics() {
     var d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
     var ym=d.toISOString().substring(0,7);
     months.push(d.toLocaleString('en-IN',{month:'short',year:'2-digit'}));
-    var mFin = D.finance.filter(function(f){return f.date.startsWith(ym);});
+    var mFin = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance).filter(function(f){return f.date.startsWith(ym);});
     incData.push(mFin.filter(function(f){return f.type==='income';}).reduce(function(s,f){return s+Number(f.amount);},0));
     expData.push(mFin.filter(function(f){return f.type==='expense';}).reduce(function(s,f){return s+Number(f.amount);},0));
   }
@@ -7334,10 +7962,12 @@ function renderAnalytics() {
   if (!revTypeFilter || revTypeFilter==='income')   revDatasets.push({label:'Income', data:incData, backgroundColor:'rgba(39,174,96,0.75)', borderRadius:4});
   if (!revTypeFilter || revTypeFilter==='expense')  revDatasets.push({label:'Expense',data:expData, backgroundColor:'rgba(192,57,43,0.6)',  borderRadius:4});
   destroyChart('revenue');
-  _charts['revenue'] = new Chart(document.getElementById('chart-revenue'),{
-    type:'bar', data:{labels:months,datasets:revDatasets},
-    options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return '₹'+v.toLocaleString('en-IN');}}}}}
-  });
+  if (document.getElementById('chart-revenue')) {
+    _charts['revenue'] = new Chart(document.getElementById('chart-revenue'),{
+      type:'bar', data:{labels:months,datasets:revDatasets},
+      options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return '₹'+v.toLocaleString('en-IN');}}}}}
+    });
+  }
 
   // ── Attendance by day (filtered) ──
   var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -7346,10 +7976,12 @@ function renderAnalytics() {
     var d=new Date(a.date); dayCounts[d.getDay()]++;
   });
   destroyChart('attendance');
-  _charts['attendance'] = new Chart(document.getElementById('chart-attendance'),{
-    type:'bar', data:{labels:days,datasets:[{label:'Check-ins',data:dayCounts,backgroundColor:'rgba(45,90,61,0.75)',borderRadius:4}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
-  });
+  if (document.getElementById('chart-attendance')) {
+    _charts['attendance'] = new Chart(document.getElementById('chart-attendance'),{
+      type:'bar', data:{labels:days,datasets:[{label:'Check-ins',data:dayCounts,backgroundColor:'rgba(45,90,61,0.75)',borderRadius:4}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+    });
+  }
 
   // ── Streak distribution (filtered customers) ──
   var streakBuckets={'0 days':0,'1–3':0,'4–7':0,'8–14':0,'15+':0};
@@ -7362,11 +7994,13 @@ function renderAnalytics() {
     else           streakBuckets['15+']++;
   });
   destroyChart('streaks');
-  _charts['streaks'] = new Chart(document.getElementById('chart-streaks'),{
-    type:'doughnut',
-    data:{labels:Object.keys(streakBuckets),datasets:[{data:Object.values(streakBuckets),backgroundColor:['#c0392b','#e8a838','#3d7a52','#2b5ce6','#9333ea'],borderWidth:2}]},
-    options:{responsive:true,plugins:{legend:{position:'bottom'}}}
-  });
+  if (document.getElementById('chart-streaks')) {
+    _charts['streaks'] = new Chart(document.getElementById('chart-streaks'),{
+      type:'doughnut',
+      data:{labels:Object.keys(streakBuckets),datasets:[{data:Object.values(streakBuckets),backgroundColor:['#c0392b','#e8a838','#3d7a52','#2b5ce6','#9333ea'],borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+    });
+  }
 
   // ── Top Referrers (filtered) ──
   var refMap={};
@@ -7389,11 +8023,13 @@ function renderAnalytics() {
   var packMap={};
   filtCusts.forEach(function(c){var p=c.pack_type||'Unknown';packMap[p]=(packMap[p]||0)+1;});
   destroyChart('packs');
-  _charts['packs'] = new Chart(document.getElementById('chart-packs'),{
-    type:'pie',
-    data:{labels:Object.keys(packMap),datasets:[{data:Object.values(packMap),backgroundColor:['#2d5a3d','#e8a838','#2b5ce6','#9333ea','#c0392b','#27ae60'],borderWidth:2}]},
-    options:{responsive:true,plugins:{legend:{position:'bottom'}}}
-  });
+  if (document.getElementById('chart-packs')) {
+    _charts['packs'] = new Chart(document.getElementById('chart-packs'),{
+      type:'pie',
+      data:{labels:Object.keys(packMap),datasets:[{data:Object.values(packMap),backgroundColor:['#2d5a3d','#e8a838','#2b5ce6','#9333ea','#c0392b','#27ae60'],borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+    });
+  }
 
   // ── Body metric trend (filtered, metric switcher) ──
   var metricLabel = {weight:'Weight (kg)', fat:'Body Fat %', muscle:'Muscle %', bmi:'BMI'}[metricFilter] || 'Weight (kg)';
@@ -7408,11 +8044,13 @@ function renderAnalytics() {
     avgMet.push(recs.length ? parseFloat((recs.reduce(function(s,b){return s+Number(b[metricKey]);},0)/recs.length).toFixed(2)) : null);
   }
   destroyChart('weightloss');
-  _charts['weightloss'] = new Chart(document.getElementById('chart-weightloss'),{
-    type:'line',
-    data:{labels:monthsW,datasets:[{label:metricLabel,data:avgMet,borderColor:metricColor,backgroundColor:metricColor+'15',tension:0.35,fill:true,pointBackgroundColor:metricColor,pointRadius:5}]},
-    options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:false}},spanGaps:true}
-  });
+  if (document.getElementById('chart-weightloss')) {
+    _charts['weightloss'] = new Chart(document.getElementById('chart-weightloss'),{
+      type:'line',
+      data:{labels:monthsW,datasets:[{label:metricLabel,data:avgMet,borderColor:metricColor,backgroundColor:metricColor+'15',tension:0.35,fill:true,pointBackgroundColor:metricColor,pointRadius:5}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:false}},spanGaps:true}
+    });
+  }
 }
 
 // ── Slicer helpers ──
@@ -7519,7 +8157,7 @@ function sendWeeklyProgressWA(cid) {
           : '💪 Let\'s increase your meal frequency this week.\n')
       : '👏 Keep up the great work this week!\n'
     ) +
-    '\n_Your Dharani\'s Wellness Center Team_ 🌱';
+    '\n_Your '+getCenterName()+' Team_ 🌱';
 
   var phone = c.contact.replace(/\D/g,'');
   if (phone.length === 10) phone = COUNTRY_CODE + phone;
@@ -7607,7 +8245,7 @@ function openBodyModalSv() {
   var p=JSON.parse(localStorage.getItem('sv_profile')||'{}');
   document.getElementById('body-age-field').value=p.age||'';
   ['body-height','body-weight','body-fat','body-visceral','body-bmr','body-bmi','body-age','body-subfat','body-muscle','body-notes'].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.value='';
+    var el=document.getElementById(id); if(el) { el.value=''; el.dataset.manual=''; }
   });
   openModal('body');
 }
@@ -7623,7 +8261,7 @@ function editSvBody(id) {
   document.getElementById('body-fat').value=b.fat_percentage||'';
   document.getElementById('body-visceral').value=b.visceral_fat||'';
   document.getElementById('body-bmr').value=b.bmr||'';
-  document.getElementById('body-bmi').value=b.bmi||'';
+  var bmiEl2=document.getElementById('body-bmi'); bmiEl2.value=b.bmi||''; bmiEl2.dataset.manual=b.bmi?'1':'';
   document.getElementById('body-age').value=b.body_age||'';
   document.getElementById('body-subfat').value=b.subcutaneous_fat_percentage||'';
   document.getElementById('body-muscle').value=b.muscle_percentage||'';
@@ -7658,53 +8296,6 @@ function onBodySearch() {
   if(match){_selectedBodyCustId=match.id;sel.value=match.id;}
   else{_selectedBodyCustId=null;sel.value='';}
   renderBody();
-}
-function renderRecheckBadge() {
-  var count = D.customers.filter(function(c){
-    var r=D.body.filter(function(b){return b.customer_id===c.id;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
-    if(!r.length) return false;
-    return Math.floor((new Date()-new Date(r[0].date))/86400000)>=7;
-  }).length;
-  var el=document.getElementById('recheck-count-badge'); if(el) el.textContent=count;
-}
-function renderRecheckList() {
-  var container=document.getElementById('recheck-list'); if(!container) return;
-  var data=D.customers.map(function(c){
-    var r=D.body.filter(function(b){return b.customer_id===c.id;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
-    var lastScan=r.length?r[0].date:null;
-    var days=lastScan?Math.floor((new Date()-new Date(lastScan))/86400000):9999;
-    return{c:c,lastScan:lastScan,days:days};
-  }).filter(function(x){return x.days>=7;}).sort(function(a,b){return b.days-a.days;});
-  if(!data.length){container.innerHTML='<div class="tcard" style="padding:40px;text-align:center;color:var(--muted)"><div style="font-size:36px;margin-bottom:10px">✅</div><p style="font-size:15px;font-weight:600;color:var(--text)">All up to date!</p></div>';return;}
-  container.innerHTML=data.map(function(x){
-    var c=x.c; var isOverdue=x.days>=14; var cls=isOverdue?'overdue':'due-soon';
-    var phone=(c.contact||'').replace(/\D/g,''); if(phone.length===10)phone=COUNTRY_CODE+phone;
-    return'<div class="recheck-card '+cls+'">'
-      +'<div><div style="font-weight:700;font-size:14px">'+c.name+(isOverdue?' <span class="badge br" style="font-size:10px">Overdue</span>':' <span class="badge by" style="font-size:10px">Due</span>')+'</div>'
-      +'<div style="font-size:12px;color:var(--muted);margin-top:3px">'+(x.lastScan?x.days+' days since last scan · Last: '+x.lastScan:'Never scanned')+'</div></div>'
-      +'<div style="display:flex;align-items:center;gap:10px">'
-      +'<div style="text-align:center"><div class="recheck-days" style="color:'+(isOverdue?'var(--danger)':'var(--accent)')+'">'+( x.lastScan?x.days:'∞')+'</div><div style="font-size:10px;color:var(--muted)">days</div></div>'
-      +'<div style="display:flex;flex-direction:column;gap:5px">'
-      +(phone?'<button class="wa-btn" style="font-size:11px;padding:4px 10px" onclick="sendRecheckWA(\''+c.id+'\')">💬 Remind</button>':'')
-      +'<button class="btn-p" style="font-size:11px;padding:4px 10px" onclick="selectBodyCustomer(\''+c.id+'\')">📋 Records</button>'
-      +'</div></div></div>';
-  }).join('');
-}
-function selectBodyCustomer(cid){
-  _selectedBodyCustId=cid;
-  var sel=document.getElementById('body-cust-select'); if(sel) sel.value=cid;
-  switchBodyTab('records',document.getElementById('body-tab-records'));
-  renderBody();
-}
-function sendRecheckWA(cid){
-  var c=D.customers.find(function(x){return x.id===cid;}); if(!c||!c.contact) return;
-  var r=D.body.filter(function(b){return b.customer_id===cid;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
-  var days=r.length?Math.floor((new Date()-new Date(r[0].date))/86400000):null;
-  var msg='🌿 *Body Scan Reminder — Dharani\'s Wellness Center*\n\nHi *'+c.name+'*! 😊\n\n'
-    +(days?'It\'s been *'+days+' days* since your last scan.':'You haven\'t done a body scan yet!')
-    +' Time for your weekly recheck! 📊\n\nRegular scans help us track your progress accurately.\n\n📅 *Please visit the center this week for your scan.*\n\n_Your Dharani\'s Wellness Center Team_ 💚';
-  var phone=c.contact.replace(/\D/g,''); if(phone.length===10)phone=COUNTRY_CODE+phone;
-  window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
 
 // ══════════════════════════════════════════════
@@ -7764,7 +8355,11 @@ function showCustomerJourney(cid){
     {lbl:'Days With Us',val:daysW!==null?daysW+' days':'—'},
     {lbl:'Weight Change',val:wLost!==null?(Number(wLost)>0?'+':'')+wLost+' kg':'—'},
     {lbl:'Body Scans',val:bodyRecs.length},
-  ].map(function(s){return'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--surface2);font-size:13px"><span style="color:var(--muted)">'+s.lbl+'</span><strong style="color:var(--primary)">'+s.val+'</strong></div>';}).join('');
+  ].map(function(s){return'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--surface2);font-size:13px"><span style="color:var(--muted)">'+s.lbl+'</span><strong style="color:var(--primary)">'+s.val+'</strong></div>';}).join('')
+  +'<div style="margin-top:14px;display:flex;gap:8px">'
+  +'<button class="btn-p" style="flex:1;background:#8b5cf6;font-size:12px" onclick="openRenewForCustomer(\''+cid+'\')">🔄 Renew Pack</button>'
+  +'<button class="btn-p" style="flex:1;background:#dc2626;font-size:12px" onclick="openRefundModal(\''+cid+'\')">↩ Refund / Cancel</button>'
+  +'</div>';
 }
 function onRenewPayModeChange(){
   var mode=document.getElementById('renew-pay-mode').value;
@@ -7778,7 +8373,19 @@ function onRenewPriceChange(){
 function openRenewForCustomer(cid){
   var c=D.customers.find(function(x){return x.id===cid;}); if(!c) return;
   document.getElementById('renew-cust-id').value=c.id;
+  document.getElementById('renew-type').value='customer';
   document.getElementById('renew-cust-name').textContent=c.name;
+  document.getElementById('renew-prev-pack').textContent='Previous: '+(c.pack_type||'—')+' started '+(c.pack_start_date||'—');
+  document.getElementById('renew-pack-type').value=c.pack_type||'';
+  document.getElementById('renew-start-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('renew-price').value=c.pack_price||'';
+  openModal('renew-pack');
+}
+function openRenewForCoach(coachId){
+  var c=D.coaches.find(function(x){return x.id===coachId;}); if(!c) return;
+  document.getElementById('renew-cust-id').value=c.id;
+  document.getElementById('renew-type').value='coach';
+  document.getElementById('renew-cust-name').textContent=c.name+' (Coach)';
   document.getElementById('renew-prev-pack').textContent='Previous: '+(c.pack_type||'—')+' started '+(c.pack_start_date||'—');
   document.getElementById('renew-pack-type').value=c.pack_type||'';
   document.getElementById('renew-start-date').value=new Date().toISOString().split('T')[0];
@@ -7788,6 +8395,7 @@ function openRenewForCustomer(cid){
 async function saveRenewal(){
   getCredentials();if(!SB_URL||!SB_KEY){showToast('Not connected','error');return;}
   var cid       = document.getElementById('renew-cust-id').value;
+  var isCoach   = document.getElementById('renew-type').value === 'coach';
   var packType  = document.getElementById('renew-pack-type').value;
   var startDate = document.getElementById('renew-start-date').value;
   var price     = parseFloat(document.getElementById('renew-price').value)||null;
@@ -7795,29 +8403,36 @@ async function saveRenewal(){
   var paidNow   = parseFloat(document.getElementById('renew-paid-now').value)||0;
   var dueDate   = document.getElementById('renew-due-date').value||document.getElementById('renew-due-date-none').value||null;
   var today     = new Date().toISOString().split('T')[0];
-  var c         = D.customers.find(function(x){return x.id===cid;});
+  var c         = isCoach ? D.coaches.find(function(x){return x.id===cid;}) : D.customers.find(function(x){return x.id===cid;});
   if(!packType||!startDate){showToast('Pack type and start date required','error');return;}
+  var displayName = c ? c.name : (isCoach ? 'Coach' : 'Customer');
   try{
     // Archive old pack
-    if(c&&c.pack_type&&c.pack_start_date)
-      await dbInsert('pack_history',{customer_id:cid,customer_name:c.name,pack_type:c.pack_type,start_date:c.pack_start_date,price:c.pack_price||null,notes:'Archived on renewal'});
+    if(c&&c.pack_type&&c.pack_start_date){
+      var archiveRow = {pack_type:c.pack_type,start_date:c.pack_start_date,price:c.pack_price||null,notes:'Archived on renewal',customer_name:displayName};
+      if(isCoach) archiveRow.coach_id=cid; else archiveRow.customer_id=cid;
+      await dbInsert('pack_history',archiveRow);
+    }
     // Save new pack to history
-    await dbInsert('pack_history',{customer_id:cid,customer_name:c?c.name:'',pack_type:packType,start_date:startDate,price:price,notes:'Renewal — '+payMode});
-    // Update customer record
-    await dbUpdate('customers',cid,{pack_type:packType,pack_start_date:startDate,pack_price:price});
+    var histRow = {pack_type:packType,start_date:startDate,price:price,notes:'Renewal — '+payMode,customer_name:displayName};
+    if(isCoach) histRow.coach_id=cid; else histRow.customer_id=cid;
+    await dbInsert('pack_history',histRow);
+    // Update record in the right table
+    await dbUpdate(isCoach?'coaches':'customers',cid,{pack_type:packType,pack_start_date:startDate,pack_price:price});
 
     // ── Payment handling ──
+    var finCategory = isCoach ? 'Coach pack payment' : 'Pack sale to customer';
+    var _renewCenter = (c && c.wellness_center_id) || null;
     if(price){
       if(payMode==='full'){
-        await dbInsert('finance',{type:'income',description:(c?c.name:'Customer')+' — Pack renewal',amount:price,category:'Pack sale to customer',date:today});
+        await dbInsert('finance',{type:'income',description:displayName+' — Pack renewal',amount:price,category:finCategory,date:today,wellness_center_id:_renewCenter});
         showToast('Pack renewed + ₹'+price.toLocaleString('en-IN')+' income recorded! 🎉');
       } else if(payMode==='partial'){
-        if(paidNow>0) await dbInsert('finance',{type:'income',description:(c?c.name:'Customer')+' — Partial renewal payment',amount:paidNow,category:'Pack sale to customer',date:today});
-        await dbInsert('payments',{person_id:cid,person_name:c?c.name:'',total_amount:price,amount_paid:paidNow,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — balance due'});
+        if(paidNow>0) await dbInsert('finance',{type:'income',description:displayName+' — Partial renewal payment',amount:paidNow,category:finCategory,date:today,wellness_center_id:_renewCenter});
+        await dbInsert('payments',{person_id:cid,person_name:displayName,total_amount:price,amount_paid:paidNow,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — balance due'});
         showToast('Pack renewed! Balance ₹'+(price-paidNow).toLocaleString('en-IN')+' due. 🎉');
       } else {
-        // none — full amount pending
-        await dbInsert('payments',{person_id:cid,person_name:c?c.name:'',total_amount:price,amount_paid:0,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — not yet paid'});
+        await dbInsert('payments',{person_id:cid,person_name:displayName,total_amount:price,amount_paid:0,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — not yet paid'});
         showToast('Pack renewed! ₹'+price.toLocaleString('en-IN')+' payment pending. 🎉');
       }
       await loadPayments(); await loadFinance();
@@ -7826,27 +8441,83 @@ async function saveRenewal(){
     }
 
     closeModal('renew-pack');
-    await loadCustomers();await loadPackHistory();renderOverview();
+    if(isCoach){ await loadCoaches(); } else { await loadCustomers(); }
+    await loadPackHistory();renderOverview();
 
     if(c&&c.contact){
       var balMsg = payMode==='full' ? 'Payment received in full. ✅' : payMode==='partial' ? 'Partial payment received. Balance ₹'+(price-paidNow).toLocaleString('en-IN')+' due.' : 'Payment of ₹'+(price||0).toLocaleString('en-IN')+' pending.';
-      var msg='🌿 *Pack Renewed!*\n\nHi *'+c.name+'*! 🎉\n\nYour *'+packType+'* starts *'+startDate+'*.\n'+balMsg+'\n\nThank you for continuing your wellness journey! 💪\n\n_Your Dharani\'s Wellness Center Family_ 💚';
+      var msg='🌿 *Pack Renewed!*\n\nHi *'+displayName+'*! 🎉\n\nYour *'+packType+'* starts *'+startDate+'*.\n'+balMsg+'\n\nThank you for continuing your wellness journey! 💪\n\n_Your '+getCenterName()+' Family_ 💚';
       var phone=c.contact.replace(/\D/g,'');if(phone.length===10)phone=COUNTRY_CODE+phone;
-      setTimeout(function(){if(confirm('Send WhatsApp renewal confirmation to '+c.name+'?'))window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');},400);
+      setTimeout(function(){if(confirm('Send WhatsApp renewal confirmation to '+displayName+'?'))window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');},400);
     }
   }catch(e){showToast('Error: '+e.message,'error');}
 }
+// ── REFUND / CANCEL PACK ──
+function openRefundModal(cid) {
+  var c = D.customers.find(function(x){return x.id===cid;});
+  if (!c) return;
+  document.getElementById('refund-cust-id').value = c.id;
+  document.getElementById('refund-cust-name').textContent = c.name;
+  document.getElementById('refund-curr-pack').textContent = 'Pack: '+(c.pack_type||'None')+' · Started: '+(c.pack_start_date||'—')+(c.pack_price?' · ₹'+Number(c.pack_price).toLocaleString('en-IN'):'');
+  document.getElementById('refund-amount').value = c.pack_price || '';
+  document.getElementById('refund-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('refund-reason').value = '';
+  document.getElementById('refund-clear-pack').checked = !!c.pack_type;
+  openModal('refund-pack');
+}
+async function saveRefund() {
+  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  var cid    = document.getElementById('refund-cust-id').value;
+  var amount = parseFloat(document.getElementById('refund-amount').value) || 0;
+  var date   = document.getElementById('refund-date').value;
+  var method = document.getElementById('refund-method').value;
+  var reason = document.getElementById('refund-reason').value.trim();
+  var clearPack = document.getElementById('refund-clear-pack').checked;
+  var c = D.customers.find(function(x){return x.id===cid;});
+  if (!date)   { showToast('Date is required','error'); return; }
+  if (!reason) { showToast('Reason is required','error'); return; }
+  if (clearPack && !confirm('Clear the pack for '+(c?c.name:'this customer')+'? This removes their current pack record.')) return;
+  try {
+    if (amount > 0) {
+      await dbInsert('finance', {
+        type:'expense', category:'Refund',
+        description: (c?c.name:'Customer')+' — Refund via '+method+' — '+reason,
+        amount: amount, date: date,
+        wellness_center_id: (c&&c.wellness_center_id)||null
+      });
+    }
+    var pending = (D.payments||[]).find(function(p){
+      return p.person_id===cid && Math.max(0,Number(p.total_amount)-Number(p.amount_paid))>0;
+    });
+    if (pending) {
+      await dbUpdate('payments', pending.id, {
+        amount_paid: pending.total_amount,
+        notes: (pending.notes||'')+' — Refunded '+date
+      });
+    }
+    if (clearPack) {
+      await dbUpdate('customers', cid, {pack_type:null, pack_start_date:null, pack_price:null});
+    }
+    auditLog('Refund','Customer',(c?c.name:'')+(amount>0?' — ₹'+amount+' refunded':'')+' — '+reason);
+    showToast('Refund recorded'+(clearPack?' & pack cleared':'')+'! ₹'+amount.toLocaleString('en-IN')+' logged as expense.','success');
+    closeModal('refund-pack');
+    await loadFinance(); await loadCustomers();
+    if (pending) await loadPayments();
+    renderOverview();
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
 function sendLoyaltyWA(cid){
   var c=D.customers.find(function(x){return x.id===cid;}); if(!c||!c.contact) return;
   var joinDate=c.join_date||c.pack_start_date;
   var tier=getLoyaltyTier(joinDate);
   var months=tier?tier.months:0;
-  var msg='🌿 *Thank You from Dharani\'s Wellness Center!*\n\nDear *'+c.name+'*, 🙏\n\n';
+  var msg='🌿 *Thank You from '+getCenterName()+'!*\n\nDear *'+c.name+'*, 🙏\n\n';
   if(months>=12) msg+='It\'s been *'+Math.floor(months/12)+' year'+(Math.floor(months/12)>1?'s':'')+' together*! 🎊\n\nYou are family. Thank you for trusting us with your wellness journey. Here\'s to many more years! 💎';
   else if(months>=6) msg+='Six months of amazing progress! 🏆\n\nYour commitment is inspiring. Thank you for being our Gold Member! 🌟';
   else if(months>=3) msg+='Three months strong! 🌟\n\nYour consistency is amazing. Thank you for being such a wonderful member! 💪';
   else msg+='Welcome to your first month! 🌱\n\nYou took the most important step. We\'re with you every step! 💚';
-  msg+='\n\n_Your Dharani\'s Wellness Center Family_ 🌿';
+  msg+='\n\n_Your '+getCenterName()+' Family_ 🌿';
   var phone=c.contact.replace(/\D/g,'');if(phone.length===10)phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
@@ -7864,9 +8535,17 @@ var _origRenderCustomers = typeof renderCustomers === 'function' ? renderCustome
 // ══════════════════════════════════════════════
 // ORG TREE
 // ══════════════════════════════════════════════
-function updateCoachUplineSelects(){
-  var opts='<option value="">No upline (Root)</option>'+D.coaches.map(function(c){return'<option value="'+c.id+'">'+c.name+'</option>';}).join('');
-  var sel=document.getElementById('coach-upline-sel');if(sel)sel.innerHTML=opts;
+function updateCoachUplineSelects(excludeId){
+  excludeId = excludeId || '';
+  var ownerName = (JSON.parse(localStorage.getItem('ownerProfile')||'{}')).name || 'You (Root)';
+  var opts='<option value="">'+ownerName+' (Root — You)</option>'+D.coaches
+    .filter(function(c){ return !excludeId || c.id !== excludeId; })
+    .map(function(c){
+      var pin = c.herbalife_pin ? ' · '+c.herbalife_pin : '';
+      return '<option value="'+c.id+'">'+c.name+pin+'</option>';
+    }).join('');
+  var sel=document.getElementById('coach-upline-sel');
+  if(sel){ var prev=sel.value; sel.innerHTML=opts; if(prev) sel.value=prev; }
 }
 // ══════════════════════════════════════════════
 // 🏅 PIN TRACKER
@@ -8225,6 +8904,7 @@ async function generateBizAIReport() {
     resultEl.innerHTML = '<div style="font-weight:600;margin-bottom:8px;font-size:14px">✨ AI Business Report — '+month+'</div><div style="font-size:13px;line-height:1.8">'+text.replace(/\n/g,'<br>')+'</div>';
   } catch(e) {
     resultEl.innerHTML = '<div style="color:var(--danger)">Error: '+e.message+'</div>';
+    showToast('Business AI error: ' + e.message, 'error');
   } finally {
     _bizAiInFlight = false;
     if(btn) btn.textContent = '✨ AI Report';
@@ -8416,6 +9096,53 @@ async function saveCouponRenewal(){
   }catch(e){showToast('Error: '+e.message,'error');}
 }
 
+function openShakeRedeem(){
+  sdClear('shake-person');
+  document.getElementById('sr-qty').value='1';
+  document.getElementById('sr-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('sr-balance-info').innerHTML='';
+  openModal('shake-redeem');
+}
+function showShakeBalance(){
+  var cid=document.getElementById('sr-person-id').value;
+  var el=document.getElementById('sr-balance-info');
+  if(!cid){el.innerHTML='';return;}
+  var bal=getCouponBalance(cid).balance;
+  el.innerHTML='<div style="padding:10px 12px;background:var(--accent-light);border-radius:8px;font-size:13px;margin-top:8px">'
+    +'🎟️ Available coupons: <strong style="color:var(--primary)">'+bal+'</strong>'
+    +(bal===0?'<div style="color:var(--danger);font-size:11px;margin-top:4px">No coupons available</div>':'')
+    +'</div>';
+  document.getElementById('sr-qty').max=bal;
+}
+async function saveShakeRedemption(){
+  getCredentials();if(!SB_URL||!SB_KEY){showToast('Not connected','error');return;}
+  var cid=document.getElementById('sr-person-id').value;
+  var qty=Math.max(1,Number(document.getElementById('sr-qty').value)||1);
+  var date=document.getElementById('sr-date').value;
+  if(!cid||!date){showToast('Fill all fields','error');return;}
+  var person=findPerson(cid);
+  if(!person){showToast('Person not found','error');return;}
+  var bal=getCouponBalance(cid).balance;
+  if(bal<qty){showToast('Only '+bal+' coupon'+(bal!==1?'s':'')+' available','error');return;}
+  try{
+    await dbInsert('coupons',{coach_id:cid,quantity:qty,type:'use',reason:'Free shake redemption',date:date});
+    await dbInsert('attendance',{customer_id:cid,customer_name:person.name,date:date,status:'coupon_shake',servings:qty,notes:'Coupon shake redemption ('+qty+' coupon'+(qty>1?'s':'')+' used)'});
+    showToast('🥤 '+qty+' free shake'+(qty>1?'s':'')+' redeemed!','success');
+    closeModal('shake-redeem');sdClear('shake-person');
+    await loadCoupons();await loadAttendance();
+    // WhatsApp notification
+    var phone=(person.phone||'').replace(/\D/g,'');
+    if(phone){
+      var _cn=getCenterName();
+      var msg='🥤 Hi '+person.name+'!\n\nYour '+qty+' free shake'+(qty>1?'s have':' has')+' been redeemed today using your coupons. Enjoy!\n\nRemaining coupons: '+(bal-qty)+'\n\n— '+_cn;
+      var waLink=document.getElementById('att-wa-bar-link');
+      var bar=document.getElementById('att-wa-bar');
+      if(waLink&&bar){waLink.href='https://api.whatsapp.com/send?phone='+COUNTRY_CODE+phone+'&text='+encodeURIComponent(msg);bar.style.display='flex';document.getElementById('att-wa-bar-text').textContent='Send shake confirmation to '+person.name+'?';}
+      else{window.open('https://api.whatsapp.com/send?phone='+COUNTRY_CODE+phone+'&text='+encodeURIComponent(msg),'_blank');}
+    }
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
 // ══════════════════════════════════════════════
 // PARTIAL PAYMENTS
 // ══════════════════════════════════════════════
@@ -8516,13 +9243,13 @@ async function saveCoachPaymentSetup() {
   try {
     if (mode === 'full') {
       await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:packPrice, payment_date:payDate, description:c.pack_type||'Coach Pack', notes:'Coach pack — full payment' });
-      await dbInsert('finance', { type:'income', description:c.name+' — Coach pack sale', amount:packPrice, category:'Coach pack payment', date:payDate });
+      await dbInsert('finance', { type:'income', description:c.name+' — Coach pack sale', amount:packPrice, category:'Coach pack payment', date:payDate, wellness_center_id:c.wellness_center_id||null });
       showToast('Payment recorded! ₹'+packPrice.toLocaleString('en-IN')+' income logged.', 'success');
     } else if (mode === 'partial') {
       var paidNow = Number(document.getElementById('cps-paid-now').value)||0;
       var dueDate = document.getElementById('cps-due-date').value||null;
       await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:paidNow, payment_date:payDate, due_date:dueDate, description:c.pack_type||'Coach Pack', notes:'Coach pack — partial' });
-      if (paidNow > 0) await dbInsert('finance', { type:'income', description:c.name+' — Partial coach pack payment', amount:paidNow, category:'Coach pack payment', date:payDate });
+      if (paidNow > 0) await dbInsert('finance', { type:'income', description:c.name+' — Partial coach pack payment', amount:paidNow, category:'Coach pack payment', date:payDate, wellness_center_id:c.wellness_center_id||null });
       showToast('Payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
     } else {
       var dueDateNone = document.getElementById('cps-due-date').value||null;
@@ -8649,7 +9376,8 @@ async function saveInstallment() {
   var newPaid = Number(p.amount_paid) + adding;
   try {
     await dbUpdate('payments', pid, { amount_paid: newPaid, notes: (p.notes?p.notes+'; ':'')+date+': ₹'+adding+(notes?' ('+notes+')':'') });
-    await dbInsert('finance', { type:'income', description:(p.person_name||'Customer')+' — '+(p.description||'Pack')+' installment', amount:adding, category:'Pack sale to customer', date:date });
+    var _instPerson = D.customers.find(function(x){return x.id===p.person_id;}) || D.coaches.find(function(x){return x.id===p.person_id;});
+    await dbInsert('finance', { type:'income', description:(p.person_name||'Customer')+' — '+(p.description||'Pack')+' installment', amount:adding, category:'Pack sale to customer', date:date, wellness_center_id:(_instPerson&&_instPerson.wellness_center_id)||null });
     showToast('₹'+adding.toLocaleString('en-IN')+' recorded + income logged!', 'success');
     closeModal('installment');
     await loadPayments(); await loadFinance(); renderOverview();
@@ -8699,7 +9427,7 @@ function sendPaymentWA(pid){
   var phone=(person&&person.contact?person.contact:'').replace(/\D/g,'');
   if(phone.length===10)phone=COUNTRY_CODE+phone;
   if(!phone){showToast('No contact number','error');return;}
-  var msg='🌿 *Payment Reminder — Dharani\'s Wellness Center*\n\nHi *'+p.person_name+'*! 😊\n\n📋 *'+p.description+'*\n✅ Paid: ₹'+Number(p.amount_paid).toLocaleString('en-IN')+'\n⚠️ Balance: *₹'+bal.toLocaleString('en-IN')+'*\n'+(p.due_date?'📅 Due: *'+p.due_date+'*\n':'')+'\nPlease clear at earliest. Thank you! 🙏\n\n_Dharani\'s Wellness Center_ 💚';
+  var msg='🌿 *Payment Reminder — '+getCenterName()+'*\n\nHi *'+p.person_name+'*! 😊\n\n📋 *'+p.description+'*\n✅ Paid: ₹'+Number(p.amount_paid).toLocaleString('en-IN')+'\n⚠️ Balance: *₹'+bal.toLocaleString('en-IN')+'*\n'+(p.due_date?'📅 Due: *'+p.due_date+'*\n':'')+'\nPlease clear at earliest. Thank you! 🙏\n\n_'+getCenterName()+'_ 💚';
   window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
 function checkOverduePayments(){
@@ -8777,8 +9505,10 @@ function renderCustomers() {
     var memberBadge = members.length ? '<span class="badge by" style="font-size:9px;display:block;margin-top:2px">👥 +'+members.length+' member'+(members.length>1?'s':'')+'</span>' : '';
     var enrollCoach = c.referred_by_id ? D.coaches.find(function(x){return x.id===c.referred_by_id;}) : null;
     var coachBadge = enrollCoach ? '<span class="badge" style="background:#eff6ff;color:#1d4ed8;font-size:9px;display:block;margin-top:2px">👨‍🏫 '+enrollCoach.name+'</span>' : '';
+    var risk = getChurnRisk(c.id);
+    var riskBadge = risk.label ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;display:block;margin-top:2px;'+(risk.level==='critical'?'background:#fee2e2;color:#b91c1c':'background:#fef9c3;color:#854d0e')+'" title="'+risk.reasons.join(', ')+'">'+risk.label+'</span>' : '';
     return '<tr>'
-      +'<td><strong>'+c.name+bdayFlag+'</strong>'+freeDay+sharedBadge+memberBadge+coachBadge+'</td>'
+      +'<td><strong>'+c.name+bdayFlag+'</strong>'+freeDay+sharedBadge+memberBadge+coachBadge+riskBadge+'</td>'
       +'<td>'+(c.contact||'—')+'</td>'
       +'<td>'+(c.pack_owner_id ? '↗ shared' : (c.pack_type||'—'))+'</td>'
       +'<td>'+(c.pack_owner_id ? '—' : (c.pack_start_date||'—'))+'</td>'
@@ -8789,6 +9519,7 @@ function renderCustomers() {
       +'<td><div class="acts">'+waRenew+waReeng+waWeekly
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#0ea5e9" onclick="showCustomerJourney(\''+c.id+'\')" title="Journey">🎁</button> '
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#8b5cf6" onclick="openRenewForCustomer(\''+c.id+'\')" title="Renew">🔄</button> '
+        +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#dc2626" onclick="openRefundModal(\''+c.id+'\')" title="Refund / Cancel Pack">↩</button> '
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#16a34a" onclick="generateDietPlan(\''+c.id+'\')" title="'+(c.diet_plan?'Regenerate Diet Plan':'Generate Diet Plan')+'">🥗'+(c.diet_plan?' ✓':'')+' Diet</button> '
         +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#0891b2" onclick="viewMealCompliance(\''+c.id+'\',\''+c.name+'\')" title="Meal Compliance">📋 Compliance</button> ':'')
         +'<button class="btn-e" onclick="editCustomer(\''+c.id+'\')">Edit</button>'
@@ -9414,7 +10145,7 @@ function openExpenseModal(id) {
 }
 function quickAddWaterCans(loc) {
   var key    = loc === 'home' ? 'waterCansHomeAmt' : 'waterCansCenterAmt';
-  var label  = loc === 'home' ? 'Water Can — Home' : 'Water Can — Dharani\'s';
+  var label  = loc === 'home' ? 'Water Can — Home' : 'Water Can — ' + getCenterName();
   var lastAmt = localStorage.getItem(key) || '10';
   openExpenseModal();
   document.getElementById('exp-cat').value    = 'Water Cans';
@@ -9425,8 +10156,8 @@ function quickAddWaterCans(loc) {
     if (ACTIVE_CENTER) {
       csel.value = ACTIVE_CENTER;
     } else {
-      var match = D.centers.find(function(c){ return (c.name||'').toLowerCase().includes('dharani'); });
-      if (match) csel.value = match.id;
+      // Default to first center when no active center
+      if (D.centers.length === 1) csel.value = D.centers[0].id;
     }
   }
 }
@@ -9589,6 +10320,148 @@ function renderCoachPerf() {
       '</div>';
     }).join('') || '<div class="empty"><p>No coach data available.</p></div>';
   }
+}
+
+// ══════════════════════════════════════════
+//  COACH COMMISSION CALCULATOR
+// ══════════════════════════════════════════
+function initCommission() {
+  var sel = document.getElementById('comm-month');
+  if (!sel) return;
+  if (!sel.options.length) {
+    var months = []; var cur = new Date();
+    for (var i = 0; i < 6; i++) {
+      var d = new Date(cur.getFullYear(), cur.getMonth()-i, 1);
+      var val = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      months.push('<option value="'+val+'">'+d.toLocaleString('default',{month:'long',year:'numeric'})+'</option>');
+    }
+    sel.innerHTML = months.join('');
+  }
+  renderCommission();
+}
+
+function renderCommission() {
+  var sel = document.getElementById('comm-month');
+  if (!sel) return;
+  var month = sel.value;
+  if (!month) { var d = new Date(); month = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+  var rates = JSON.parse(localStorage.getItem('commissionRates') || '{}');
+  var defRate = parseFloat(rates.default !== undefined ? rates.default : 10) / 100;
+
+  var data = D.coaches.map(function(coach) {
+    var myCusts = D.customers.filter(function(c){
+      return c.coach_id === coach.id || c.referred_by_id === coach.id;
+    });
+    var custIds = myCusts.map(function(c){ return c.id; });
+
+    var newEnrolled = myCusts.filter(function(c){
+      var d = c.join_date || c.pack_start_date || (c.created_at||'').substring(0,10);
+      return d && d.startsWith(month);
+    });
+    var newEarnings = newEnrolled.reduce(function(s, c){
+      var price = Number(c.pack_price) || 0;
+      var key = (c.pack_type||'').trim();
+      var rate = rates[key] !== undefined ? parseFloat(rates[key])/100 : defRate;
+      return s + price * rate;
+    }, 0);
+
+    var renewals = (D.packHistory||[]).filter(function(h){
+      return h.start_date && h.start_date.startsWith(month) && custIds.indexOf(h.customer_id) !== -1;
+    });
+    var renewalEarnings = renewals.reduce(function(s, h){
+      var price = Number(h.pack_price) || 0;
+      return s + price * defRate;
+    }, 0);
+
+    return {
+      coach: coach,
+      newCount: newEnrolled.length,
+      renewCount: renewals.length,
+      newEarnings: Math.round(newEarnings),
+      renewalEarnings: Math.round(renewalEarnings),
+      total: Math.round(newEarnings + renewalEarnings),
+      totalCusts: myCusts.length
+    };
+  }).sort(function(a,b){ return b.total - a.total; });
+
+  var grandTotal = data.reduce(function(s,d){ return s + d.total; }, 0);
+  var el = document.getElementById('commission-content');
+  if (!el) return;
+
+  if (!data.length) {
+    el.innerHTML = '<div class="empty" style="padding:24px"><p>No coaches added yet.</p></div>';
+    return;
+  }
+
+  var html = '<div class="stats" style="margin-bottom:12px">'
+    +'<div class="stat"><div class="stat-ic">💰</div><div class="stat-l">Total Payout</div><div class="stat-v" style="color:var(--primary)">₹'+grandTotal.toLocaleString('en-IN')+'</div></div>'
+    +'<div class="stat"><div class="stat-ic">👨‍🏫</div><div class="stat-l">Coaches</div><div class="stat-v">'+data.length+'</div></div>'
+    +'<div class="stat"><div class="stat-ic">🔄</div><div class="stat-l">Total Renewals</div><div class="stat-v">'+data.reduce(function(s,d){return s+d.renewCount;},0)+'</div></div>'
+    +'<div class="stat"><div class="stat-ic">🆕</div><div class="stat-l">New Enrollments</div><div class="stat-v">'+data.reduce(function(s,d){return s+d.newCount;},0)+'</div></div>'
+    +'</div>';
+
+  html += '<div class="twrap"><table><thead><tr>'
+    +'<th>Coach</th><th>Customers</th><th>New</th><th>Renewals</th>'
+    +'<th>New Earnings</th><th>Renewal Earnings</th><th style="color:var(--primary)">Total Due</th>'
+    +'</tr></thead><tbody>';
+
+  data.forEach(function(d, i) {
+    var medal = i===0&&d.total>0?'🥇 ':i===1&&d.total>0?'🥈 ':i===2&&d.total>0?'🥉 ':'';
+    var phone = (d.coach.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
+    var msg = encodeURIComponent('Hi '+d.coach.name+'! Your commission for '+month+' is ready: ₹'+d.total.toLocaleString('en-IN')+' ('+d.newCount+' new + '+d.renewCount+' renewals). Thank you! 🙏');
+    html += '<tr>'
+      +'<td><strong>'+medal+d.coach.name+'</strong><div style="font-size:11px;color:var(--muted)">'+(d.coach.herbalife_pin||'Associate')+'</div></td>'
+      +'<td>'+d.totalCusts+'</td>'
+      +'<td style="color:var(--success);font-weight:700">+'+d.newCount+'</td>'
+      +'<td>'+d.renewCount+'</td>'
+      +'<td>₹'+d.newEarnings.toLocaleString('en-IN')+'</td>'
+      +'<td>₹'+d.renewalEarnings.toLocaleString('en-IN')+'</td>'
+      +'<td style="font-weight:700;color:var(--primary)"><div style="display:flex;align-items:center;gap:6px">₹'+d.total.toLocaleString('en-IN')
+        +(phone&&d.total>0?' <button class="wa-btn" style="font-size:10px;padding:2px 7px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+msg+'\',\'_blank\')" title="Notify coach">💬</button>':'')
+      +'</div></td>'
+      +'</tr>';
+  });
+
+  html += '<tr style="background:var(--surface2);font-weight:700">'
+    +'<td colspan="4" style="text-align:right;font-size:13px">Grand Total</td>'
+    +'<td>₹'+data.reduce(function(s,d){return s+d.newEarnings;},0).toLocaleString('en-IN')+'</td>'
+    +'<td>₹'+data.reduce(function(s,d){return s+d.renewalEarnings;},0).toLocaleString('en-IN')+'</td>'
+    +'<td style="color:var(--primary)">₹'+grandTotal.toLocaleString('en-IN')+'</td>'
+    +'</tr>';
+
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+function openCommissionSettings() {
+  var rates = JSON.parse(localStorage.getItem('commissionRates') || '{}');
+  document.getElementById('comm-rate-default').value = rates.default !== undefined ? rates.default : 10;
+  var packTypes = [];
+  D.customers.forEach(function(c){ if(c.pack_type && packTypes.indexOf(c.pack_type)===-1) packTypes.push(c.pack_type); });
+  var packHtml = packTypes.map(function(pt){
+    var val = rates[pt] !== undefined ? rates[pt] : '';
+    return '<div style="display:flex;align-items:center;gap:10px">'
+      +'<label style="flex:1;font-size:12px;color:var(--muted)">'+pt+'</label>'
+      +'<div style="display:flex;align-items:center;gap:4px">'
+      +'<input type="number" class="comm-pack-rate-input" data-pack="'+pt+'" min="0" max="100" step="0.5" value="'+val+'" placeholder="default" style="width:70px;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;text-align:right">'
+      +'<span style="font-size:12px;color:var(--muted)">%</span>'
+      +'</div></div>';
+  }).join('');
+  document.getElementById('comm-pack-rates').innerHTML = packHtml || '<div style="font-size:12px;color:var(--muted)">No pack types found.</div>';
+  openModal('commission-rates');
+}
+
+function saveCommissionRates() {
+  var rates = {};
+  rates.default = parseFloat(document.getElementById('comm-rate-default').value) || 10;
+  document.querySelectorAll('.comm-pack-rate-input').forEach(function(inp){
+    var v = inp.value.trim();
+    if(v !== '') rates[inp.dataset.pack] = parseFloat(v);
+  });
+  localStorage.setItem('commissionRates', JSON.stringify(rates));
+  closeModal('commission-rates');
+  renderCommission();
+  showToast('Commission rates saved', 'success');
 }
 
 // Helper: days left for supervisor context (uses Supabase data structure)
@@ -10410,6 +11283,547 @@ async function deleteFood(id, name) {
   } catch(e){ showToast('Error: '+e.message,'error'); }
 }
 
+
+// ══════════════════════════════════════════
+//  CONTESTS
+// ══════════════════════════════════════════
+
+var _activeContestId = null;
+var _contestTypeFilter = 'all';
+
+var CONTEST_CONFIG = {
+  weight_loss:  { label:'Weight Loss',  icon:'⬇️', color:'#ef4444', gradient:'linear-gradient(135deg,#c0392b,#e74c3c)', metric:'weight',          dir:-1, unit:'kg',  field:'current_weight',  startField:'start_weight' },
+  weight_gain:  { label:'Weight Gain',  icon:'⬆️', color:'#2b5ce6', gradient:'linear-gradient(135deg,#1e3a8a,#2b5ce6)', metric:'weight',          dir:1,  unit:'kg',  field:'current_weight',  startField:'start_weight' },
+  fat_loss:     { label:'Fat Loss',     icon:'🔥', color:'#f59e0b', gradient:'linear-gradient(135deg,#b45309,#f59e0b)', metric:'fat_percentage',  dir:-1, unit:'%',   field:'current_fat',     startField:'start_fat' },
+  muscle_gain:  { label:'Muscle Gain',  icon:'💪', color:'#27ae60', gradient:'linear-gradient(135deg,#166534,#27ae60)', metric:'muscle_percentage',dir:1,  unit:'%',   field:'current_muscle',  startField:'start_muscle' }
+};
+
+async function loadContests() {
+  D.contests = await dbGet('contests', 'created_at');
+  D.contestParticipants = await dbGet('contest_participants', 'created_at');
+}
+
+function openContestModal(id) {
+  document.getElementById('contest-id').value = id || '';
+  if (id) {
+    var c = D.contests.find(function(x){ return x.id === id; });
+    if (!c) return;
+    document.getElementById('contest-name').value        = c.name || '';
+    document.getElementById('contest-type').value        = c.type || 'weight_loss';
+    document.getElementById('contest-start').value       = c.start_date || '';
+    document.getElementById('contest-prize').value       = c.prize_amount || '';
+    document.getElementById('contest-entry-fee').value   = c.entry_fee || '';
+    document.getElementById('contest-senior-amount').value = c.senior_amount || '';
+    document.getElementById('contest-desc').value        = c.description || '';
+    document.getElementById('contest-duration').value    = c.duration_days || '21';
+  } else {
+    document.getElementById('contest-name').value        = '';
+    document.getElementById('contest-type').value        = 'weight_loss';
+    document.getElementById('contest-start').value       = new Date().toISOString().slice(0,10);
+    document.getElementById('contest-prize').value       = '';
+    document.getElementById('contest-entry-fee').value   = '';
+    document.getElementById('contest-senior-amount').value = '';
+    document.getElementById('contest-desc').value        = '';
+    document.getElementById('contest-duration').value    = '21';
+  }
+  openModal('contest');
+}
+
+function switchContestTab(tab) {
+  document.getElementById('contest-leaderboard').style.display = tab==='leaderboard' ? '' : 'none';
+  document.getElementById('contest-tracker').style.display     = tab==='tracker'     ? '' : 'none';
+  document.getElementById('cd-tab-leaderboard').classList.toggle('active', tab==='leaderboard');
+  document.getElementById('cd-tab-tracker').classList.toggle('active', tab==='tracker');
+  if (tab==='tracker' && _activeContestId) renderContestTracker(_activeContestId);
+}
+
+function renderContestTracker(contestId) {
+  var c   = D.contests.find(function(x){ return x.id===contestId; });
+  var pts = D.contestParticipants.filter(function(p){ return p.contest_id===contestId; });
+  var el  = document.getElementById('contest-tracker');
+  if (!c || !el) return;
+
+  var entryFee  = parseFloat(c.entry_fee||0);
+  var seniorAmt = parseFloat(c.senior_amount||0);
+  var paidCount = pts.filter(function(p){ return p.fee_paid; }).length;
+  var totalCollected = paidCount * entryFee;
+  var sentToSenior   = c.amount_sent_to_senior;
+
+  // ── Summary bar ──
+  var summaryHtml =
+    '<div class="tracker-summary-bar">' +
+      '<span class="tracker-summary-chip" style="background:var(--success-light);color:var(--success)">✅ Fee Paid: '+paidCount+'/'+pts.length+'</span>' +
+      '<span class="tracker-summary-chip" style="background:var(--accent-light);color:#92400e">💰 Collected: ₹'+totalCollected+'</span>' +
+      (seniorAmt>0 ? '<span class="tracker-summary-chip" style="background:#ede9fe;color:#6d28d9">📤 Senior share: ₹'+seniorAmt+'</span>' : '')+
+      '<button class="senior-send-btn '+(sentToSenior?'done':'pending')+'" onclick="toggleSentToSenior(\''+contestId+'\')">' +
+        (sentToSenior ? '✅ Amount Sent to Senior' : '📤 Mark Sent to Senior') +
+      '</button>' +
+    '</div>';
+
+  if (!pts.length) {
+    el.innerHTML = summaryHtml + '<div class="empty"><div class="ei">👥</div><p>No participants yet</p></div>';
+    return;
+  }
+
+  // ── Rows ──
+  var rows = pts.map(function(p) {
+    var vt = p.video_tracking
+      ? (typeof p.video_tracking==='string' ? JSON.parse(p.video_tracking) : p.video_tracking)
+      : {};
+
+    // Measurements — start vs final
+    var hasFinal  = p.current_fat || p.current_muscle || p.current_weight;
+    var startMeas = (p.start_weight||'—') + ' kg &nbsp;·&nbsp; ' +
+                    (p.start_fat||'—') + '% fat &nbsp;·&nbsp; ' +
+                    (p.start_muscle||'—') + '% muscle';
+    var finalMeas = hasFinal
+      ? (p.current_weight||'—') + ' kg &nbsp;·&nbsp; ' +
+        (p.current_fat||'—')    + '% fat &nbsp;·&nbsp; ' +
+        (p.current_muscle||'—') + '% muscle'
+      : null;
+
+    // 3 weight video columns (fixed)
+    var videoCells = '';
+    for (var w=1; w<=3; w++) {
+      var wk  = vt['week'+w] || {};
+      var got = wk.received  || false;
+      var fwd = wk.forwarded || false;
+      videoCells +=
+        '<td style="border-left:2px solid var(--border);text-align:center">' +
+          '<button class="tracker-toggle '+(got?'on':'')+'" onclick="toggleVideoStatus(\''+p.id+'\','+w+',\'received\')" title="Week '+w+' video '+(got?'received':'not received')+'">'+(got?'✅':'📹')+'</button>' +
+        '</td>' +
+        '<td style="text-align:center">' +
+          '<button class="tracker-toggle '+(fwd?'on':got?'warn':'')+'" onclick="toggleVideoStatus(\''+p.id+'\','+w+',\'forwarded\')" title="'+(fwd?'Sent to senior':got?'Not sent yet':'Need video first')+'">'+(fwd?'✅':got?'📤':'—')+'</button>' +
+        '</td>';
+    }
+
+    return '<tr>' +
+      // Name
+      '<td style="font-weight:600;white-space:nowrap">'+p.customer_name+'</td>' +
+
+      // Fee paid
+      '<td style="text-align:center">' +
+        '<button class="tracker-toggle '+(p.fee_paid?'on':'')+'" onclick="togglePayment(\''+p.id+'\')" title="'+(p.fee_paid?'Paid':'Not paid')+'">' +
+          (p.fee_paid?'✅':'₹') +
+        '</button>' +
+        (p.fee_paid && entryFee ? '<div style="font-size:10px;color:var(--success);margin-top:2px;font-weight:700">₹'+entryFee+'</div>' : '') +
+      '</td>' +
+
+      // Start measurements
+      '<td style="font-size:11px;color:var(--muted)">'+startMeas+'</td>' +
+
+      // Final measurements
+      '<td>' +
+        (finalMeas
+          ? '<span style="font-size:11px;font-weight:700;color:var(--primary)">'+finalMeas+'</span>'
+          : '<button class="btn-e" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="openUpdateProgressModal(\''+p.id+'\')">Enter Final</button>') +
+      '</td>' +
+
+      // 3 video columns
+      videoCells +
+    '</tr>';
+  }).join('');
+
+  el.innerHTML = summaryHtml +
+    '<div class="tracker-wrap">' +
+      '<table class="tracker-tbl">' +
+        '<thead>' +
+          '<tr>' +
+            '<th rowspan="2" style="text-align:left;min-width:120px">Participant</th>' +
+            '<th rowspan="2">Fee<br>Paid</th>' +
+            '<th rowspan="2" style="min-width:160px">Start Measurements<br><span style="font-weight:500;font-size:9px">(Day 1)</span></th>' +
+            '<th rowspan="2" style="min-width:160px">Final Measurements<br><span style="font-weight:500;font-size:9px">(Last Day)</span></th>' +
+            '<th colspan="2" style="border-left:2px solid var(--border)">Week 1 Video</th>' +
+            '<th colspan="2" style="border-left:2px solid var(--border)">Week 2 Video</th>' +
+            '<th colspan="2" style="border-left:2px solid var(--border)">Week 3 Video</th>' +
+          '</tr>' +
+          '<tr>' +
+            '<th style="border-left:2px solid var(--border);font-size:9px">Got</th><th style="font-size:9px">Sent</th>' +
+            '<th style="border-left:2px solid var(--border);font-size:9px">Got</th><th style="font-size:9px">Sent</th>' +
+            '<th style="border-left:2px solid var(--border);font-size:9px">Got</th><th style="font-size:9px">Sent</th>' +
+          '</tr>' +
+        '</thead>' +
+        '<tbody>'+rows+'</tbody>' +
+      '</table>' +
+    '</div>';
+}
+
+async function togglePayment(pid) {
+  var p = D.contestParticipants.find(function(x){ return x.id===pid; });
+  if (!p) return;
+  var newVal = !p.fee_paid;
+  try {
+    await dbUpdate('contest_participants', pid, { fee_paid: newVal });
+    p.fee_paid = newVal;
+    renderContestTracker(_activeContestId);
+    showToast(newVal ? '✅ Marked as paid' : 'Marked as unpaid', newVal?'success':'info');
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+async function toggleVideoStatus(pid, week, field) {
+  var p = D.contestParticipants.find(function(x){ return x.id===pid; });
+  if (!p) return;
+  var vt = p.video_tracking ? (typeof p.video_tracking==='string' ? JSON.parse(p.video_tracking) : Object.assign({}, p.video_tracking)) : {};
+  if (!vt['week'+week]) vt['week'+week] = { received:false, forwarded:false };
+  vt['week'+week][field] = !vt['week'+week][field];
+  // Can't mark forwarded if not received
+  if (field==='forwarded' && vt['week'+week].forwarded && !vt['week'+week].received) {
+    vt['week'+week].received = true;
+  }
+  try {
+    await dbUpdate('contest_participants', pid, { video_tracking: vt });
+    p.video_tracking = vt;
+    renderContestTracker(_activeContestId);
+    var action = field==='received' ? (vt['week'+week].received?'Video received ✅':'Unmarked') : (vt['week'+week].forwarded?'Sent to senior ✅':'Unmarked');
+    showToast(action, 'success');
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+async function toggleSentToSenior(contestId) {
+  var c = D.contests.find(function(x){ return x.id===contestId; });
+  if (!c) return;
+  if (c.amount_sent_to_senior) return; // Already sent, don't untoggle
+  if (!confirm('Mark all collected amount as sent to senior?')) return;
+  try {
+    await dbUpdate('contests', contestId, { amount_sent_to_senior: true, senior_sent_date: new Date().toISOString().slice(0,10) });
+    c.amount_sent_to_senior = true;
+    renderContestTracker(contestId);
+    showToast('✅ Marked as sent to senior!', 'success');
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+async function saveContest() {
+  var name       = document.getElementById('contest-name').value.trim();
+  var type       = document.getElementById('contest-type').value;
+  var start      = document.getElementById('contest-start').value;
+  var prize      = document.getElementById('contest-prize').value;
+  var entryFee   = document.getElementById('contest-entry-fee').value;
+  var seniorAmt  = document.getElementById('contest-senior-amount').value;
+  var desc       = document.getElementById('contest-desc').value.trim();
+  var days       = parseInt(document.getElementById('contest-duration').value) || 21;
+  var id         = document.getElementById('contest-id').value;
+  if (!name || !start) { showToast('Name and start date are required', 'error'); return;  }
+  var startD = new Date(start);
+  var endD   = new Date(startD); endD.setDate(endD.getDate() + days);
+  var endDate = endD.toISOString().slice(0,10);
+  var payload = { name:name, type:type, start_date:start, end_date:endDate, duration_days:days, prize_amount:prize||0, entry_fee:entryFee||0, senior_amount:seniorAmt||0, description:desc, status:'active' };
+  try {
+    if (id) {
+      await dbUpdate('contests', id, payload);
+      var idx = D.contests.findIndex(function(c){ return c.id===id; });
+      if (idx>=0) D.contests[idx] = Object.assign(D.contests[idx], payload);
+    } else {
+      var row = await dbInsert('contests', payload);
+      if (row && row[0]) D.contests.unshift(row[0]);
+    }
+    closeModal('contest');
+    renderContests();
+    showToast('Contest saved!', 'success');
+  } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
+async function deleteContest(id) {
+  if (!confirm('Delete this contest and all participant data?')) return;
+  try {
+    await dbDelete('contests', id);
+    D.contestParticipants = D.contestParticipants.filter(function(p){ return p.contest_id !== id; });
+    D.contests = D.contests.filter(function(c){ return c.id !== id; });
+    if (_activeContestId === id) closeContestDetail();
+    renderContests();
+    showToast('Contest deleted', 'info');
+  } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
+async function markContestComplete(id) {
+  try {
+    await dbUpdate('contests', id, { status:'completed' });
+    var c = D.contests.find(function(x){ return x.id===id; });
+    if (c) c.status = 'completed';
+    renderContests();
+    showToast('Contest marked as completed!', 'success');
+  } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
+function filterContestType(type, el) {
+  _contestTypeFilter = type;
+  document.querySelectorAll('.contest-type-chip').forEach(function(c){ c.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderContests();
+}
+
+function renderContests() {
+  var filter = _contestTypeFilter;
+  var all = D.contests.filter(function(c){ return filter==='all' || c.type===filter; });
+  var active    = all.filter(function(c){ return c.status !== 'completed'; });
+  var completed = all.filter(function(c){ return c.status === 'completed'; });
+  var today = new Date(); today.setHours(0,0,0,0);
+
+  // Active grid
+  var activeGrid = document.getElementById('contests-active-grid');
+  var activeEmpty = document.getElementById('contests-active-empty');
+  if (!active.length) {
+    activeGrid.innerHTML = '';
+    activeGrid.appendChild(activeEmpty);
+    activeEmpty.style.display = '';
+  } else {
+    activeGrid.innerHTML = active.map(function(c){ return buildContestCard(c, today); }).join('');
+  }
+
+  // Completed list
+  var completedList = document.getElementById('contests-completed-list');
+  var completedEmpty = document.getElementById('contests-completed-empty');
+  if (!completed.length) {
+    completedList.innerHTML = '';
+    completedList.appendChild(completedEmpty);
+    completedEmpty.style.display = '';
+  } else {
+    completedList.innerHTML = completed.map(function(c){
+      var cfg = CONTEST_CONFIG[c.type] || CONTEST_CONFIG.weight_loss;
+      var pts = D.contestParticipants.filter(function(p){ return p.contest_id===c.id; });
+      var winner = pts.sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); })[0];
+      return '<div class="contest-completed-row" onclick="openContestDetail(\''+c.id+'\')">' +
+        '<div>' +
+          '<div style="font-weight:700;font-size:14px">'+cfg.icon+' '+c.name+'</div>' +
+          '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+c.start_date+' → '+c.end_date+' · '+pts.length+' participants</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          (winner ? '<div style="font-size:12px;font-weight:700;color:var(--accent)">🥇 '+winner.customer_name+'</div>' : '') +
+          (c.prize_amount > 0 ? '<div style="font-size:11px;color:var(--muted)">₹'+c.prize_amount+' prize</div>' : '') +
+        '</div>' +
+        '<button class="btn-d" onclick="event.stopPropagation();deleteContest(\''+c.id+'\')">🗑</button>' +
+      '</div>';
+    }).join('');
+  }
+}
+
+function buildContestCard(c, today) {
+  var cfg = CONTEST_CONFIG[c.type] || CONTEST_CONFIG.weight_loss;
+  var pts  = D.contestParticipants.filter(function(p){ return p.contest_id === c.id; });
+  var startD = new Date(c.start_date); startD.setHours(0,0,0,0);
+  var endD   = new Date(c.end_date);   endD.setHours(0,0,0,0);
+  var totalDays  = Math.max(1, Math.round((endD - startD) / 86400000));
+  var elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today - startD) / 86400000)));
+  var daysLeft = Math.max(0, totalDays - elapsedDays);
+  var pct = Math.round((elapsedDays / totalDays) * 100);
+
+  // Top 3 for preview
+  var ranked = pts.slice().sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); });
+  var topHtml = ranked.slice(0,3).map(function(p,i){
+    var prog = parseFloat(p.progress||0);
+    var medal = i===0?'🥇':i===1?'🥈':'🥉';
+    var sign  = cfg.dir===1 ? (prog>0?'+':'') : (prog<0?'':'+');
+    var disp  = cfg.dir===-1 ? Math.abs(prog).toFixed(1) : prog.toFixed(1);
+    return '<div class="contest-rank-row">' +
+      '<div class="contest-rank-num '+(i===0?'contest-rank-1':i===1?'contest-rank-2':'contest-rank-3')+'">'+medal+'</div>' +
+      '<div style="flex:1;font-weight:600;font-size:13px">'+p.customer_name+'</div>' +
+      '<div style="font-size:12px;font-weight:700;color:'+cfg.color+'">'+(prog?disp+cfg.unit:'—')+'</div>' +
+    '</div>';
+  }).join('');
+
+  return '<div class="contest-card" onclick="openContestDetail(\''+c.id+'\')">' +
+    '<div class="contest-card-banner" style="background:'+cfg.gradient+'">' +
+      '<div class="contest-card-type">'+cfg.icon+' '+cfg.label+'</div>' +
+      '<div class="contest-card-name">'+c.name+'</div>' +
+      (c.prize_amount>0 ? '<div class="contest-card-prize">🏆 ₹'+c.prize_amount+' prize</div>' : '') +
+    '</div>' +
+    '<div class="contest-card-body">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+        '<span style="font-size:11px;font-weight:700;color:var(--muted)">'+pct+'% complete</span>' +
+        '<span style="font-size:11px;font-weight:700;color:'+(daysLeft<=3?'var(--danger)':'var(--primary)')+'">'+daysLeft+' days left</span>' +
+      '</div>' +
+      '<div class="contest-days-bar"><div class="contest-days-fill" style="width:'+pct+'%;background:'+cfg.color+'"></div></div>' +
+      '<div class="contest-meta-row"><span>'+pts.length+' participants</span><span>'+c.start_date+' – '+c.end_date+'</span></div>' +
+      (pts.length ? '<div style="margin-top:10px">'+topHtml+'</div>' : '<div style="text-align:center;padding:16px 0;font-size:12px;color:var(--muted)">No participants yet</div>') +
+      '<div style="display:flex;gap:6px;margin-top:12px">' +
+        '<button class="btn-e" style="flex:1" onclick="event.stopPropagation();openAddParticipantModal(\''+c.id+'\')">+ Participant</button>' +
+        '<button class="btn-e" onclick="event.stopPropagation();openContestModal(\''+c.id+'\')">✏️</button>' +
+        '<button class="btn-e" onclick="event.stopPropagation();markContestComplete(\''+c.id+'\')">✅</button>' +
+        '<button class="btn-d" onclick="event.stopPropagation();deleteContest(\''+c.id+'\')">🗑</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function openContestDetail(id) {
+  _activeContestId = id;
+  var c   = D.contests.find(function(x){ return x.id===id; });
+  if (!c) return;
+  var cfg = CONTEST_CONFIG[c.type] || CONTEST_CONFIG.weight_loss;
+  var pts = D.contestParticipants.filter(function(p){ return p.contest_id===id; });
+  var today = new Date(); today.setHours(0,0,0,0);
+  var startD = new Date(c.start_date); startD.setHours(0,0,0,0);
+  var endD   = new Date(c.end_date);   endD.setHours(0,0,0,0);
+  var totalDays   = Math.max(1, Math.round((endD - startD) / 86400000));
+  var elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today - startD) / 86400000)));
+  var daysLeft = Math.max(0, totalDays - elapsedDays);
+  var pct = Math.round((elapsedDays / totalDays) * 100);
+
+  var header = document.getElementById('contest-detail-header');
+  header.innerHTML =
+    '<div style="font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">'+cfg.icon+' '+cfg.label+'</div>' +
+    '<div style="font-size:20px;font-weight:700;margin-bottom:6px">'+c.name+'</div>' +
+    '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;opacity:.8">' +
+      '<span>📅 '+c.start_date+' → '+c.end_date+'</span>' +
+      (c.prize_amount>0 ? '<span>🏆 ₹'+c.prize_amount+' prize</span>' : '') +
+      '<span>⏱ '+daysLeft+' days left ('+pct+'% done)</span>' +
+      '<span>👥 '+pts.length+' participants</span>' +
+    '</div>' +
+    '<div style="height:5px;background:rgba(255,255,255,.2);border-radius:10px;margin-top:10px;overflow:hidden">' +
+      '<div style="height:100%;width:'+pct+'%;background:'+cfg.color+';border-radius:10px;transition:width .6s"></div>' +
+    '</div>';
+
+  // Leaderboard
+  var ranked = pts.slice().sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); });
+  var lb = document.getElementById('contest-leaderboard');
+  if (!ranked.length) {
+    lb.innerHTML = '<div class="empty"><div class="ei">👥</div><p>No participants yet. Add someone to start!</p></div>';
+  } else {
+    lb.innerHTML = '<div class="tcard" style="padding:0;overflow:hidden">' +
+      '<table><thead><tr>' +
+        '<th style="width:40px">Rank</th><th>Participant</th>' +
+        '<th>Start '+cfg.label.split(' ')[1]+'</th>' +
+        '<th>Current</th><th>Change</th><th>Actions</th>' +
+      '</tr></thead><tbody>' +
+      ranked.map(function(p, i) {
+        var medal  = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+        var startV = parseFloat(p[cfg.startField]||0);
+        var curV   = parseFloat(p[cfg.field]||0);
+        var change = curV ? (curV - startV) : null;
+        var changeDisp = change!==null ? (change>0?'+':'')+change.toFixed(1)+cfg.unit : '—';
+        var changeColor= change===null ? 'var(--muted)' : (cfg.dir===1?(change>0?'var(--success)':'var(--danger)'):(change<0?'var(--success)':'var(--danger)'));
+        return '<tr>' +
+          '<td style="font-size:16px;text-align:center">'+medal+'</td>' +
+          '<td><div style="font-weight:600">'+p.customer_name+'</div></td>' +
+          '<td>'+(startV||'—')+(startV?cfg.unit:'')+'</td>' +
+          '<td>'+(curV||'—')+(curV?cfg.unit:'')+'</td>' +
+          '<td style="font-weight:700;color:'+changeColor+'">'+changeDisp+'</td>' +
+          '<td><div style="display:flex;gap:4px">' +
+            '<button class="btn-e" onclick="openUpdateProgressModal(\''+p.id+'\')">📊 Update</button>' +
+            '<button class="btn-d" onclick="removeContestParticipant(\''+p.id+'\')">🗑</button>' +
+          '</div></td>' +
+        '</tr>';
+      }).join('') +
+      '</tbody></table></div>';
+  }
+
+  // Reset to leaderboard tab
+  switchContestTab('leaderboard');
+  document.getElementById('contest-detail-panel').style.display = 'block';
+  document.getElementById('contest-detail-panel').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function closeContestDetail() {
+  _activeContestId = null;
+  document.getElementById('contest-detail-panel').style.display = 'none';
+}
+
+function openAddParticipantModal(contestId) {
+  var id = contestId || _activeContestId;
+  if (!id) return;
+  document.getElementById('cp-contest-id').value   = id;
+  document.getElementById('cp-participant-id').value = '';
+  document.getElementById('cp-start-weight').value  = '';
+  document.getElementById('cp-start-fat').value     = '';
+  document.getElementById('cp-start-muscle').value  = '';
+  document.getElementById('cp-start-bmi').value     = '';
+  // Populate customer dropdown (exclude already enrolled)
+  var enrolled = D.contestParticipants.filter(function(p){ return p.contest_id===id; }).map(function(p){ return p.customer_id; });
+  var sel = document.getElementById('cp-customer');
+  sel.innerHTML = '<option value="">— Select customer —</option>' +
+    D.customers.filter(function(c){ return enrolled.indexOf(c.id)===-1; })
+      .map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  openModal('contest-participant');
+}
+
+async function saveContestParticipant() {
+  var contestId  = document.getElementById('cp-contest-id').value;
+  var custId     = document.getElementById('cp-customer').value;
+  var startW     = document.getElementById('cp-start-weight').value;
+  var startF     = document.getElementById('cp-start-fat').value;
+  var startM     = document.getElementById('cp-start-muscle').value;
+  var startBmi   = document.getElementById('cp-start-bmi').value;
+  if (!custId) { showToast('Select a customer', 'error'); return; }
+  var cust = D.customers.find(function(c){ return c.id===custId; });
+  var payload = {
+    contest_id: contestId,
+    customer_id: custId,
+    customer_name: cust ? cust.name : custId,
+    start_weight: startW||null,
+    start_fat: startF||null,
+    start_muscle: startM||null,
+    start_bmi: startBmi||null,
+    current_weight: startW||null,
+    current_fat: startF||null,
+    current_muscle: startM||null,
+    progress: 0
+  };
+  try {
+    var row = await dbInsert('contest_participants', payload);
+    if (row && row[0]) D.contestParticipants.push(row[0]);
+    closeModal('contest-participant');
+    renderContests();
+    if (_activeContestId === contestId) openContestDetail(contestId);
+    showToast('Participant added!', 'success');
+  } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
+function openUpdateProgressModal(participantId) {
+  var p = D.contestParticipants.find(function(x){ return x.id===participantId; });
+  if (!p) return;
+  var c   = D.contests.find(function(x){ return x.id===p.contest_id; });
+  var cfg = c ? CONTEST_CONFIG[c.type] : CONTEST_CONFIG.weight_loss;
+  document.getElementById('cpp-participant-id').value = participantId;
+  document.getElementById('cp-progress-title').textContent = '📊 '+p.customer_name+' — Update';
+  document.getElementById('cpp-weight').value  = p.current_weight  || '';
+  document.getElementById('cpp-fat').value     = p.current_fat     || '';
+  document.getElementById('cpp-muscle').value  = p.current_muscle  || '';
+  document.getElementById('cpp-bmi').value     = p.current_bmi     || '';
+  document.getElementById('cpp-start-summary').innerHTML =
+    '<strong>Starting:</strong> ' +
+    (p.start_weight  ? 'Weight '+p.start_weight+'kg' : '') +
+    (p.start_fat     ? '  ·  Fat '+p.start_fat+'%' : '') +
+    (p.start_muscle  ? '  ·  Muscle '+p.start_muscle+'%' : '') +
+    '  <span style="color:var(--primary);font-weight:700">Goal: '+cfg.label+'</span>';
+  openModal('contest-progress');
+}
+
+async function saveContestProgress() {
+  var pid    = document.getElementById('cpp-participant-id').value;
+  var weight = document.getElementById('cpp-weight').value;
+  var fat    = document.getElementById('cpp-fat').value;
+  var muscle = document.getElementById('cpp-muscle').value;
+  var bmi    = document.getElementById('cpp-bmi').value;
+  var p = D.contestParticipants.find(function(x){ return x.id===pid; });
+  if (!p) return;
+  var c   = D.contests.find(function(x){ return x.id===p.contest_id; });
+  var cfg = c ? CONTEST_CONFIG[c.type] : CONTEST_CONFIG.weight_loss;
+  // Calculate progress based on contest type
+  var curVal   = parseFloat({ weight_loss:'weight', weight_gain:'weight', fat_loss:'fat', muscle_gain:'muscle' }[c.type]==='weight'?weight:c.type==='fat_loss'?fat:muscle) || 0;
+  var startKey = { weight_loss:'start_weight', weight_gain:'start_weight', fat_loss:'start_fat', muscle_gain:'start_muscle' }[c.type];
+  var startVal = parseFloat(p[startKey]) || 0;
+  var progress = startVal && curVal ? parseFloat((curVal - startVal).toFixed(2)) : 0;
+  var payload = { current_weight:weight||null, current_fat:fat||null, current_muscle:muscle||null, current_bmi:bmi||null, progress:progress };
+  try {
+    await dbUpdate('contest_participants', pid, payload);
+    Object.assign(p, payload);
+    closeModal('contest-progress');
+    renderContests();
+    if (_activeContestId) openContestDetail(_activeContestId);
+    showToast('Progress updated!', 'success');
+  } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
+async function removeContestParticipant(pid) {
+  if (!confirm('Remove this participant?')) return;
+  try {
+    await dbDelete('contest_participants', pid);
+    D.contestParticipants = D.contestParticipants.filter(function(p){ return p.id!==pid; });
+    renderContests();
+    if (_activeContestId) openContestDetail(_activeContestId);
+    showToast('Removed', 'info');
+  } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
 </script>
 
 
@@ -10442,6 +11856,23 @@ async function deleteFood(id, name) {
       <div id="cr-breakdown" style="margin-top:12px;padding:14px;background:var(--accent-light);border-radius:10px;font-size:13px;display:none"></div>
       <div class="fg" style="margin-top:12px"><label>New Start Date *</label><input type="date" id="cr-start" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       <div class="mf"><button class="btn-c" onclick="closeModal('coupon-renew')">Cancel</button><button class="btn-p" onclick="saveCouponRenewal()">💾 Save</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Redeem Shakes -->
+<div class="overlay" id="modal-shake-redeem">
+  <div class="modal" style="max-width:400px">
+    <div class="mh"><div class="mt">🥤 Redeem Shakes</div><button class="mc" onclick="closeModal('shake-redeem')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label>Person *</label><input type="hidden" id="sr-person-id"><input type="text" id="shake-person-input" placeholder="Type to search..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      <div id="sr-balance-info"></div>
+      <div class="fr" style="margin-top:12px">
+        <div class="fg"><label>Shakes (Coupons)</label><input type="number" id="sr-qty" min="1" value="1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+        <div class="fg"><label>Date *</label><input type="date" id="sr-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+      </div>
+      <div style="padding:10px 12px;background:#f0fdf4;border-radius:8px;font-size:12px;color:#166534;margin-top:12px;line-height:1.6">1 coupon = 1 free shake. Will appear in Attendance as 🥤 and a WhatsApp will be sent.</div>
+      <div class="mf"><button class="btn-c" onclick="closeModal('shake-redeem')">Cancel</button><button class="btn-p" style="background:#25D366;border-color:#25D366" onclick="saveShakeRedemption()">🥤 Redeem</button></div>
     </div>
   </div>
 </div>
@@ -10512,6 +11943,120 @@ async function deleteFood(id, name) {
       <div class="fg" style="margin-top:10px"><label>Notes</label><input type="text" id="inst-notes" placeholder="e.g. Cash received" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       <div style="margin-top:12px;font-size:12px;color:var(--muted);padding:8px 12px;background:#e8f4fd;border-radius:6px">Finance income entry will be auto-created for this amount.</div>
       <div class="mf"><button class="btn-c" onclick="closeModal('installment')">Cancel</button><button class="btn-p" onclick="saveInstallment()">Save Payment</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE CONTEST MODAL -->
+<div class="overlay" id="modal-contest">
+  <div class="modal" style="max-width:480px;border-top:4px solid var(--accent)">
+    <div class="mh"><div class="mt">🏆 New Contest</div><button class="mc" onclick="closeModal('contest')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="contest-id">
+      <div class="fg">
+        <label>Contest Name *</label>
+        <input type="text" id="contest-name" placeholder="e.g. Summer Transformation Challenge">
+      </div>
+      <div class="fr">
+        <div class="fg">
+          <label>Type *</label>
+          <select id="contest-type">
+            <option value="weight_loss">⬇️ Weight Loss</option>
+            <option value="weight_gain">⬆️ Weight Gain</option>
+            <option value="fat_loss">🔥 Fat Loss</option>
+            <option value="muscle_gain">💪 Muscle Gain</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Duration</label>
+          <select id="contest-duration">
+            <option value="21">21 Days</option>
+            <option value="30">30 Days</option>
+            <option value="45">45 Days</option>
+            <option value="60">60 Days</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg">
+          <label>Start Date *</label>
+          <input type="date" id="contest-start">
+        </div>
+        <div class="fg">
+          <label>Entry Fee per Person (₹)</label>
+          <input type="number" id="contest-entry-fee" placeholder="e.g. 500">
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg">
+          <label>Prize Amount (₹)</label>
+          <input type="number" id="contest-prize" placeholder="e.g. 1000">
+        </div>
+        <div class="fg">
+          <label>Amount to Send Senior (₹)</label>
+          <input type="number" id="contest-senior-amount" placeholder="e.g. 400">
+        </div>
+      </div>
+      <div class="fg">
+        <label>Description (optional)</label>
+        <textarea id="contest-desc" placeholder="Rules, eligibility, reward details..."></textarea>
+      </div>
+      <div class="mf">
+        <button class="btn-c" onclick="closeModal('contest')">Cancel</button>
+        <button class="btn-p" onclick="saveContest()">Create Contest</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PARTICIPANT MODAL -->
+<div class="overlay" id="modal-contest-participant">
+  <div class="modal" style="max-width:480px;border-top:4px solid var(--success)">
+    <div class="mh"><div class="mt">➕ Add Participant</div><button class="mc" onclick="closeModal('contest-participant')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="cp-contest-id">
+      <input type="hidden" id="cp-participant-id">
+      <div class="fg">
+        <label>Customer *</label>
+        <select id="cp-customer"></select>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;margin-top:4px">Starting Measurements</div>
+      <div class="fr">
+        <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="cp-start-weight" placeholder="65.0"></div>
+        <div class="fg"><label>Body Fat (%)</label><input type="number" step="0.1" id="cp-start-fat" placeholder="25.0"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="cp-start-muscle" placeholder="35.0"></div>
+        <div class="fg"><label>BMI</label><input type="number" step="0.1" id="cp-start-bmi" placeholder="22.3"></div>
+      </div>
+      <div class="mf">
+        <button class="btn-c" onclick="closeModal('contest-participant')">Cancel</button>
+        <button class="btn-p" onclick="saveContestParticipant()">Add to Contest</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE PROGRESS MODAL -->
+<div class="overlay" id="modal-contest-progress">
+  <div class="modal" style="max-width:480px;border-top:4px solid #7c3aed">
+    <div class="mh"><div class="mt" id="cp-progress-title">📊 Update Progress</div><button class="mc" onclick="closeModal('contest-progress')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="cpp-participant-id">
+      <div id="cpp-start-summary" style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--muted)"></div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Current Measurements</div>
+      <div class="fr">
+        <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="cpp-weight" placeholder="63.0"></div>
+        <div class="fg"><label>Body Fat (%)</label><input type="number" step="0.1" id="cpp-fat" placeholder="23.0"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="cpp-muscle" placeholder="36.0"></div>
+        <div class="fg"><label>BMI</label><input type="number" step="0.1" id="cpp-bmi" placeholder="21.8"></div>
+      </div>
+      <div class="mf">
+        <button class="btn-c" onclick="closeModal('contest-progress')">Cancel</button>
+        <button class="btn-p" onclick="saveContestProgress()">Save Progress</button>
+      </div>
     </div>
   </div>
 </div>
@@ -10597,6 +12142,7 @@ async function deleteFood(id, name) {
     <div class="mh"><div class="mt">🔄 Renew Pack</div><button class="mc" onclick="closeModal('renew-pack')">✕</button></div>
     <div class="mb">
       <input type="hidden" id="renew-cust-id"/>
+      <input type="hidden" id="renew-type" value="customer"/>
       <div style="background:var(--accent-light);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px"><strong id="renew-cust-name"></strong><br/><span style="color:var(--muted);font-size:12px" id="renew-prev-pack"></span></div>
       <div class="fr"><div class="fg"><label>New Pack *</label><select id="renew-pack-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">Select</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option></select></div><div class="fg"><label>Start Date *</label><input type="date" id="renew-start-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
       <div class="fg" style="margin-top:12px"><label>Pack Price (₹)</label><input type="number" id="renew-price" placeholder="2500" oninput="onRenewPriceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
@@ -10618,6 +12164,44 @@ async function deleteFood(id, name) {
         <div class="fg"><label>Due Date</label><input type="date" id="renew-due-date-none" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       </div>
       <div class="mf"><button class="btn-c" onclick="closeModal('renew-pack')">Cancel</button><button class="btn-p" onclick="saveRenewal()">💾 Save Renewal</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── REFUND / CANCEL PACK MODAL ── -->
+<div class="overlay" id="modal-refund-pack">
+  <div class="modal" style="max-width:420px">
+    <div class="mh"><div class="mt">↩ Refund / Cancel Pack</div><button class="mc" onclick="closeModal('refund-pack')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="refund-cust-id">
+      <div style="background:var(--danger-light);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-weight:700;font-size:14px;color:var(--danger)" id="refund-cust-name"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px" id="refund-curr-pack"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Refund Amount (₹)</label><input type="number" id="refund-amount" min="0" placeholder="0"></div>
+        <div class="fg"><label>Date *</label><input type="date" id="refund-date"></div>
+      </div>
+      <div class="fg"><label>Refund Method</label>
+        <select id="refund-method" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="Cash">Cash</option>
+          <option value="UPI">UPI / GPay / PhonePe</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Adjustment">Adjustment (no cash returned)</option>
+        </select>
+      </div>
+      <div class="fg"><label>Reason *</label><input type="text" id="refund-reason" placeholder="e.g. Customer request, health issue, relocation..."></div>
+      <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:8px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600">
+          <input type="checkbox" id="refund-clear-pack" style="width:15px;height:15px">
+          Also clear customer's current pack
+        </label>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;padding-left:23px">Removes pack type, start date and price — customer will show as no active pack</div>
+      </div>
+      <div class="mf">
+        <button class="btn-c" onclick="closeModal('refund-pack')">Cancel</button>
+        <button class="btn-p" style="background:var(--danger)" onclick="saveRefund()">↩ Process Refund</button>
+      </div>
     </div>
   </div>
 </div>

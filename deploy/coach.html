@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coach Dashboard — Dharani's</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{--bg:#f5f2ee;--surface:#fff;--surface2:#f0ede8;--primary:#2d5a3d;--primary-light:#3d7a52;--accent:#e8a838;--text:#1a2e1f;--muted:#6b7c6f;--border:#ddd8d0;--danger:#c0392b;--danger-light:#fdf0ef;--success:#27ae60;--success-light:#eafaf1;--shadow:0 2px 12px rgba(45,90,61,.08);--radius:12px;--sw:210px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -92,10 +93,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .att-panel{border-radius:12px;padding:16px;border:1px solid var(--border);margin-bottom:16px}
 
 /* ── BODY COMP ── */
-.body-rec{background:var(--surface2);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.body-rec-date{font-weight:700;font-size:13px}
-.body-rec-vals{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted)}
-.body-rec-val span{font-weight:700;color:var(--text)}
+.body-rec{background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.body-rec-date{font-weight:700;font-size:13px;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.body-rec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px}
+.body-rec-stat{background:#fff;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)}
+.body-rec-stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600}
+.body-rec-stat-val{font-size:20px;font-weight:700;color:var(--primary);margin-top:2px}
+.body-diff-down{color:var(--success);font-size:11px;font-weight:700}
+.body-diff-up{color:var(--danger);font-size:11px;font-weight:700}
+.body-chart-wrap{margin-top:14px;position:relative;height:180px}
 
 /* ── FINANCE ── */
 .fin-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px}
@@ -269,6 +275,130 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .wa-template{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;min-height:100px;resize:vertical;outline:none}
 .wa-template:focus{border-color:var(--primary)}
 
+/* ── MODAL ACCENT STRIPS ── */
+.modal-box{border-top:4px solid var(--primary)}
+#modal-body .modal-box{border-top:4px solid var(--success)}
+#modal-finance .modal-box,#modal-txn .modal-box{border-top:4px solid var(--accent)}
+#modal-lead .modal-box{border-top:4px solid #2b5ce6}
+#modal-customer .modal-box{border-top:4px solid var(--primary)}
+
+/* ── FIELD HINT BADGES ── */
+.fhint{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;margin-top:5px;min-height:20px;transition:all .2s}
+.fhint-good{background:#d1fae5;color:#065f46}
+.fhint-warn{background:#fef3c7;color:#92400e}
+.fhint-bad{background:#fee2e2;color:#991b1b}
+.fhint-low{background:#dbeafe;color:#1e40af}
+
+/* ── HEALTH SCORE GAUGE ── */
+.hs-card{background:linear-gradient(135deg,#0f2318 0%,#1a3a28 50%,#2d5a3d 100%);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;color:#fff;display:flex;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+.hs-gauge{flex-shrink:0}
+.hs-info{flex:1;min-width:160px}
+.hs-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.55);margin-bottom:4px}
+.hs-score-big{font-size:32px;font-weight:700;color:#fff;line-height:1}
+.hs-grade-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:6px}
+.hs-breakdown{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
+.hs-metric{font-size:11px;color:rgba(255,255,255,.65)}
+.hs-metric span{color:#fff;font-weight:700}
+
+/* ── MODAL LIVE SCORE ── */
+.modal-hs-bar{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.modal-hs-ring{flex-shrink:0}
+.modal-hs-label{font-size:12px;color:var(--muted);font-weight:600}
+.modal-hs-val{font-size:20px;font-weight:700;color:var(--primary)}
+
+/* ── SIDEBAR GREETING ── */
+.sb-greeting{padding:10px 16px 0;font-size:11px;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+.sb-greeting-name{color:rgba(255,255,255,.9);font-size:13px;font-weight:700;margin-top:2px}
+
+/* ════════════════════════════════════════
+   GLOBAL UI POLISH
+   ════════════════════════════════════════ */
+
+/* Section entrance animation */
+.sec.active{animation:secIn .24s ease both}
+@keyframes secIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Page title accent */
+.pt{position:relative;padding-bottom:10px}
+.pt::after{content:'';display:block;width:28px;height:3px;background:linear-gradient(90deg,var(--accent),var(--primary));border-radius:2px;margin-top:5px}
+
+/* Stat cards — colored top strip + hover lift */
+.stat{border-top:3px solid var(--primary);transition:transform .2s,box-shadow .2s}
+.stat:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(45,90,61,.13)}
+.stat-v{transition:color .2s}
+
+/* Cards — hover shadow lift */
+.tcard{transition:box-shadow .2s,border-color .2s}
+.tcard:hover{box-shadow:0 4px 22px rgba(45,90,61,.1);border-color:#c8c4bc}
+
+/* Customer cards */
+.cust-card{transition:all .2s;border-left:3px solid transparent}
+.cust-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.08);border-left-color:var(--primary)}
+
+/* Attendance cards */
+.att-card{border-left:3px solid transparent}
+.att-card:hover{border-left-color:var(--accent)}
+
+/* Lead cards */
+.lead-card{transition:all .2s;border-left:3px solid transparent}
+.lead-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.lead-card.overdue{border-left-color:var(--danger)}
+.lead-card.due-today{border-left-color:var(--accent)}
+
+/* Finance cards */
+.fin-card{transition:all .2s}
+.fin-card:hover{box-shadow:0 4px 16px rgba(45,90,61,.1)}
+
+/* Buttons — lift + shadow on hover */
+.btn-p{transition:all .18s!important}
+.btn-p:hover{background:var(--primary-light);transform:translateY(-1px);box-shadow:0 4px 14px rgba(45,90,61,.3)}
+.btn-p:active{transform:translateY(0);box-shadow:none}
+.btn-e{transition:all .15s}
+.btn-e:hover{background:#dde8ff;color:#1e40af;border-color:#a5b4fc}
+.btn-d{transition:all .15s}
+.btn-d:hover{background:#fecaca;transform:translateY(-1px)}
+
+/* Form inputs — focus glow */
+.fg input,.fg select,.fg textarea{transition:border-color .18s,box-shadow .18s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(45,90,61,.09);outline:none}
+.search:focus{box-shadow:0 0 0 3px rgba(45,90,61,.09)}
+
+/* Nav active indicator bar */
+.nav-item{position:relative}
+.nav-item.active{background:rgba(255,255,255,.18);border-left:3px solid var(--accent);padding-left:8px}
+.nav-item:not(.active){border-left:3px solid transparent;padding-left:8px}
+
+/* Table — alternating rows + better hover */
+tbody tr:nth-child(even) td{background:#faf9f7}
+tbody tr:hover td{background:var(--accent-light)!important;transition:background .12s}
+
+/* Scrollbar polish */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:#bbb5ad}
+
+/* Overview cards */
+.ov-card{transition:all .2s}
+.ov-card:hover{box-shadow:0 6px 22px rgba(45,90,61,.12);transform:translateY(-2px)}
+
+/* Badge micro-polish */
+.badge{transition:all .15s}
+.bg{box-shadow:0 1px 4px rgba(39,174,96,.15)}
+.br{box-shadow:0 1px 4px rgba(192,57,43,.15)}
+.by{box-shadow:0 1px 4px rgba(133,100,4,.12)}
+
+/* Empty state icon bounce */
+.empty .ei{animation:iconBounce 2.4s ease-in-out infinite}
+@keyframes iconBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* Section card header divider */
+.tcard-h{font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--surface2);display:flex;align-items:center;gap:8px}
+
+/* Smooth modal entrance */
+.modal-overlay.open .modal-box{animation:modalIn .22s ease both}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
   #sidebar{transform:translateX(-100%);transition:transform .3s}
@@ -295,22 +425,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <p>Coach Dashboard</p>
     </div>
 
-    <!-- Step 1: Supabase Config (first time only) -->
-    <div class="login-step active" id="step-config">
-      <div class="login-field">
-        <label>Supabase URL</label>
-        <input type="text" id="cfg-url" placeholder="https://xxxx.supabase.co">
-      </div>
-      <div class="login-field">
-        <label>Supabase Key (anon)</label>
-        <input type="password" id="cfg-key" placeholder="eyJ...">
-      </div>
-      <button class="login-btn" onclick="saveConfig()">Continue →</button>
-      <p class="step-hint">Get these from your Supabase project settings → API</p>
-    </div>
-
-    <!-- Step 2: Coach Login -->
-    <div class="login-step" id="step-login">
+    <!-- Coach Login -->
+    <div id="step-login">
       <div class="login-field">
         <label>Your Name</label>
         <select id="login-coach-sel">
@@ -321,9 +437,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <label>PIN</label>
         <input type="password" id="login-pin" placeholder="Enter your PIN" maxlength="10" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
-      <button class="login-btn" onclick="doLogin()">Login</button>
+      <button class="login-btn" onclick="doLogin()">Login →</button>
       <div class="login-err" id="login-err"></div>
-      <p class="step-hint" style="cursor:pointer;text-decoration:underline" onclick="resetConfig()">Change Supabase connection</p>
     </div>
   </div>
 </div>
@@ -339,11 +454,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <h1>🌿 Dharani's</h1>
       <span>Coach Portal</span>
     </div>
+    <div class="sb-greeting" id="sb-greeting-wrap">
+      <div id="sb-greeting-time">Good morning</div>
+      <div class="sb-greeting-name" id="sb-greeting-name"></div>
+    </div>
     <div class="sb-coach-badge">
       <div class="sb-coach-avatar" id="sb-avatar">C</div>
       <div>
         <div class="sb-coach-name" id="sb-coach-name">Coach</div>
-        <div class="sb-coach-sub">Coach Dashboard</div>
+        <div class="sb-coach-sub" id="sb-coach-sub-stat">Coach Dashboard</div>
       </div>
     </div>
     <nav class="sb-nav">
@@ -358,6 +477,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="nav-item" onclick="goTo('notes',this)"><span class="ic">📝</span><span data-t="nav_notes">Session Notes</span></button>
       <button class="nav-item" onclick="goTo('workout',this)"><span class="ic">🏋️</span><span data-t="nav_workout">Workout Planner</span></button>
       <button class="nav-item" onclick="goTo('bulkwa',this)"><span class="ic">📢</span><span data-t="nav_bulkwa">Bulk WhatsApp</span></button>
+      <button class="nav-item" onclick="goTo('shakes',this)"><span class="ic">🥤</span>My Shake Balance</button>
       <div style="margin:8px 11px 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px">My Health</div>
       <button class="nav-item" onclick="goTo('mybody',this)"><span class="ic">🧬</span><span>My Body Stats</span></button>
       <button class="nav-item" onclick="goTo('mydiet',this)"><span class="ic">🥗</span><span>My Diet Plan</span></button>
@@ -451,7 +571,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <div class="pt" style="font-size:16px" id="body-cust-name"></div>
           <button class="btn-p" onclick="openBodyModal()">+ Add Record</button>
         </div>
-        <div id="body-coach-ideals" style="display:none;margin-bottom:16px"></div>
+        <div class="stats" id="body-latest-stats" style="margin-bottom:16px"></div>
+        <div class="tcard" id="body-chart-card" style="display:none;margin-bottom:16px">
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">📈 Weight Over Time</h3>
+          <div class="body-chart-wrap"><canvas id="body-weight-chart"></canvas></div>
+        </div>
+        <div id="body-coach-ideals" style="margin-bottom:16px"></div>
         <div id="body-records"></div>
       </div>
     </div>
@@ -629,6 +754,45 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
 
+    <!-- ── SHAKE BALANCE ── -->
+    <div class="sec" id="sec-shakes">
+      <div class="ph">
+        <div><div class="pt">🥤 My Shake Balance</div><div class="ps">Track UMS shakes earned from new customers</div></div>
+      </div>
+
+      <!-- Balance card -->
+      <div id="shake-balance-card" style="margin-bottom:16px"></div>
+
+      <!-- Month navigator -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <button onclick="changeShakeMonth(-1)" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">‹</button>
+        <span id="shake-month-lbl" style="font-weight:700;font-size:14px;min-width:140px;text-align:center"></span>
+        <button onclick="changeShakeMonth(1)" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">›</button>
+      </div>
+
+      <!-- Month stats -->
+      <div class="stats" id="shake-month-stats" style="margin-bottom:16px"></div>
+
+      <!-- Unconsumed carry-over alert -->
+      <div id="shake-carryover" style="margin-bottom:16px"></div>
+
+      <!-- Supervisor: Mark consumed -->
+      <div class="tcard" style="margin-bottom:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:12px">🔒 Supervisor — Mark Consumed</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Mark each shake the coach drinks. Each click = 1 shake consumed.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button onclick="markShakeConsumed()" style="padding:10px 20px;background:#2d5a3d;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">− Mark 1 Consumed</button>
+          <div id="shake-consume-status" style="font-size:13px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <!-- History log -->
+      <div class="tcard">
+        <div style="font-weight:700;font-size:14px;margin-bottom:12px">📋 History</div>
+        <div id="shake-history"></div>
+      </div>
+    </div>
+
     <!-- ── MY BODY STATS ── -->
     <div class="sec" id="sec-mybody">
       <div class="ph">
@@ -793,28 +957,53 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="modal-close" onclick="closeModal('body')">×</button>
     </div>
     <input type="hidden" id="body-rec-id">
-    <div class="fg-row">
-      <div class="fg"><label>Date</label><input type="date" id="body-date"></div>
-      <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="body-weight" placeholder="60.5" oninput="coachCalcBody()"></div>
+    <!-- Live Health Score Bar -->
+    <div class="modal-hs-bar" id="modal-hs-bar" style="display:none">
+      <div class="modal-hs-ring">
+        <svg viewBox="0 0 80 48" width="80" height="48">
+          <path d="M 8 44 A 34 34 0 0 1 72 44" fill="none" stroke="#e8e4e0" stroke-width="7" stroke-linecap="round"/>
+          <path id="modal-hs-arc" d="M 8 44 A 34 34 0 0 1 72 44" fill="none" stroke="#27ae60" stroke-width="7" stroke-linecap="round" stroke-dasharray="106.81" stroke-dashoffset="106.81"/>
+        </svg>
+      </div>
+      <div>
+        <div class="modal-hs-label">Health Score</div>
+        <div class="modal-hs-val"><span id="modal-hs-num">—</span> <span id="modal-hs-grade" style="font-size:11px;font-weight:700;padding:1px 8px;border-radius:20px"></span></div>
+      </div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Height (cm)</label><input type="number" step="0.1" id="body-height" placeholder="170"></div>
+      <div class="fg"><label>Date</label><input type="date" id="body-date"></div>
+      <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="body-weight" placeholder="38.2" oninput="coachCalcBody()"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Height (cm)</label><input type="number" step="0.1" id="body-height" placeholder="170" oninput="coachCalcBody()"></div>
       <div class="fg"><label>Age</label><input type="number" id="body-age-field" placeholder="30"></div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Body Fat (%)</label><input type="number" step="0.1" id="body-fat" placeholder="22.5" oninput="coachCalcBody()"></div>
-      <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="body-muscle" placeholder="35.0"></div>
+      <div class="fg">
+        <label>Body Fat (%)</label>
+        <input type="number" step="0.1" id="body-fat" placeholder="23" oninput="coachCalcBody()">
+        <div id="body-fat-hint"></div>
+      </div>
+      <div class="fg">
+        <label>Visceral Fat <span style="font-size:10px;color:var(--accent)">(auto)</span></label>
+        <input type="number" step="0.01" id="body-visceral" placeholder="1.5" readonly style="background:#f5f5f5;color:var(--primary);font-weight:600">
+        <div id="body-visceral-hint"></div>
+      </div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Subcutaneous Fat (%)</label><input type="number" step="0.01" id="body-subfat" placeholder="15.0" oninput="coachCalcBody()"></div>
-      <div class="fg"><label>Visceral Fat <span style="font-size:10px;color:var(--accent)">(auto)</span></label><input type="number" step="0.01" id="body-visceral" placeholder="auto" readonly style="background:#f5f5f5;color:var(--primary);font-weight:600"></div>
+      <div class="fg"><label>BMR</label><input type="number" id="body-bmr" placeholder="950"></div>
+      <div class="fg">
+        <label>BMI <span style="font-size:10px;color:var(--accent)">(auto)</span></label>
+        <input type="number" step="0.1" id="body-bmi" placeholder="auto" oninput="this.dataset.manual=this.value?'1':'';coachCalcBody()">
+        <div id="body-bmi-hint"></div>
+      </div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>BMI</label><input type="number" step="0.1" id="body-bmi" placeholder="22.3"></div>
-      <div class="fg"><label>BMR</label><input type="number" id="body-bmr" placeholder="1483"></div>
+      <div class="fg"><label>Body Age</label><input type="number" id="body-age" placeholder="18"></div>
+      <div class="fg"><label>Subcutaneous Fat (%)</label><input type="number" step="0.01" id="body-subfat" placeholder="18.9" oninput="coachCalcBody()"></div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Body Age</label><input type="number" id="body-age" placeholder="25"></div>
+      <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="body-muscle" placeholder="26.8"></div>
     </div>
     <div class="fg"><label>Notes</label><textarea id="body-notes" rows="2" placeholder="Any observations..."></textarea></div>
     <div class="mf">
@@ -926,8 +1115,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 // ══════════════════════════════════════════
 //  GLOBALS
 // ══════════════════════════════════════════
-var SB_URL = localStorage.getItem('coach_sb_url') || '';
-var SB_KEY = localStorage.getItem('coach_sb_key') || '';
+var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
 var COACH_ID   = sessionStorage.getItem('coachId')   || '';
 var COACH_NAME = sessionStorage.getItem('coachName') || '';
 var COACH_GENDER = COACH_ID ? (localStorage.getItem('coachGender_' + COACH_ID) || 'male') : 'male';
@@ -1020,7 +1209,8 @@ var D = {
   leads: [],
   leadFollowups: [],
   centers: [],
-  allCoaches: []   // for center name lookup
+  allCoaches: [],  // for center name lookup
+  shakes: []       // coach_shakes log
 };
 
 // ══════════════════════════════════════════
@@ -1057,14 +1247,7 @@ function dbDelete(table, id) { return req(table + '?id=eq.' + id, 'DELETE'); }
 //  AUTH
 // ══════════════════════════════════════════
 async function init() {
-  if (!SB_URL || !SB_KEY) {
-    showStep('config');
-    return;
-  }
-  // Load coach list for dropdown
-  showStep('login');
   await loadCoachList();
-  // If already logged in
   if (COACH_ID && COACH_NAME) {
     startApp();
   }
@@ -1090,16 +1273,6 @@ async function loadCoachList() {
   }
 }
 
-function saveConfig() {
-  var url = document.getElementById('cfg-url').value.trim().replace(/\/+$/, '');
-  var key = document.getElementById('cfg-key').value.trim();
-  if (!url || !key) { showToast('Enter both URL and Key', 'error'); return; }
-  SB_URL = url; SB_KEY = key;
-  localStorage.setItem('coach_sb_url', url);
-  localStorage.setItem('coach_sb_key', key);
-  showStep('login');
-  loadCoachList();
-}
 
 async function doLogin() {
   var sel = document.getElementById('login-coach-sel');
@@ -1125,6 +1298,10 @@ function startApp() {
   document.getElementById('sb-coach-name').textContent = COACH_NAME;
   document.getElementById('sb-avatar').textContent = COACH_NAME.charAt(0).toUpperCase();
   document.getElementById('ov-date').textContent = new Date().toDateString();
+  // Sidebar greeting
+  var firstName = COACH_NAME ? COACH_NAME.split(' ')[0] : 'Coach';
+  document.getElementById('sb-greeting-time').textContent = getGreeting();
+  document.getElementById('sb-greeting-name').textContent = firstName;
   document.getElementById('att-date-label').textContent = 'Today — ' + todayStr();
   updateGenderToggleUI();
   loadAll();
@@ -1147,16 +1324,6 @@ function logout() {
   location.reload();
 }
 
-function resetConfig() {
-  localStorage.removeItem('coach_sb_url');
-  localStorage.removeItem('coach_sb_key');
-  location.reload();
-}
-
-function showStep(step) {
-  document.querySelectorAll('.login-step').forEach(function(el){ el.classList.remove('active'); });
-  document.getElementById('step-' + step).classList.add('active');
-}
 
 // ══════════════════════════════════════════
 //  NAVIGATION
@@ -1177,6 +1344,7 @@ function goTo(name, el) {
   if (name === 'notes')      renderNotesSection();
   if (name === 'workout')    { renderWorkoutCustFilter(); renderWorkoutPlans(); }
   if (name === 'bulkwa')     renderWaRecipients();
+  if (name === 'shakes')     renderShakes();
   if (name === 'mybody')    loadMyBodyStats();
   if (name === 'mydiet')    loadMyDiet();
   if (name === 'myfoodlog') loadMyFoodLog();
@@ -1249,6 +1417,10 @@ async function loadAll() {
     D.leadFollowups   = Array.isArray(fus)       ? fus      : [];
     D.centers         = Array.isArray(centers)   ? centers  : [];
     D.coachProfile    = (Array.isArray(coachRec) && coachRec[0]) ? coachRec[0] : {};
+    try {
+      var shakes = await dbGet('coach_shakes', 'created_at', 'coach_id=eq.' + COACH_ID);
+      D.shakes = Array.isArray(shakes) ? shakes : [];
+    } catch(e) { D.shakes = []; }
     // Load payments for coach's customers only
     var custIds = D.customers.map(function(c){ return c.id; });
     try {
@@ -1796,6 +1968,21 @@ async function saveCustomer() {
       var res = await dbInsert('customers', payload);
       var newCust = Array.isArray(res) && res[0] ? res[0] : null;
       if (newCust) D.customers.push(newCust);
+      // ── Auto-earn shake balance ──
+      if (newCust) {
+        var hasPack = !!payload.pack_type;
+        var shakeMonth = todayStr().slice(0, 7);
+        try {
+          // +1 for visit (always)
+          var v = await dbInsert('coach_shakes', { coach_id: COACH_ID, customer_id: newCust.id, event_type: 'earn_visit', quantity: 1, date: todayStr(), month: shakeMonth, notes: name + ' visited' });
+          if (Array.isArray(v) && v[0]) D.shakes.push(v[0]);
+          if (hasPack) {
+            // +3 for taking pack
+            var p = await dbInsert('coach_shakes', { coach_id: COACH_ID, customer_id: newCust.id, event_type: 'earn_pack', quantity: 3, date: todayStr(), month: shakeMonth, notes: name + ' took ' + payload.pack_type });
+            if (Array.isArray(p) && p[0]) D.shakes.push(p[0]);
+          }
+        } catch(se) { console.error('Shake earn failed:', se); }
+      }
       // ── Upload before photo if selected ──
       if (newCust) {
         var beforeFile = document.getElementById('cust-photo-before').files[0];
@@ -1949,38 +2136,318 @@ function onBodyCustChange() {
 
 function renderBodyRecords() {
   var recs = D.body.filter(function(b){ return b.customer_id === _bodySelCustId; });
+  var statsEl = document.getElementById('body-latest-stats');
+  var chartCard = document.getElementById('body-chart-card');
   var el = document.getElementById('body-records');
-  if (!recs.length) { el.innerHTML = '<div class="empty"><div class="ei">⚖️</div><p>No records yet.</p></div>'; return; }
-  el.innerHTML = recs.map(function(b){
+
+  if (!recs.length) {
+    statsEl.innerHTML = '';
+    chartCard.style.display = 'none';
+    if (_bodyCompChart) { _bodyCompChart.destroy(); _bodyCompChart = null; }
+    el.innerHTML = '<div class="empty"><div class="ei">⚖️</div><p>No records yet. Add the first measurement.</p></div>';
+    renderBodyTargets(null, null);
+    return;
+  }
+
+  // ── Latest stat tiles ──
+  var latest = recs[0];
+  var lw = parseFloat(latest.weight) || 0;
+  var latestFatKg  = (latest.fat_percentage && lw)    ? ((parseFloat(latest.fat_percentage)/100)*lw).toFixed(1)    : null;
+  var latestMusKg  = (latest.muscle_percentage && lw)  ? ((parseFloat(latest.muscle_percentage)/100)*lw).toFixed(1) : null;
+  var latestVfKg   = parseFloat(latest.visceral_fat) || 0;
+
+  // ── Health Score card ──
+  statsEl.innerHTML = buildHealthScoreCard(latest.bmi, latest.fat_percentage, latestVfKg, latest.date) +
+    '<div class="stats" style="margin-top:0">' +
+    '<div class="stat"><div class="stat-l">Weight</div><div class="stat-v">'+(latest.weight||'—')+'<span style="font-size:13px;font-family:DM Sans,sans-serif"> kg</span></div></div>'+
+    (latestFatKg  ? '<div class="stat"><div class="stat-l">Body Fat</div><div class="stat-v" style="color:var(--danger)">'  +latestFatKg +'<span style="font-size:13px;font-family:DM Sans,sans-serif"> kg</span></div></div>' : '')+
+    (latestMusKg  ? '<div class="stat"><div class="stat-l">Muscle</div><div class="stat-v" style="color:var(--success)">'   +latestMusKg +'<span style="font-size:13px;font-family:DM Sans,sans-serif"> kg</span></div></div>' : '')+
+    '<div class="stat"><div class="stat-l">BMI</div><div class="stat-v">'+(latest.bmi||'—')+'</div></div>'+
+    '</div>';
+
+  // ── Weight chart ──
+  if (recs.length >= 2) {
+    chartCard.style.display = '';
+    var chartData = recs.slice().reverse();
+    var labels  = chartData.map(function(r){ return r.date; });
+    var weights = chartData.map(function(r){ return parseFloat(r.weight)||null; });
+    if (_bodyCompChart) _bodyCompChart.destroy();
+    _bodyCompChart = new Chart(document.getElementById('body-weight-chart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{ label:'Weight (kg)', data:weights, borderColor:'#2d5a3d', backgroundColor:'rgba(45,90,61,.08)', borderWidth:2.5, pointBackgroundColor:'#2d5a3d', pointRadius:4, tension:0.3, fill:true }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:false, grid:{color:'#f0ede8'}}, x:{grid:{display:false}} } }
+    });
+  } else { chartCard.style.display = 'none'; }
+
+  // ── Body targets ──
+  renderBodyTargets(latest, _bodySelCustId);
+
+  // ── Records ──
+  function statBox(lbl, val, unit, diff, lowerIsBetter) {
+    if (!val) return '';
+    var diffHtml = '';
+    if (diff !== null && diff !== undefined) {
+      var cls = (lowerIsBetter ? parseFloat(diff)<0 : parseFloat(diff)>0) ? 'body-diff-down' : 'body-diff-up';
+      diffHtml = '<div class="'+cls+'" style="font-size:10px;margin-top:2px">'+(parseFloat(diff)<0?'↓ ':'↑ ')+Math.abs(diff)+' kg</div>';
+    }
+    return '<div class="body-rec-stat"><div class="body-rec-stat-lbl">'+lbl+'</div>'+
+      '<div class="body-rec-stat-val">'+val+'<span style="font-size:10px;font-weight:400">'+unit+'</span></div>'+
+      diffHtml+'</div>';
+  }
+
+  el.innerHTML = recs.map(function(r, i) {
+    var prev   = recs[i+1];
+    var w      = parseFloat(r.weight)||0;
+    var fatKg  = (r.fat_percentage && w) ? ((parseFloat(r.fat_percentage)/100)*w).toFixed(1)    : null;
+    var musKg  = (r.muscle_percentage && w) ? ((parseFloat(r.muscle_percentage)/100)*w).toFixed(1) : null;
+    var vf     = r.visceral_fat ? parseFloat(r.visceral_fat).toFixed(2) : null;
+    var pw     = prev ? parseFloat(prev.weight)||0 : 0;
+    var wd     = (prev && r.weight && prev.weight) ? (parseFloat(r.weight)-parseFloat(prev.weight)).toFixed(1) : null;
+    var pFatKg = (prev && prev.fat_percentage && pw) ? ((parseFloat(prev.fat_percentage)/100)*pw) : null;
+    var fatDiff= (fatKg && pFatKg) ? (parseFloat(fatKg)-pFatKg).toFixed(1) : null;
+    var pMusKg = (prev && prev.muscle_percentage && pw) ? ((parseFloat(prev.muscle_percentage)/100)*pw) : null;
+    var musDiff= (musKg && pMusKg) ? (parseFloat(musKg)-pMusKg).toFixed(1) : null;
+    var wdHtml = wd !== null
+      ? '<span class="'+(parseFloat(wd)<0?'body-diff-down':'body-diff-up')+'">'+(parseFloat(wd)<0?'↓ ':'↑ ')+Math.abs(wd)+' kg</span>'
+      : '';
     return '<div class="body-rec">'+
-      '<div><div class="body-rec-date">'+b.date+'</div>'+(b.notes?'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+b.notes+'</div>':'')+'</div>'+
-      '<div class="body-rec-vals">'+
-        (b.weight   ? '<div>Wt <span>'+b.weight+'kg</span></div>' : '')+
-        (b.fat_percentage ? '<div>Fat <span>'+b.fat_percentage+'%</span></div>' : '')+
-        (b.muscle_percentage ? '<div>Muscle <span>'+b.muscle_percentage+'%</span></div>' : '')+
-        (b.bmi      ? '<div>BMI <span>'+b.bmi+'</span></div>' : '')+
-        (b.visceral_fat ? '<div>VF <span>'+b.visceral_fat+'</span></div>' : '')+
+      '<div class="body-rec-date"><span>'+r.date+(i===0?' <span style="background:var(--success);color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;font-weight:700;margin-left:6px">Latest</span>':'')+'</span>'+wdHtml+'</div>'+
+      (r.notes ? '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">📝 '+r.notes+'</div>' : '')+
+      '<div class="body-rec-grid">'+
+        statBox('Weight',   r.weight, ' kg', wd,      true)+
+        statBox('Body Fat', fatKg,    ' kg', fatDiff, true)+
+        statBox('Muscle',   musKg,    ' kg', musDiff, false)+
+        statBox('Belly Fat',vf,       ' kg', null,    true)+
+        (r.bmi ? '<div class="body-rec-stat"><div class="body-rec-stat-lbl">BMI</div><div class="body-rec-stat-val">'+r.bmi+'</div></div>' : '')+
+        (r.bmr ? '<div class="body-rec-stat"><div class="body-rec-stat-lbl">BMR</div><div class="body-rec-stat-val" style="font-size:14px">'+r.bmr+'</div></div>' : '')+
       '</div>'+
-      '<div style="display:flex;gap:6px">'+
-        '<button class="btn-e" onclick="openBodyModal(\''+b.id+'\')">Edit</button>'+
-        '<button class="btn-d" onclick="delBodyRecord(\''+b.id+'\')">Del</button>'+
+      '<div style="font-size:10px;color:var(--muted);margin-top:6px">'+
+        (r.fat_percentage ? 'Fat: '+r.fat_percentage+'%' : '')+
+        (r.muscle_percentage ? '  ·  Muscle: '+r.muscle_percentage+'%' : '')+
+        (r.subcutaneous_fat_percentage ? '  ·  Sub-fat: '+r.subcutaneous_fat_percentage+'%' : '')+
+      '</div>'+
+      '<div style="display:flex;gap:6px;margin-top:10px">'+
+        '<button class="btn-e" onclick="openBodyModal(\''+r.id+'\')">Edit</button>'+
+        '<button class="btn-d" onclick="delBodyRecord(\''+r.id+'\')">Del</button>'+
       '</div>'+
     '</div>';
   }).join('');
 }
 
+function renderBodyTargets(latest, custId) {
+  var card = document.getElementById('body-coach-ideals');
+  if (!card) return;
+  if (!latest || !custId) { card.innerHTML = ''; return; }
+
+  var cust   = D.customers.find(function(c){ return c.id === custId; });
+  var gender = cust ? (cust.gender||'').toLowerCase() : '';
+  var isMale = gender === 'male', isFemale = gender === 'female';
+  var w  = latest.weight ? Number(latest.weight) : null;
+  var h  = latest.height ? Number(latest.height)/100 : null;
+
+  function pctToKg(pct){ return (w && pct) ? +((w*pct)/100).toFixed(2) : null; }
+
+  var fatLoPct = isMale?10:isFemale?18:10, fatHiPct = isMale?20:isFemale?28:28;
+  var musLoPct = isMale?33:isFemale?24:24, musHiPct = isMale?39:isFemale?30:39;
+
+  var metrics = [
+    { icon:'⚖️', label:'Weight',     val:w,                              unit:' kg', lo:h?+(18.5*h*h).toFixed(1):null, hi:h?+(24.9*h*h).toFixed(1):null },
+    { icon:'🔥', label:'Body Fat',   val:pctToKg(latest.fat_percentage), unit:' kg', lo:pctToKg(fatLoPct), hi:pctToKg(fatHiPct) },
+    { icon:'💪', label:'Muscle',     val:pctToKg(latest.muscle_percentage), unit:' kg', lo:pctToKg(musLoPct), hi:pctToKg(musHiPct) },
+    { icon:'📊', label:'BMI',        val:latest.bmi?Number(latest.bmi):null, unit:'', lo:18.5, hi:24.9 },
+    { icon:'🫀', label:'Visceral Fat', val:latest.visceral_fat?Number(latest.visceral_fat):null, unit:' kg', lo:1, hi:9 }
+  ].filter(function(m){ return m.val!==null && m.lo!==null && m.hi!==null; });
+
+  if (!metrics.length) { card.innerHTML = ''; return; }
+
+  function getStatus(m) {
+    if (m.val < m.lo) return { label:'Too Low',       color:'#f59e0b', bg:'#fffbeb' };
+    if (m.val > m.hi) return { label:'Too High',      color:'#ef4444', bg:'#fef2f2' };
+    return               { label:'On Target ✓',  color:'#16a34a', bg:'#f0fdf4' };
+  }
+
+  var rows = metrics.map(function(m) {
+    var s = getStatus(m);
+    var target = +((m.lo+m.hi)/2).toFixed(2);
+    var diff = +((target-m.val)).toFixed(2);
+    var diffStr = diff===0 ? 'You\'re at target!' : (diff>0 ? '▲ Need +'+Math.abs(diff) : '▼ Need -'+Math.abs(diff))+m.unit;
+    return '<div style="background:'+s.bg+';border:1.5px solid '+s.color+'33;border-radius:12px;padding:14px 16px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<span style="font-size:22px">'+m.icon+'</span>'+
+          '<div style="font-weight:700;font-size:14px;color:#1e293b">'+m.label+'</div>'+
+        '</div>'+
+        '<div style="text-align:right">'+
+          '<div style="font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Current</div>'+
+          '<div style="font-size:20px;font-weight:800;color:'+s.color+'">'+m.val+m.unit+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-top:10px;background:rgba(0,0,0,.05);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'+
+        '<div style="text-align:center">'+
+          '<div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Your Value</div>'+
+          '<div style="font-size:15px;font-weight:800;color:'+s.color+'">'+m.val+m.unit+'</div>'+
+        '</div>'+
+        '<div style="font-size:18px;color:#cbd5e1">→</div>'+
+        '<div style="text-align:center">'+
+          '<div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px">🎯 Target</div>'+
+          '<div style="font-size:15px;font-weight:800;color:#2d5a3d">'+target+m.unit+'</div>'+
+        '</div>'+
+        '<div>'+
+          '<div style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:'+s.color+'22;color:'+s.color+'">'+s.label+'</div>'+
+          '<div style="font-size:10px;color:'+s.color+';font-weight:600;margin-top:4px;text-align:center">'+diffStr+'</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  card.innerHTML = '<div class="tcard" style="padding:16px 18px">'+
+    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">🎯 Body Targets</div>'+
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Based on latest scan — '+latest.date+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">'+rows+'</div>'+
+  '</div>';
+}
+
 function coachCalcBody() {
-  var w = parseFloat(document.getElementById('body-weight').value) || 0;
-  var f = parseFloat(document.getElementById('body-fat').value) || 0;
-  var sf = parseFloat(document.getElementById('body-subfat').value) || 0;
-  var vfEl = document.getElementById('body-visceral');
+  var w   = parseFloat(document.getElementById('body-weight').value) || 0;
+  var h   = parseFloat(document.getElementById('body-height').value) || 0;
+  var f   = parseFloat(document.getElementById('body-fat').value) || 0;
+  var sf  = parseFloat(document.getElementById('body-subfat').value) || 0;
+  var vfEl  = document.getElementById('body-visceral');
+  var bmiEl = document.getElementById('body-bmi');
+  var vfKg  = 0;
+
+  // Auto-calculate visceral fat
   if (w > 0 && f > 0) {
     var fatKg = w * f / 100;
-    var sfKg = sf > 0 ? (w * sf / 100) : (fatKg * 0.8);
-    vfEl.value = Math.max(0, fatKg - sfKg).toFixed(2);
+    var sfKg  = sf > 0 ? (w * sf / 100) : (fatKg * 0.8);
+    vfKg = Math.max(0, fatKg - sfKg);
+    vfEl.value = vfKg.toFixed(2);
   } else {
     vfEl.value = '';
   }
+
+  // Auto-calculate BMI
+  var bmi = 0;
+  if (w > 0 && h > 0 && !bmiEl.dataset.manual) {
+    var hm = h / 100;
+    bmi = parseFloat((w / (hm * hm)).toFixed(1));
+    bmiEl.value = bmi;
+  } else {
+    bmi = parseFloat(bmiEl.value) || 0;
+  }
+
+  // Field hint badges
+  setBodyHint('body-bmi-hint',      bmiHint(bmi));
+  setBodyHint('body-fat-hint',      fatHint(f));
+  setBodyHint('body-visceral-hint', vfHint(vfKg));
+
+  // Live Health Score in modal
+  var score = calcHealthScore(bmi || 0, f || 0, vfKg || 0);
+  updateModalHealthScore(score);
+}
+
+function setBodyHint(id, hint) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (!hint) { el.innerHTML = ''; return; }
+  el.innerHTML = '<span class="fhint fhint-' + hint.cls + '">' + hint.icon + ' ' + hint.label + '</span>';
+}
+function bmiHint(v) {
+  if (!v) return null;
+  if (v < 18.5) return {cls:'low',   icon:'⬇️', label:'Underweight'};
+  if (v < 25)   return {cls:'good',  icon:'✅', label:'Normal'};
+  if (v < 30)   return {cls:'warn',  icon:'⚠️', label:'Overweight'};
+  return              {cls:'bad',   icon:'🔴', label:'Obese'};
+}
+function fatHint(v) {
+  if (!v) return null;
+  if (v < 8)    return {cls:'low',  icon:'⬇️', label:'Very Low Fat'};
+  if (v <= 25)  return {cls:'good', icon:'✅', label:'Healthy Range'};
+  if (v <= 32)  return {cls:'warn', icon:'⚠️', label:'Above Ideal'};
+  return              {cls:'bad',  icon:'🔴', label:'High Body Fat'};
+}
+function vfHint(kg) {
+  if (!kg && kg !== 0) return null;
+  if (kg === 0) return null;
+  if (kg <= 2)  return {cls:'good', icon:'✅', label:'Low Risk'};
+  if (kg <= 4)  return {cls:'warn', icon:'⚠️', label:'Moderate'};
+  return              {cls:'bad',  icon:'🔴', label:'High Risk'};
+}
+function calcHealthScore(bmi, fatPct, vfKg) {
+  var score = 0, total = 0;
+  if (bmi) {
+    total += 40;
+    if (bmi >= 18.5 && bmi <= 24.9) score += 40;
+    else if (bmi < 18.5) score += Math.max(0, 40 - (18.5 - bmi) * 5);
+    else score += Math.max(0, 40 - (bmi - 24.9) * 4);
+  }
+  if (fatPct) {
+    total += 35;
+    if (fatPct >= 8 && fatPct <= 25) score += 35;
+    else if (fatPct < 8) score += Math.max(0, 35 - (8 - fatPct) * 4);
+    else score += Math.max(0, 35 - (fatPct - 25) * 2);
+  }
+  if (vfKg > 0) {
+    total += 25;
+    if (vfKg <= 2) score += 25;
+    else if (vfKg <= 4) score += 15;
+    else if (vfKg <= 6) score += 8;
+  }
+  if (total === 0) return null;
+  return Math.round((score / total) * 100);
+}
+function updateModalHealthScore(score) {
+  var bar    = document.getElementById('modal-hs-bar');
+  var numEl  = document.getElementById('modal-hs-num');
+  var arcEl  = document.getElementById('modal-hs-arc');
+  var gradeEl = document.getElementById('modal-hs-grade');
+  if (!bar) return;
+  if (score === null) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  numEl.textContent = score;
+  var maxDash = 106.81;
+  var offset  = maxDash * (1 - score / 100);
+  var color   = score >= 80 ? '#27ae60' : score >= 55 ? '#e8a838' : '#c0392b';
+  arcEl.style.stroke = color;
+  arcEl.style.strokeDashoffset = offset;
+  var grade = score >= 85 ? {t:'Excellent',bg:'#d1fae5',c:'#065f46'}
+            : score >= 70 ? {t:'Good',bg:'#d1fae5',c:'#065f46'}
+            : score >= 55 ? {t:'Fair',bg:'#fef3c7',c:'#92400e'}
+            : score >= 40 ? {t:'Poor',bg:'#fee2e2',c:'#991b1b'}
+            :               {t:'Critical',bg:'#fee2e2',c:'#991b1b'};
+  gradeEl.textContent = grade.t;
+  gradeEl.style.background = grade.bg;
+  gradeEl.style.color = grade.c;
+}
+function buildHealthScoreCard(bmi, fatPct, vfKg, date) {
+  var score = calcHealthScore(parseFloat(bmi)||0, parseFloat(fatPct)||0, parseFloat(vfKg)||0);
+  if (score === null) return '';
+  var color = score >= 80 ? '#27ae60' : score >= 55 ? '#e8a838' : '#c0392b';
+  var maxDash = 157.08;
+  var offset  = maxDash * (1 - score / 100);
+  var grade = score >= 85 ? {t:'Excellent',bg:'rgba(209,250,229,.3)',c:'#a7f3d0'}
+            : score >= 70 ? {t:'Good',bg:'rgba(209,250,229,.3)',c:'#a7f3d0'}
+            : score >= 55 ? {t:'Fair',bg:'rgba(254,243,199,.3)',c:'#fde68a'}
+            : score >= 40 ? {t:'Poor',bg:'rgba(254,226,226,.3)',c:'#fca5a5'}
+            :               {t:'Critical',bg:'rgba(254,226,226,.3)',c:'#fca5a5'};
+  return '<div class="hs-card">' +
+    '<div class="hs-gauge">' +
+      '<svg viewBox="0 0 120 72" width="120" height="72">' +
+        '<path d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="9" stroke-linecap="round"/>' +
+        '<path d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="' + color + '" stroke-width="9" stroke-linecap="round" stroke-dasharray="' + maxDash + '" stroke-dashoffset="' + offset + '"/>' +
+        '<text x="60" y="62" text-anchor="middle" font-size="20" font-weight="700" fill="#fff" font-family="DM Sans,sans-serif">' + score + '</text>' +
+      '</svg>' +
+    '</div>' +
+    '<div class="hs-info">' +
+      '<div class="hs-title">Health Score</div>' +
+      '<div class="hs-score-big">' + score + '<span style="font-size:16px;font-weight:400;color:rgba(255,255,255,.5)">/100</span></div>' +
+      '<div class="hs-grade-badge" style="background:' + grade.bg + ';color:' + grade.c + '">' + grade.t + '</div>' +
+      (date ? '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px">Last scan: ' + date + '</div>' : '') +
+    '</div>' +
+  '</div>';
 }
 
 function openBodyModal(id) {
@@ -1995,6 +2462,7 @@ function openBodyModal(id) {
     document.getElementById('body-fat').value         = b.fat_percentage || '';
     document.getElementById('body-muscle').value      = b.muscle_percentage || '';
     document.getElementById('body-bmi').value         = b.bmi || '';
+    document.getElementById('body-bmi').dataset.manual = b.bmi ? '1' : '';
     document.getElementById('body-visceral').value    = b.visceral_fat || '';
     document.getElementById('body-notes').value       = b.notes || '';
     document.getElementById('body-height').value      = b.height || '';
@@ -2012,6 +2480,8 @@ function openBodyModal(id) {
       if (cust.age)    document.getElementById('body-age-field').value = cust.age;
     }
   }
+  // Reset manual BMI flag so auto-calc works fresh
+  document.getElementById('body-bmi').dataset.manual = '';
   openModal('body');
 }
 
@@ -2229,6 +2699,123 @@ function renderFinance() {
     '</div>';
   }).join('');
   renderTransactions();
+}
+
+// ══════════════════════════════════════════
+//  SHAKE BALANCE
+// ══════════════════════════════════════════
+var _shakeYear = null, _shakeMonth = null;
+
+function changeShakeMonth(dir) {
+  _shakeMonth += dir;
+  if (_shakeMonth < 0)  { _shakeMonth = 11; _shakeYear--; }
+  if (_shakeMonth > 11) { _shakeMonth = 0;  _shakeYear++; }
+  renderShakes();
+}
+
+function renderShakes() {
+  var now = new Date();
+  if (_shakeYear === null) { _shakeYear = now.getFullYear(); _shakeMonth = now.getMonth(); }
+  var monthStr = _shakeYear + '-' + String(_shakeMonth + 1).padStart(2, '0');
+  document.getElementById('shake-month-lbl').textContent =
+    new Date(_shakeYear, _shakeMonth, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+
+  var logs = D.shakes;
+
+  // ── Running balance (all time, never below 0) ──
+  var totalEarned   = logs.filter(function(s){ return s.event_type.startsWith('earn'); }).reduce(function(t,s){ return t + (s.quantity||0); }, 0);
+  var totalConsumed = logs.filter(function(s){ return s.event_type === 'consume'; }).reduce(function(t,s){ return t + (s.quantity||0); }, 0);
+  var balance = Math.max(0, totalEarned - totalConsumed);
+
+  // ── This month ──
+  var monthLogs     = logs.filter(function(s){ return (s.month||'').startsWith(monthStr); });
+  var monthEarned   = monthLogs.filter(function(s){ return s.event_type.startsWith('earn'); }).reduce(function(t,s){ return t + (s.quantity||0); }, 0);
+  var monthConsumed = monthLogs.filter(function(s){ return s.event_type === 'consume'; }).reduce(function(t,s){ return t + (s.quantity||0); }, 0);
+
+  // ── Previous month carry-over ──
+  var prevDate  = new Date(_shakeYear, _shakeMonth, 0); // last day of prev month
+  var prevMonth = prevDate.getFullYear() + '-' + String(prevDate.getMonth() + 1).padStart(2, '0');
+  var prevEarned   = logs.filter(function(s){ return s.event_type.startsWith('earn') && (s.month||'').startsWith(prevMonth); }).reduce(function(t,s){ return t + s.quantity; }, 0);
+  var prevConsumed = logs.filter(function(s){ return s.event_type === 'consume'       && (s.month||'').startsWith(prevMonth); }).reduce(function(t,s){ return t + s.quantity; }, 0);
+  var carryOver = Math.max(0, prevEarned - prevConsumed);
+
+  // ── Monetary value of current balance ──
+  // (5600 ÷ 26) × balance  [26-day UMS as reference price]
+  var shakeValue = Math.round((5600 / 26) * balance);
+
+  // ── Balance card ──
+  var balColor = balance === 0 ? 'var(--muted)' : balance >= 3 ? 'var(--success)' : '#b07800';
+  document.getElementById('shake-balance-card').innerHTML =
+    '<div style="background:linear-gradient(135deg,#0f2318,#1a3a28,#2d5a3d);border-radius:var(--radius);padding:22px 24px;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.25)">' +
+      '<div style="font-size:11px;color:rgba(255,255,255,.55);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Current Shake Balance</div>' +
+      '<div style="font-size:56px;font-weight:800;line-height:1;color:' + (balance === 0 ? 'rgba(255,255,255,.4)' : '#e8a838') + '">' + balance + '</div>' +
+      '<div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:4px">🥤 shakes available</div>' +
+      (balance > 0 ? '<div style="margin-top:12px;background:rgba(255,255,255,.1);border-radius:8px;padding:10px 14px;font-size:13px;color:rgba(255,255,255,.8)">' +
+        '💰 Monetary value: <strong style="color:#e8a838">₹' + shakeValue.toLocaleString('en-IN') + '</strong> — can deduct from your next pack purchase' +
+      '</div>' : '') +
+    '</div>';
+
+  // ── Month stats ──
+  document.getElementById('shake-month-stats').innerHTML =
+    '<div class="stat"><div class="stat-l">Earned This Month</div><div class="stat-v" style="color:var(--success)">+' + monthEarned + '</div></div>' +
+    '<div class="stat"><div class="stat-l">Consumed This Month</div><div class="stat-v" style="color:var(--danger)">−' + monthConsumed + '</div></div>' +
+    '<div class="stat"><div class="stat-l">Month Balance</div><div class="stat-v">' + Math.max(0, monthEarned - monthConsumed) + '</div></div>' +
+    '<div class="stat"><div class="stat-l">Carried from Last Month</div><div class="stat-v" style="color:#2563eb">' + carryOver + '</div></div>';
+
+  // ── Carry-over alert ──
+  var co = document.getElementById('shake-carryover');
+  if (carryOver > 0) {
+    var coValue = Math.round((5600 / 26) * carryOver);
+    co.innerHTML = '<div style="background:linear-gradient(135deg,#fff8e1,#fef3c7);border:1.5px solid #f9c74f;border-radius:var(--radius);padding:16px 18px">' +
+      '<div style="font-weight:700;font-size:14px;color:#7a5a00;margin-bottom:8px">⚠️ ' + carryOver + ' unconsumed shake' + (carryOver > 1 ? 's' : '') + ' carried from last month</div>' +
+      '<div style="font-size:13px;color:#9a7a20;margin-bottom:10px">Options for supervisor:</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<div style="background:rgba(255,255,255,.7);border-radius:8px;padding:10px 14px;font-size:13px;color:#7a5a00;flex:1;min-width:180px">🥤 <strong>Carry forward</strong> — shakes are already in balance above</div>' +
+        '<div style="background:rgba(255,255,255,.7);border-radius:8px;padding:10px 14px;font-size:13px;color:#7a5a00;flex:1;min-width:180px">💰 <strong>Convert to discount</strong> — deduct <strong>₹' + coValue.toLocaleString('en-IN') + '</strong> from coach\'s next pack</div>' +
+      '</div>' +
+    '</div>';
+  } else { co.innerHTML = ''; }
+
+  // ── Consume status ──
+  document.getElementById('shake-consume-status').textContent =
+    balance > 0 ? 'Balance will reduce to ' + (balance - 1) + ' after marking' : '⚠️ Balance is 0 — nothing to consume';
+
+  // ── History log ──
+  var histEl = document.getElementById('shake-history');
+  if (!logs.length) { histEl.innerHTML = '<div class="empty"><div class="ei">🥤</div><p>No shake events yet.</p></div>'; return; }
+  var typeLabels = { earn_visit: '✅ Earned — New visitor', earn_pack: '✅ Earned — Pack taken', earn_manual: '✅ Earned — Added by supervisor', consume: '🥤 Consumed', convert: '💰 Converted to discount' };
+  var typeColors = { earn_visit: 'var(--success)', earn_pack: 'var(--success)', earn_manual: 'var(--success)', consume: 'var(--danger)', convert: '#2563eb' };
+  histEl.innerHTML = logs.slice().reverse().map(function(s) {
+    var custName = '';
+    if (s.customer_id) {
+      var c = D.customers.find(function(x){ return x.id === s.customer_id; });
+      if (c) custName = ' — ' + c.name;
+    }
+    var sign = s.event_type.startsWith('earn') ? '+' : '−';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--surface2);gap:8px">' +
+      '<div>' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text)">' + (typeLabels[s.event_type] || s.event_type) + custName + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + (s.date || '') + (s.notes ? ' · ' + s.notes : '') + '</div>' +
+      '</div>' +
+      '<div style="font-size:18px;font-weight:800;color:' + (typeColors[s.event_type] || 'var(--text)') + ';white-space:nowrap">' + sign + s.quantity + ' 🥤</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function markShakeConsumed() {
+  var totalEarned   = D.shakes.filter(function(s){ return s.event_type.startsWith('earn'); }).reduce(function(t,s){ return t + s.quantity; }, 0);
+  var totalConsumed = D.shakes.filter(function(s){ return s.event_type === 'consume'; }).reduce(function(t,s){ return t + s.quantity; }, 0);
+  var balance = Math.max(0, totalEarned - totalConsumed);
+  if (balance <= 0) { showToast('Balance is 0 — no shakes to consume', 'error'); return; }
+  var statusEl = document.getElementById('shake-consume-status');
+  statusEl.textContent = 'Saving...';
+  try {
+    var month = todayStr().slice(0, 7);
+    var res = await dbInsert('coach_shakes', { coach_id: COACH_ID, customer_id: null, event_type: 'consume', quantity: 1, date: todayStr(), month: month, notes: 'Marked by supervisor' });
+    if (Array.isArray(res) && res[0]) D.shakes.push(res[0]);
+    showToast('1 shake marked as consumed', 'success');
+    renderShakes();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); statusEl.textContent = ''; }
 }
 
 // ══════════════════════════════════════════
@@ -2762,6 +3349,7 @@ function deleteNote(idx) {
 // ══════════════════════════════════════════
 var D_MY_BODY = [];
 var _myWeightChart = null;
+var _bodyCompChart = null;
 
 async function loadMyBodyStats() {
   try {
