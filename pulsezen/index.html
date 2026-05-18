@@ -334,7 +334,7 @@
 
 <!-- NAVBAR -->
 <nav>
-  <a class="nav-brand" href="home.html">
+  <a class="nav-brand" href="index.html">
     <div class="nav-brand-icon">P</div>
     <div>
       <div class="nav-brand-name">PulseZen</div>
@@ -708,6 +708,17 @@
           <option value="Non-exclusive ₹299/month">Non-exclusive ₹299/month — My area is taken</option>
         </select>
       </div>
+      <div style="display:flex;flex-direction:column;gap:10px;background:#f9fafb;border:1.5px solid var(--border);border-radius:12px;padding:16px">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Before submitting, please read our <a href="terms.html" target="_blank" style="color:var(--primary);font-weight:600;">Terms & Conditions →</a></p>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer">
+          <input type="checkbox" id="r-consent" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--primary)">
+          <span style="font-size:13px;color:#1a1a1a;line-height:1.6;font-weight:500">I confirm I have obtained (or will obtain before publishing) consent from all members whose photos appear on my PulseZen page. I take full responsibility for member data.</span>
+        </label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer">
+          <input type="checkbox" id="r-agree" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--primary)">
+          <span style="font-size:13px;color:#1a1a1a;line-height:1.6;font-weight:500">I have read and agree to the <a href="terms.html" target="_blank" style="color:var(--primary);font-weight:600;">PulseZen Terms & Conditions</a>.</span>
+        </label>
+      </div>
       <div id="regMsg" style="display:none;padding:12px 16px;border-radius:10px;font-size:14px;font-weight:600;text-align:center"></div>
       <button type="submit" id="regBtn"
         style="background:var(--wa);color:#fff;border:none;border-radius:10px;padding:16px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s">
@@ -741,6 +752,24 @@
     e.preventDefault();
     var btn = document.getElementById('regBtn');
     var msg = document.getElementById('regMsg');
+
+    if(!document.getElementById('r-consent').checked) {
+      msg.style.display = 'block';
+      msg.style.background = '#fef2f2';
+      msg.style.color = '#dc2626';
+      msg.style.border = '1.5px solid #fecaca';
+      msg.textContent = '❌ Please confirm member consent responsibility.';
+      return;
+    }
+    if(!document.getElementById('r-agree').checked) {
+      msg.style.display = 'block';
+      msg.style.background = '#fef2f2';
+      msg.style.color = '#dc2626';
+      msg.style.border = '1.5px solid #fecaca';
+      msg.textContent = '❌ Please agree to the Terms & Conditions.';
+      return;
+    }
+
     btn.disabled = true;
     btn.textContent = 'Submitting...';
 
