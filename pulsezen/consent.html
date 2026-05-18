@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photo Consent — PulseZen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a3a28; --primary-light: #3d7a52;
+      --accent: #e8a838; --success: #16a34a;
+      --border: #e5e7eb; --muted: #6b7280;
+      --surface: #f9fafb; --white: #ffffff;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'DM Sans',sans-serif; background:var(--surface); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+    .card {
+      background:var(--white); border-radius:20px; padding:40px 32px;
+      max-width:480px; width:100%;
+      box-shadow:0 4px 24px rgba(0,0,0,.08);
+    }
+    .logo { display:flex; align-items:center; gap:10px; margin-bottom:28px; }
+    .logo-icon {
+      width:40px; height:40px; border-radius:10px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-family:'DM Serif Display',serif; font-size:18px;
+    }
+    .logo-text { font-family:'DM Serif Display',serif; font-size:18px; color:var(--primary); }
+    .logo-sub { font-size:11px; color:var(--muted); }
+    h1 { font-family:'DM Serif Display',serif; font-size:24px; color:var(--primary); margin-bottom:8px; }
+    .subtitle { font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:28px; }
+    .form-group { margin-bottom:16px; }
+    label { font-size:13px; font-weight:600; color:#1a1a1a; display:block; margin-bottom:6px; }
+    input, select {
+      width:100%; padding:12px 16px;
+      border:1.5px solid var(--border); border-radius:10px;
+      font-size:14px; font-family:'DM Sans',sans-serif; outline:none;
+      transition:border-color .2s;
+    }
+    input:focus, select:focus { border-color:var(--primary-light); }
+    .consent-box {
+      background:var(--surface); border:1.5px solid var(--border);
+      border-radius:12px; padding:16px; margin-bottom:20px;
+    }
+    .consent-statement {
+      font-size:14px; color:#1a1a1a; line-height:1.7; margin-bottom:16px;
+    }
+    .consent-statement strong { color:var(--primary); }
+    .checkbox-row { display:flex; gap:12px; align-items:flex-start; }
+    .checkbox-row input[type=checkbox] { width:18px; height:18px; margin-top:2px; flex-shrink:0; cursor:pointer; accent-color:var(--primary); }
+    .checkbox-row label { font-size:13px; color:#1a1a1a; line-height:1.6; font-weight:500; cursor:pointer; }
+    .btn {
+      width:100%; padding:16px; background:var(--primary);
+      color:#fff; border:none; border-radius:10px;
+      font-family:'DM Sans',sans-serif; font-size:16px; font-weight:700;
+      cursor:pointer; transition:opacity .2s; margin-top:4px;
+    }
+    .btn:hover { opacity:.88; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    #successMsg {
+      display:none; text-align:center; padding:32px 16px;
+    }
+    .success-icon { font-size:56px; margin-bottom:16px; }
+    .success-title { font-family:'DM Serif Display',serif; font-size:24px; color:var(--success); margin-bottom:8px; }
+    .success-sub { font-size:14px; color:var(--muted); line-height:1.6; }
+    #errMsg { display:none; background:#fef2f2; color:#dc2626; border:1.5px solid #fecaca; border-radius:10px; padding:12px 16px; font-size:13px; margin-bottom:12px; }
+    .footer-note { font-size:11px; color:var(--muted); text-align:center; margin-top:20px; line-height:1.6; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- SUCCESS STATE -->
+  <div id="successMsg">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Consent Recorded</div>
+    <p class="success-sub">Thank you! Your consent has been saved. Your photo will be published on the wellness center page with a <em>"Results may vary"</em> disclaimer. You can close this page.</p>
+  </div>
+
+  <!-- FORM STATE -->
+  <div id="formState">
+    <div class="logo">
+      <div class="logo-icon">P</div>
+      <div>
+        <div class="logo-text">PulseZen</div>
+        <div class="logo-sub">Photo Consent Form</div>
+      </div>
+    </div>
+
+    <h1>Permission to Publish Photo</h1>
+    <p class="subtitle">Your wellness center would like to share your transformation photo on their website. Please fill this form to give your permission.</p>
+
+    <div class="form-group">
+      <label>Your Full Name *</label>
+      <input id="c-name" type="text" placeholder="Enter your full name" required>
+    </div>
+    <div class="form-group">
+      <label>Your WhatsApp Number *</label>
+      <input id="c-phone" type="tel" placeholder="e.g. 9876543210" required>
+    </div>
+    <div class="form-group">
+      <label>Center Name *</label>
+      <input id="c-center" type="text" placeholder="e.g. Dharani's Wellness Center" required>
+    </div>
+    <div class="form-group">
+      <label>Type of Photo *</label>
+      <select id="c-type" required>
+        <option value="">— Select —</option>
+        <option value="Before & After Transformation">Before & After Transformation</option>
+        <option value="After Result Only">After Result Only</option>
+        <option value="Testimonial / Review">Testimonial / Review</option>
+      </select>
+    </div>
+
+    <div class="consent-box">
+      <p class="consent-statement">
+        I, <strong id="namePreview">__________</strong>, confirm that:
+        <br><br>
+        • The photo being submitted is of me<br>
+        • I give permission to publish it on the PulseZen wellness center website<br>
+        • I understand it will be visible publicly on the internet<br>
+        • The photo will be displayed with a <strong>"Results may vary"</strong> disclaimer<br>
+        • I can request removal at any time by contacting the center
+      </p>
+      <div class="checkbox-row">
+        <input type="checkbox" id="c-agree">
+        <label for="c-agree">Yes, I confirm the above and give my consent to publish my photo.</label>
+      </div>
+    </div>
+
+    <div id="errMsg"></div>
+
+    <button class="btn" id="submitBtn" onclick="submitConsent()">✅ Submit My Consent</button>
+  </div>
+
+  <p class="footer-note">
+    This consent is recorded with your name, phone number and timestamp.<br>
+    PulseZen is an independent wellness platform. Not affiliated with any nutrition brand.
+  </p>
+</div>
+
+<script>
+  var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+
+  // Live name preview in consent statement
+  document.getElementById('c-name').addEventListener('input', function(){
+    var val = this.value.trim() || '__________';
+    document.getElementById('namePreview').textContent = val;
+  });
+
+  async function submitConsent() {
+    var name    = document.getElementById('c-name').value.trim();
+    var phone   = document.getElementById('c-phone').value.trim();
+    var center  = document.getElementById('c-center').value.trim();
+    var type    = document.getElementById('c-type').value;
+    var agreed  = document.getElementById('c-agree').checked;
+    var err     = document.getElementById('errMsg');
+
+    err.style.display = 'none';
+
+    if(!name || !phone || !center || !type) {
+      err.style.display = 'block';
+      err.textContent = '❌ Please fill all required fields.';
+      return;
+    }
+    if(!agreed) {
+      err.style.display = 'block';
+      err.textContent = '❌ Please tick the checkbox to confirm your consent.';
+      return;
+    }
+
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+      var res = await fetch(SB_URL + '/rest/v1/pulsezen_consents', {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          person_name: name,
+          whatsapp:    phone,
+          center_name: center,
+          photo_type:  type,
+          consented:   true
+        })
+      });
+
+      if(res.ok) {
+        document.getElementById('formState').style.display = 'none';
+        document.getElementById('successMsg').style.display = 'block';
+      } else {
+        throw new Error('failed');
+      }
+    } catch(e) {
+      err.style.display = 'block';
+      err.textContent = '❌ Something went wrong. Please try again.';
+      btn.disabled = false;
+      btn.textContent = '✅ Submit My Consent';
+    }
+  }
+</script>
+
+</body>
+</html>

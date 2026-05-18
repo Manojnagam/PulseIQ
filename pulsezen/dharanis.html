@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dharani's Wellness Center — Personalized nutrition programs for weight loss, weight gain and healthy living. Book a free consultation today.">
+  <meta name="keywords" content="wellness center in Nandyal, weight loss center Nandyal, nutrition center 518501, weight loss program Nandyal, wellness center Padmavathi Nagar Nandyal, nutrition program Andhra Pradesh, wellness center near Pramod Gastro Nandyal">
+  <meta property="og:title" content="Dharani's Wellness Center">
+  <meta property="og:description" content="Transform your health with personalized nutrition programs. Book a free consultation today.">
+  <meta property="og:type" content="website">
+  <title>Dharani's Wellness Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a3a28;
+      --primary-mid: #2d5a3d;
+      --primary-light: #3d7a52;
+      --accent: #e8a838;
+      --accent-light: #fef3c7;
+      --text: #1a1a1a;
+      --muted: #6b7280;
+      --surface: #f9fafb;
+      --border: #e5e7eb;
+      --white: #ffffff;
+      --success: #16a34a;
+      --wa: #25D366;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--white); }
+    h1, h2, h3 { font-family: 'DM Serif Display', serif; }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-family: 'DM Serif Display', serif; font-size: 18px;
+    }
+    .nav-logo-text { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--primary); line-height: 1.2; }
+    .nav-logo-sub { font-size: 10px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-weight: 500; }
+    .nav-cta {
+      background: var(--wa); color: #fff; border: none; border-radius: 8px;
+      padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 13px;
+      font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex;
+      align-items: center; gap: 6px; transition: opacity .2s;
+    }
+    .nav-cta:hover { opacity: .88; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f2318 0%, #1a3a28 45%, #2d5a3d 80%, #3d7a52 100%);
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 120px 24px 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -60px; right: -60px;
+      width: 300px; height: 300px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,168,56,.15) 0%, transparent 70%);
+    }
+    .hero::after {
+      content: ''; position: absolute; bottom: -80px; left: -80px;
+      width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(61,122,82,.3) 0%, transparent 70%);
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 680px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      color: #fff; font-size: 12px; font-weight: 600; padding: 6px 14px;
+      border-radius: 20px; margin-bottom: 24px; letter-spacing: .5px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 6vw, 56px); color: #fff; line-height: 1.2;
+      margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero-sub {
+      font-size: clamp(15px, 2.5vw, 18px); color: rgba(255,255,255,.8);
+      line-height: 1.7; margin-bottom: 36px; max-width: 520px; margin-left: auto; margin-right: auto;
+    }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--wa); color: #fff; border: none; border-radius: 10px;
+      padding: 14px 28px; font-family: 'DM Sans', sans-serif; font-size: 15px;
+      font-weight: 700; cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: transform .2s, opacity .2s; box-shadow: 0 4px 20px rgba(37,211,102,.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); opacity: .92; }
+    .btn-secondary {
+      background: rgba(255,255,255,.12); color: #fff;
+      border: 1.5px solid rgba(255,255,255,.3); border-radius: 10px;
+      padding: 14px 28px; font-family: 'DM Sans', sans-serif; font-size: 15px;
+      font-weight: 600; cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: background .2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,.2); }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--primary); padding: 28px 24px;
+      display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
+    }
+    .stat-item {
+      text-align: center; padding: 12px 32px;
+      border-right: 1px solid rgba(255,255,255,.15);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--accent); }
+    .stat-lbl { font-size: 12px; color: rgba(255,255,255,.7); font-weight: 500; margin-top: 2px; }
+
+    /* ── SECTIONS ── */
+    section { padding: 72px 24px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      display: inline-block; background: var(--accent-light); color: #92400e;
+      font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px;
+      letter-spacing: .8px; text-transform: uppercase; margin-bottom: 12px;
+    }
+    .section-title { font-size: clamp(26px, 4vw, 38px); color: var(--primary); margin-bottom: 12px; }
+    .section-sub { font-size: 15px; color: var(--muted); line-height: 1.7; max-width: 560px; }
+    .section-header { margin-bottom: 48px; }
+    .section-header.center { text-align: center; }
+    .section-header.center .section-sub { margin: 0 auto; }
+
+    /* ── ABOUT ── */
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+    }
+    .about-img {
+      border-radius: 20px; overflow: hidden; position: relative;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      min-height: 380px; display: flex; align-items: center; justify-content: center;
+    }
+    .about-img-placeholder {
+      text-align: center; color: rgba(255,255,255,.7); padding: 40px;
+    }
+    .about-img-placeholder .icon { font-size: 64px; margin-bottom: 12px; }
+    .about-img-placeholder p { font-size: 13px; line-height: 1.6; }
+    .about-points { display: flex; flex-direction: column; gap: 16px; margin-top: 28px; }
+    .about-point { display: flex; gap: 12px; align-items: flex-start; }
+    .about-point-icon {
+      width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .about-point-text h4 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .about-point-text p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* ── PROGRAMS ── */
+    .programs { background: var(--surface); }
+    .programs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .program-card {
+      background: var(--white); border-radius: 16px; padding: 28px;
+      border: 1.5px solid var(--border); transition: all .2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+    .program-card:hover { border-color: var(--primary-light); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(26,58,40,.1); }
+    .program-card.featured {
+      background: linear-gradient(135deg, var(--primary), var(--primary-mid));
+      border-color: transparent; color: #fff;
+    }
+    .program-icon { font-size: 36px; margin-bottom: 16px; }
+    .program-badge {
+      display: inline-block; background: var(--accent); color: #fff;
+      font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+      margin-bottom: 12px; letter-spacing: .5px;
+    }
+    .program-card h3 { font-size: 20px; margin-bottom: 8px; }
+    .program-card.featured h3 { color: #fff; }
+    .program-card p { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+    .program-card.featured p { color: rgba(255,255,255,.75); }
+    .program-features { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .program-features li { font-size: 13px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+    .program-card.featured .program-features li { color: rgba(255,255,255,.8); }
+    .program-features li::before { content: '✓'; font-weight: 700; color: var(--success); font-size: 12px; }
+    .program-card.featured .program-features li::before { color: var(--accent); }
+
+    /* ── HOW IT WORKS ── */
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+    .step-card { text-align: center; padding: 32px 20px; }
+    .step-num {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff; font-family: 'DM Serif Display', serif; font-size: 22px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .step-icon { font-size: 32px; margin-bottom: 12px; }
+    .step-card h3 { font-size: 18px; color: var(--primary); margin-bottom: 8px; }
+    .step-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .step-arrow {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: var(--border); padding-top: 32px;
+    }
+
+    /* ── RESULTS ── */
+    .results { background: var(--surface); }
+    .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .result-card {
+      background: var(--white); border-radius: 16px; overflow: hidden;
+      border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+    .result-photos { display: grid; grid-template-columns: 1fr 1fr; }
+    .result-photo {
+      height: 180px; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; text-align: center; padding: 12px;
+    }
+    .result-photo.before { background: #fef2f2; color: #dc2626; }
+    .result-photo.after { background: #f0fdf4; color: var(--success); }
+    .result-photo-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .5px; margin-bottom: 4px; opacity: .6; text-transform: uppercase; }
+    .result-body { padding: 16px; }
+    .result-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .result-tag { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .result-highlight {
+      display: inline-block; margin-top: 8px; background: var(--accent-light);
+      color: #92400e; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+    }
+    .results-disclaimer {
+      text-align: center; font-size: 11px; color: var(--muted);
+      margin-top: 24px; font-style: italic;
+    }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .testimonial-card {
+      background: var(--white); border-radius: 16px; padding: 24px;
+      border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+    .testimonial-stars { color: var(--accent); font-size: 14px; margin-bottom: 12px; }
+    .testimonial-text { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
+    .testimonial-author { display: flex; align-items: center; gap: 10px; }
+    .testimonial-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff; font-weight: 700; font-size: 15px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .testimonial-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .testimonial-meta { font-size: 11px; color: var(--muted); }
+
+    /* ── LOCATION ── */
+    .location { background: var(--primary); color: #fff; }
+    .location .section-title { color: #fff; }
+    .location .section-sub { color: rgba(255,255,255,.7); }
+    .location-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+    .location-map {
+      border-radius: 16px; overflow: hidden; height: 320px;
+      border: 2px solid rgba(255,255,255,.15);
+    }
+    .location-map iframe { width: 100%; height: 100%; border: none; }
+    .location-details { display: flex; flex-direction: column; gap: 20px; }
+    .location-item { display: flex; gap: 14px; align-items: flex-start; }
+    .location-item-icon {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      background: rgba(255,255,255,.1); display: flex; align-items: center;
+      justify-content: center; font-size: 18px;
+    }
+    .location-item-label { font-size: 11px; color: rgba(255,255,255,.5); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+    .location-item-val { font-size: 14px; color: #fff; line-height: 1.5; }
+    .location-item-val a { color: var(--accent); text-decoration: none; }
+    .timings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+    .timing-row { font-size: 13px; color: rgba(255,255,255,.8); }
+    .timing-row span { color: rgba(255,255,255,.5); font-size: 11px; }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      background: linear-gradient(135deg, #0f2318, #1a3a28, #2d5a3d);
+      text-align: center; padding: 80px 24px;
+    }
+    .cta-section h2 { font-size: clamp(28px, 4vw, 42px); color: #fff; margin-bottom: 14px; }
+    .cta-section p { font-size: 16px; color: rgba(255,255,255,.75); margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FLOATING WA BUTTON ── */
+    .wa-float {
+      position: fixed; bottom: 24px; right: 24px; z-index: 200;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--wa); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; text-decoration: none;
+      box-shadow: 0 4px 20px rgba(37,211,102,.5);
+      transition: transform .2s; animation: pulse-wa 2s infinite;
+    }
+    .wa-float:hover { transform: scale(1.1); }
+    @keyframes pulse-wa {
+      0%, 100% { box-shadow: 0 4px 20px rgba(37,211,102,.5); }
+      50% { box-shadow: 0 4px 32px rgba(37,211,102,.8); }
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #0a1f12; padding: 28px 24px; text-align: center;
+    }
+    .footer-logo { font-family: 'DM Serif Display', serif; font-size: 20px; color: #fff; margin-bottom: 6px; }
+    .footer-powered {
+      font-size: 11px; color: rgba(255,255,255,.4); margin-bottom: 14px;
+    }
+    .footer-powered a { color: rgba(255,255,255,.6); text-decoration: none; }
+    .footer-links { display: flex; gap: 20px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
+    .footer-links a { font-size: 12px; color: rgba(255,255,255,.5); text-decoration: none; }
+    .footer-links a:hover { color: rgba(255,255,255,.8); }
+    .footer-copy { font-size: 11px; color: rgba(255,255,255,.3); line-height: 1.6; }
+    .footer-disclaimer {
+      font-size: 10px; color: rgba(255,255,255,.25); margin-top: 8px;
+      max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .about-grid { grid-template-columns: 1fr; }
+      .location-grid { grid-template-columns: 1fr; }
+      .stat-item { padding: 12px 20px; border-right: none; border-bottom: 1px solid rgba(255,255,255,.1); }
+      .stat-item:last-child { border-bottom: none; }
+      .stats-bar { flex-direction: column; align-items: center; }
+      nav { padding: 12px 16px; }
+      .nav-logo-text { font-size: 14px; }
+      section { padding: 52px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-icon">D</div>
+    <div>
+      <div class="nav-logo-text">Dharani's Wellness</div>
+      <div class="nav-logo-sub">Nutrition &amp; Health Center</div>
+    </div>
+  </a>
+  <a class="nav-cta" href="https://wa.me/917981614593?text=Hi%2C%20I%27d%20like%20to%20book%20a%20free%20consultation%20at%20Dharani%27s%20Wellness%20Center" target="_blank">
+    💬 Book Free Consultation
+  </a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">🌿 Trusted Nutrition &amp; Wellness Center</div>
+    <h1>Transform Your Health,<br><span>One Day at a Time</span></h1>
+    <p class="hero-sub">Personalized nutrition programs for weight loss, weight gain and healthy living — guided by expert coaches every step of the way.</p>
+    <div class="hero-btns">
+      <a class="btn-primary" href="https://wa.me/917981614593?text=Hi%2C%20I%27d%20like%20to%20book%20a%20free%20consultation%20at%20Dharani%27s%20Wellness%20Center" target="_blank">
+        💬 Book Free Consultation
+      </a>
+      <a class="btn-secondary" href="#programs">View Programs ↓</a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-num">200+</div><div class="stat-lbl">Happy Members</div></div>
+  <div class="stat-item"><div class="stat-num">3+</div><div class="stat-lbl">Years of Excellence</div></div>
+  <div class="stat-item"><div class="stat-num">95%</div><div class="stat-lbl">Success Rate</div></div>
+  <div class="stat-item"><div class="stat-num">Free</div><div class="stat-lbl">First Consultation</div></div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-img">
+        <div class="about-img-placeholder">
+          <div class="icon">🌿</div>
+          <p>Center photo<br>coming soon</p>
+        </div>
+      </div>
+      <div>
+        <div class="section-header">
+          <span class="section-tag">About Us</span>
+          <h2 class="section-title">We Care About Your Real Results</h2>
+          <p class="section-sub">At Dharani's Wellness Center, we believe that good health is not a luxury — it's a right. Our coaches work with you personally to build a program that fits your body, your lifestyle and your goals.</p>
+          <p class="section-sub" style="margin-top:10px;font-size:13px">📍 Dharani's Wellness Center is located in Padmavathi Nagar, Nandyal — near Pramod Gastro and Liver Centre — serving customers across Nandyal, Atmakur, Allagadda and surrounding areas of Kurnool district.</p>
+        </div>
+        <div class="about-points">
+          <div class="about-point">
+            <div class="about-point-icon">📊</div>
+            <div class="about-point-text">
+              <h4>Body Composition Analysis</h4>
+              <p>Scientific body scanning to track your real progress — not just weight, but fat, muscle and overall health score.</p>
+            </div>
+          </div>
+          <div class="about-point">
+            <div class="about-point-icon">🥗</div>
+            <div class="about-point-text">
+              <h4>Personalised Meal Plans</h4>
+              <p>Custom 7-day meal plans based on your goal, age, and lifestyle — no generic diets.</p>
+            </div>
+          </div>
+          <div class="about-point">
+            <div class="about-point-icon">💬</div>
+            <div class="about-point-text">
+              <h4>Daily Coach Support</h4>
+              <p>Your coach stays connected with you throughout your journey — guidance, motivation and accountability.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRAMS -->
+<section class="programs" id="programs">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">Our Programs</span>
+      <h2 class="section-title">Choose Your Wellness Journey</h2>
+      <p class="section-sub">Every program is guided by a personal coach and powered by scientifically formulated nutrition products.</p>
+    </div>
+    <div class="programs-grid">
+      <div class="program-card">
+        <div class="program-icon">🔥</div>
+        <h3>Weight Loss</h3>
+        <p>Lose weight sustainably with a structured nutrition plan, daily shakes and regular body scans to track progress.</p>
+        <ul class="program-features">
+          <li>Body composition analysis</li>
+          <li>Personalised meal plan</li>
+          <li>Daily protein shake</li>
+          <li>Weekly progress check</li>
+          <li>Coach WhatsApp support</li>
+        </ul>
+      </div>
+      <div class="program-card featured">
+        <div class="program-icon">⭐</div>
+        <div class="program-badge">Most Popular</div>
+        <h3>Complete Wellness</h3>
+        <p>A full-body transformation program combining weight management, energy boost and long-term habit building.</p>
+        <ul class="program-features">
+          <li>Everything in Weight Loss</li>
+          <li>Supplement guidance</li>
+          <li>Bi-weekly body scans</li>
+          <li>Custom supplement plan</li>
+          <li>Priority coach support</li>
+        </ul>
+      </div>
+      <div class="program-card">
+        <div class="program-icon">💪</div>
+        <h3>Weight Gain &amp; Muscle</h3>
+        <p>Build lean muscle and healthy weight with high-protein nutrition plans designed for your body type and activity level.</p>
+        <ul class="program-features">
+          <li>Muscle mass tracking</li>
+          <li>High-protein meal plan</li>
+          <li>Protein shake program</li>
+          <li>Strength-focused guidance</li>
+          <li>Coach WhatsApp support</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">How It Works</span>
+      <h2 class="section-title">Your Journey in 3 Simple Steps</h2>
+      <p class="section-sub">Getting started is free. No commitment. Just walk in or book via WhatsApp.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-icon">💬</div>
+        <h3>Book Free Consultation</h3>
+        <p>Message us on WhatsApp or walk into the center. Your first consultation and body checkup is completely free.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-icon">📊</div>
+        <h3>Get Your Body Scan</h3>
+        <p>We do a full body composition scan — BMI, fat percentage, muscle mass — and explain exactly what your numbers mean.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-icon">🌿</div>
+        <h3>Start Your Program</h3>
+        <p>Your coach builds a personalised nutrition plan. You come in daily, take your shake, get motivated and see real results.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="results" id="results">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">Real Results</span>
+      <h2 class="section-title">Our Members' Transformations</h2>
+      <p class="section-sub">Real people, real journeys. Every result is backed by body scan data tracked by our coaches.</p>
+    </div>
+    <div class="results-grid">
+      <div class="result-card">
+        <div class="result-photos">
+          <div class="result-photo before"><div><span class="result-photo-label">Before</span>Photo<br>Coming Soon</div></div>
+          <div class="result-photo after"><div><span class="result-photo-label">After</span>Photo<br>Coming Soon</div></div>
+        </div>
+        <div class="result-body">
+          <div class="result-name">Member B</div>
+          <div class="result-tag">Weight Loss · 45 days</div>
+          <div class="result-highlight">Lost 9 kg in 45 days</div>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-photos">
+          <div class="result-photo before"><div><span class="result-photo-label">Before</span>Photo<br>Coming Soon</div></div>
+          <div class="result-photo after"><div><span class="result-photo-label">After</span>Photo<br>Coming Soon</div></div>
+        </div>
+        <div class="result-body">
+          <div class="result-name">Member B</div>
+          <div class="result-tag">Muscle Gain · 45 days</div>
+          <div class="result-highlight">Gained 4 kg muscle</div>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-photos">
+          <div class="result-photo before"><div><span class="result-photo-label">Before</span>Photo<br>Coming Soon</div></div>
+          <div class="result-photo after"><div><span class="result-photo-label">After</span>Photo<br>Coming Soon</div></div>
+        </div>
+        <div class="result-body">
+          <div class="result-name">Member C</div>
+          <div class="result-tag">Complete Wellness · 60 days</div>
+          <div class="result-highlight">12 kg lost + energy improved</div>
+        </div>
+      </div>
+    </div>
+    <p class="results-disclaimer">* Results may vary. Individual results depend on consistency, diet and lifestyle factors. All photos and testimonials are shared with the written consent of the individual.</p>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">Testimonials</span>
+      <h2 class="section-title">What Our Members Say</h2>
+    </div>
+    <!-- FEATURED TESTIMONIAL -->
+    <div style="background:linear-gradient(135deg,#0f2318,#1a3a28,#2d5a3d);border-radius:20px;padding:32px;margin-bottom:24px;border:1.5px solid rgba(255,255,255,.1)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <span style="background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px">FEATURED STORY</span>
+        <span style="color:var(--accent);font-size:14px">★★★★★</span>
+      </div>
+
+      <!-- Before / After Photos -->
+      <div style="display:flex;justify-content:center;gap:16px;margin-bottom:24px;flex-wrap:wrap;align-items:flex-start">
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <img src="centers/dharanis/images/testimonial-manoj-before.jpeg" alt="Before" style="height:300px;width:auto;border-radius:10px;display:block">
+          <div style="margin-top:8px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:6px">BEFORE · 43 kg</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <img src="centers/dharanis/images/testimonial-manoj-after.jpeg" alt="After" style="height:300px;width:auto;border-radius:10px;display:block">
+          <div style="margin-top:8px;background:#16a34a;color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:6px">AFTER · 59 kg</div>
+        </div>
+      </div>
+
+      <p style="font-size:15px;color:rgba(255,255,255,.9);line-height:1.8;font-style:italic;margin-bottom:20px">
+        "In 2023, I met with a road accident on the highway near Shantiram Hospital. My head hit the road — doctors found blood clots in 5 areas of my brain. My chances of survival were 25%. I was in a coma for 5 days. The doctors told my parents it would take 6 months to fully recover my memory and recognise people around me.
+        <br><br>
+        What happened next surprised everyone — including the doctors. With 15 days of consistent nutrition guidance and wellness products from Dharani's Wellness Center, I was discharged from hospital in just 15 days. Only 15 more days later, I was back in college — studying for my 6th semester exams. I passed every subject.
+        <br><br>
+        During my hospital stay I dropped to 43 kg. After consistent wellness guidance from Dharani's, I reached 59 kg — gaining 16 kg from my lowest point and 10 kg above my pre-accident weight. My recovery was not just survival. It was a full comeback — and I owe a big part of it to the right nutrition at the right time."
+      </p>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0">M</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#fff">Manoj</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5)">Recovery Member · Nandyal</div>
+        </div>
+      </div>
+      <p style="font-size:10px;color:rgba(255,255,255,.3);margin-top:16px;line-height:1.5">* This is a personal experience. Results may vary. Nutrition support is not a substitute for medical treatment. Always follow your doctor's advice during recovery.</p>
+    </div>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"I had tried so many diets before but nothing worked long-term. At Dharani's the coach explained everything clearly and the daily shake routine made it easy to stay consistent. I lost 6kg in my first month!"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">P</div>
+          <div>
+            <div class="testimonial-name">Priya S.</div>
+            <div class="testimonial-meta">Weight Loss Member · 2 months</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"The body scan every week showed me real data — not just the weighing scale. My fat percentage dropped from 34% to 26% in 45 days. The coach WhatsApp support is what makes this different from a regular gym."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">R</div>
+          <div>
+            <div class="testimonial-name">Ravi K.</div>
+            <div class="testimonial-meta">Complete Wellness Member · 6 weeks</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"I was underweight and wanted to build muscle. The personalized meal plan and protein shake program helped me gain 5kg of healthy weight in 2 months. Coach is very motivating and always available."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">A</div>
+          <div>
+            <div class="testimonial-name">Arjun M.</div>
+            <div class="testimonial-meta">Muscle Gain Member · 2 months</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOCATION -->
+<section class="location" id="location">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)">Find Us</span>
+      <h2 class="section-title">Visit Our Center</h2>
+      <p class="section-sub">Walk in anytime during center hours — no appointment needed for your first free consultation.</p>
+    </div>
+    <div class="location-grid">
+      <div class="location-map">
+        <iframe
+          src="https://maps.google.com/maps?q=Dharani's+Wellness+Center&output=embed"
+          allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+      <div class="location-details">
+        <div class="location-item">
+          <div class="location-item-icon">📍</div>
+          <div>
+            <div class="location-item-label">Address</div>
+            <div class="location-item-val">
+              Dharani's Wellness Center<br>
+              Padmavathi Nagar, Nandyal<br>
+              <span style="font-size:12px;color:rgba(255,255,255,.5)">Near Pramod Gastro and Liver Centre</span><br>
+              <a href="https://maps.app.goo.gl/SDRrRWpuk42MG6LCA" target="_blank">View on Google Maps →</a>
+            </div>
+          </div>
+        </div>
+        <div class="location-item">
+          <div class="location-item-icon">🕐</div>
+          <div>
+            <div class="location-item-label">Center Timings</div>
+            <div class="location-item-val">
+              <div class="timings-grid">
+                <div class="timing-row">Mon – Sat<br><span>7:00 AM – 8:00 PM</span></div>
+                <div class="timing-row">Sunday<br><span>8:00 AM – 1:00 PM</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="location-item">
+          <div class="location-item-icon">📞</div>
+          <div>
+            <div class="location-item-label">Contact</div>
+            <div class="location-item-val">
+              <a href="tel:+917981614593" style="color:var(--accent)">+91 79816 14593</a>
+            </div>
+          </div>
+        </div>
+        <div class="location-item">
+          <div class="location-item-icon">💬</div>
+          <div>
+            <div class="location-item-label">WhatsApp</div>
+            <div class="location-item-val">
+              <a href="https://wa.me/917981614593?text=Hi%2C%20I%27d%20like%20to%20book%20a%20free%20consultation%20at%20Dharani%27s%20Wellness%20Center" target="_blank" style="color:var(--accent)">Message us to book →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Ready to Start Your Journey?</h2>
+  <p>Your first consultation and body scan is completely free. Walk in or book via WhatsApp — takes just 2 minutes.</p>
+  <div class="cta-btns">
+    <a class="btn-primary" href="https://wa.me/917981614593?text=Hi%2C%20I%27d%20like%20to%20book%20a%20free%20consultation%20at%20Dharani%27s%20Wellness%20Center" target="_blank">
+      💬 Book on WhatsApp
+    </a>
+    <a class="btn-secondary" href="https://maps.app.goo.gl/SDRrRWpuk42MG6LCA" target="_blank">
+      📍 Get Directions
+    </a>
+  </div>
+</section>
+
+<!-- FLOATING WA BUTTON -->
+<a class="wa-float" href="https://wa.me/917981614593?text=Hi%2C%20I%27d%20like%20to%20book%20a%20free%20consultation%20at%20Dharani%27s%20Wellness%20Center" target="_blank" title="Chat on WhatsApp">💬</a>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Dharani's Wellness Center</div>
+  <div class="footer-powered">
+    Built with <a href="#" target="_blank">PulseZen</a> · Powered by <a href="#" target="_blank">PulseIQ</a>
+  </div>
+  <div class="footer-links">
+    <a href="#about">About</a>
+    <a href="#programs">Programs</a>
+    <a href="#results">Results</a>
+    <a href="#location">Location</a>
+    <a href="https://wa.me/917981614593" target="_blank">Contact</a>
+  </div>
+  <div class="footer-copy">© 2026 Dharani's Wellness Center. All rights reserved.</div>
+  <div class="footer-disclaimer">
+    PulseZen is an independent wellness platform. Not affiliated with any nutrition brand.<br>
+    Results may vary. These programs support wellness goals and are not a substitute for medical advice.
+  </div>
+</footer>
+
+</body>
+</html>

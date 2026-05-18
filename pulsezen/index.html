@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PulseZen — Get your wellness center online in 24 hours. Professional website, WhatsApp booking, Google visibility. Limited spots per area.">
+  <meta name="keywords" content="wellness center website, nutrition center online, PulseZen, wellness center registration">
+  <meta property="og:title" content="PulseZen — Get Your Wellness Center Online">
+  <meta property="og:description" content="Professional website for your wellness center. WhatsApp booking, Google visibility, area exclusivity. Register free today.">
+  <title>PulseZen — Get Your Wellness Center Online</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a3a28;
+      --primary-mid: #2d5a3d;
+      --primary-light: #3d7a52;
+      --accent: #e8a838;
+      --accent-light: #fef3c7;
+      --danger: #dc2626;
+      --text: #1a1a1a;
+      --muted: #6b7280;
+      --surface: #f9fafb;
+      --border: #e5e7eb;
+      --white: #ffffff;
+      --success: #16a34a;
+      --wa: #25D366;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--white); }
+    h1, h2, h3 { font-family: 'DM Serif Display', serif; }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,0.96); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-brand-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-family: 'DM Serif Display', serif; font-size: 16px;
+    }
+    .nav-brand-name { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--primary); }
+    .nav-brand-by { font-size: 10px; color: var(--muted); font-family: 'DM Sans', sans-serif; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-demo { font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none; }
+    .nav-demo:hover { text-decoration: underline; }
+    .btn-wa {
+      background: var(--wa); color: #fff; border: none; border-radius: 8px;
+      padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 13px;
+      font-weight: 700; cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px; transition: opacity .2s;
+    }
+    .btn-wa:hover { opacity: .88; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a1f12 0%, #1a3a28 50%, #2d5a3d 100%);
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 120px 24px 80px; position: relative; overflow: hidden;
+    }
+    .hero-blob1 {
+      position: absolute; top: -100px; right: -100px; width: 500px; height: 500px;
+      border-radius: 50%; background: radial-gradient(circle, rgba(232,168,56,.12) 0%, transparent 70%);
+    }
+    .hero-blob2 {
+      position: absolute; bottom: -120px; left: -120px; width: 600px; height: 600px;
+      border-radius: 50%; background: radial-gradient(circle, rgba(61,122,82,.2) 0%, transparent 70%);
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 720px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(232,168,56,.15); border: 1px solid rgba(232,168,56,.3);
+      color: var(--accent); font-size: 12px; font-weight: 700; padding: 6px 16px;
+      border-radius: 20px; margin-bottom: 28px; letter-spacing: .6px; text-transform: uppercase;
+    }
+    .hero h1 {
+      font-size: clamp(34px, 6vw, 60px); color: #fff; line-height: 1.15; margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero-sub {
+      font-size: clamp(15px, 2.5vw, 18px); color: rgba(255,255,255,.75);
+      line-height: 1.75; margin-bottom: 16px; max-width: 580px; margin-left: auto; margin-right: auto;
+    }
+    .hero-urgency {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(220,38,38,.15); border: 1px solid rgba(220,38,38,.3);
+      color: #fca5a5; font-size: 12px; font-weight: 600; padding: 6px 14px;
+      border-radius: 8px; margin-bottom: 32px;
+    }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px; }
+    .btn-primary {
+      background: var(--wa); color: #fff; border: none; border-radius: 10px;
+      padding: 16px 32px; font-family: 'DM Sans', sans-serif; font-size: 16px;
+      font-weight: 700; cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: transform .2s, opacity .2s; box-shadow: 0 6px 24px rgba(37,211,102,.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); }
+    .btn-outline {
+      background: transparent; color: #fff;
+      border: 1.5px solid rgba(255,255,255,.35); border-radius: 10px;
+      padding: 16px 32px; font-family: 'DM Sans', sans-serif; font-size: 16px;
+      font-weight: 600; cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px; transition: background .2s;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,.1); }
+    .hero-trust { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+    .hero-trust-item { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,.6); font-size: 13px; }
+    .hero-trust-item span { color: var(--accent); }
+
+    /* ── PROBLEM SECTION ── */
+    .problem { background: var(--surface); padding: 72px 24px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      display: inline-block; background: var(--accent-light); color: #92400e;
+      font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px;
+      letter-spacing: .8px; text-transform: uppercase; margin-bottom: 12px;
+    }
+    .section-title { font-size: clamp(26px, 4vw, 40px); color: var(--primary); margin-bottom: 12px; line-height: 1.2; }
+    .section-sub { font-size: 15px; color: var(--muted); line-height: 1.75; max-width: 560px; }
+    .section-header { margin-bottom: 48px; }
+    .section-header.center { text-align: center; }
+    .section-header.center .section-sub { margin: 0 auto; }
+    .problem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .problem-card {
+      background: var(--white); border-radius: 14px; padding: 24px;
+      border: 1.5px solid var(--border); text-align: center;
+    }
+    .problem-icon { font-size: 36px; margin-bottom: 12px; }
+    .problem-card h3 { font-size: 16px; color: var(--text); margin-bottom: 8px; font-family: 'DM Sans', sans-serif; font-weight: 700; }
+    .problem-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── WHAT YOU GET ── */
+    .features { padding: 72px 24px; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .feature-card {
+      background: var(--white); border-radius: 16px; padding: 28px;
+      border: 1.5px solid var(--border); transition: all .2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+    .feature-card:hover { border-color: var(--primary-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,58,40,.1); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px; margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .feature-card h3 { font-size: 18px; color: var(--primary); margin-bottom: 8px; }
+    .feature-card p { font-size: 13px; color: var(--muted); line-height: 1.65; }
+    .feature-tag {
+      display: inline-block; margin-top: 12px; background: #f0fdf4; color: var(--success);
+      font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+    }
+
+    /* ── EXCLUSIVITY ── */
+    .exclusivity { background: var(--primary); padding: 72px 24px; }
+    .exclusivity .section-title { color: #fff; }
+    .exclusivity .section-sub { color: rgba(255,255,255,.7); }
+    .exclusivity .section-tag { background: rgba(232,168,56,.15); color: var(--accent); }
+    .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px; }
+    .vs-card { border-radius: 16px; padding: 28px; }
+    .vs-card.good { background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.15); }
+    .vs-card.bad { background: rgba(220,38,38,.1); border: 1.5px solid rgba(220,38,38,.2); }
+    .vs-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .vs-card.good .vs-title { color: #fff; }
+    .vs-card.bad .vs-title { color: #fca5a5; }
+    .vs-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .vs-list li { font-size: 13px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+    .vs-card.good .vs-list li { color: rgba(255,255,255,.8); }
+    .vs-card.bad .vs-list li { color: rgba(255,150,150,.8); }
+    .vs-list li::before { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .vs-card.good .vs-list li::before { content: '✅'; }
+    .vs-card.bad .vs-list li::before { content: '❌'; }
+    .exclusivity-note {
+      background: rgba(232,168,56,.1); border: 1px solid rgba(232,168,56,.25);
+      border-radius: 12px; padding: 20px 24px; text-align: center;
+    }
+    .exclusivity-note p { color: rgba(255,255,255,.85); font-size: 14px; line-height: 1.7; }
+    .exclusivity-note strong { color: var(--accent); }
+
+    /* ── HOW IT WORKS ── */
+    .how { padding: 72px 24px; background: var(--surface); }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; position: relative; }
+    .step { text-align: center; padding: 24px 20px; position: relative; }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff; font-family: 'DM Serif Display', serif; font-size: 24px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; position: relative; z-index: 1;
+    }
+    .step-connector {
+      position: absolute; top: 52px; left: 50%; right: -50%;
+      height: 2px; background: var(--border); z-index: 0;
+    }
+    .step:last-child .step-connector { display: none; }
+    .step-icon { font-size: 28px; margin-bottom: 10px; }
+    .step h3 { font-size: 16px; color: var(--primary); margin-bottom: 6px; font-family: 'DM Sans', sans-serif; font-weight: 700; }
+    .step p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── PREVIEW ── */
+    .preview { padding: 72px 24px; }
+    .preview-box {
+      background: linear-gradient(135deg, var(--primary), var(--primary-mid));
+      border-radius: 20px; padding: 48px 32px; text-align: center; position: relative; overflow: hidden;
+    }
+    .preview-box::before {
+      content: ''; position: absolute; top: -60px; right: -60px;
+      width: 280px; height: 280px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,168,56,.15) 0%, transparent 70%);
+    }
+    .preview-box h2 { font-size: clamp(24px, 4vw, 36px); color: #fff; margin-bottom: 12px; }
+    .preview-box p { font-size: 15px; color: rgba(255,255,255,.75); margin-bottom: 28px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+    .preview-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.25);
+      color: #fff; border-radius: 10px; padding: 12px 24px;
+      font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 10px;
+      transition: background .2s;
+    }
+    .preview-link:hover { background: rgba(255,255,255,.25); }
+
+    /* ── PRICING ── */
+    .pricing { padding: 72px 24px; background: var(--surface); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+    .price-card {
+      background: var(--white); border-radius: 18px; padding: 32px 28px;
+      border: 1.5px solid var(--border); position: relative; transition: all .2s;
+    }
+    .price-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(26,58,40,.12); }
+    .price-card.featured {
+      background: linear-gradient(135deg, var(--primary), var(--primary-mid));
+      border-color: transparent;
+    }
+    .price-popular {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
+      padding: 4px 16px; border-radius: 20px; white-space: nowrap; letter-spacing: .5px;
+    }
+    .price-name { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+    .price-card.featured .price-name { color: rgba(255,255,255,.6); }
+    .price-amount { font-family: 'DM Serif Display', serif; font-size: 40px; color: var(--primary); margin-bottom: 4px; }
+    .price-card.featured .price-amount { color: #fff; }
+    .price-per { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .price-card.featured .price-per { color: rgba(255,255,255,.6); }
+    .price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .price-features li { font-size: 13px; display: flex; align-items: flex-start; gap: 8px; color: var(--muted); }
+    .price-card.featured .price-features li { color: rgba(255,255,255,.8); }
+    .price-features li::before { content: '✓'; font-weight: 700; color: var(--success); flex-shrink: 0; }
+    .price-card.featured .price-features li::before { color: var(--accent); }
+    .price-cta {
+      width: 100%; padding: 13px; border-radius: 10px; border: none;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700;
+      cursor: pointer; text-decoration: none; display: block; text-align: center;
+      transition: opacity .2s;
+    }
+    .price-cta:hover { opacity: .88; }
+    .price-cta.solid { background: var(--primary); color: #fff; }
+    .price-cta.wa { background: var(--wa); color: #fff; }
+    .price-cta.outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.4); }
+    .price-note { text-align: center; font-size: 12px; color: var(--muted); margin-top: 20px; }
+
+    /* ── FAQ ── */
+    .faq { padding: 72px 24px; }
+    .faq-list { display: flex; flex-direction: column; gap: 12px; max-width: 720px; margin: 0 auto; }
+    .faq-item { background: var(--surface); border-radius: 12px; border: 1.5px solid var(--border); overflow: hidden; }
+    .faq-q {
+      padding: 18px 20px; font-size: 14px; font-weight: 700; color: var(--text);
+      cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+      user-select: none;
+    }
+    .faq-q:hover { background: var(--border); }
+    .faq-arrow { font-size: 16px; color: var(--muted); transition: transform .2s; flex-shrink: 0; }
+    .faq-a { display: none; padding: 0 20px 18px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+
+    /* ── FINAL CTA ── */
+    .final-cta {
+      background: linear-gradient(135deg, #0a1f12, #1a3a28, #2d5a3d);
+      padding: 80px 24px; text-align: center;
+    }
+    .final-cta h2 { font-size: clamp(28px, 5vw, 48px); color: #fff; margin-bottom: 14px; }
+    .final-cta p { font-size: 16px; color: rgba(255,255,255,.7); margin-bottom: 36px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+    .final-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FOOTER ── */
+    footer { background: #050f08; padding: 32px 24px; text-align: center; }
+    .footer-brand { font-family: 'DM Serif Display', serif; font-size: 22px; color: #fff; margin-bottom: 4px; }
+    .footer-powered { font-size: 11px; color: rgba(255,255,255,.35); margin-bottom: 16px; }
+    .footer-powered a { color: rgba(255,255,255,.5); text-decoration: none; }
+    .footer-links { display: flex; gap: 20px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .footer-links a { font-size: 12px; color: rgba(255,255,255,.4); text-decoration: none; }
+    .footer-links a:hover { color: rgba(255,255,255,.7); }
+    .footer-copy { font-size: 11px; color: rgba(255,255,255,.25); line-height: 1.6; }
+    .footer-disclaimer { font-size: 10px; color: rgba(255,255,255,.2); margin-top: 8px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+
+    /* ── FLOATING WA ── */
+    .wa-float {
+      position: fixed; bottom: 24px; right: 24px; z-index: 200;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--wa); color: #fff; font-size: 26px;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; box-shadow: 0 4px 20px rgba(37,211,102,.5);
+      animation: wa-pulse 2s infinite; transition: transform .2s;
+    }
+    .wa-float:hover { transform: scale(1.1); }
+    @keyframes wa-pulse {
+      0%,100% { box-shadow: 0 4px 20px rgba(37,211,102,.5); }
+      50% { box-shadow: 0 4px 32px rgba(37,211,102,.85); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:768px) {
+      nav { padding: 12px 16px; }
+      .nav-demo { display: none; }
+      .vs-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .step-connector { display: none; }
+      section, .problem, .features, .how, .preview,
+      .pricing, .faq, .exclusivity { padding: 52px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a class="nav-brand" href="home.html">
+    <div class="nav-brand-icon">P</div>
+    <div>
+      <div class="nav-brand-name">PulseZen</div>
+      <div class="nav-brand-by">powered by PulseIQ</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <a class="nav-demo" href="dharanis.html" target="_blank">See Demo Page →</a>
+    <a class="btn-wa" href="#register">
+      💬 Register Free
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-blob1"></div>
+  <div class="hero-blob2"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🌿 For Wellness Center Owners</div>
+    <h1>Get Your Wellness Center<br><span>Online in 24 Hours</span></h1>
+    <p class="hero-sub">Professional website, WhatsApp booking button, Google visibility — all set up for you. New customers find your center and book directly.</p>
+    <div class="hero-urgency">
+      🔴 Limited spots — only 1 center per area gets exclusivity
+    </div>
+    <div class="hero-btns">
+      <a class="btn-primary" href="#register">
+        💬 Register Your Center Free
+      </a>
+      <a class="btn-outline" href="dharanis.html" target="_blank">
+        👁 See Demo Page
+      </a>
+    </div>
+    <div class="hero-trust">
+      <div class="hero-trust-item"><span>✓</span> No technical knowledge needed</div>
+      <div class="hero-trust-item"><span>✓</span> Setup done for you</div>
+      <div class="hero-trust-item"><span>✓</span> First consultation free</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<div class="problem">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">The Problem</span>
+      <h2 class="section-title">Most Wellness Centers Are Invisible Online</h2>
+      <p class="section-sub">Your center does great work — but if customers can't find you online, they go to whoever they find first.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">😔</div>
+        <h3>No Online Presence</h3>
+        <p>Customers search "wellness center near me" and your center doesn't appear. They go to a competitor instead.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📱</div>
+        <h3>Sharing Just a Phone Number</h3>
+        <p>Instagram bio says "call us" — no website, no photos, no story. Customers don't trust what they can't see.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">😴</div>
+        <h3>Losing Customers at Night</h3>
+        <p>Someone wants to book at 10pm. Your center is closed. They move on. A website works 24/7 even when you sleep.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📣</div>
+        <h3>Only Word of Mouth</h3>
+        <p>Growing only through referrals is slow. A PulseZen page brings new customers who never heard of you before.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">What You Get</span>
+      <h2 class="section-title">Everything Your Center Needs Online</h2>
+      <p class="section-sub">We build it, you share the link. It's that simple.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>Professional Website</h3>
+        <p>A beautiful, mobile-friendly page for your center — with your name, programs, results, location and contact details. Looks premium on any phone or laptop.</p>
+        <span class="feature-tag">Done for you in 24 hours</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <h3>WhatsApp Booking Button</h3>
+        <p>Every visitor sees a "Book Free Consultation" button that opens WhatsApp directly to you with a pre-filled message. No forms, no apps — just a chat.</p>
+        <span class="feature-tag">Instant bookings</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📍</div>
+        <h3>Google Maps Integration</h3>
+        <p>Your center location embedded on the page. Customers see exactly where you are and get directions in one tap. Link your Google Business Profile for maximum visibility.</p>
+        <span class="feature-tag">Easy to find</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Area Exclusivity</h3>
+        <p>Only one wellness center per locality gets a PulseZen page. Your area is locked — no competitor in your street gets the same advantage. First to register wins.</p>
+        <span class="feature-tag">Limited spots</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Results & Testimonials</h3>
+        <p>Showcase your members' transformations and reviews on your page. Build trust before a customer even walks in. We format and display them professionally.</p>
+        <span class="feature-tag">Builds trust instantly</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>One Link for Everything</h3>
+        <p>Share one link on WhatsApp status, Instagram bio, visiting cards, anywhere. That link shows your full center — programs, results, location, booking. One link does it all.</p>
+        <span class="feature-tag">Share anywhere</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXCLUSIVITY -->
+<section class="exclusivity" id="exclusivity">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">Why Register Early</span>
+      <h2 class="section-title">Center 1 vs Center 10 — The Difference Is Huge</h2>
+      <p class="section-sub">In every area only one center gets exclusivity. Here is what that means for you.</p>
+    </div>
+    <div class="vs-grid">
+      <div class="vs-card good">
+        <div class="vs-title">✅ Center 1 — Registers First</div>
+        <ul class="vs-list">
+          <li>Area locked — no competitor gets PulseZen in same locality</li>
+          <li>Google ranking starts immediately — 3 month head start</li>
+          <li>Customers find them first when searching online</li>
+          <li>Professional page to share on Instagram and WhatsApp</li>
+          <li>Price locked at ₹499/month forever</li>
+          <li>Bookings coming in 24/7 even when center is closed</li>
+          <li>Competitors can never catch up on Google rankings</li>
+        </ul>
+      </div>
+      <div class="vs-card bad">
+        <div class="vs-title">❌ Center 10 — Registers Late</div>
+        <ul class="vs-list">
+          <li>Area already taken — goes on waitlist or non-exclusive listing</li>
+          <li>Google ranking starts from zero in a crowded market</li>
+          <li>Customers already found Center 1 — hard to switch them</li>
+          <li>Still sharing just a phone number on social media</li>
+          <li>Pays higher price — ₹699/month for less benefit</li>
+          <li>Misses bookings that happen after hours</li>
+          <li>Center 1 has months of reviews and visibility already</li>
+        </ul>
+      </div>
+    </div>
+    <div class="exclusivity-note">
+      <p>In Nandyal there may be 25 wellness centers. Only <strong>8–10 spots</strong> are available — one per locality. Once your area is taken, it is gone. <strong>The center that registers today wins their area permanently.</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="how" id="how">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">How It Works</span>
+      <h2 class="section-title">Get Online in 4 Simple Steps</h2>
+      <p class="section-sub">No technical knowledge needed. We handle everything.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-connector"></div>
+        <div class="step-icon">💬</div>
+        <h3>Message Us on WhatsApp</h3>
+        <p>Click "Register Free" and send us your center name, location and WhatsApp number. Takes 2 minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-connector"></div>
+        <div class="step-icon">🔒</div>
+        <h3>We Lock Your Area</h3>
+        <p>We confirm your locality is available and reserve it for you. No other center in your area gets PulseZen.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-connector"></div>
+        <div class="step-icon">🌐</div>
+        <h3>Your Page Goes Live</h3>
+        <p>Within 24 hours your professional wellness center page is live at your own PulseZen link.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-connector"></div>
+        <div class="step-icon">📲</div>
+        <h3>Share & Get Customers</h3>
+        <p>Share your link on WhatsApp, Instagram bio, visiting cards. New customers find you and book directly.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<section class="preview">
+  <div class="container">
+    <div class="preview-box">
+      <h2>See What Your Page Looks Like</h2>
+      <p>We built a demo page for Dharani's Wellness Center. This is exactly what your center's page will look like — professional, mobile-friendly and ready to take bookings.</p>
+      <a class="preview-link" href="dharanis.html" target="_blank">👁 View Demo Page →</a>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">Pricing</span>
+      <h2 class="section-title">Simple, Honest Pricing</h2>
+      <p class="section-sub">Start free. Upgrade when you're ready. No hidden charges.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-name">Starter</div>
+        <div class="price-amount">₹499</div>
+        <div class="price-per">per month</div>
+        <ul class="price-features">
+          <li>Professional PulseZen page</li>
+          <li>Area exclusivity locked</li>
+          <li>WhatsApp booking button</li>
+          <li>Google Maps integration</li>
+          <li>Results & testimonials section</li>
+          <li>Updates anytime</li>
+        </ul>
+        <a class="price-cta solid" href="#register">Register Now</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-popular">Most Popular</div>
+        <div class="price-name">Pro</div>
+        <div class="price-amount">₹999</div>
+        <div class="price-per">per month</div>
+        <ul class="price-features">
+          <li>Everything in Starter</li>
+          <li>PulseIQ dashboard included</li>
+          <li>Customer & attendance tracking</li>
+          <li>Finance management</li>
+          <li>Body composition tracking</li>
+          <li>AI insights & meal plans</li>
+        </ul>
+        <a class="price-cta outline" href="#register">Register Now</a>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Elite</div>
+        <div class="price-amount">₹1999</div>
+        <div class="price-per">per month</div>
+        <ul class="price-features">
+          <li>Everything in Pro</li>
+          <li>Priority support</li>
+          <li>Custom subdomain setup</li>
+          <li>Monthly performance report</li>
+          <li>First priority on new features</li>
+          <li>Direct owner WhatsApp line</li>
+        </ul>
+        <a class="price-cta solid" href="#register">Register Now</a>
+      </div>
+    </div>
+    <p class="price-note">🔒 Early bird centers lock their price forever. Price increases after first 50 centers.</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">FAQ</span>
+      <h2 class="section-title">Common Questions</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Do I need any technical knowledge to get started? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">No. You just message us on WhatsApp with your center details. We build the page, set everything up and send you your link. You don't need to touch any code.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">What is area exclusivity? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Only one wellness center per locality gets a PulseZen page. If you are in Old Town Nandyal, no other center in Old Town gets PulseZen. Your area is locked for you as long as you have an active subscription.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">What if my area is already taken? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">You go on the waitlist for free. If the center in your area cancels their subscription, you get first priority. You can also take a non-exclusive listing at ₹299/month — you get a page but without the area lock.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">How long does it take to get my page live? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Within 24 hours of registering. We ask for your center name, location, WhatsApp number, timings and any photos you have. We build the page and send you the link the same day or next morning.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Can I update my page later? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Yes. Any time you want to add new results, update timings, change photos or add testimonials — just message us on WhatsApp. Updates are done within 24 hours.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Is there any contract or lock-in period? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">No contract. Month to month. You can cancel anytime. But remember — if you cancel, your area exclusivity is released and another center can claim it.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">What is PulseIQ and is it different from PulseZen? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">PulseZen is your public website — what new customers see. PulseIQ is your internal management dashboard — attendance, customer data, finance, body scans. They work together but are separate tools. PulseIQ is included in the Pro and Elite plans.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REGISTRATION FORM -->
+<section id="register" style="padding:72px 24px;background:var(--surface)">
+  <div class="container">
+    <div class="section-header center">
+      <span class="section-tag">Register Your Center</span>
+      <h2 class="section-title">Get Your Center Online in 24 Hours</h2>
+      <p class="section-sub">Fill in your details below. We'll build your page and send you the link within 24 hours.</p>
+    </div>
+    <form id="regForm" style="max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+      <div>
+        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">Center Name *</label>
+        <input id="r-name" type="text" placeholder="e.g. Dharani's Wellness Center" required
+          style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none">
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">Owner Name *</label>
+        <input id="r-owner" type="text" placeholder="Your full name" required
+          style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none">
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">WhatsApp Number *</label>
+        <input id="r-phone" type="tel" placeholder="e.g. 9876543210" required
+          style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">City *</label>
+          <input id="r-city" type="text" placeholder="e.g. Nandyal" required
+            style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">Locality / Area *</label>
+          <input id="r-locality" type="text" placeholder="e.g. Padmavathi Nagar" required
+            style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">Nearby Landmark</label>
+        <input id="r-landmark" type="text" placeholder="e.g. Near Pramod Hospital"
+          style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none">
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">Center Timings</label>
+        <input id="r-timings" type="text" placeholder="e.g. 7am–10am, 5pm–8pm"
+          style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none">
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">Google Maps Link (optional)</label>
+        <input id="r-maps" type="url" placeholder="https://maps.app.goo.gl/..."
+          style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none">
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">Preferred Plan *</label>
+        <select id="r-tier" required
+          style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:#fff">
+          <option value="">— Select a plan —</option>
+          <option value="Exclusive ₹999/month">Exclusive ₹999/month — First in my area</option>
+          <option value="Standard ₹499/month">Standard ₹499/month — Other locality</option>
+          <option value="Non-exclusive ₹299/month">Non-exclusive ₹299/month — My area is taken</option>
+        </select>
+      </div>
+      <div id="regMsg" style="display:none;padding:12px 16px;border-radius:10px;font-size:14px;font-weight:600;text-align:center"></div>
+      <button type="submit" id="regBtn"
+        style="background:var(--wa);color:#fff;border:none;border-radius:10px;padding:16px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s">
+        💬 Submit &amp; Register Center
+      </button>
+      <p style="font-size:12px;color:var(--muted);text-align:center">We'll review your details and contact you within 24 hours on WhatsApp.</p>
+    </form>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <h2>Your Area Is Available — For Now</h2>
+  <p>Register today and lock your locality before another center in your area does. First to register wins the spot permanently.</p>
+  <div class="final-btns">
+    <a class="btn-primary" href="#register">
+      📋 Register Your Center
+    </a>
+    <a class="btn-outline" href="dharanis.html" target="_blank">
+      👁 See Demo First
+    </a>
+  </div>
+</section>
+
+<script>
+(function(){
+  var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+
+  document.getElementById('regForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var btn = document.getElementById('regBtn');
+    var msg = document.getElementById('regMsg');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    var data = {
+      center_name: document.getElementById('r-name').value.trim(),
+      owner_name:  document.getElementById('r-owner').value.trim(),
+      whatsapp:    document.getElementById('r-phone').value.trim(),
+      city:        document.getElementById('r-city').value.trim(),
+      locality:    document.getElementById('r-locality').value.trim(),
+      landmark:    document.getElementById('r-landmark').value.trim(),
+      timings:     document.getElementById('r-timings').value.trim(),
+      maps_link:   document.getElementById('r-maps').value.trim(),
+      tier:        document.getElementById('r-tier').value,
+      status:      'pending'
+    };
+
+    try {
+      var res = await fetch(SB_URL + '/rest/v1/pulsezen_centers', {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(data)
+      });
+
+      if(res.ok){
+        msg.style.display = 'block';
+        msg.style.background = '#f0fdf4';
+        msg.style.color = '#16a34a';
+        msg.style.border = '1.5px solid #bbf7d0';
+        msg.textContent = '✅ Registration submitted! We will check your area availability and contact you on WhatsApp within 24 hours with payment details to lock your spot.';
+        btn.style.display = 'none';
+
+        // Notify owner on WhatsApp
+        // Pre-filled approval message to send to center owner
+        var approveMsg = 'Hi ' + data.owner_name + '! Great news — '
+          + data.locality + ', ' + data.city + ' is available on PulseZen. '
+          + 'To lock your exclusive spot, please pay ' + data.tier.split(' ')[1] + ' to this UPI: [your UPI ID]. '
+          + 'Once payment is done, your center page will be live within 24 hours!';
+
+        // Notification to you with approve link included
+        var phone91 = '91' + data.whatsapp.replace(/\D/g,'').slice(-10);
+        var approveLink = 'https://wa.me/' + phone91 + '?text=' + encodeURIComponent(approveMsg);
+
+        var waText = '🆕 New PulseZen Registration!%0A%0A'
+          + 'Center: ' + encodeURIComponent(data.center_name) + '%0A'
+          + 'Owner: ' + encodeURIComponent(data.owner_name) + '%0A'
+          + 'WhatsApp: ' + encodeURIComponent(data.whatsapp) + '%0A'
+          + 'City: ' + encodeURIComponent(data.city) + '%0A'
+          + 'Locality: ' + encodeURIComponent(data.locality) + '%0A'
+          + 'Landmark: ' + encodeURIComponent(data.landmark) + '%0A'
+          + 'Timings: ' + encodeURIComponent(data.timings) + '%0A'
+          + 'Plan: ' + encodeURIComponent(data.tier) + '%0A%0A'
+          + '✅ Approve & send payment details:%0A'
+          + encodeURIComponent(approveLink) + '%0A%0A'
+          + '❌ If area taken reply: Sorry, your area is already taken. You can join the waitlist or choose non-exclusive at %E2%82%B9299/month.';
+
+        setTimeout(function(){
+          window.open('https://wa.me/917981614593?text=' + waText, '_blank');
+        }, 1500);
+      } else {
+        throw new Error('Failed');
+      }
+    } catch(err){
+      msg.style.display = 'block';
+      msg.style.background = '#fef2f2';
+      msg.style.color = '#dc2626';
+      msg.style.border = '1.5px solid #fecaca';
+      msg.textContent = '❌ Something went wrong. Please message us directly on WhatsApp.';
+      btn.disabled = false;
+      btn.textContent = '💬 Submit & Register Center';
+    }
+  });
+})();
+</script>
+
+<!-- FLOATING WA -->
+<a class="wa-float" href="#register" title="Register on WhatsApp">💬</a>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">PulseZen</div>
+  <div class="footer-powered">powered by <a href="#">PulseIQ</a></div>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#exclusivity">Exclusivity</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="dharanis.html" target="_blank">Demo</a>
+  </div>
+  <div class="footer-copy">© 2026 PulseZen. All rights reserved. Unauthorized copying of this platform is prohibited.</div>
+  <div class="footer-disclaimer">PulseZen is an independent wellness platform. Not affiliated with any nutrition brand. Results may vary.</div>
+</footer>
+
+<script>
+  function toggleFaq(el) {
+    var item = el.parentElement;
+    var isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(function(i){ i.classList.remove('open'); });
+    if (!isOpen) item.classList.add('open');
+  }
+</script>
+
+</body>
+</html>
