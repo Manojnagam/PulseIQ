@@ -698,12 +698,15 @@
         <input id="r-maps" type="url" placeholder="https://maps.app.goo.gl/..."
           style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none">
       </div>
+      <!-- AVAILABILITY BADGE -->
+      <div id="availBadge" style="display:none;padding:14px 16px;border-radius:12px;font-size:14px;font-weight:600;line-height:1.6"></div>
+
       <div>
         <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px">Preferred Plan *</label>
         <select id="r-tier" required
           style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:#fff">
           <option value="">— Select a plan —</option>
-          <option value="Exclusive ₹999/month">Exclusive ₹999/month — First in my area</option>
+          <option value="Exclusive ₹999/month" id="tierExclusive">Exclusive ₹999/month — First in my area</option>
           <option value="Standard ₹499/month">Standard ₹499/month — Other locality</option>
           <option value="Non-exclusive ₹299/month">Non-exclusive ₹299/month — My area is taken</option>
         </select>
@@ -846,6 +849,74 @@
       btn.textContent = '💬 Submit & Register Center';
     }
   });
+
+  // ── LIVE AVAILABILITY CHECKER ──
+  var _checkTimer = null;
+
+  function checkAvailability() {
+    var city     = document.getElementById('r-city').value.trim();
+    var locality = document.getElementById('r-locality').value.trim();
+    var badge    = document.getElementById('availBadge');
+    var tier     = document.getElementById('r-tier');
+    var exclusive= document.getElementById('tierExclusive');
+
+    if(city.length < 2 || locality.length < 2) {
+      badge.style.display = 'none';
+      return;
+    }
+
+    badge.style.display = 'block';
+    badge.style.background = '#f9fafb';
+    badge.style.border = '1.5px solid #e5e7eb';
+    badge.style.color = '#6b7280';
+    badge.textContent = '🔍 Checking availability for ' + locality + ', ' + city + '...';
+
+    clearTimeout(_checkTimer);
+    _checkTimer = setTimeout(async function() {
+      try {
+        var url = SB_URL + '/rest/v1/pulsezen_centers'
+          + '?city=ilike.' + encodeURIComponent(city)
+          + '&locality=ilike.' + encodeURIComponent(locality)
+          + '&tier=like.Exclusive*'
+          + '&status=eq.active'
+          + '&select=id';
+
+        var res = await fetch(url, {
+          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+        });
+        var data = await res.json();
+
+        if(data.length === 0) {
+          // Available
+          badge.style.background = '#f0fdf4';
+          badge.style.border = '1.5px solid #86efac';
+          badge.style.color = '#15803d';
+          badge.innerHTML = '✅ <strong>' + locality + ', ' + city + '</strong> is available! You can get exclusivity — no competitor will be listed in your area.';
+          exclusive.disabled = false;
+          exclusive.textContent = 'Exclusive ₹999/month — First in my area ✅';
+          tier.value = 'Exclusive ₹999/month';
+        } else {
+          // Taken
+          badge.style.background = '#fef2f2';
+          badge.style.border = '1.5px solid #fca5a5';
+          badge.style.color = '#dc2626';
+          badge.innerHTML = '❌ <strong>' + locality + ', ' + city + '</strong> is already taken by another center. You can still join as <strong>Non-Exclusive at ₹299/month</strong> — your page will go live without area lock.';
+          exclusive.disabled = true;
+          exclusive.textContent = 'Exclusive ₹999/month — Not available in your area';
+          tier.value = 'Non-exclusive ₹299/month';
+        }
+      } catch(e) {
+        badge.style.background = '#fefce8';
+        badge.style.border = '1.5px solid #fde68a';
+        badge.style.color = '#92400e';
+        badge.textContent = '⚠️ Could not check availability. We will confirm your area when we contact you.';
+      }
+    }, 600);
+  }
+
+  document.getElementById('r-city').addEventListener('input', checkAvailability);
+  document.getElementById('r-locality').addEventListener('input', checkAvailability);
+
 })();
 </script>
 
