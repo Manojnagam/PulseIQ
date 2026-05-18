@@ -82,18 +82,7 @@
       color:#fff; padding:2px 8px; border-radius:20px; margin-left:6px;
     }
 
-    /* T&C Box */
-    .tnc-box {
-      background:var(--surface); border:1.5px solid var(--border);
-      border-radius:12px; padding:16px; margin:20px 0;
-      max-height:200px; overflow-y:auto;
-      font-size:12px; color:#374151; line-height:1.8;
-    }
-    .tnc-box h3 { font-size:13px; color:var(--primary); margin-bottom:10px; }
-    .tnc-box p { margin-bottom:8px; }
-    .tnc-box strong { color:#1a1a1a; }
-
-    .checkbox-row { display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; }
+.checkbox-row { display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; }
     .checkbox-row input[type=checkbox] { width:18px; height:18px; margin-top:2px; flex-shrink:0; cursor:pointer; accent-color:var(--primary); }
     .checkbox-row label { font-size:13px; color:#1a1a1a; line-height:1.6; font-weight:500; cursor:pointer; }
 
@@ -219,24 +208,7 @@
 
     <!-- TERMS & CONDITIONS -->
     <div class="section-label">Terms & Agreement</div>
-    <div class="tnc-box">
-      <h3>PulseZen Center Owner Agreement</h3>
-      <p>By registering your wellness center with PulseZen, you agree to the following terms:</p>
-      <p><strong>1. Member Data & Consent Responsibility</strong><br>
-      You, as the center owner, are solely responsible for obtaining written or verbal consent from your members before submitting their photos, testimonials, or personal data to PulseZen. PulseZen will not be held liable for any data published without proper member consent. You confirm that all individuals whose photos or testimonials appear on your PulseZen page have given their permission.</p>
-      <p><strong>2. Content Accuracy</strong><br>
-      All information, photos, and testimonials you provide must be accurate and genuine. Fabricated results or stock photos are strictly prohibited.</p>
-      <p><strong>3. Health Claims</strong><br>
-      You agree not to make medical claims about results. All content must use soft language: "supports weight loss", "improved wellness" — not "cures" or "treats" any condition.</p>
-      <p><strong>4. Copyright</strong><br>
-      You confirm that all photos you submit are owned by you or your members. No third-party copyrighted images.</p>
-      <p><strong>5. Payment</strong><br>
-      Subscription is monthly. Non-payment results in page deactivation. No refunds for partial months.</p>
-      <p><strong>6. Exclusivity</strong><br>
-      Area exclusivity is confirmed only after payment. Registration alone does not guarantee exclusivity.</p>
-      <p><strong>7. Termination</strong><br>
-      PulseZen reserves the right to remove any center page that violates these terms without prior notice.</p>
-    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Please read our <a href="terms.html" target="_blank" style="color:var(--primary);font-weight:600;">Terms & Conditions →</a> before agreeing below.</p>
 
     <div class="checkbox-row">
       <input type="checkbox" id="r-consent">
@@ -244,7 +216,7 @@
     </div>
     <div class="checkbox-row">
       <input type="checkbox" id="r-agree">
-      <label for="r-agree">I have read and agree to the PulseZen Center Owner Terms & Agreement above.</label>
+      <label for="r-agree">I have read and agree to the <a href="terms.html" target="_blank" style="color:var(--primary);font-weight:600;">PulseZen Terms & Conditions</a>.</label>
     </div>
 
     <div id="errMsg"></div>
