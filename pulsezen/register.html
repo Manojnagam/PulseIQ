@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Your Center — PulseZen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a3a28; --primary-light: #3d7a52;
+      --accent: #e8a838; --success: #16a34a;
+      --border: #e5e7eb; --muted: #6b7280;
+      --surface: #f9fafb; --white: #ffffff;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'DM Sans',sans-serif; background:var(--surface); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+    .card {
+      background:var(--white); border-radius:20px; padding:40px 32px;
+      max-width:520px; width:100%;
+      box-shadow:0 4px 24px rgba(0,0,0,.08);
+    }
+    .logo { display:flex; align-items:center; gap:10px; margin-bottom:28px; }
+    .logo-icon {
+      width:40px; height:40px; border-radius:10px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-family:'DM Serif Display',serif; font-size:18px;
+    }
+    .logo-text { font-family:'DM Serif Display',serif; font-size:18px; color:var(--primary); }
+    .logo-sub { font-size:11px; color:var(--muted); }
+    h1 { font-family:'DM Serif Display',serif; font-size:24px; color:var(--primary); margin-bottom:8px; }
+    .subtitle { font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:28px; }
+    .section-label {
+      font-size:11px; font-weight:700; color:var(--primary-light);
+      letter-spacing:.6px; text-transform:uppercase;
+      margin:24px 0 12px;
+    }
+    .form-group { margin-bottom:14px; }
+    label { font-size:13px; font-weight:600; color:#1a1a1a; display:block; margin-bottom:6px; }
+    input, select, textarea {
+      width:100%; padding:12px 16px;
+      border:1.5px solid var(--border); border-radius:10px;
+      font-size:14px; font-family:'DM Sans',sans-serif; outline:none;
+      transition:border-color .2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color:var(--primary-light); }
+    textarea { resize:vertical; min-height:80px; }
+
+    /* Pricing Cards */
+    .plans { display:flex; flex-direction:column; gap:10px; margin-bottom:4px; }
+    .plan-option { display:none; }
+    .plan-label {
+      display:flex; align-items:flex-start; gap:12px;
+      border:1.5px solid var(--border); border-radius:12px;
+      padding:14px 16px; cursor:pointer; transition:border-color .2s, background .2s;
+    }
+    .plan-option:checked + .plan-label {
+      border-color:var(--primary); background:#f0f7f3;
+    }
+    .plan-radio {
+      width:18px; height:18px; border:2px solid var(--border);
+      border-radius:50%; flex-shrink:0; margin-top:2px;
+      display:flex; align-items:center; justify-content:center;
+      transition:border-color .2s;
+    }
+    .plan-option:checked + .plan-label .plan-radio {
+      border-color:var(--primary); background:var(--primary);
+    }
+    .plan-option:checked + .plan-label .plan-radio::after {
+      content:''; width:6px; height:6px; background:#fff; border-radius:50%; display:block;
+    }
+    .plan-info { flex:1; }
+    .plan-name { font-size:14px; font-weight:700; color:#1a1a1a; }
+    .plan-desc { font-size:12px; color:var(--muted); margin-top:2px; line-height:1.5; }
+    .plan-price {
+      font-size:15px; font-weight:700; color:var(--primary);
+      white-space:nowrap; margin-top:2px;
+    }
+    .plan-badge {
+      font-size:10px; font-weight:700; background:var(--accent);
+      color:#fff; padding:2px 8px; border-radius:20px; margin-left:6px;
+    }
+
+    /* T&C Box */
+    .tnc-box {
+      background:var(--surface); border:1.5px solid var(--border);
+      border-radius:12px; padding:16px; margin:20px 0;
+      max-height:200px; overflow-y:auto;
+      font-size:12px; color:#374151; line-height:1.8;
+    }
+    .tnc-box h3 { font-size:13px; color:var(--primary); margin-bottom:10px; }
+    .tnc-box p { margin-bottom:8px; }
+    .tnc-box strong { color:#1a1a1a; }
+
+    .checkbox-row { display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; }
+    .checkbox-row input[type=checkbox] { width:18px; height:18px; margin-top:2px; flex-shrink:0; cursor:pointer; accent-color:var(--primary); }
+    .checkbox-row label { font-size:13px; color:#1a1a1a; line-height:1.6; font-weight:500; cursor:pointer; }
+
+    .btn {
+      width:100%; padding:16px; background:var(--primary);
+      color:#fff; border:none; border-radius:10px;
+      font-family:'DM Sans',sans-serif; font-size:16px; font-weight:700;
+      cursor:pointer; transition:opacity .2s; margin-top:4px;
+    }
+    .btn:hover { opacity:.88; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    #successMsg { display:none; text-align:center; padding:32px 16px; }
+    .success-icon { font-size:56px; margin-bottom:16px; }
+    .success-title { font-family:'DM Serif Display',serif; font-size:24px; color:var(--success); margin-bottom:8px; }
+    .success-sub { font-size:14px; color:var(--muted); line-height:1.7; }
+    .success-next { background:#f0f7f3; border-radius:12px; padding:16px; margin-top:20px; text-align:left; font-size:13px; color:#1a1a1a; line-height:1.8; }
+    .success-next strong { color:var(--primary); }
+
+    #errMsg { display:none; background:#fef2f2; color:#dc2626; border:1.5px solid #fecaca; border-radius:10px; padding:12px 16px; font-size:13px; margin-bottom:12px; }
+    .footer-note { font-size:11px; color:var(--muted); text-align:center; margin-top:20px; line-height:1.6; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- SUCCESS STATE -->
+  <div id="successMsg">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Application Received!</div>
+    <p class="success-sub">Thank you for registering your wellness center with PulseZen. We will review your application and contact you within 24 hours.</p>
+    <div class="success-next">
+      <strong>What happens next:</strong><br>
+      1. We verify your center details<br>
+      2. We confirm area exclusivity availability<br>
+      3. Payment link is sent to your WhatsApp<br>
+      4. Your PulseZen page goes live within 48 hours
+    </div>
+  </div>
+
+  <!-- FORM STATE -->
+  <div id="formState">
+    <div class="logo">
+      <div class="logo-icon">P</div>
+      <div>
+        <div class="logo-text">PulseZen</div>
+        <div class="logo-sub">Center Registration</div>
+      </div>
+    </div>
+
+    <h1>Register Your Wellness Center</h1>
+    <p class="subtitle">Get your own PulseZen page and start attracting new members in your area. Fill the form below — we'll contact you within 24 hours.</p>
+
+    <!-- CENTER DETAILS -->
+    <div class="section-label">Center Details</div>
+    <div class="form-group">
+      <label>Center Name *</label>
+      <input id="r-center" type="text" placeholder="e.g. Ravi's Wellness Studio">
+    </div>
+    <div class="form-group">
+      <label>Owner Name *</label>
+      <input id="r-owner" type="text" placeholder="Your full name">
+    </div>
+    <div class="form-group">
+      <label>WhatsApp Number *</label>
+      <input id="r-phone" type="tel" placeholder="e.g. 9876543210">
+    </div>
+    <div class="form-group">
+      <label>City *</label>
+      <input id="r-city" type="text" placeholder="e.g. Nandyal">
+    </div>
+    <div class="form-group">
+      <label>Locality / Area *</label>
+      <input id="r-locality" type="text" placeholder="e.g. Bus Stand Area, Old Town">
+    </div>
+
+    <!-- PLAN SELECTION -->
+    <div class="section-label">Choose Your Plan</div>
+    <div class="plans">
+
+      <input type="radio" name="plan" id="p1" value="Exclusive First — ₹999/month" class="plan-option">
+      <label class="plan-label" for="p1">
+        <div class="plan-radio"></div>
+        <div class="plan-info">
+          <div class="plan-name">Exclusive — First in Area <span class="plan-badge">BEST VALUE</span></div>
+          <div class="plan-desc">You are the only wellness center in your locality on PulseZen. No competitor ever gets listed in your area.</div>
+        </div>
+        <div class="plan-price">₹999<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
+      </label>
+
+      <input type="radio" name="plan" id="p2" value="Exclusive Others — ₹499/month" class="plan-option">
+      <label class="plan-label" for="p2">
+        <div class="plan-radio"></div>
+        <div class="plan-info">
+          <div class="plan-name">Exclusive — Other Locality</div>
+          <div class="plan-desc">Exclusive in your own area. Another center already holds exclusivity in a nearby area.</div>
+        </div>
+        <div class="plan-price">₹499<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
+      </label>
+
+      <input type="radio" name="plan" id="p3" value="Non-Exclusive — ₹299/month" class="plan-option">
+      <label class="plan-label" for="p3">
+        <div class="plan-radio"></div>
+        <div class="plan-info">
+          <div class="plan-name">Non-Exclusive</div>
+          <div class="plan-desc">PulseZen page only. Your locality is already taken. No area lock.</div>
+        </div>
+        <div class="plan-price">₹299<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
+      </label>
+
+      <input type="radio" name="plan" id="p4" value="Elite — ₹1999/month" class="plan-option">
+      <label class="plan-label" for="p4">
+        <div class="plan-radio"></div>
+        <div class="plan-info">
+          <div class="plan-name">Elite</div>
+          <div class="plan-desc">Everything + priority support + AI member insights. Available on any tier upgrade.</div>
+        </div>
+        <div class="plan-price">₹1999<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
+      </label>
+
+    </div>
+
+    <!-- TERMS & CONDITIONS -->
+    <div class="section-label">Terms & Agreement</div>
+    <div class="tnc-box">
+      <h3>PulseZen Center Owner Agreement</h3>
+      <p>By registering your wellness center with PulseZen, you agree to the following terms:</p>
+      <p><strong>1. Member Data & Consent Responsibility</strong><br>
+      You, as the center owner, are solely responsible for obtaining written or verbal consent from your members before submitting their photos, testimonials, or personal data to PulseZen. PulseZen will not be held liable for any data published without proper member consent. You confirm that all individuals whose photos or testimonials appear on your PulseZen page have given their permission.</p>
+      <p><strong>2. Content Accuracy</strong><br>
+      All information, photos, and testimonials you provide must be accurate and genuine. Fabricated results or stock photos are strictly prohibited.</p>
+      <p><strong>3. Health Claims</strong><br>
+      You agree not to make medical claims about results. All content must use soft language: "supports weight loss", "improved wellness" — not "cures" or "treats" any condition.</p>
+      <p><strong>4. Copyright</strong><br>
+      You confirm that all photos you submit are owned by you or your members. No third-party copyrighted images.</p>
+      <p><strong>5. Payment</strong><br>
+      Subscription is monthly. Non-payment results in page deactivation. No refunds for partial months.</p>
+      <p><strong>6. Exclusivity</strong><br>
+      Area exclusivity is confirmed only after payment. Registration alone does not guarantee exclusivity.</p>
+      <p><strong>7. Termination</strong><br>
+      PulseZen reserves the right to remove any center page that violates these terms without prior notice.</p>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="r-consent">
+      <label for="r-consent">I confirm that I have obtained (or will obtain before publishing) written consent from all members whose photos or testimonials appear on my PulseZen page. I take full responsibility for member data.</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="r-agree">
+      <label for="r-agree">I have read and agree to the PulseZen Center Owner Terms & Agreement above.</label>
+    </div>
+
+    <div id="errMsg"></div>
+
+    <button class="btn" id="submitBtn" onclick="submitReg()">Submit Registration →</button>
+  </div>
+
+  <p class="footer-note">
+    PulseZen is an independent wellness platform. Not affiliated with any nutrition brand.<br>
+    Questions? WhatsApp us at <a href="https://wa.me/91XXXXXXXXXX" style="color:var(--primary)">+91 XXXXX XXXXX</a>
+  </p>
+</div>
+
+<script>
+  var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+
+  async function submitReg() {
+    var center   = document.getElementById('r-center').value.trim();
+    var owner    = document.getElementById('r-owner').value.trim();
+    var phone    = document.getElementById('r-phone').value.trim();
+    var city     = document.getElementById('r-city').value.trim();
+    var locality = document.getElementById('r-locality').value.trim();
+    var planEl   = document.querySelector('input[name="plan"]:checked');
+    var consent  = document.getElementById('r-consent').checked;
+    var agree    = document.getElementById('r-agree').checked;
+    var err      = document.getElementById('errMsg');
+
+    err.style.display = 'none';
+
+    if(!center || !owner || !phone || !city || !locality) {
+      err.style.display = 'block';
+      err.textContent = '❌ Please fill all required fields.';
+      return;
+    }
+    if(!planEl) {
+      err.style.display = 'block';
+      err.textContent = '❌ Please select a plan.';
+      return;
+    }
+    if(!consent) {
+      err.style.display = 'block';
+      err.textContent = '❌ Please confirm member consent responsibility.';
+      return;
+    }
+    if(!agree) {
+      err.style.display = 'block';
+      err.textContent = '❌ Please agree to the Terms & Agreement.';
+      return;
+    }
+
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    try {
+      var res = await fetch(SB_URL + '/rest/v1/pulsezen_registrations', {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          center_name:      center,
+          owner_name:       owner,
+          whatsapp:         phone,
+          city:             city,
+          locality:         locality,
+          plan:             planEl.value,
+          consent_accepted: true,
+          terms_accepted:   true
+        })
+      });
+
+      if(res.ok) {
+        document.getElementById('formState').style.display = 'none';
+        document.getElementById('successMsg').style.display = 'block';
+      } else {
+        throw new Error('failed');
+      }
+    } catch(e) {
+      err.style.display = 'block';
+      err.textContent = '❌ Something went wrong. Please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Submit Registration →';
+    }
+  }
+</script>
+
+</body>
+</html>
