@@ -3,6 +3,10 @@ export default {
     const url = new URL(request.url);
     const hostname = url.hostname;
 
+    if (url.pathname === '/test-worker') {
+      return new Response('Worker running! hostname: ' + hostname + ' | path: ' + url.pathname, { status: 200 });
+    }
+
     if (url.pathname === '/' || url.pathname === '') {
       if (hostname.startsWith('dharanis.')) {
         return Response.redirect('https://dharanis.pulsezen.in/dharanis.html', 302);
