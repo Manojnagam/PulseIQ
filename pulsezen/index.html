@@ -820,6 +820,16 @@
         var phone91 = '91' + data.whatsapp.replace(/\D/g,'').slice(-10);
         var approveLink = 'https://wa.me/' + phone91 + '?text=' + encodeURIComponent(approveMsg);
 
+        // Get the inserted center's ID for the admin approve link
+        var insertedRes = await fetch(SB_URL + '/rest/v1/pulsezen_centers'
+          + '?whatsapp=eq.' + encodeURIComponent(data.whatsapp)
+          + '&status=eq.pending&order=created_at.desc&limit=1&select=id', {
+          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+        });
+        var inserted = await insertedRes.json();
+        var centerId = inserted.length ? inserted[0].id : '';
+        var adminLink = 'https://pulsezen.pages.dev/admin.html?approve=' + centerId;
+
         var waText = '🆕 New PulseZen Registration!%0A%0A'
           + 'Center: ' + encodeURIComponent(data.center_name) + '%0A'
           + 'Owner: ' + encodeURIComponent(data.owner_name) + '%0A'
@@ -829,9 +839,9 @@
           + 'Landmark: ' + encodeURIComponent(data.landmark) + '%0A'
           + 'Timings: ' + encodeURIComponent(data.timings) + '%0A'
           + 'Plan: ' + encodeURIComponent(data.tier) + '%0A%0A'
-          + '✅ Approve & send payment details:%0A'
-          + encodeURIComponent(approveLink) + '%0A%0A'
-          + '❌ If area taken reply: Sorry, your area is already taken. You can join the waitlist or choose non-exclusive at %E2%82%B9299/month.';
+          + '👉 Approve in one click:%0A'
+          + encodeURIComponent(adminLink) + '%0A%0A'
+          + '(Opens admin panel — login then click Approve)';
 
         setTimeout(function(){
           window.open('https://wa.me/917981614593?text=' + waText, '_blank');
@@ -878,8 +888,8 @@
           + '?city=ilike.' + encodeURIComponent(city)
           + '&locality=ilike.' + encodeURIComponent(locality)
           + '&tier=like.Exclusive*'
-          + '&status=eq.active'
-          + '&select=id';
+          + '&status=in.(active,pending)'
+          + '&select=id,status';
 
         var res = await fetch(url, {
           headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
@@ -895,6 +905,15 @@
           exclusive.disabled = false;
           exclusive.textContent = 'Exclusive ₹999/month — First in my area ✅';
           tier.value = 'Exclusive ₹999/month';
+        } else if(data[0].status === 'pending') {
+          // Pending — someone already registered, awaiting approval
+          badge.style.background = '#fefce8';
+          badge.style.border = '1.5px solid #fde68a';
+          badge.style.color = '#92400e';
+          badge.innerHTML = '⏳ <strong>' + locality + ', ' + city + '</strong> has a pending registration. This area may not be available. You can still register as <strong>Non-Exclusive at ₹299/month</strong>.';
+          exclusive.disabled = true;
+          exclusive.textContent = 'Exclusive ₹999/month — Pending in your area';
+          tier.value = 'Non-exclusive ₹299/month';
         } else {
           // Taken
           badge.style.background = '#fef2f2';

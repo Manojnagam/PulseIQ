@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulseZen Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a3a28;
+      --accent: #e8a838;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --surface: #f9fafb;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: #1a1a1a; min-height: 100vh; }
+
+    /* LOGIN */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+    }
+    .login-box {
+      background: #fff; border: 1.5px solid var(--border); border-radius: 16px;
+      padding: 40px 32px; width: 100%; max-width: 360px; text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+    .login-box h2 { font-size: 20px; color: var(--primary); margin-bottom: 6px; }
+    .login-box p  { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .login-box input {
+      width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+      border-radius: 9px; font-size: 15px; font-family: inherit;
+      margin-bottom: 14px; letter-spacing: 4px; text-align: center;
+    }
+    .login-box input:focus { outline: none; border-color: var(--primary); }
+    .btn-login {
+      width: 100%; padding: 12px; background: var(--primary); color: #fff;
+      border: none; border-radius: 9px; font-size: 15px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+    }
+    .login-err { color: var(--danger); font-size: 13px; margin-top: 10px; }
+
+    /* ADMIN PANEL */
+    #admin-panel { display: none; max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+    .admin-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px;
+    }
+    .admin-header h1 { font-size: 22px; color: var(--primary); }
+    .tab-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab {
+      padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: 1.5px solid var(--border); background: #fff; color: var(--muted);
+    }
+    .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .card {
+      background: #fff; border: 1.5px solid var(--border); border-radius: 14px;
+      padding: 20px; margin-bottom: 16px;
+    }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .card-name { font-size: 17px; font-weight: 700; color: var(--primary); }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+    }
+    .badge-pending  { background: #fef3c7; color: #92400e; }
+    .badge-active   { background: #dcfce7; color: #15803d; }
+    .badge-rejected { background: #fee2e2; color: #991b1b; }
+
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-bottom: 16px; }
+    .card-field label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    .card-field p { font-size: 14px; color: #1a1a1a; margin-top: 2px; }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      padding: 10px 20px; border: none; border-radius: 8px; font-size: 13px;
+      font-weight: 700; font-family: inherit; cursor: pointer;
+    }
+    .btn-approve { background: var(--success); color: #fff; }
+    .btn-reject  { background: var(--danger);  color: #fff; }
+    .btn-wa      { background: #25D366; color: #fff; }
+    .btn:disabled { opacity: .5; cursor: default; }
+
+    .empty { text-align: center; padding: 48px; color: var(--muted); font-size: 15px; }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #1a1a1a; color: #fff; padding: 12px 24px; border-radius: 10px;
+      font-size: 14px; font-weight: 600; display: none; z-index: 999;
+    }
+    .toast.show { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h2>🌿 PulseZen Admin</h2>
+    <p>Enter admin password to continue</p>
+    <input type="password" id="pwd-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="btn-login" onclick="doLogin()">Login</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+  <div class="admin-header">
+    <h1>🌿 PulseZen Admin</h1>
+    <button class="btn" style="background:var(--surface);border:1.5px solid var(--border);color:var(--muted)" onclick="loadData()">🔄 Refresh</button>
+  </div>
+  <div class="tab-row">
+    <div class="tab active" onclick="switchTab('pending')" id="tab-pending">⏳ Pending</div>
+    <div class="tab" onclick="switchTab('active')" id="tab-active">✅ Active</div>
+    <div class="tab" onclick="switchTab('rejected')" id="tab-rejected">❌ Rejected</div>
+  </div>
+  <div id="cards-container"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+  var ADMIN_PASS = 'pulseiq2026';
+  var OWNER_WA   = '917981614593';
+  var UPI_ID     = 'your-upi@bank'; // update this
+
+  var currentTab = 'pending';
+  var allData = [];
+
+  function doLogin() {
+    var pwd = document.getElementById('pwd-input').value;
+    if(pwd === ADMIN_PASS) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-panel').style.display  = 'block';
+      // Check if URL has ?approve=id for quick approval
+      var params = new URLSearchParams(window.location.search);
+      var approveId = params.get('approve');
+      loadData(approveId);
+    } else {
+      document.getElementById('login-err').textContent = '❌ Wrong password';
+    }
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    ['pending','active','rejected'].forEach(function(t){
+      document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    });
+    renderCards();
+  }
+
+  async function loadData(highlightId) {
+    try {
+      var res = await fetch(SB_URL + '/rest/v1/pulsezen_centers?select=*&order=created_at.desc', {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      });
+      allData = await res.json();
+      renderCards(highlightId);
+    } catch(e) {
+      showToast('Failed to load data');
+    }
+  }
+
+  function renderCards(highlightId) {
+    var filtered = allData.filter(function(c){ return c.status === currentTab; });
+    var container = document.getElementById('cards-container');
+    if(!filtered.length) {
+      container.innerHTML = '<div class="empty">No ' + currentTab + ' registrations.</div>';
+      return;
+    }
+    container.innerHTML = filtered.map(function(c) {
+      var badgeCls = c.status === 'active' ? 'badge-active' : c.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+      var badgeTxt = c.status === 'active' ? '✅ Active' : c.status === 'rejected' ? '❌ Rejected' : '⏳ Pending';
+      var highlight = highlightId === c.id ? 'border:2px solid var(--accent);' : '';
+      var actionBtns = '';
+      if(c.status === 'pending') {
+        actionBtns = '<button class="btn btn-approve" onclick="approve(\''+c.id+'\',\''+c.owner_name+'\',\''+c.whatsapp+'\',\''+c.tier+'\',\''+c.center_name+'\',\''+c.locality+'\',\''+c.city+'\')">✅ Approve</button>'
+          + '<button class="btn btn-reject" onclick="reject(\''+c.id+'\',\''+c.owner_name+'\',\''+c.whatsapp+'\')">❌ Reject</button>'
+          + '<button class="btn btn-wa" onclick="waCenter(\''+c.whatsapp+'\')">💬 WhatsApp</button>';
+      } else if(c.status === 'active') {
+        actionBtns = '<button class="btn btn-wa" onclick="waCenter(\''+c.whatsapp+'\')">💬 WhatsApp</button>';
+      }
+      return '<div class="card" style="'+highlight+'">'
+        + '<div class="card-header">'
+        +   '<div><div class="card-name">'+c.center_name+'</div>'
+        +   '<div style="font-size:12px;color:var(--muted);margin-top:3px">'+c.locality+', '+c.city+'</div></div>'
+        +   '<span class="badge '+badgeCls+'">'+badgeTxt+'</span>'
+        + '</div>'
+        + '<div class="card-grid">'
+        +   '<div class="card-field"><label>Owner</label><p>'+c.owner_name+'</p></div>'
+        +   '<div class="card-field"><label>WhatsApp</label><p>'+c.whatsapp+'</p></div>'
+        +   '<div class="card-field"><label>Plan</label><p>'+c.tier+'</p></div>'
+        +   '<div class="card-field"><label>Registered</label><p>'+(c.created_at ? c.created_at.slice(0,10) : '—')+'</p></div>'
+        +   (c.landmark ? '<div class="card-field"><label>Landmark</label><p>'+c.landmark+'</p></div>' : '')
+        +   (c.timings  ? '<div class="card-field"><label>Timings</label><p>'+c.timings+'</p></div>'  : '')
+        + '</div>'
+        + '<div class="btn-row">'+actionBtns+'</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  async function approve(id, ownerName, whatsapp, tier, centerName, locality, city) {
+    if(!confirm('Approve ' + centerName + ' (' + locality + ', ' + city + ')?')) return;
+    try {
+      var res = await fetch(SB_URL + '/rest/v1/pulsezen_centers?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ status: 'active' })
+      });
+      if(!res.ok) throw new Error('Failed');
+      showToast('✅ Approved! Opening WhatsApp...');
+      await loadData();
+
+      // Send payment details to center owner
+      var price = tier.match(/₹[\d,]+/) ? tier.match(/₹[\d,]+/)[0] : '₹999';
+      var phone91 = '91' + whatsapp.replace(/\D/g,'').slice(-10);
+      var msg = 'Hi ' + ownerName + '! 🎉 Great news — your area is confirmed on PulseZen!\n\n'
+        + '📍 ' + locality + ', ' + city + ' is now reserved exclusively for ' + centerName + '.\n\n'
+        + '💳 To activate your page, please pay ' + price + '/month to:\n'
+        + 'UPI: ' + UPI_ID + '\n\n'
+        + 'Once payment is done, your center page will be live within 24 hours!\n\n'
+        + '— PulseZen Team';
+      setTimeout(function(){
+        window.open('https://wa.me/' + phone91 + '?text=' + encodeURIComponent(msg), '_blank');
+      }, 800);
+    } catch(e) { showToast('❌ Error: ' + e.message); }
+  }
+
+  async function reject(id, ownerName, whatsapp) {
+    if(!confirm('Reject this registration?')) return;
+    try {
+      await fetch(SB_URL + '/rest/v1/pulsezen_centers?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ status: 'rejected' })
+      });
+      showToast('Rejected.');
+      await loadData();
+      var phone91 = '91' + whatsapp.replace(/\D/g,'').slice(-10);
+      var msg = 'Hi ' + ownerName + ', thank you for registering on PulseZen. Unfortunately your area is already taken. You can join as Non-Exclusive at ₹299/month — reply YES if interested!';
+      setTimeout(function(){
+        window.open('https://wa.me/' + phone91 + '?text=' + encodeURIComponent(msg), '_blank');
+      }, 800);
+    } catch(e) { showToast('❌ Error: ' + e.message); }
+  }
+
+  function waCenter(whatsapp) {
+    var phone91 = '91' + whatsapp.replace(/\D/g,'').slice(-10);
+    window.open('https://wa.me/' + phone91, '_blank');
+  }
+
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show';
+    setTimeout(function(){ t.className = 'toast'; }, 3000);
+  }
+
+  // Auto-login check (if already logged in this session)
+  window.onload = function() {
+    var params = new URLSearchParams(window.location.search);
+    if(params.get('approve')) {
+      document.getElementById('pwd-input').focus();
+    }
+  };
+</script>
+</body>
+</html>
