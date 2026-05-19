@@ -5,14 +5,10 @@ export default {
 
     if (url.pathname === '/' || url.pathname === '') {
       if (hostname.startsWith('dharanis.')) {
-        const newUrl = new URL(request.url);
-        newUrl.pathname = '/dharanis.html';
-        return env.ASSETS.fetch(new Request(newUrl.toString(), request));
+        return Response.redirect('https://dharanis.pulsezen.in/dharanis.html', 302);
       }
       if (hostname.startsWith('bksprime.') || hostname.startsWith('bks-prime.')) {
-        const newUrl = new URL(request.url);
-        newUrl.pathname = '/bks-prime.html';
-        return env.ASSETS.fetch(new Request(newUrl.toString(), request));
+        return Response.redirect('https://bksprime.pulsezen.in/bks-prime.html', 302);
       }
     }
 
