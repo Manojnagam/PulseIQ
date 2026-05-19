@@ -1,16 +1,9 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "pulsezen",
-  "main": "worker/index.js",
+  "main": "router.js",
   "compatibility_date": "2026-05-18",
-  "observability": {
-    "enabled": true
-  },
   "assets": {
     "directory": ".",
     "binding": "ASSETS"
-  },
-  "compatibility_flags": [
-    "nodejs_compat"
-  ]
+  }
 }
