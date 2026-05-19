@@ -5,5 +5,10 @@
   "assets": {
     "directory": ".",
     "binding": "ASSETS"
-  }
+  },
+  "routes": [
+    { "pattern": "dharanis.pulsezen.in/*", "zone_name": "pulsezen.in" },
+    { "pattern": "bksprime.pulsezen.in/*", "zone_name": "pulsezen.in" },
+    { "pattern": "pulsezen.in/*", "zone_name": "pulsezen.in" }
+  ]
 }
