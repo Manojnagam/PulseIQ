@@ -161,6 +161,68 @@
     .about-point-text h4 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
     .about-point-text p { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
+    /* ── FOUNDER STORY ── */
+    .founder-story { background: var(--surface); }
+    .founder-story-inner {
+      background: linear-gradient(135deg, #0f2318, #1a3a28, #2d5a3d);
+      border-radius: 24px; padding: 48px 40px;
+      border: 1.5px solid rgba(255,255,255,.08);
+      display: grid; grid-template-columns: auto 1fr; gap: 48px; align-items: start;
+    }
+    .founder-photos { display: flex; flex-direction: column; gap: 10px; align-items: center; flex-shrink: 0; }
+    .founder-photo-wrap { display: flex; flex-direction: column; align-items: center; }
+    .founder-photo-wrap img { height: 240px; width: auto; border-radius: 12px; display: block; }
+    .founder-photo-label {
+      margin-top: 7px; font-size: 11px; font-weight: 700; padding: 4px 16px;
+      border-radius: 6px; letter-spacing: .4px; color: #fff;
+    }
+    .founder-photo-label.before { background: #dc2626; }
+    .founder-photo-label.after { background: #16a34a; }
+    .founder-content { color: #fff; }
+    .founder-tag {
+      display: inline-block; background: var(--accent); color: #fff;
+      font-size: 10px; font-weight: 700; padding: 4px 12px;
+      border-radius: 20px; margin-bottom: 16px; letter-spacing: .8px; text-transform: uppercase;
+    }
+    .founder-content h2 {
+      font-size: clamp(22px, 3vw, 30px); color: #fff; margin-bottom: 18px; line-height: 1.3;
+    }
+    .founder-content h2 span { color: var(--accent); }
+    .founder-struggles {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px;
+    }
+    .struggle-pill {
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+      color: rgba(255,255,255,.8); font-size: 12px; font-weight: 500;
+      padding: 5px 12px; border-radius: 20px;
+    }
+    .founder-quote {
+      font-size: 15px; color: rgba(255,255,255,.88); line-height: 1.8;
+      font-style: italic; margin-bottom: 22px;
+      border-left: 3px solid var(--accent); padding-left: 16px;
+    }
+    .founder-mission {
+      background: rgba(232,168,56,.1); border: 1px solid rgba(232,168,56,.25);
+      border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;
+    }
+    .founder-mission p { font-size: 14px; color: rgba(255,255,255,.85); line-height: 1.7; }
+    .founder-mission strong { color: var(--accent); }
+    .founder-sig { display: flex; align-items: center; gap: 12px; }
+    .founder-sig-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--accent); color: #fff; font-weight: 700; font-size: 17px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .founder-sig-name { font-size: 14px; font-weight: 700; color: #fff; }
+    .founder-sig-role { font-size: 12px; color: rgba(255,255,255,.5); }
+    .founder-disclaimer { font-size: 10px; color: rgba(255,255,255,.3); margin-top: 18px; line-height: 1.5; }
+    @media (max-width: 768px) {
+      .founder-story-inner { grid-template-columns: 1fr; }
+      .founder-photos { flex-direction: row; justify-content: center; }
+      .founder-photo-wrap img { height: 160px; }
+      .founder-story-inner { padding: 28px 20px; }
+    }
+
     /* ── PROGRAMS ── */
     .programs { background: var(--surface); }
     .programs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
@@ -412,6 +474,72 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDER STORY -->
+<section class="founder-story" id="story">
+  <div class="container">
+    <div class="section-header center" style="margin-bottom:32px">
+      <span class="section-tag">Our Story</span>
+      <h2 class="section-title">Why Dharani's Wellness Center Exists</h2>
+      <p class="section-sub">This center was born from a deeply personal journey — a mother's 18-year struggle, and the transformation that changed everything.</p>
+    </div>
+    <div class="founder-story-inner">
+      <!-- Photos -->
+      <div class="founder-photos">
+        <div class="founder-photo-wrap">
+          <img src="centers/dharanis/images/testimonial-mom-before.jpeg" alt="Dharani before wellness journey">
+          <div class="founder-photo-label before">BEFORE · 77 kg</div>
+        </div>
+        <div class="founder-photo-wrap">
+          <img src="centers/dharanis/images/testimonial-mom-after.jpeg" alt="Dharani after wellness journey">
+          <div class="founder-photo-label after">AFTER · 63 kg</div>
+        </div>
+      </div>
+      <!-- Content -->
+      <div class="founder-content">
+        <span class="founder-tag">Founder's Journey</span>
+        <h2>From 18 Years of Struggle<br>to <span>Helping Hundreds Heal</span></h2>
+        <p style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px">
+          For nearly two decades, our founder <strong style="color:rgba(255,255,255,.85)">Lakshmidevi Nagam</strong> lived with multiple health challenges simultaneously:
+        </p>
+        <div class="founder-struggles">
+          <span class="struggle-pill">⚡ Fits &amp; Seizures — 18 years</span>
+          <span class="struggle-pill">🦴 Back Pain — 12 years</span>
+          <span class="struggle-pill">⚖️ Was 77 kg → Now 63 kg</span>
+          <span class="struggle-pill">💧 Low Blood Pressure</span>
+          <span class="struggle-pill">🫁 Sinus Headaches</span>
+          <span class="struggle-pill">🦵 Sciatica &amp; Knee Pain</span>
+          <span class="struggle-pill">🦶 Foot Pain</span>
+          <span class="struggle-pill">😴 Poor Sleep</span>
+          <span class="struggle-pill">🌀 Gas Trouble</span>
+          <span class="struggle-pill">🚿 Digestion Problems</span>
+          <span class="struggle-pill">💪 Body Pains</span>
+        </div>
+        <p class="founder-quote">
+          "I had been struggling for 18 years — raising 3 children while managing so many health issues at once. Doctors helped, but the daily discomfort never fully went away. I had accepted it as my life."
+        </p>
+        <p style="font-size:14px;color:rgba(255,255,255,.8);line-height:1.8;margin-bottom:20px">
+          In <strong style="color:var(--accent)">2020</strong>, everything changed. Lakshmidevi discovered a structured nutrition and wellness program and began her journey with complete consistency. Over the following months, her energy returned, her weight dropped from <strong style="color:var(--accent)">77 kg to 63 kg</strong>, her sleep improved, and most of her long-standing health challenges reduced significantly — including conditions she had lived with for nearly two decades.
+        </p>
+        <div class="founder-mission">
+          <p>
+            <strong>The transformation gave her a purpose.</strong><br>
+            She realized that so many people in Nandyal were quietly suffering the same way — not knowing that the right nutrition and consistent guidance could help them feel better.
+            In 2020, she started <strong>Dharani's Wellness Center</strong> — not as a business, but as a mission to help others live without pain and with real energy.
+          </p>
+        </div>
+        <div class="founder-sig">
+          <div class="founder-sig-avatar">D</div>
+          <div>
+            <div class="founder-sig-name">Lakshmidevi Nagam</div>
+            <div class="founder-sig-role">Founder, Dharani's Wellness Center · Est. 2020</div>
+          </div>
+        </div>
+        <p class="founder-disclaimer">* This is a personal experience. Results may vary. Individual results depend on consistency, nutrition, and lifestyle. This is not a substitute for medical treatment.</p>
       </div>
     </div>
   </div>
@@ -714,6 +842,7 @@
   </div>
   <div class="footer-links">
     <a href="#about">About</a>
+    <a href="#story">Our Story</a>
     <a href="#programs">Programs</a>
     <a href="#results">Results</a>
     <a href="#location">Location</a>
