@@ -16,6 +16,9 @@ export default {
       }
     }
 
-    return env.ASSETS.fetch(request);
+    // For all other requests (images, CSS, JS etc.) fetch from main workers URL
+    const assetUrl = new URL(request.url);
+    assetUrl.hostname = 'pulsezen.nagam-kumar.workers.dev';
+    return env.ASSETS.fetch(assetUrl.toString());
   }
 };
