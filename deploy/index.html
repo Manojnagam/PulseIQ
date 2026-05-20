@@ -186,8 +186,10 @@ tr:hover td{background:#f9f7f5}
 /* SQL BOX */
 pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font-size:11px;overflow-x:auto;line-height:1.7;white-space:pre-wrap}
 /* CUSTOM EXTRAS */
-.att-grid{overflow-x:auto;margin-top:20px}
-.att-grid table{width:max-content;min-width:100%}
+.att-grid{overflow-x:auto;overflow-y:auto;max-height:72vh;margin-top:20px;border-radius:8px}
+.att-grid table{width:max-content;min-width:100%;border-collapse:collapse}
+.att-grid thead th{position:sticky;top:0;background:var(--surface2);z-index:3}
+.att-grid thead th:first-child{z-index:4}
 .att-cell{text-align:center;cursor:pointer;padding:6px 4px;font-size:11px;user-select:none}
 .att-cell.p{background:var(--success-light);color:var(--success);font-weight:600}
 .att-cell.a{background:var(--danger-light);color:var(--danger)}
@@ -247,6 +249,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
   .menu-btn{display:block}
   .fr{grid-template-columns:1fr}
   .ph{flex-direction:column;align-items:flex-start}
+  #sec-profile [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
 }
 
 /* ── SLICERS ── */
@@ -532,6 +535,32 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
 .hs-breakdown{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
 .hs-metric{font-size:11px;color:rgba(255,255,255,.65)}
 .hs-metric span{color:#fff;font-weight:700}
+.hs-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.hs-info-panel{display:none;background:rgba(0,0,0,.25);border-radius:8px;padding:12px 14px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.85);line-height:1.7}
+.hs-info-panel table{width:100%;border-collapse:collapse}
+.hs-info-panel td{padding:3px 8px 3px 0;vertical-align:top;color:rgba(255,255,255,.85)}
+.hs-info-panel td:first-child{font-weight:700;color:#fff;white-space:nowrap}
+.hs-grade-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.hs-grade-pip{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+
+/* ── DIET PLAN ── */
+.diet-header{background:linear-gradient(135deg,#052e16,#14532d,#166534);border-radius:var(--radius);padding:20px 22px;margin-bottom:16px;color:#fff}
+.diet-header h2{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px}
+.diet-header p{font-size:12px;opacity:.7}
+.diet-macros{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.diet-macro{background:rgba(255,255,255,.12);border-radius:10px;padding:8px 14px;text-align:center;flex:1;min-width:70px}
+.diet-macro-val{font-size:18px;font-weight:700}
+.diet-macro-lbl{font-size:10px;opacity:.7;margin-top:2px}
+.meal-slot{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.meal-slot-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.meal-slot-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.meal-slot-title{font-weight:700;font-size:14px}
+.meal-slot-cal{font-size:11px;color:var(--muted);margin-top:1px}
+.meal-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--surface2)}
+.meal-item:last-child{border-bottom:none}
+.meal-item-name{font-size:13px;font-weight:600}
+.meal-item-detail{font-size:11px;color:var(--muted);margin-top:2px}
+.meal-item-badge{background:var(--surface2);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--primary);white-space:nowrap}
 
 /* ── MODAL LIVE SCORE ── */
 .modal-hs-bar{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
@@ -606,7 +635,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-analytics')"><span>Analytics & Reports</span><span class="nav-arrow">▾</span></div>
       <div id="g-analytics" style="display:none">
         <button class="nav-item" onclick="goTo('analytics',this)"><span class="ic">📈</span><span data-t="nav_analytics">Analytics</span></button>
-        <button class="nav-item" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span><span data-t="nav_bizanalyst">Biz Analyst</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span><span data-t="nav_bizanalyst">Biz Analyst</span></button>
         <button class="nav-item" onclick="goTo('notifications',this)"><span class="ic">🔔</span><span data-t="nav_notifications">Notifications</span></button>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
@@ -615,9 +644,9 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
         <button class="nav-item" onclick="goTo('coupons',this)"><span class="ic">🎟️</span><span data-t="nav_coupons">Coupons</span></button>
         <button class="nav-item" onclick="goTo('payments',this)"><span class="ic">💳</span><span data-t="nav_payments">Payments</span></button>
         <button class="nav-item" onclick="goTo('expenses',this)"><span class="ic">🧾</span><span data-t="nav_expenses">Expense Tracker</span></button>
-        <button class="nav-item" onclick="goTo('pintracker',this)"><span class="ic">🏅</span><span data-t="nav_pintracker">Pin Tracker</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('pintracker',this)"><span class="ic">🏅</span><span data-t="nav_pintracker">Pin Tracker</span></button>
         <button class="nav-item" onclick="goTo('goals',this)"><span class="ic">🎯</span><span data-t="nav_goals">Goal Setting</span></button>
-        <button class="nav-item" onclick="goTo('orgtree',this)"><span class="ic">🌳</span><span data-t="nav_orgtree">Org Tree</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('orgtree',this)"><span class="ic">🌳</span><span data-t="nav_orgtree">Org Tree</span></button>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-setup')"><span data-t="nav_setup">Setup</span><span class="nav-arrow">▾</span></div>
       <div id="g-setup" style="display:none">
@@ -722,7 +751,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
     <!-- INVENTORY REMOVED — see inventory/index.html -->
     <div class="sec" id="sec-inventory" style="display:none">
       <div class="ph">
-        <div><div class="pt" data-t="pt_inventory">Inventory</div><div class="ps" data-t="ps_inventory">Track Herbalife products, stock movements and daily usage</div></div>
+        <div><div class="pt" data-t="pt_inventory">Inventory</div><div class="ps" data-t="ps_inventory">Track nutrition products, stock movements and daily usage</div></div>
       </div>
       <div class="stats" id="inventory-stats"><div class="stat"><div class="stat-l">Total Products</div><div class="stat-v">58</div></div><div class="stat"><div class="stat-l">Low Stock</div><div class="stat-v" style="color:var(--success)">0</div></div><div class="stat"><div class="stat-l">Out of Stock</div><div class="stat-v" style="color:var(--danger)">58</div></div><div class="stat" style="cursor:pointer" onclick="shareReorderWhatsApp()"><div class="stat-l">📲 Reorder List</div><div class="stat-v" style="font-size:16px;margin-top:4px;color:#25D366">58 items</div></div></div>
       <div class="tabs">
@@ -1024,7 +1053,10 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
       </div>
 
       <div id="att-daily-view">
-        <div style="margin-bottom:16px"><input class="search" id="att-search" placeholder="🔍 Search customers..." oninput="renderAttendance()" style="width:100%;max-width:100%;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:12px 16px;font-family:inherit;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.02);"></div>
+        <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center">
+          <input class="search" id="att-search" placeholder="🔍 Search customers..." oninput="renderAttendance()" style="flex:1;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:12px 16px;font-family:inherit;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+          <button id="att-inactive-toggle" onclick="toggleInactiveAtt()" style="white-space:nowrap;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-family:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s">😴 Show Inactive</button>
+        </div>
         
         <div class="att-list-panel" style="margin-bottom:20px; background:rgba(0,180,100,0.05); border-top: 4px solid var(--success);">
           <h3 style="color:var(--success); margin:0 0 16px; display:flex; justify-content:space-between; align-items:center;">✅ Present Today <span id="att-present-count" style="font-size:13px;background:var(--success);color:#fff;padding:2px 8px;border-radius:20px">(0)</span></h3>
@@ -1092,6 +1124,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
           <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
             <div class="fg" style="min-width:150px;flex:1"><label>Name</label><input type="text" id="sv-name" placeholder="Your name" oninput="saveSvProfile()"></div>
             <div class="fg" style="min-width:80px"><label>Age</label><input type="number" id="sv-age" placeholder="30" oninput="saveSvProfile()"></div>
+            <div class="fg" style="min-width:80px"><label>Height (cm)</label><input type="number" id="sv-height" placeholder="170" step="0.1" oninput="saveSvProfile()"></div>
             <div class="fg" style="min-width:120px"><label>Gender</label><select id="sv-gender" onchange="saveSvProfile()"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select></div>
             <div class="fg" style="min-width:140px"><label>Goal</label><select id="sv-goal" onchange="saveSvProfile()"><option value="Weight Loss">Weight Loss</option><option value="Weight Gain">Weight Gain</option><option value="Maintenance">Maintenance</option></select></div>
             <div style="padding-top:18px"><button class="btn-p" onclick="openBodyModalSv()">+ Add My Record</button></div>
@@ -1103,6 +1136,8 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
           <p style="font-size:13px;margin-top:4px">Click "+ Add My Record" to log your first scan</p>
         </div>
         <div id="sv-body-records-wrap" style="display:none">
+          <div id="sv-body-score-card" style="margin-bottom:14px"></div>
+          <div id="sv-ideal-card" style="margin-bottom:16px"></div>
           <div class="tcard">
             <div class="twrap"><table>
               <thead><tr><th>Date</th><th>Weight (kg)</th><th>Fat (kg)</th><th>Subcu Fat (kg)</th><th>Muscle (kg)</th><th>Visceral (kg)</th><th>BMR</th><th>BMI</th><th>Body Age</th><th>Actions</th></tr></thead>
@@ -1313,6 +1348,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
             <select class="slicer-select" id="slicer-revenue-type" onchange="renderAnalytics()" style="width:auto;font-size:11px;padding:4px 8px"><option value="">Both</option><option value="income">Income</option><option value="expense">Expense</option></select>
           </div>
           <canvas id="chart-revenue" height="160"></canvas>
+          <div id="analytics-forecast" style="margin-top:14px"></div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
@@ -1322,6 +1358,48 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
         <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:10px">⭐ Top Referrers</div><div id="analytics-referrers"></div></div>
         <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:10px">📦 Pack Distribution</div><canvas id="chart-packs" height="180"></canvas></div>
+      </div>
+      <!-- Conversion Funnel -->
+      <div class="tcard" style="padding:20px;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">🔽 Conversion Funnel</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Leads → Interested → Joined → Trial → Full Pack → Renewed — where do people drop off?</div>
+        <div id="analytics-funnel"></div>
+      </div>
+      <!-- Correlation Analysis -->
+      <div class="tcard" style="padding:20px;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">🔗 Correlation — Attendance vs Results</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Does visiting more often lead to better weight loss? Let the data answer.</div>
+        <div id="analytics-correlation"></div>
+      </div>
+      <!-- Pareto Analysis -->
+      <div class="tcard" style="padding:20px;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">⚖️ Pareto Analysis — 80/20 Rule</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Which customers generate 80% of your revenue?</div>
+        <div id="analytics-pareto"></div>
+      </div>
+      <!-- ARPU -->
+      <div class="tcard" style="padding:20px;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">📊 ARPU — Avg Revenue Per User</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">How much revenue each active customer generates on average per month</div>
+        <div id="analytics-arpu"></div>
+      </div>
+      <!-- CLV -->
+      <div class="tcard" style="padding:20px;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">💎 Customer Lifetime Value (CLV)</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Total revenue generated per customer across all packs and renewals</div>
+        <div id="analytics-clv"></div>
+      </div>
+      <!-- Cohort Retention -->
+      <div class="tcard" style="padding:20px;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">🗓️ Cohort Retention Analysis</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Of customers who joined each month, how many are still attending in later months?</div>
+        <div id="analytics-cohort"></div>
+      </div>
+      <!-- RFM Analysis -->
+      <div class="tcard" style="padding:20px;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">🎯 RFM Customer Segments</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Recency · Frequency · Monetary — who are your most valuable customers?</div>
+        <div id="analytics-rfm"></div>
       </div>
       <div class="tcard" style="padding:20px;margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -1405,7 +1483,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
     </div>
     <!-- MY PROFILE -->
     <div class="sec" id="sec-profile">
-      <div class="ph"><div><div class="pt" data-t="pt_profile">My Profile</div><div class="ps" data-t="ps_profile">Your Herbalife identity, center details and promotion goals</div></div><button class="btn-p" onclick="saveOwnerProfile()">💾 Save Profile</button></div>
+      <div class="ph"><div><div class="pt" data-t="pt_profile">My Profile</div><div class="ps" data-t="ps_profile">Your business profile, center details and promotion goals</div></div><button class="btn-p" onclick="saveOwnerProfile()">💾 Save Profile</button></div>
       <!-- Profile card preview -->
       <div id="prof-card" style="display:none;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-radius:16px;padding:24px;margin-bottom:20px;align-items:center;gap:20px">
         <div id="prof-card-photo" style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.25);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px">👤</div>
@@ -1432,7 +1510,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
           </div>
         </div>
         <div class="fr">
-          <div class="fg"><label>Herbalife Distributor ID</label><input type="text" id="prof-hlid" placeholder="e.g. IN1234567"></div>
+          <div class="fg"><label>Distributor ID</label><input type="text" id="prof-hlid" placeholder="e.g. IN1234567"></div>
           <div class="fg"><label>Link to Coach Record</label><select id="prof-coach-id" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— Not linked —</option></select><div style="font-size:11px;color:var(--muted);margin-top:4px">Select your own entry from the Coaches list so referrals count correctly</div></div>
         </div>
         <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:16px">
@@ -1444,7 +1522,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
           <div class="fg"><label>🔐 Your PIN (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="prof-master-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 1234" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1"><button type="button" onclick="togglePinVis('prof-master-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Your personal PIN to access your center + all downline centers. Only needed when others (like your brother) also use this app.</div></div>
         </div>
         <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:16px">
-          <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:12px">🏅 Herbalife PIN / Promotion</div>
+          <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:12px">🏅 Business Level / Promotion</div>
           <div class="fr">
             <div class="fg"><label>Current PIN Level</label>
               <select id="prof-current-pin" onchange="updateProfilePinGoal()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
@@ -1477,6 +1555,42 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
             </div>
           </div>
         </div>
+      </div>
+      <!-- My Diet Plan -->
+      <div style="margin-top:20px">
+        <div class="tcard" style="padding:18px 20px 14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+            <div>
+              <div style="font-size:16px;font-weight:700;color:var(--primary)">🥗 My Diet Plan</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Personalised 7-day meal plan</div>
+            </div>
+            <button class="btn-p" onclick="generateSvDietPlan()" id="sv-diet-gen-btn">🤖 Generate My Plan</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div class="fg" style="margin-bottom:0"><label>Goal</label>
+              <select id="sv-diet-goal" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+                <option value="Weight Loss">Weight Loss</option>
+                <option value="Weight Gain">Weight Gain</option>
+                <option value="Maintenance">Maintenance</option>
+              </select>
+            </div>
+            <div class="fg" style="margin-bottom:0"><label>Diet Type</label>
+              <select id="sv-diet-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+                <option value="veg">Vegetarian</option>
+                <option value="nonveg">Non-Vegetarian</option>
+              </select>
+            </div>
+            <div class="fg" style="margin-bottom:0"><label>Activity Level</label>
+              <select id="sv-diet-activity" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+                <option value="light">Light</option>
+                <option value="moderate">Moderate</option>
+                <option value="active">Active</option>
+                <option value="sedentary">Sedentary</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="sv-diet-output" style="margin-top:14px"></div>
       </div>
     </div>
     <!-- SQL -->
@@ -2042,7 +2156,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div class="fg"><label>Goal</label><select id="coach-goal"><option value="Weight Loss">Weight Loss</option><option value="Weight Gain">Weight Gain</option><option value="Maintenance">Maintenance</option></select></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Herbalife PIN Level</label>
+        <div class="fg"><label>Business Level</label>
           <select id="coach-pin" onchange="showCoachPinTip()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             <option value="">Not specified</option>
             <option>Preferred Customer</option><option>Associate</option><option>Qualified Producer (QP)</option>
@@ -2063,6 +2177,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       </div>
       <div style="border-top:1px solid var(--border);margin:14px 0;padding-top:14px" id="coach-pack-section">
         <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">📦 Coach Pack <span style="font-weight:400;color:var(--muted)">(skip if Center Owner)</span></div>
+        <div class="fg" style="margin-bottom:10px"><label>Shares Pack With</label><select id="coach-pack-owner" onchange="onCoachPackOwnerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— Own Pack (not shared) —</option></select></div>
         <div class="fr">
           <div class="fg"><label>Pack Type</label><select id="coach-pack-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">No pack</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option></select></div>
           <div class="fg"><label>Start Date</label><input type="date" id="coach-pack-start" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
@@ -2583,7 +2698,7 @@ var T = {
     pt_overview:'Overview Dashboard', ps_overview:'Your wellness center at a glance',
     pt_centers:'Wellness Centers', ps_centers:'Manage all centers in your network',
     pt_coaches:'Coaches', ps_coaches:'Manage your coaching staff',
-    pt_inventory:'Inventory', ps_inventory:'Track Herbalife products, stock movements and daily usage',
+    pt_inventory:'Inventory', ps_inventory:'Track nutrition products, stock movements and daily usage',
     pt_customers:'Customers', ps_customers:'Track all customers and their packs',
     pt_leads:'Leads', ps_leads:'Track potential customers and follow-ups',
     pt_attendance:'Attendance', ps_attendance:'Track customer visit history',
@@ -2595,7 +2710,7 @@ var T = {
     pt_orgtree:'Organisation Tree', ps_orgtree:'Coach downline structure',
     pt_bizanalyst:'\uD83D\uDCCA Business Analyst', ps_bizanalyst:"Auto-analysis of every coach's business",
     pt_pintracker:'\uD83C\uDFC5 Pin Tracker', ps_pintracker:'Track your Volume Points and pin qualification progress',
-    pt_profile:'My Profile', ps_profile:'Your Herbalife identity, center details and promotion goals',
+    pt_profile:'My Profile', ps_profile:'Your business profile, center details and promotion goals',
     pt_guide:'How to Use', ps_guide:'Step-by-step guide for every feature',
     pt_auditlog:'Audit Log', ps_auditlog:'Track all data changes — who did what and when',
     pt_sql:'SQL Setup Guide & AI Config', ps_sql:'Configure APIs and Database Schemas',
@@ -2804,17 +2919,26 @@ function _applySwitch(centerId) {
   ACTIVE_CENTER = centerId;
   localStorage.setItem('activeCenter', centerId);
   _daysLeftCache = {};
-  renderOverview(); renderCenters(); renderCoaches(); renderAttendance(); renderFinance();
-  if(typeof renderCurrentStock==='function') renderCurrentStock();
-  if(typeof renderCoupons==='function') renderCoupons();
-  if(typeof renderPayments==='function') renderPayments();
-  if(typeof renderCustomers==='function') renderCustomers();
-  updateCustSelects();
   updateSidebarLogo();
-  // Revert dropdown if switch was cancelled
   var sel = document.getElementById('center-switcher');
   if(sel) sel.value = centerId;
-  showToast(centerId ? 'Switched center' : 'Showing all centers');
+  showToast(centerId ? 'Switching center...' : 'Loading all centers...');
+  // Reload data scoped to new center (2-phase, same as loadAll)
+  Promise.all([loadCustomers(), loadCoaches()])
+    .then(function(){
+      return Promise.all([loadAttendance(), loadBody(), loadFinance(),
+        loadCoupons(), loadPayments(), loadPackHistory(),
+        loadLeads(), loadExpenses(), loadInventory()]);
+    })
+    .then(function(){
+      _daysLeftCache = {};
+      renderCustomers(); renderCenters(); renderOverview();
+      if(typeof renderCurrentStock==='function') renderCurrentStock();
+      if(typeof renderCoupons==='function') renderCoupons();
+      if(typeof renderPayments==='function') renderPayments();
+      updateCustSelects();
+      showToast(centerId ? 'Switched center' : 'Showing all centers');
+    });
 }
 
 function updateCenterSwitcher() {
@@ -2834,6 +2958,9 @@ function updateCenterSwitcher() {
   });
   sel.innerHTML = opts;
   if(prev && !D.centers.some(function(c){return c.id===prev;})) { ACTIVE_CENTER=''; localStorage.removeItem('activeCenter'); }
+  // Hide supervisor-only nav items for center-PIN users
+  var isSuper = isSupervisor();
+  document.querySelectorAll('.nav-supervisor-only').forEach(function(el){ el.style.display = isSuper ? '' : 'none'; });
 }
 
 // Helper: filter array by wellness_center_id matching ACTIVE_CENTER
@@ -2851,9 +2978,10 @@ function filterByCenterViaCustomer(arr) {
 }
 
 // Helper: filter finance by wellness_center_id (requires finance to have the column)
+// Records with null wellness_center_id are treated as belonging to the active center (legacy/unassigned records)
 function filterFinanceByCenter(arr) {
   if(!ACTIVE_CENTER) return arr;
-  return arr.filter(function(f){ return f.wellness_center_id === ACTIVE_CENTER; });
+  return arr.filter(function(f){ return !f.wellness_center_id || f.wellness_center_id === ACTIVE_CENTER; });
 }
 
 // Helper: get the active center's display name
@@ -3235,14 +3363,33 @@ async function req(method, table, body, filter) {
   if (!res.ok) throw new Error(data.message || 'HTTP ' + res.status);
   return data;
 }
-async function dbGet(table, order) {
+async function dbGet(table, order, extraFilter) {
   order = order || 'created_at';
-  try { var r = await req('GET', table, null, '?order=' + order + '.desc'); return Array.isArray(r) ? r : []; }
+  var qs = '?order=' + order + '.desc' + (extraFilter ? '&' + extraFilter : '');
+  try { var r = await req('GET', table, null, qs); return Array.isArray(r) ? r : []; }
   catch(e) { console.error(table, e); return []; }
 }
 async function dbInsert(table, data) { return req('POST', table, data); }
 async function dbUpdate(table, id, data) { return req('PATCH', table, data, '?id=eq.' + id); }
 async function dbDelete(table, id) { return req('DELETE', table, null, '?id=eq.' + id); }
+
+// ── Center-scoped query helpers ──
+// Builds a PostgREST filter for a center field, including null (legacy) records
+function _cFilter(field) {
+  if (!ACTIVE_CENTER) return '';
+  field = field || 'wellness_center_id';
+  return 'or=(' + field + '.is.null,' + field + '.eq.' + ACTIVE_CENTER + ')';
+}
+// Builds a PostgREST filter for customer_id IN (active center's customers)
+function _custIdsFilter() {
+  if (!ACTIVE_CENTER) return '';
+  var ids = D.customers.map(function(c){ return c.id; });
+  var svId = (JSON.parse(localStorage.getItem('ownerProfile')||'{}')).sv_body_id;
+  if (svId) ids.push(svId);
+  D.coaches.forEach(function(c){ if(c.id) ids.push(c.id); });
+  if (!ids.length) return '';
+  return 'customer_id=in.(' + ids.join(',') + ')';
+}
 
 // ── CONNECT ──
 async function doConnect() {
@@ -3343,7 +3490,7 @@ window.onload = async function() {
     SB_KEY = key;
     await doConnect();
   }
-  var today = new Date().toISOString().split('T')[0];
+  var _d=new Date(); var today=_d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
   ['att-date','body-date','fin-date','inv-in-date','inv-out-date','inv-sum-date','inv-usage-date'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.value = today;
   });
@@ -3364,14 +3511,18 @@ async function refreshDashboard() {
 async function loadAll() {
   D.stockIn=[]; D.stockOut=[]; D.dailyUsage=[]; D.currentStock={};
   D.coupons=[]; D.payments=[]; D.packHistory=[];
-  await Promise.all([loadCenters(),loadCoaches(),loadInventory(),loadCustomers(),
-    loadAttendance(),loadBody(),loadFinance(),
-    loadCoupons(),loadPayments(),loadPackHistory(),loadLeads(),loadExpenses(),loadFoods(),loadContests()]);
+  // Phase 1: centers + customers + coaches first (attendance/body need customer IDs for center-scoped query)
+  await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
+  // Phase 2: everything else — attendance/body/packHistory use customer IDs from phase 1
+  await Promise.all([loadAttendance(), loadBody(), loadFinance(),
+    loadCoupons(), loadPayments(), loadPackHistory(),
+    loadLeads(), loadExpenses(), loadFoods(), loadInventory(), loadContests()]);
   _daysLeftCache = {};  // all data loaded — recalculate with full attendance
   renderCustomers();    // re-render so days-left matches attendance data
   renderOverview();
   applyLang();          // apply saved language preference
   startAutoPing();
+  migrateSvBodyToSupabase();
   // On startup: if PINs exist but no session auth, prompt for PIN
   checkStartupAuth();
 }
@@ -3399,20 +3550,22 @@ function updateSidebarLogo() {
   if (wcBtn) wcBtn.textContent = '🌿 ' + cn;
 }
 async function loadCustomers() {
-  D.customers = await dbGet('customers');
+  D.customers = await dbGet('customers', 'created_at', _cFilter());
   renderCustomers();
   updateCustSelects();
   updateCoachSelects();
   updateBodyCustSelect();
   updatePaymentPersonSelect();
 }
-async function loadAttendance() { D.attendance = await dbGet('attendance','date'); _daysLeftCache = {}; renderAttendance(); }
+async function loadAttendance() { D.attendance = await dbGet('attendance','date', _custIdsFilter()); _daysLeftCache = {}; renderAttendance(); }
 
 async function loadBody() {
   getCredentials();
   D.body = [];
   try {
-    const res = await fetch(SB_URL + '/rest/v1/body_composition?order=date.desc&limit=100', {
+    var custF = _custIdsFilter();
+    var bodyUrl = SB_URL + '/rest/v1/body_composition?order=date.desc&limit=500' + (custF ? '&' + custF : '');
+    const res = await fetch(bodyUrl, {
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
     });
     D.body = await res.json();
@@ -3422,9 +3575,9 @@ async function loadBody() {
   renderRecheckBadge();
 }
 
-async function loadFinance() { D.finance = await dbGet('finance','date'); renderFinance(); }
+async function loadFinance() { D.finance = await dbGet('finance','date', _cFilter()); renderFinance(); }
 async function loadCoaches() {
-  D.coaches = await dbGet('coaches');
+  D.coaches = await dbGet('coaches', 'created_at', _cFilter());
   renderCoaches();
   updateCoachSelects();
   updateCouponCoachSelects();
@@ -3551,16 +3704,47 @@ function togglePinVis(inputId, btn) {
 function updatePackOwnerSelect() {
   var sel = document.getElementById('customer-pack-owner'); if(!sel) return;
   var editId = document.getElementById('customer-id').value;
-  var _custs = filterByCenter(D.customers).filter(function(c){
+  var _custs = D.customers.filter(function(c){
     return c.id !== editId && c.pack_type && c.pack_start_date && !c.pack_owner_id;
   });
+  var _coaches = D.coaches.filter(function(c){
+    return c.pack_type && c.pack_start_date && !c.pack_owner_id;
+  });
+  var _all = _custs.map(function(c){ return {id:c.id, name:c.name, obj:c}; })
+    .concat(_coaches.map(function(c){ return {id:c.id, name:c.name+' 👨‍🏫', obj:c}; }));
   sel.innerHTML = '<option value="">— Own Pack (not shared) —</option>' +
-    _custs.map(function(c){
-      var st = getDaysLeft(c);
-      return '<option value="'+c.id+'">'+c.name+' ('+c.pack_type+' — '+st.days+' servings left)</option>';
+    _all.map(function(p){
+      var st = getDaysLeft(p.obj);
+      return '<option value="'+p.id+'">'+p.name+' ('+p.obj.pack_type+' — '+st.days+' servings left)</option>';
     }).join('');
 }
 
+function updateCoachPackOwnerSelect() {
+  var sel = document.getElementById('coach-pack-owner'); if(!sel) return;
+  var editId = document.getElementById('coach-id').value;
+  var _custs = D.customers.filter(function(c){
+    return c.pack_type && c.pack_start_date && !c.pack_owner_id;
+  });
+  var _coaches = D.coaches.filter(function(c){
+    return c.id !== editId && c.pack_type && c.pack_start_date && !c.pack_owner_id;
+  });
+  var _all = _custs.map(function(c){ return {id:c.id, name:c.name, obj:c}; })
+    .concat(_coaches.map(function(c){ return {id:c.id, name:c.name+' 👨‍🏫', obj:c}; }));
+  sel.innerHTML = '<option value="">— Own Pack (not shared) —</option>' +
+    _all.map(function(p){
+      var st = getDaysLeft(p.obj);
+      return '<option value="'+p.id+'">'+p.name+' ('+p.obj.pack_type+' — '+st.days+' servings left)</option>';
+    }).join('');
+}
+function onCoachPackOwnerChange() {
+  var ownerId = document.getElementById('coach-pack-owner').value;
+  var packRow = document.querySelector('#coach-pack-section .fr');
+  if(ownerId) {
+    if(packRow) packRow.style.display = 'none';
+  } else {
+    if(packRow) packRow.style.display = '';
+  }
+}
 function onPackOwnerChange() {
   var ownerId = document.getElementById('customer-pack-owner').value;
   var ownFields = document.getElementById('own-pack-fields');
@@ -3642,6 +3826,9 @@ function isSupervisor() {
 }
 
 function goTo(name, el) {
+  if (!isSupervisor() && ['orgtree','pintracker','bizanalyst'].indexOf(name) > -1) {
+    showToast('This section is for supervisors only', 'error'); return;
+  }
   document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active')});
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
   var sec = document.getElementById('sec-'+name);
@@ -3656,10 +3843,10 @@ function goTo(name, el) {
   if (name==='orgtree')   setTimeout(renderOrgTree, 80);
   if (name==='pintracker') setTimeout(initPinTracker, 80);
   if (name==='bizanalyst') setTimeout(initBizAnalyst, 80);
-  if (name==='profile')   setTimeout(function(){ renderProfileCard(); updateProfileCoachSelect(); }, 80);
+  if (name==='profile')   setTimeout(function(){ renderProfileCard(); updateProfileCoachSelect(); renderSvDietPlan(); }, 80);
   if (name==='leads')     setTimeout(function(){ renderLeadsStats(); renderLeads(); updateLeadCenterSel(); }, 80);
   if (name==='guide')     setTimeout(renderGuide, 80);
-  if (name==='finance')        { setTimeout(renderFinance, 80); }
+  if (name==='finance')        { setTimeout(function(){ setFinPeriod('all', document.querySelector('.fin-period[onclick*="all"]')); }, 80); }
   if (name==='expenses')       { setTimeout(renderExpenses, 80); }
   if (name==='goals')          { setTimeout(renderGoals, 80); }
   if (name==='notifications')  { setTimeout(renderNotifications, 80); }
@@ -3687,7 +3874,7 @@ function openModal(type) {
       if(ACTIVE_CENTER) sel.value = ACTIVE_CENTER;
       else if(D.centers.length === 1) sel.value = D.centers[0].id;
     }
-    if(type==='coach') { updateCoachUplineSelects(document.getElementById('coach-id').value); }
+    if(type==='coach') { updateCoachUplineSelects(document.getElementById('coach-id').value); updateCoachPackOwnerSelect(); }
   }
   if(type==='customer') updatePackOwnerSelect();
   // Auto-select center in finance modal for new records
@@ -3709,7 +3896,7 @@ function openModal(type) {
 function closeModal(type) {
   document.getElementById('modal-'+type).classList.remove('open');
   document.getElementById('modal-'+type).querySelectorAll('input:not([type=hidden]),select,textarea').forEach(function(el){
-    if(el.type==='date') el.value=new Date().toISOString().split('T')[0];
+    if(el.type==='date') { var _td=new Date(); el.value=_td.getFullYear()+'-'+String(_td.getMonth()+1).padStart(2,'0')+'-'+String(_td.getDate()).padStart(2,'0'); }
     else el.value = el.tagName==='SELECT' ? (el.options[0]&&el.options[0].value||'') : '';
   });
   document.getElementById('modal-'+type).querySelectorAll('input[type=hidden]').forEach(function(el){el.value='';});
@@ -4442,7 +4629,7 @@ async function runFinanceAnalystAgent() {
     'EXPENSE BREAKDOWN THIS MONTH:\n'+Object.keys(expCat).map(function(k){ return '- '+k+': ₹'+expCat[k].toLocaleString('en-IN'); }).join('\n')+'\n\n'+
     'UNCOLLECTED PENDING PAYMENTS: ₹'+pending.toLocaleString('en-IN')+'\n\n'+
     'BUSINESS METRICS:\nActive customers: '+activeCnt+'\nNew this month: '+newCnt+'\nExpiring in 7 days: '+expiring7+'\nLow/out-of-stock products: '+lowStock+'\n\n'+
-    'CONTEXT: Small Herbalife wellness center, India, sole proprietor owner.';
+    'CONTEXT: Small nutrition wellness center, India, sole proprietor owner.';
 
   // ── Open modal ──
   document.getElementById('agent-output-title').textContent = '💹 Finance Analyst Agent';
@@ -4695,7 +4882,7 @@ async function askBodyAI(cid, rid) {
       body: JSON.stringify({
         model: GROQ_MODEL,
         messages: [
-          { role: 'system', content: "You are an expert wellness coach at a Herbalife nutrition center in India. Analyze this customer's body composition history from their Karada body scanner readings. Explain in simple, friendly language: 1) What changed and whether it is good or bad based on their goal, 2) Why this change likely happened (diet consistency, shake timing, hydration, attendance), 3) Two specific actionable recommendations for the wellness center owner to tell this customer. Keep response under 150 words. Be encouraging but honest. Use Indian context." },
+          { role: 'system', content: "You are an expert wellness coach at a nutrition wellness center in India. Analyze this customer's body composition history from their Karada body scanner readings. Explain in simple, friendly language: 1) What changed and whether it is good or bad based on their goal, 2) Why this change likely happened (diet consistency, shake timing, hydration, attendance), 3) Two specific actionable recommendations for the wellness center owner to tell this customer. Keep response under 150 words. Be encouraging but honest. Use Indian context." },
           { role: 'user', content: statsMsg }
         ],
         max_tokens: 500
@@ -4770,7 +4957,7 @@ async function generateFirstScanReport(cid) {
   if (!recs.length) return;
   var r = recs[0];
   var prompt = "Customer: "+name+", Goal: "+goal+", Baseline scan: weight "+(r.weight||'-')+"kg, fat "+(r.fat_percentage||'-')+"%, muscle "+(r.muscle_percentage||'-')+"%, visceral "+(r.visceral_fat||'-')+", BMR "+(r.bmr||'-')+", BMI "+(r.bmi||'-')+".";
-  var sys = 'You are an expert wellness coach at a Herbalife nutrition center. A customer just completed their FIRST EVER body scan. Analyze their baseline numbers considering their stated goal. In simple, friendly language: 1) Give a 2-sentence breakdown of what their starting numbers mean, 2) Provide 3 highly specific starting recommendations (diet, water, Herbalife shakes) to kickstart their journey. Keep under 120 words. Be extremely motivating and welcoming.';
+  var sys = 'You are an expert wellness coach at a nutrition wellness center. A customer just completed their FIRST EVER body scan. Analyze their baseline numbers considering their stated goal. In simple, friendly language: 1) Give a 2-sentence breakdown of what their starting numbers mean, 2) Provide 3 highly specific starting recommendations (diet, water, protein shakes) to kickstart their journey. Keep under 120 words. Be extremely motivating and welcoming.';
   doGroqReport(cid, sys, prompt, 'First Scan AI Report');
 }
 
@@ -4782,7 +4969,7 @@ async function generateWeeklyReport(cid) {
   if (recs.length < 2) { showToast('Need at least 2 records for a weekly comparison!', 'error'); return; }
   var r1 = recs[0]; var r0 = recs[1]; 
   var prompt = "Customer: "+name+", Goal: "+goal+", Last week: weight "+(r0.weight||'-')+"kg, fat "+(r0.fat_percentage||'-')+"%, muscle "+(r0.muscle_percentage||'-')+"%, visceral "+(r0.visceral_fat||'-')+", BMR "+(r0.bmr||'-')+", BMI "+(r0.bmi||'-')+". This week: weight "+(r1.weight||'-')+"kg, fat "+(r1.fat_percentage||'-')+"%, muscle "+(r1.muscle_percentage||'-')+"%, visceral "+(r1.visceral_fat||'-')+", BMR "+(r1.bmr||'-')+", BMI "+(r1.bmi||'-')+".";
-  var sys = 'You are an expert wellness coach at a Herbalife nutrition center in India. A customer has done their weekly body scan. Compare their current week results with last week and explain in simple, friendly language: 1) What changed and whether it is good or bad based on their goal, 2) Why this change likely happened (diet, consistency, timing of shakes), 3) Two specific actionable recommendations for the wellness center owner to tell the customer. Keep the response under 150 words. Be encouraging but honest.';
+  var sys = 'You are an expert wellness coach at a nutrition wellness center in India. A customer has done their weekly body scan. Compare their current week results with last week and explain in simple, friendly language: 1) What changed and whether it is good or bad based on their goal, 2) Why this change likely happened (diet, consistency, timing of shakes), 3) Two specific actionable recommendations for the wellness center owner to tell the customer. Keep the response under 150 words. Be encouraging but honest.';
   doGroqReport(cid, sys, prompt, 'Weekly Progress Report');
 }
 
@@ -4795,7 +4982,7 @@ async function generateFullProgressReport(cid) {
   var rFirst = recs[recs.length-1];
   var rLast = recs[0];
   var prompt = "Customer: "+name+", Goal: "+goal+", Total Scans: "+recs.length+", First scan ("+rFirst.date+"): weight "+(rFirst.weight||'-')+"kg, fat "+(rFirst.fat_percentage||'-')+"%. Latest scan ("+rLast.date+"): weight "+(rLast.weight||'-')+"kg, fat "+(rLast.fat_percentage||'-')+"%, muscle "+(rLast.muscle_percentage||'-')+"%, visceral "+(rLast.visceral_fat||'-')+".";
-  var sys = 'You are an expert wellness coach at a Herbalife nutrition center. A customer has completed multiple body scans over time. Analyze their full journey from their first scan to their latest scan. 1) Summarize their total overall transformation based on their goal. 2) Praise their consistency and highlight the biggest win. 3) Give 1 strong piece of advice to push them to the next level. Keep under 150 words. Be deeply inspiring and celebratory.';
+  var sys = 'You are an expert wellness coach at a nutrition wellness center. A customer has completed multiple body scans over time. Analyze their full journey from their first scan to their latest scan. 1) Summarize their total overall transformation based on their goal. 2) Praise their consistency and highlight the biggest win. 3) Give 1 strong piece of advice to push them to the next level. Keep under 150 words. Be deeply inspiring and celebratory.';
   doGroqReport(cid, sys, prompt, 'Full Journey Summary');
 }
 
@@ -5320,7 +5507,7 @@ var PRODUCTS_DB = (function(){
       {id:"activated-fiber-90",name:"Activated Fiber 90 Tablets",defaultUnit:"boxes",threshold:2},
       {id:"simply-probiotic",name:"Simply Probiotic",defaultUnit:"boxes",threshold:2},
       {id:"joint-support",name:"Joint Support",defaultUnit:"boxes",threshold:2},
-      {id:"herbalife-calcium",name:"Herbalife Calcium Tablets",defaultUnit:"boxes",threshold:2},
+      {id:"herbalife-calcium",name:"Calcium Tablets",defaultUnit:"boxes",threshold:2},
       {id:"hn-skin-booster-30",name:"HN-Skin Booster 30 Servings",defaultUnit:"boxes",threshold:2},
       {id:"hn-skin-booster-canister",name:"HN-Skin Booster Canister 300g",defaultUnit:"boxes",threshold:2},
       {id:"womans-choice",name:"Woman's Choice",defaultUnit:"boxes",threshold:2},
@@ -5703,7 +5890,7 @@ function sendBroadcastAll() {
 function shareReorderWhatsApp() {
   var list = window._reorderList || [];
   if (!list.length) { showToast('All products are well stocked! 🎉'); return; }
-  var msg = '📦 *Herbalife Reorder List — '+new Date().toLocaleDateString('en-IN')+'*\n\n';
+  var msg = '📦 *Product Reorder List — '+new Date().toLocaleDateString('en-IN')+'*\n\n';
   var out = list.filter(function(i){return i.status==='OUT';});
   var low = list.filter(function(i){return i.status==='LOW';});
   if (out.length) { msg += '🔴 *Out of Stock:*\n'; out.forEach(function(i){ msg += '• '+i.name+'\n'; }); msg+='\n'; }
@@ -6044,6 +6231,18 @@ function renderCenters() {
 
 // ── RENDER ATTENDANCE ──
 var ATT_TAB = 'daily';
+var ATT_SHOW_INACTIVE = false;
+function toggleInactiveAtt() {
+  ATT_SHOW_INACTIVE = !ATT_SHOW_INACTIVE;
+  var btn = document.getElementById('att-inactive-toggle');
+  if (btn) {
+    btn.style.background    = ATT_SHOW_INACTIVE ? '#fff3cd' : 'var(--surface)';
+    btn.style.borderColor   = ATT_SHOW_INACTIVE ? '#f59e0b' : 'var(--border)';
+    btn.style.color         = ATT_SHOW_INACTIVE ? '#92400e' : 'var(--muted)';
+    btn.textContent         = ATT_SHOW_INACTIVE ? '😴 Hide Inactive' : '😴 Show Inactive';
+  }
+  renderAttendance();
+}
 function switchAttTab(tab) {
   ATT_TAB = tab;
   document.getElementById('tab-daily').classList.toggle('active', tab==='daily');
@@ -6167,8 +6366,13 @@ function renderAttGrid() {
   var parts = monthStr.split('-');
   var y=parseInt(parts[0]), m=parseInt(parts[1]);
   var daysInMonth = new Date(y, m, 0).getDate();
-  var custRows = filterByCenter(D.customers).filter(function(c){return getDaysLeft(c).active || D.attendance.some(function(a){return a.customer_id===c.id&&a.date.startsWith(monthStr);});})
-    .map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:false}; });
+  var custRows = filterByCenter(D.customers).filter(function(c){
+    var hasAttThisMonth = D.attendance.some(function(a){return a.customer_id===c.id&&a.date.startsWith(monthStr);});
+    if(hasAttThisMonth) return true; // always show if they actually attended this month
+    if(!getDaysLeft(c).active) return false; // expired pack, no attendance — hide
+    if(isInactive(c) && !ATT_SHOW_INACTIVE) return false; // inactive, toggle off — hide
+    return true;
+  }).map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:false}; });
   var coachRows = filterByCenter(D.coaches).filter(function(c){ return (c.pack_type && c.pack_start_date) || D.attendance.some(function(a){return a.customer_id===c.id&&a.date.startsWith(monthStr);}); })
     .map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:true}; });
   var allRows = custRows.concat(coachRows);
@@ -6267,15 +6471,17 @@ async function gridServRemove(id, name, date) {
 function renderAttendance() {
   if(ATT_TAB==='monthly') return renderAttGrid();
   var q = document.getElementById('att-search').value.toLowerCase();
-  var todayStr = new Date().toISOString().split('T')[0];
+  var _tn=new Date(); var todayStr=_tn.getFullYear()+'-'+String(_tn.getMonth()+1).padStart(2,'0')+'-'+String(_tn.getDate()).padStart(2,'0');
   
   var activeCusts = filterByCenter(D.customers).filter(function(c){
-    return (!isInactive(c) || getDaysLeft(c).active) && ((c.name||'').toLowerCase().includes(q));
+    var packActive = getDaysLeft(c).active;
+    if (!packActive) return false; // always hide expired-pack customers
+    return (c.name||'').toLowerCase().includes(q);
   });
 
   // Also include coaches who have an active pack
   var activeCoaches = filterByCenter(D.coaches).filter(function(c){
-    return c.pack_type && c.pack_start_date &&
+    return (c.pack_type && c.pack_start_date || c.pack_owner_id) &&
       getDaysLeft(c).active &&
       (c.name||'').toLowerCase().includes(q);
   });
@@ -6303,8 +6509,9 @@ function renderAttendance() {
     }
     var servBadge = stst==='present' && servings > 1 ? '<span class="badge" style="background:#6366f1;color:#fff;margin-left:6px">×'+servings+'</span>' : '';
     var resetHtml = stst==='present' ? ' ondblclick="event.stopPropagation();resetAtt(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\')"' : '';
+    var inactiveBadge = (!p.isCoach && isInactive(p.obj)) ? '<span style="font-size:10px;font-weight:700;background:#fff3cd;color:#92400e;border-radius:20px;padding:1px 7px;margin-left:5px">Inactive</span>' : '';
     var cardHtml = '<div class="att-card" onclick="toggleAtt(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\',\''+stst+'\')"'+resetHtml+'>' +
-                     '<div class="att-card-name">'+p.name+servBadge+'</div>' +
+                     '<div class="att-card-name">'+p.name+servBadge+inactiveBadge+'</div>' +
                      '<div><span class="badge '+bdg+'">'+st.used+'/'+st.total+'</span></div>' +
                    '</div>';
     if (stst === 'present') present.push(cardHtml);
@@ -6399,7 +6606,7 @@ function renderBody() {
 
   profileCard.style.display = 'block';
   var latestVfKg = latest ? parseFloat(latest.visceral_fat) || 0 : 0;
-  profileCard.innerHTML = svBuildHealthScoreCard(latest ? latest.bmi : null, latest ? latest.fat_percentage : null, latestVfKg, latest ? latest.date : null) +
+  profileCard.innerHTML = svBuildHealthScoreCard(latest ? latest.bmi : null, latest ? latest.fat_percentage : null, latestVfKg, latest ? latest.date : null, {name: cust.name, phone: cust.contact, weight: latest ? latest.weight : null, musclePct: latest ? latest.muscle_percentage : null, gender: cust.gender || ''}) +
     '<div class="body-profile">'
     +'<div class="body-profile-name">'+cust.name+'</div>'
     +'<div class="body-profile-meta">'
@@ -6485,8 +6692,8 @@ function renderBody() {
 }
 
 // ── Ideal Values Card ──
-function renderIdealCard(cust, latest) {
-  var card = document.getElementById('body-ideal-card');
+function renderIdealCard(cust, latest, elId) {
+  var card = document.getElementById(elId || 'body-ideal-card');
   if (!card) return;
 
   if (!latest) { card.style.display = 'none'; return; }
@@ -7382,7 +7589,13 @@ function calcBody() {
   svSetBodyHint('body-visceral-hint', svVfHint(vfKg));
 
   // Live Health Score in modal
-  var score = svCalcHealthScore(bmi || 0, isNaN(fatPct) ? 0 : fatPct, vfKg);
+  var musclePctLive = parseFloat(document.getElementById('body-muscle').value) || 0;
+  var _modalCust = _selectedBodyCustId
+    ? ((D.customers||[]).find(function(x){return x.id===_selectedBodyCustId;}) || (D.coaches||[]).find(function(x){return x.id===_selectedBodyCustId;}))
+    : null;
+  var _modalGender = _modalCust ? (_modalCust.gender||'') : '';
+  var _modalWeight = parseFloat(document.getElementById('body-weight') ? document.getElementById('body-weight').value : 0) || 0;
+  var score = svCalcHealthScore(bmi || 0, isNaN(fatPct) ? 0 : fatPct, vfKg, musclePctLive || null, _modalGender, _modalWeight);
   svUpdateModalHealthScore(score);
 }
 
@@ -7412,25 +7625,43 @@ function svVfHint(kg) {
   if (kg <= 4) return {cls:'warn', icon:'⚠️', label:'Moderate'};
   return             {cls:'bad',  icon:'🔴', label:'High Risk'};
 }
-function svCalcHealthScore(bmi, fatPct, vfKg) {
+function svCalcHealthScore(bmi, fatPct, vfKg, musclePct, gender, weight) {
+  var g = (gender || '').toLowerCase();
+  var isMale = g === 'male', isFemale = g === 'female';
+  var fatLo = isMale ? 10 : isFemale ? 20 : 10;
+  var fatHi = isMale ? 20 : isFemale ? 26 : 25;
+  // Muscle scored on absolute kg: men ideal ≥30 kg, women ≥22 kg
+  var musIdealKg = isMale ? 30 : 22;
+  var musMinKg   = isMale ? 10 : 8;
   var score = 0, total = 0;
   if (bmi) {
-    total += 40;
-    if (bmi >= 18.5 && bmi <= 24.9) score += 40;
-    else if (bmi < 18.5) score += Math.max(0, 40 - (18.5 - bmi) * 5);
-    else score += Math.max(0, 40 - (bmi - 24.9) * 4);
+    total += 25;
+    if (bmi >= 18.5 && bmi <= 24.9) score += 25;
+    else if (bmi < 18.5) score += Math.max(0, 25 - (18.5 - bmi) * 4);
+    else score += Math.max(0, 25 - (bmi - 24.9) * 3);
   }
   if (fatPct) {
-    total += 35;
-    if (fatPct >= 8 && fatPct <= 25) score += 35;
-    else if (fatPct < 8) score += Math.max(0, 35 - (8 - fatPct) * 4);
-    else score += Math.max(0, 35 - (fatPct - 25) * 2);
+    total += 30;
+    if (fatPct >= fatLo && fatPct <= fatHi) score += 30;
+    else if (fatPct < fatLo) score += Math.max(0, 30 - (fatLo - fatPct) * 3);
+    else score += Math.max(0, 30 - (fatPct - fatHi) * 1.8);
   }
   if (vfKg > 0) {
+    total += 20;
+    if (vfKg <= 2) score += 20;
+    else if (vfKg <= 4) score += 12;
+    else if (vfKg <= 6) score += 5;
+  }
+  if (musclePct) {
     total += 25;
-    if (vfKg <= 2) score += 25;
-    else if (vfKg <= 4) score += 15;
-    else if (vfKg <= 6) score += 8;
+    var muscleKg = weight > 0 ? weight * musclePct / 100 : 0;
+    if (muscleKg > 0) {
+      // Score on absolute muscle kg — gaining muscle always improves score
+      score += Math.min(25, Math.max(0, (muscleKg - musMinKg) / (musIdealKg - musMinKg) * 25));
+    } else {
+      // No weight available — fall back to % (threshold 35% unisex)
+      score += Math.min(25, Math.max(0, (musclePct - 15) / 20 * 25));
+    }
   }
   if (total === 0) return null;
   return Math.round((score / total) * 100);
@@ -7458,8 +7689,17 @@ function svUpdateModalHealthScore(score) {
   gradeEl.style.background = grade.bg;
   gradeEl.style.color = grade.c;
 }
-function svBuildHealthScoreCard(bmi, fatPct, vfKg, date) {
-  var score = svCalcHealthScore(parseFloat(bmi)||0, parseFloat(fatPct)||0, parseFloat(vfKg)||0);
+function svBuildHealthScoreCard(bmi, fatPct, vfKg, date, opts) {
+  opts = opts || {};
+  var musV = parseFloat(opts.musclePct)||0;
+  var gender = (opts.gender || '').toLowerCase();
+  var isMale = gender === 'male', isFemale = gender === 'female';
+  var fatIdealLo = isMale ? 10 : isFemale ? 20 : 10;
+  var fatIdealHi = isMale ? 20 : isFemale ? 26 : 25;
+  var musIdealKg = isMale ? 30 : 22;
+  var weightV = parseFloat(opts.weight) || 0;
+  var muscleKg = (weightV > 0 && musV > 0) ? parseFloat((weightV * musV / 100).toFixed(1)) : 0;
+  var score = svCalcHealthScore(parseFloat(bmi)||0, parseFloat(fatPct)||0, parseFloat(vfKg)||0, musV||null, gender, weightV);
   if (score === null) return '';
   var color = score >= 80 ? '#27ae60' : score >= 55 ? '#e8a838' : '#c0392b';
   var maxDash = 157.08;
@@ -7469,6 +7709,21 @@ function svBuildHealthScoreCard(bmi, fatPct, vfKg, date) {
             : score >= 55 ? {t:'Fair',bg:'rgba(254,243,199,.3)',c:'#fde68a'}
             : score >= 40 ? {t:'Poor',bg:'rgba(254,226,226,.3)',c:'#fca5a5'}
             :               {t:'Critical',bg:'rgba(254,226,226,.3)',c:'#fca5a5'};
+  var bmiV = parseFloat(bmi)||0;
+  var fatV = parseFloat(fatPct)||0;
+  var bmiLbl = bmiV ? (bmiV < 18.5 ? '⬇️ Underweight' : bmiV <= 24.9 ? '✅ Normal' : bmiV <= 29.9 ? '⚠️ Overweight' : '🔴 Obese') : '—';
+  var fatLbl = fatV ? (fatV >= fatIdealLo && fatV <= fatIdealHi ? '✅ Ideal' : fatV <= fatIdealHi + 6 ? '⚠️ High' : '🔴 Very High') : '—';
+  var vfLbl  = vfKg > 0 ? (vfKg <= 2 ? '✅ Low' : vfKg <= 4 ? '⚠️ Moderate' : '🔴 High') : '—';
+  var musLbl = muscleKg > 0
+    ? (muscleKg >= musIdealKg ? '✅ Excellent' : muscleKg >= musIdealKg * 0.85 ? '✅ Good' : muscleKg >= musIdealKg * 0.65 ? '⚠️ Average' : '🔴 Low')
+    : musV ? '⚠️ Average' : '—';
+  var uid = 'hs-' + Date.now();
+  // Store WA data in a global so onclick doesn't need inline string escaping
+  window._hsWaData = window._hsWaData || {};
+  window._hsWaData[uid] = {name:opts.name||'', phone:opts.phone||'', score:score, grade:grade.t, bmi:bmiV, fatPct:fatV, vfKg:vfKg, weight:opts.weight||0, musclePct:opts.musclePct||0, date:date||'', center:getCenterName()};
+  var waBtn = opts.phone
+    ? '<button onclick="var d=window._hsWaData[\''+uid+'\'];sendHealthScoreWA(d.name,d.phone,d.score,d.grade,d.bmi,d.fatPct,d.vfKg,d.weight,d.musclePct,d.date,d.center)" style="background:#25D366;color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">💬 Share Score</button>'
+    : '';
   return '<div class="hs-card">' +
     '<div class="hs-gauge">' +
       '<svg viewBox="0 0 120 72" width="120" height="72">' +
@@ -7477,13 +7732,59 @@ function svBuildHealthScoreCard(bmi, fatPct, vfKg, date) {
         '<text x="60" y="62" text-anchor="middle" font-size="20" font-weight="700" fill="#fff" font-family="DM Sans,sans-serif">' + score + '</text>' +
       '</svg>' +
     '</div>' +
-    '<div class="hs-info">' +
+    '<div class="hs-info" style="flex:1">' +
       '<div class="hs-title">Health Score</div>' +
       '<div class="hs-score-big">' + score + '<span style="font-size:16px;font-weight:400;color:rgba(255,255,255,.5)">/100</span></div>' +
       '<div class="hs-grade-badge" style="background:' + grade.bg + ';color:' + grade.c + '">' + grade.t + '</div>' +
       (date ? '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px">Last scan: ' + date + '</div>' : '') +
+      '<div class="hs-actions">' +
+        waBtn +
+        '<button onclick="var p=document.getElementById(\''+uid+'\');p.style.display=p.style.display===\'block\'?\'none\':\'block\'" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer">ℹ️ How is this scored?</button>' +
+      '</div>' +
+      '<div class="hs-info-panel" id="'+uid+'">' +
+        '<div style="font-weight:700;color:#fff;margin-bottom:10px">How Health Score is calculated</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px">' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">BMI (25 pts)</span><span style="color:#fff;font-size:12px">'+bmiV+' — '+bmiLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: 18.5–24.9</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Body Fat % (30 pts)</span><span style="color:#fff;font-size:12px">'+fatV+'% — '+fatLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: '+fatIdealLo+'–'+fatIdealHi+'%</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Visceral Fat (20 pts)</span><span style="color:#fff;font-size:12px">'+(vfKg||'—')+' kg — '+vfLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: ≤ 2 kg</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Muscle Mass (25 pts)</span><span style="color:#fff;font-size:12px">'+(muscleKg > 0 ? muscleKg+' kg' : (musV||'—')+'%')+' — '+musLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: ≥ '+musIdealKg+' kg</span></div>' +
+        '</div>' +
+        '<div class="hs-grade-row" style="margin-top:10px">' +
+          '<div class="hs-grade-pip" style="background:#d1fae5;color:#065f46">85–100 Excellent</div>' +
+          '<div class="hs-grade-pip" style="background:#d1fae5;color:#065f46">70–84 Good</div>' +
+          '<div class="hs-grade-pip" style="background:#fef3c7;color:#92400e">55–69 Fair</div>' +
+          '<div class="hs-grade-pip" style="background:#fee2e2;color:#991b1b">40–54 Poor</div>' +
+          '<div class="hs-grade-pip" style="background:#fee2e2;color:#991b1b">&lt;40 Critical</div>' +
+        '</div>' +
+      '</div>' +
     '</div>' +
   '</div>';
+}
+
+function sendHealthScoreWA(name, phone, score, grade, bmi, fatPct, vfKg, weight, musclePct, date, centerName) {
+  var emoji = score >= 85 ? '🌟' : score >= 70 ? '💚' : score >= 55 ? '🟡' : '🔴';
+  var msg = '🏥 *Health Score Report*\n'
+    + 'Hi ' + name + '! Here\'s your latest body analysis from ' + centerName + '.\n\n'
+    + emoji + ' *Health Score: ' + score + '/100 — ' + grade + '*\n\n'
+    + '📊 *Your Numbers:*\n'
+    + (weight  ? '⚖️ Weight: ' + weight + ' kg\n' : '')
+    + (bmi     ? '📏 BMI: ' + bmi + (bmi < 18.5 ? ' (Underweight)' : bmi <= 24.9 ? ' (Normal ✅)' : bmi <= 29.9 ? ' (Overweight ⚠️)' : ' (Obese 🔴)') + '\n' : '')
+    + (fatPct  ? '🔥 Body Fat: ' + fatPct + '%' + (fatPct <= 26 ? ' ✅' : ' ⚠️') + '\n' : '')
+    + (musclePct ? '💪 Muscle: ' + musclePct + '%\n' : '')
+    + (vfKg > 0 ? '🫀 Visceral Fat: ' + vfKg + ' kg' + (vfKg <= 2 ? ' ✅' : ' ⚠️') + '\n' : '')
+    + (date    ? '📅 Scan Date: ' + date + '\n' : '')
+    + '\n📖 *What does Health Score mean?*\n'
+    + 'Your score is based on 4 key markers:\n'
+    + '• BMI (25 pts) — ideal range: 18.5–24.9\n'
+    + '• Body Fat % (30 pts) — ideal: 10–20% (Men) / 20–26% (Women)\n'
+    + '• Visceral Fat (20 pts) — ideal: ≤ 2 kg\n'
+    + '• Muscle Mass (25 pts) — ideal: ≥ 30 kg (Men) / ≥ 22 kg (Women)\n\n'
+    + (score >= 70
+      ? '✨ Great work! Keep up your healthy habits. 💪'
+      : '💡 Don\'t worry — with the right nutrition & consistency, your score will improve. We\'re here to support you! 🌱')
+    + '\n\n— ' + centerName;
+  var ph = (phone || '').replace(/\D/g, '');
+  window.open('https://api.whatsapp.com/send?' + (ph ? 'phone=' + COUNTRY_CODE + ph + '&' : '') + 'text=' + encodeURIComponent(msg), '_blank');
 }
 
 function calcVF() {
@@ -7510,8 +7811,14 @@ async function saveBody() {
   if (!dateVal) { showToast('Date is required','error'); return; }
 
   if (custId === '__sv__') {
+    getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+    var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+    if (!op.sv_body_id) {
+      op.sv_body_id = (crypto.randomUUID ? crypto.randomUUID() : 'sv-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+      localStorage.setItem('ownerProfile', JSON.stringify(op));
+    }
     var svPayload = {
-      id: id || ('sv-' + Date.now()),
+      customer_id: op.sv_body_id, customer_name: op.name || 'Supervisor',
       date: dateVal,
       height: document.getElementById('body-height').value||null,
       age: document.getElementById('body-age-field').value||null,
@@ -7525,11 +7832,13 @@ async function saveBody() {
       muscle_percentage: document.getElementById('body-muscle').value||null,
       notes: document.getElementById('body-notes').value.trim()
     };
-    var recs = JSON.parse(localStorage.getItem('sv_body_records')||'[]');
-    if (id) { var si=recs.findIndex(function(x){return x.id===id;}); if(si>=0) recs[si]=svPayload; else recs.push(svPayload); }
-    else { recs.push(svPayload); }
-    localStorage.setItem('sv_body_records', JSON.stringify(recs));
-    showToast('Record saved!'); closeModal('body'); renderSvBody();
+    // If id starts with 'sv-' it's a legacy localStorage id — insert as new record
+    var isLegacyId = id && id.toString().startsWith('sv-');
+    try {
+      if (id && !isLegacyId) await dbUpdate('body_composition', id, svPayload);
+      else await dbInsert('body_composition', svPayload);
+      showToast('Record saved!'); closeModal('body'); await loadBody(); renderSvBody();
+    } catch(e) { showToast('Error: '+e.message, 'error'); }
     return;
   }
 
@@ -7597,6 +7906,8 @@ async function saveCoach() {
   if (dashPin) payload.coach_pin = dashPin;
   // Only include pack fields if not a center owner and columns exist
   if (!isOwner) {
+    var coachPackOwner = (document.getElementById('coach-pack-owner')||{}).value || null;
+    payload.pack_owner_id = coachPackOwner || null;
     var pt = document.getElementById('coach-pack-type') ? document.getElementById('coach-pack-type').value||null : null;
     var ps = document.getElementById('coach-pack-start') ? document.getElementById('coach-pack-start').value||null : null;
     var pp = document.getElementById('coach-pack-price') ? Number(document.getElementById('coach-pack-price').value)||null : null;
@@ -7652,6 +7963,7 @@ function editCoach(id) {
   if(document.getElementById('coach-pack-type')) document.getElementById('coach-pack-type').value=c.pack_type||'';
   if(document.getElementById('coach-pack-start')) document.getElementById('coach-pack-start').value=c.pack_start_date||'';
   if(document.getElementById('coach-pack-price')) document.getElementById('coach-pack-price').value=c.pack_price||'';
+  if(document.getElementById('coach-pack-owner')) { updateCoachPackOwnerSelect(); document.getElementById('coach-pack-owner').value=c.pack_owner_id||''; onCoachPackOwnerChange(); }
   if(document.getElementById('coach-upline-sel')) document.getElementById('coach-upline-sel').value=c.upline_id||'';
   if(document.getElementById('coach-pin')) { document.getElementById('coach-pin').value=c.herbalife_pin||''; showCoachPinTip(); }
   if(document.getElementById('coach-dashboard-pin')) document.getElementById('coach-dashboard-pin').value=c.coach_pin||'';
@@ -7729,7 +8041,7 @@ function auditLog(action, entity, detail) {
     var ctr = D.centers.find(function(c){return c.id===window._centerAuth.centerId;});
     if (ctr) actor = ctr.name + ' (coach login)';
   }
-  var entry = { ts: new Date().toISOString(), actor: actor, action: action, entity: entity, detail: detail };
+  var entry = { ts: new Date().toISOString(), actor: actor, action: action, entity: entity, detail: detail, centerId: ACTIVE_CENTER || null };
   var log = JSON.parse(localStorage.getItem('auditLog') || '[]');
   log.unshift(entry);
   if (log.length > 500) log = log.slice(0, 500);
@@ -7741,6 +8053,7 @@ function renderAuditLog() {
   var ef = (document.getElementById('audit-filter')||{}).value || '';
   q = q.toLowerCase();
   var filtered = log.filter(function(e){
+    if (ACTIVE_CENTER && e.centerId && e.centerId !== ACTIVE_CENTER) return false;
     if (ef && e.entity !== ef) return false;
     if (q && !(e.actor||'').toLowerCase().includes(q) && !(e.action||'').toLowerCase().includes(q) && !(e.entity||'').toLowerCase().includes(q) && !(e.detail||'').toLowerCase().includes(q)) return false;
     return true;
@@ -7958,16 +8271,83 @@ function renderAnalytics() {
     incData.push(mFin.filter(function(f){return f.type==='income';}).reduce(function(s,f){return s+Number(f.amount);},0));
     expData.push(mFin.filter(function(f){return f.type==='expense';}).reduce(function(s,f){return s+Number(f.amount);},0));
   }
+  // ── 3-Month Moving Average ──
+  function movingAvg(arr, n) {
+    return arr.map(function(_, i) {
+      if (i < n - 1) return null;
+      var sum = 0;
+      for (var k = 0; k < n; k++) sum += arr[i - k];
+      return Math.round(sum / n);
+    });
+  }
+  var incMA = movingAvg(incData, 3);
+  var expMA = movingAvg(expData, 3);
   var revDatasets = [];
-  if (!revTypeFilter || revTypeFilter==='income')   revDatasets.push({label:'Income', data:incData, backgroundColor:'rgba(39,174,96,0.75)', borderRadius:4});
-  if (!revTypeFilter || revTypeFilter==='expense')  revDatasets.push({label:'Expense',data:expData, backgroundColor:'rgba(192,57,43,0.6)',  borderRadius:4});
+  if (!revTypeFilter || revTypeFilter==='income')  revDatasets.push({label:'Income', data:incData, backgroundColor:'rgba(39,174,96,0.75)', borderRadius:4, order:2});
+  if (!revTypeFilter || revTypeFilter==='expense') revDatasets.push({label:'Expense',data:expData, backgroundColor:'rgba(192,57,43,0.6)',  borderRadius:4, order:2});
+  if (!revTypeFilter || revTypeFilter==='income')  revDatasets.push({label:'Income 3M Avg', data:incMA, type:'line', borderColor:'#16a34a', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#16a34a', tension:0.3, order:1});
+  if (!revTypeFilter || revTypeFilter==='expense') revDatasets.push({label:'Expense 3M Avg',data:expMA, type:'line', borderColor:'#e74c3c', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#e74c3c', tension:0.3, order:1});
   destroyChart('revenue');
   if (document.getElementById('chart-revenue')) {
     _charts['revenue'] = new Chart(document.getElementById('chart-revenue'),{
-      type:'bar', data:{labels:months,datasets:revDatasets},
-      options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return '₹'+v.toLocaleString('en-IN');}}}}}
+      type:'bar',
+      data:{labels:months, datasets:revDatasets},
+      options:{
+        responsive:true,
+        plugins:{
+          legend:{position:'bottom'},
+          tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': ₹'+Number(ctx.raw||0).toLocaleString('en-IN');}}}
+        },
+        scales:{y:{beginAtZero:true, ticks:{callback:function(v){return '₹'+v.toLocaleString('en-IN');}}}}
+      }
     });
   }
+
+  // ── Revenue Forecast (Linear Regression) ──
+  (function() {
+    var el = document.getElementById('analytics-forecast'); if (!el) return;
+    function linReg(arr) {
+      var n = arr.length, sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      arr.forEach(function(y, x) { sumX += x; sumY += y; sumXY += x * y; sumX2 += x * x; });
+      var slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX) || 0;
+      var intercept = (sumY - slope * sumX) / n;
+      return { slope: slope, intercept: intercept, next: Math.max(0, Math.round(intercept + slope * n)) };
+    }
+    var nextMonthDate = new Date(); nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+    var nextLabel = nextMonthDate.toLocaleString('en-IN', {month:'long', year:'numeric'});
+    var incF = incData.length >= 2 ? linReg(incData) : null;
+    var expF = expData.length >= 2 ? linReg(expData) : null;
+    if (!incF && !expF) { el.innerHTML = ''; return; }
+    function trendArrow(slope) { return slope > 0 ? '<span style="color:#16a34a">▲</span>' : slope < 0 ? '<span style="color:#e74c3c">▼</span>' : '→'; }
+    function trendColor(slope, isExpense) {
+      if (slope === 0) return 'var(--muted)';
+      var good = isExpense ? slope < 0 : slope > 0;
+      return good ? '#16a34a' : '#e74c3c';
+    }
+    var netF = (incF ? incF.next : 0) - (expF ? expF.next : 0);
+    el.innerHTML =
+      '<div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px">' +
+      '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📈 Forecast — ' + nextLabel + '</div>' +
+      '<div style="display:flex;gap:12px;flex-wrap:wrap">' +
+      (incF ? '<div style="flex:1;min-width:120px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px">' +
+        '<div style="font-size:11px;color:#166534;font-weight:600">Projected Income</div>' +
+        '<div style="font-size:20px;font-weight:700;color:#16a34a;margin:2px 0">₹' + incF.next.toLocaleString('en-IN') + '</div>' +
+        '<div style="font-size:11px;color:var(--muted)">' + trendArrow(incF.slope) + ' ' + (incF.slope >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(incF.slope)).toLocaleString('en-IN') + '/mo trend</div>' +
+        '</div>' : '') +
+      (expF ? '<div style="flex:1;min-width:120px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px">' +
+        '<div style="font-size:11px;color:#991b1b;font-weight:600">Projected Expense</div>' +
+        '<div style="font-size:20px;font-weight:700;color:#e74c3c;margin:2px 0">₹' + expF.next.toLocaleString('en-IN') + '</div>' +
+        '<div style="font-size:11px;color:var(--muted)">' + trendArrow(expF.slope) + ' ' + (expF.slope >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(expF.slope)).toLocaleString('en-IN') + '/mo trend</div>' +
+        '</div>' : '') +
+      (incF && expF ? '<div style="flex:1;min-width:120px;background:' + (netF >= 0 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (netF >= 0 ? '#bbf7d0' : '#fecaca') + ';border-radius:10px;padding:10px 14px">' +
+        '<div style="font-size:11px;color:' + (netF >= 0 ? '#166534' : '#991b1b') + ';font-weight:600">Projected Net Profit</div>' +
+        '<div style="font-size:20px;font-weight:700;color:' + (netF >= 0 ? '#16a34a' : '#e74c3c') + ';margin:2px 0">₹' + netF.toLocaleString('en-IN') + '</div>' +
+        '<div style="font-size:11px;color:var(--muted)">Based on linear trend</div>' +
+        '</div>' : '') +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:8px">* Forecast uses linear regression on the selected period. Actual results may vary.</div>' +
+      '</div>';
+  })();
 
   // ── Attendance by day (filtered) ──
   var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -8051,6 +8431,746 @@ function renderAnalytics() {
       options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:false}},spanGaps:true}
     });
   }
+
+  // ── Conversion Funnel ──
+  (function() {
+    var el = document.getElementById('analytics-funnel'); if (!el) return;
+
+    var allLeads   = ACTIVE_CENTER ? (D.leads||[]).filter(function(l){ return l.wellness_center_id === ACTIVE_CENTER; }) : (D.leads||[]);
+    var allCusts   = ACTIVE_CENTER ? D.customers.filter(function(c){ return c.wellness_center_id === ACTIVE_CENTER; }) : D.customers;
+    var allHistory = D.packHistory || [];
+
+    // Stage counts
+    var s1_leads       = allLeads.length;
+    var s2_contacted   = allLeads.filter(function(l){ return l.status !== 'New'; }).length;
+    var s3_interested  = allLeads.filter(function(l){ return l.status === 'Interested' || l.status === 'Joined'; }).length;
+    var s4_joined      = allLeads.filter(function(l){ return l.status === 'Joined'; }).length
+                       + allCusts.filter(function(c){ return !allLeads.some(function(l){ return l.status==='Joined' && l.name===c.name; }); }).length;
+    var s5_trial       = allCusts.filter(function(c){ return (c.pack_type||'').toLowerCase().includes('trial'); }).length;
+    var s6_fullpack    = allCusts.filter(function(c){ return !(c.pack_type||'').toLowerCase().includes('trial'); }).length;
+    var s7_renewed     = allCusts.filter(function(c){ return allHistory.some(function(h){ return h.customer_name === c.name; }); }).length;
+
+    var stages = [
+      { label: 'Total Leads',    icon: '📋', count: s1_leads,    desc: 'All leads captured' },
+      { label: 'Contacted',      icon: '📞', count: s2_contacted, desc: 'Leads followed up' },
+      { label: 'Interested',     icon: '💡', count: s3_interested,desc: 'Expressed interest' },
+      { label: 'Joined',         icon: '🚪', count: s4_joined,   desc: 'Became customers' },
+      { label: 'Trial Pack',     icon: '🧪', count: s5_trial,    desc: 'Started on trial' },
+      { label: 'Full Pack',      icon: '💪', count: s6_fullpack, desc: 'Upgraded / direct join' },
+      { label: 'Renewed',        icon: '🔄', count: s7_renewed,  desc: 'Renewed at least once' }
+    ].filter(function(s){ return s.count > 0; });
+
+    if (stages.length < 2) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px">Not enough data. Add leads and customers to see the conversion funnel.</div>';
+      return;
+    }
+
+    var top = stages[0].count;
+
+    // Overall conversion rate (first to last stage)
+    var overallRate = top > 0 ? Math.round((stages[stages.length-1].count / top) * 100) : 0;
+
+    // Summary
+    var html = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">'
+      + '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;flex:1;min-width:130px">'
+        + '<div style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.4px">Overall Conversion</div>'
+        + '<div style="font-size:26px;font-weight:700;color:#16a34a;margin:4px 0">' + overallRate + '%</div>'
+        + '<div style="font-size:11px;color:var(--muted)">' + stages[stages.length-1].label + ' / ' + stages[0].label + '</div>'
+      + '</div>'
+      + '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;flex:1;min-width:130px">'
+        + '<div style="font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.4px">Lead → Customer</div>'
+        + '<div style="font-size:26px;font-weight:700;color:#2563eb;margin:4px 0">'
+          + (s1_leads > 0 ? Math.round((s4_joined / s1_leads) * 100) : 0) + '%</div>'
+        + '<div style="font-size:11px;color:var(--muted)">' + s4_joined + ' of ' + s1_leads + ' leads converted</div>'
+      + '</div>'
+      + '<div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:10px;padding:12px 16px;flex:1;min-width:130px">'
+        + '<div style="font-size:11px;font-weight:700;color:#6b21a8;text-transform:uppercase;letter-spacing:.4px">Renewal Rate</div>'
+        + '<div style="font-size:26px;font-weight:700;color:#7c3aed;margin:4px 0">'
+          + (s6_fullpack > 0 ? Math.round((s7_renewed / s6_fullpack) * 100) : 0) + '%</div>'
+        + '<div style="font-size:11px;color:var(--muted)">' + s7_renewed + ' of ' + s6_fullpack + ' full-pack customers</div>'
+      + '</div>'
+    + '</div>';
+
+    // Funnel bars
+    html += '<div style="display:flex;flex-direction:column;gap:8px">';
+    stages.forEach(function(s, i) {
+      var pctOfTop   = top > 0 ? Math.round((s.count / top) * 100) : 0;
+      var dropOff    = i > 0 ? stages[i-1].count - s.count : 0;
+      var dropPct    = i > 0 && stages[i-1].count > 0 ? Math.round((dropOff / stages[i-1].count) * 100) : 0;
+      var barColor   = pctOfTop >= 70 ? '#16a34a' : pctOfTop >= 40 ? '#f59e0b' : '#e74c3c';
+      var barWidth   = Math.max(pctOfTop, 8);
+
+      html += '<div>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
+          + '<span style="font-size:13px;font-weight:600">' + s.icon + ' ' + s.label + '</span>'
+          + '<div style="display:flex;align-items:center;gap:10px">'
+            + (i > 0 && dropOff > 0 ? '<span style="font-size:11px;color:#e74c3c">−' + dropOff + ' (' + dropPct + '% drop)</span>' : '')
+            + '<span style="font-size:13px;font-weight:700">' + s.count + '</span>'
+          + '</div>'
+        + '</div>'
+        + '<div style="background:#e2e8f0;border-radius:6px;height:28px;overflow:hidden;position:relative">'
+          + '<div style="background:' + barColor + ';height:100%;width:' + barWidth + '%;border-radius:6px;display:flex;align-items:center;padding-left:10px;transition:width .4s">'
+            + '<span style="color:#fff;font-size:11px;font-weight:700;white-space:nowrap">' + pctOfTop + '% of leads</span>'
+          + '</div>'
+        + '</div>'
+        + '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + s.desc + '</div>'
+      + '</div>';
+    });
+    html += '</div>';
+
+    // Drop-off table
+    html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:16px 0 8px">Stage-by-Stage Drop-off</div>'
+      + '<div class="twrap"><table><thead><tr><th>Stage</th><th>Count</th><th>% of Top</th><th>Drop from Previous</th><th>Stage Conv. Rate</th></tr></thead><tbody>';
+    stages.forEach(function(s, i) {
+      var pctOfTop  = top > 0 ? Math.round((s.count / top) * 100) : 0;
+      var dropOff   = i > 0 ? stages[i-1].count - s.count : 0;
+      var stageConv = i > 0 && stages[i-1].count > 0 ? Math.round((s.count / stages[i-1].count) * 100) : 100;
+      html += '<tr>'
+        + '<td>' + s.icon + ' <strong>' + s.label + '</strong></td>'
+        + '<td style="text-align:center">' + s.count + '</td>'
+        + '<td style="text-align:center;font-weight:700;color:' + (pctOfTop>=70?'#16a34a':pctOfTop>=40?'#f59e0b':'#e74c3c') + '">' + pctOfTop + '%</td>'
+        + '<td style="text-align:center;color:' + (dropOff>0?'#e74c3c':'var(--muted)') + '">' + (i>0 ? '−'+dropOff : '—') + '</td>'
+        + '<td style="text-align:center;font-weight:700;color:' + (stageConv>=70?'#16a34a':stageConv>=40?'#f59e0b':'#e74c3c') + '">' + (i>0 ? stageConv+'%' : '—') + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>'
+      + '<div style="font-size:10px;color:var(--muted);margin-top:8px">Stage conversion rate = count at this stage / count at previous stage. Respects active center filter.</div>';
+
+    el.innerHTML = html;
+  })();
+
+  // ── Correlation: Attendance vs Weight/Fat Change ──
+  (function() {
+    var el = document.getElementById('analytics-correlation'); if (!el) return;
+
+    // Build dataset: customers with both attendance + at least 2 body records
+    var points = [];
+    filtCusts.forEach(function(c) {
+      var bodyRecs = (D.body || [])
+        .filter(function(b) { return b.customer_id === c.id && b.weight; })
+        .sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+      if (bodyRecs.length < 2) return;
+
+      var first = bodyRecs[0], last = bodyRecs[bodyRecs.length - 1];
+      var weightChange = parseFloat(last.weight) - parseFloat(first.weight);
+      var fatChange = (first.fat_percentage && last.fat_percentage)
+        ? parseFloat(last.fat_percentage) - parseFloat(first.fat_percentage) : null;
+
+      // Visits per week over pack duration
+      var custAtt = D.attendance.filter(function(a) { return a.customer_id === c.id && a.status === 'present'; });
+      var packDays = parsePack(c.pack_type) || 30;
+      var visitsPerWeek = parseFloat((custAtt.length / packDays * 7).toFixed(2));
+
+      points.push({ name: c.name, visitsPerWeek: visitsPerWeek, weightChange: weightChange, fatChange: fatChange, goal: c.goal || '' });
+    });
+
+    if (points.length < 3) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px">Need at least 3 customers with 2+ body scans each to show correlation. Keep logging body records!</div>';
+      return;
+    }
+
+    // Pearson correlation coefficient
+    function pearson(xs, ys) {
+      var n = xs.length;
+      if (n < 2) return 0;
+      var mx = xs.reduce(function(s,v){return s+v;},0)/n;
+      var my = ys.reduce(function(s,v){return s+v;},0)/n;
+      var num = 0, dx2 = 0, dy2 = 0;
+      for (var i = 0; i < n; i++) {
+        var dx = xs[i]-mx, dy = ys[i]-my;
+        num += dx*dy; dx2 += dx*dx; dy2 += dy*dy;
+      }
+      var denom = Math.sqrt(dx2*dy2);
+      return denom === 0 ? 0 : parseFloat((num/denom).toFixed(3));
+    }
+
+    var wXs = points.map(function(p){return p.visitsPerWeek;});
+    var wYs = points.map(function(p){return p.weightChange;});
+    var rWeight = pearson(wXs, wYs);
+
+    var fatPoints = points.filter(function(p){return p.fatChange !== null;});
+    var rFat = fatPoints.length >= 3
+      ? pearson(fatPoints.map(function(p){return p.visitsPerWeek;}), fatPoints.map(function(p){return p.fatChange;}))
+      : null;
+
+    function rLabel(r) {
+      var abs = Math.abs(r);
+      var dir = r < 0 ? 'negative' : 'positive';
+      var strength = abs >= 0.7 ? 'Strong' : abs >= 0.4 ? 'Moderate' : abs >= 0.2 ? 'Weak' : 'Very weak';
+      return strength + ' ' + dir;
+    }
+    function rColor(r) {
+      var abs = Math.abs(r);
+      // For weight: negative r is good (more visits → less weight for weight-loss)
+      // For fat: negative r is good too
+      var good = r < 0;
+      return abs < 0.2 ? '#94a3b8' : good ? '#16a34a' : '#e74c3c';
+    }
+    function rInterp(r, metric) {
+      var abs = Math.abs(r);
+      if (abs < 0.2) return 'No meaningful relationship found between attendance and ' + metric + '.';
+      var dir = r < 0 ? 'more visits correlate with ' + (metric==='weight change'?'weight loss':'fat reduction')
+                      : 'more visits correlate with ' + (metric==='weight change'?'weight gain':'fat increase');
+      var strength = abs >= 0.7 ? 'strongly' : abs >= 0.4 ? 'moderately' : 'weakly';
+      return 'Customers who attend more often ' + strength + ' tend to see better results — ' + dir + '.';
+    }
+
+    // Attendance buckets
+    var buckets = [
+      { label: '< 2/wk',  min: 0,   max: 2   },
+      { label: '2–3/wk',  min: 2,   max: 3   },
+      { label: '3–4/wk',  min: 3,   max: 4   },
+      { label: '4+/wk',   min: 4,   max: 999 }
+    ];
+    var bucketData = buckets.map(function(b) {
+      var members = points.filter(function(p) { return p.visitsPerWeek >= b.min && p.visitsPerWeek < b.max; });
+      var avgW = members.length ? (members.reduce(function(s,p){return s+p.weightChange;},0)/members.length).toFixed(1) : null;
+      var fatM = members.filter(function(p){return p.fatChange!==null;});
+      var avgF = fatM.length ? (fatM.reduce(function(s,p){return s+p.fatChange;},0)/fatM.length).toFixed(1) : null;
+      return { label: b.label, count: members.length, avgWeight: avgW, avgFat: avgF };
+    }).filter(function(b) { return b.count > 0; });
+
+    // Render
+    var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">';
+    // Weight correlation card
+    html += '<div style="background:var(--surface2);border-radius:10px;padding:14px 16px">'
+      + '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Visits/Week vs Weight Change</div>'
+      + '<div style="font-size:28px;font-weight:700;color:' + rColor(rWeight) + '">r = ' + rWeight + '</div>'
+      + '<div style="font-size:12px;font-weight:600;color:' + rColor(rWeight) + ';margin:2px 0">' + rLabel(rWeight) + ' correlation</div>'
+      + '<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">' + rInterp(rWeight, 'weight change') + '</div>'
+      + '<div style="font-size:10px;color:var(--muted);margin-top:6px">Based on ' + points.length + ' customers with 2+ body scans</div>'
+    + '</div>';
+    // Fat correlation card
+    if (rFat !== null) {
+      html += '<div style="background:var(--surface2);border-radius:10px;padding:14px 16px">'
+        + '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Visits/Week vs Body Fat % Change</div>'
+        + '<div style="font-size:28px;font-weight:700;color:' + rColor(rFat) + '">r = ' + rFat + '</div>'
+        + '<div style="font-size:12px;font-weight:600;color:' + rColor(rFat) + ';margin:2px 0">' + rLabel(rFat) + ' correlation</div>'
+        + '<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">' + rInterp(rFat, 'fat % change') + '</div>'
+        + '<div style="font-size:10px;color:var(--muted);margin-top:6px">Based on ' + fatPoints.length + ' customers</div>'
+      + '</div>';
+    }
+    html += '</div>';
+
+    // Bucket comparison table
+    html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Results by Attendance Frequency</div>'
+      + '<div class="twrap"><table><thead><tr><th>Frequency</th><th>Customers</th><th>Avg Weight Change</th><th>Avg Fat % Change</th><th>Verdict</th></tr></thead><tbody>';
+    bucketData.forEach(function(b) {
+      var wVal = b.avgWeight !== null ? parseFloat(b.avgWeight) : null;
+      var fVal = b.avgFat !== null ? parseFloat(b.avgFat) : null;
+      var wColor = wVal === null ? 'var(--muted)' : wVal < 0 ? '#16a34a' : wVal > 0 ? '#e74c3c' : 'var(--muted)';
+      var fColor = fVal === null ? 'var(--muted)' : fVal < 0 ? '#16a34a' : fVal > 0 ? '#e74c3c' : 'var(--muted)';
+      var verdict = wVal === null ? '—'
+        : wVal < -1 ? '✅ Excellent loss' : wVal < 0 ? '✅ Losing weight' : wVal < 0.5 ? '➡️ Maintaining' : '⚠️ Gaining';
+      html += '<tr>'
+        + '<td><strong>' + b.label + '</strong></td>'
+        + '<td style="text-align:center">' + b.count + '</td>'
+        + '<td style="font-weight:700;color:' + wColor + '">' + (wVal !== null ? (wVal > 0 ? '+' : '') + wVal + ' kg' : '—') + '</td>'
+        + '<td style="font-weight:700;color:' + fColor + '">' + (fVal !== null ? (fVal > 0 ? '+' : '') + fVal + '%' : '—') + '</td>'
+        + '<td>' + verdict + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>'
+      + '<div style="font-size:10px;color:var(--muted);margin-top:8px">'
+      + 'r = Pearson correlation coefficient. Range: −1 (perfect negative) to +1 (perfect positive). '
+      + 'For weight loss goals, r &lt; 0 means more attendance = more weight lost (good). '
+      + 'Results are only meaningful with sufficient data points.</div>';
+
+    el.innerHTML = html;
+  })();
+
+  // ── Pareto Analysis (80/20 Rule) ──
+  (function() {
+    var el = document.getElementById('analytics-pareto'); if (!el) return;
+
+    // Revenue per customer = pack_price + all renewals (same as CLV)
+    var custRevenue = filtCusts.map(function(c) {
+      var renewalTotal = (D.packHistory || [])
+        .filter(function(p) { return p.customer_name === c.name; })
+        .reduce(function(s, p) { return s + (Number(p.price) || 0); }, 0);
+      var rev = (Number(c.pack_price) || 0) + renewalTotal;
+      return { name: c.name, revenue: rev, packType: c.pack_type || '—' };
+    }).filter(function(d) { return d.revenue > 0; })
+      .sort(function(a, b) { return b.revenue - a.revenue; });
+
+    if (!custRevenue.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px">No revenue data. Add pack prices to customers to enable Pareto analysis.</div>';
+      return;
+    }
+
+    var grandTotal = custRevenue.reduce(function(s, d) { return s + d.revenue; }, 0);
+
+    // Build cumulative %
+    var cumulative = 0;
+    var paretoData = custRevenue.map(function(d, i) {
+      cumulative += d.revenue;
+      var cumPct = Math.round((cumulative / grandTotal) * 100);
+      var custPct = Math.round(((i + 1) / custRevenue.length) * 100);
+      return Object.assign({}, d, { cumRevPct: cumPct, custPct: custPct, rank: i + 1 });
+    });
+
+    // Find 80% threshold
+    var eightyIdx = paretoData.findIndex(function(d) { return d.cumRevPct >= 80; });
+    var eightyCount = eightyIdx + 1;
+    var eightyPct = Math.round((eightyCount / custRevenue.length) * 100);
+
+    // Summary insight
+    var html = '<div style="background:linear-gradient(135deg,#052e16,#166534);color:#fff;border-radius:12px;padding:16px 20px;margin-bottom:16px">'
+      + '<div style="font-size:13px;opacity:.7;margin-bottom:4px">Key Insight</div>'
+      + '<div style="font-size:18px;font-weight:700">'
+        + 'Top <span style="color:#4ade80">' + eightyCount + ' customers</span> '
+        + '(<span style="color:#4ade80">' + eightyPct + '%</span> of total) '
+        + 'generate <span style="color:#4ade80">80%</span> of revenue'
+      + '</div>'
+      + '<div style="font-size:12px;opacity:.65;margin-top:6px">'
+        + 'Total: ₹' + grandTotal.toLocaleString('en-IN') + ' across ' + custRevenue.length + ' customers'
+      + '</div>'
+    + '</div>';
+
+    // Visual cumulative bar
+    html += '<div style="margin-bottom:16px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px"><span>Cumulative Revenue %</span><span>80% threshold</span></div>'
+      + '<div style="position:relative;background:#e2e8f0;border-radius:6px;height:12px;overflow:visible">';
+    paretoData.forEach(function(d) {
+      var widthPct = (1 / custRevenue.length) * 100;
+      var color = d.rank <= eightyCount ? '#16a34a' : '#94a3b8';
+      html += '<div style="position:absolute;left:' + ((d.rank-1)/custRevenue.length*100) + '%;width:' + widthPct + '%;height:100%;background:' + color + ';border-right:1px solid #fff" title="' + d.name + ': ₹' + d.revenue.toLocaleString('en-IN') + '"></div>';
+    });
+    // 80% line
+    html += '<div style="position:absolute;left:' + eightyPct + '%;top:-4px;bottom:-4px;width:2px;background:#e74c3c;z-index:2"></div>';
+    html += '</div>'
+      + '<div style="display:flex;gap:12px;margin-top:6px;font-size:11px">'
+        + '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:8px;background:#16a34a;border-radius:2px"></span> Top ' + eightyCount + ' (80% revenue)</span>'
+        + '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:8px;background:#94a3b8;border-radius:2px"></span> Remaining ' + (custRevenue.length - eightyCount) + '</span>'
+        + '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:2px;height:12px;background:#e74c3c"></span> 80% threshold</span>'
+      + '</div>'
+    + '</div>';
+
+    // Table — top customers with cumulative %
+    html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Revenue Ranking</div>'
+      + '<div class="twrap"><table><thead><tr><th>#</th><th>Customer</th><th>Pack</th><th>Revenue</th><th>% of Total</th><th>Cumulative %</th></tr></thead><tbody>';
+
+    paretoData.forEach(function(d) {
+      var revPct = ((d.revenue / grandTotal) * 100).toFixed(1);
+      var isThreshold = d.rank === eightyCount;
+      var isTop = d.rank <= eightyCount;
+      html += '<tr style="' + (isThreshold ? 'border-bottom:2px solid #e74c3c;' : '') + '">'
+        + '<td style="font-weight:700;color:' + (isTop ? '#16a34a' : 'var(--muted)') + '">' + d.rank + '</td>'
+        + '<td><strong>' + d.name + '</strong>' + (isTop ? ' <span style="background:#d1fae5;color:#065f46;border-radius:8px;padding:1px 6px;font-size:10px">Top 80%</span>' : '') + '</td>'
+        + '<td style="font-size:12px;color:var(--muted)">' + d.packType + '</td>'
+        + '<td style="font-weight:700">₹' + d.revenue.toLocaleString('en-IN') + '</td>'
+        + '<td style="text-align:center">' + revPct + '%</td>'
+        + '<td><div style="display:flex;align-items:center;gap:6px">'
+          + '<div style="flex:1;background:#e2e8f0;border-radius:4px;height:6px"><div style="background:' + (isTop ? '#16a34a' : '#94a3b8') + ';height:100%;width:' + d.cumRevPct + '%"></div></div>'
+          + '<span style="font-size:12px;font-weight:700;min-width:32px">' + d.cumRevPct + '%</span>'
+        + '</div></td>'
+        + '</tr>';
+    });
+
+    html += '</tbody></table></div>'
+      + '<div style="font-size:10px;color:var(--muted);margin-top:8px">Revenue = pack price + all renewals. Red line marks the 80% revenue threshold.</div>';
+
+    el.innerHTML = html;
+  })();
+
+  // ── ARPU (Average Revenue Per User) ──
+  (function() {
+    var el = document.getElementById('analytics-arpu'); if (!el) return;
+
+    // Monthly ARPU: income that month / unique customers who attended that month
+    var arpuRows = [];
+    for (var i = numMonths - 1; i >= 0; i--) {
+      var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+      var ym = d.toISOString().substring(0, 7);
+      var label = d.toLocaleString('en-IN', { month: 'short', year: '2-digit' });
+      var mIncome = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance)
+        .filter(function(f) { return f.type === 'income' && f.date.startsWith(ym); })
+        .reduce(function(s, f) { return s + Number(f.amount); }, 0);
+      // Active users that month = unique customers with at least 1 present attendance
+      var activeIds = {};
+      D.attendance.filter(function(a) {
+        return a.status === 'present' && a.date.startsWith(ym) && filtIds.indexOf(a.customer_id) > -1;
+      }).forEach(function(a) { activeIds[a.customer_id] = true; });
+      var activeCount = Object.keys(activeIds).length;
+      var arpu = activeCount > 0 ? Math.round(mIncome / activeCount) : null;
+      arpuRows.push({ label: label, ym: ym, income: mIncome, activeCount: activeCount, arpu: arpu });
+    }
+
+    var validRows = arpuRows.filter(function(r) { return r.arpu !== null; });
+    if (!validRows.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px">No data available for ARPU calculation.</div>';
+      return;
+    }
+
+    var overallIncome = validRows.reduce(function(s, r) { return s + r.income; }, 0);
+    var totalActiveSlots = validRows.reduce(function(s, r) { return s + r.activeCount; }, 0);
+    var overallARPU = totalActiveSlots > 0 ? Math.round(overallIncome / (totalActiveSlots / validRows.length)) : 0;
+    var maxARPU = validRows.reduce(function(mx, r) { return r.arpu > mx.arpu ? r : mx; }, validRows[0]);
+    var minARPU = validRows.reduce(function(mn, r) { return r.arpu < mn.arpu ? r : mn; }, validRows[0]);
+    var trend = validRows.length >= 2
+      ? validRows[validRows.length - 1].arpu - validRows[0].arpu
+      : 0;
+
+    // ARPU by pack type
+    var byPack = {};
+    filtCusts.forEach(function(c) {
+      var pt = c.pack_type || 'Unknown';
+      var custIncome = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance)
+        .filter(function(f) { return f.type === 'income' && (f.description || '').toLowerCase().includes(c.name.toLowerCase()); })
+        .reduce(function(s, f) { return s + Number(f.amount); }, 0);
+      if (!byPack[pt]) byPack[pt] = { income: 0, count: 0 };
+      byPack[pt].income += custIncome;
+      byPack[pt].count++;
+    });
+
+    // Summary row
+    var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px">'
+      + '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px">'
+        + '<div style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.4px">Overall ARPU</div>'
+        + '<div style="font-size:24px;font-weight:700;color:#16a34a;margin:4px 0">₹' + overallARPU.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">avg per active user/month</div>'
+      + '</div>'
+      + '<div style="background:' + (trend >= 0 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (trend >= 0 ? '#bbf7d0' : '#fecaca') + ';border-radius:10px;padding:12px 16px">'
+        + '<div style="font-size:11px;font-weight:700;color:' + (trend >= 0 ? '#166534' : '#991b1b') + ';text-transform:uppercase;letter-spacing:.4px">Period Trend</div>'
+        + '<div style="font-size:24px;font-weight:700;color:' + (trend >= 0 ? '#16a34a' : '#e74c3c') + ';margin:4px 0">' + (trend >= 0 ? '▲' : '▼') + ' ₹' + Math.abs(trend).toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">first vs last month in period</div>'
+      + '</div>'
+      + '<div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:10px;padding:12px 16px">'
+        + '<div style="font-size:11px;font-weight:700;color:#6b21a8;text-transform:uppercase;letter-spacing:.4px">Best Month</div>'
+        + '<div style="font-size:18px;font-weight:700;color:#7c3aed;margin:4px 0">₹' + maxARPU.arpu.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">' + maxARPU.label + '</div>'
+      + '</div>'
+      + '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px">'
+        + '<div style="font-size:11px;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.4px">Lowest Month</div>'
+        + '<div style="font-size:18px;font-weight:700;color:#ea580c;margin:4px 0">₹' + minARPU.arpu.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">' + minARPU.label + '</div>'
+      + '</div>'
+    + '</div>';
+
+    // Monthly ARPU table with mini bar
+    var maxArpuVal = Math.max.apply(null, validRows.map(function(r) { return r.arpu; }));
+    html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Monthly Breakdown</div>'
+      + '<div class="twrap"><table><thead><tr><th>Month</th><th>Income</th><th>Active Users</th><th>ARPU</th><th style="min-width:120px">Trend</th></tr></thead><tbody>';
+    arpuRows.forEach(function(r) {
+      var pct = maxArpuVal > 0 && r.arpu ? Math.round((r.arpu / maxArpuVal) * 100) : 0;
+      var now = new Date().toISOString().substring(0, 7);
+      var isCurrent = r.ym === now;
+      html += '<tr' + (isCurrent ? ' style="font-weight:700"' : '') + '>'
+        + '<td>' + r.label + (isCurrent ? ' <span style="background:#dbeafe;color:#1e40af;border-radius:8px;padding:1px 6px;font-size:10px">current</span>' : '') + '</td>'
+        + '<td>₹' + r.income.toLocaleString('en-IN') + '</td>'
+        + '<td style="text-align:center">' + r.activeCount + '</td>'
+        + '<td style="font-weight:700;color:' + (r.arpu ? '#16a34a' : 'var(--muted)') + '">' + (r.arpu ? '₹' + r.arpu.toLocaleString('en-IN') : '—') + '</td>'
+        + '<td><div style="background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden"><div style="background:#16a34a;height:100%;width:' + pct + '%"></div></div></td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>';
+
+    // ARPU by pack type
+    var packKeys = Object.keys(byPack).filter(function(k) { return byPack[k].count > 0; });
+    if (packKeys.length > 1) {
+      html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 8px">ARPU by Pack Type</div>'
+        + '<div style="display:flex;gap:10px;flex-wrap:wrap">';
+      packKeys.forEach(function(pt) {
+        var avgA = byPack[pt].count > 0 ? Math.round(byPack[pt].income / byPack[pt].count) : 0;
+        html += '<div style="background:var(--surface2);border-radius:8px;padding:8px 14px;font-size:12px">'
+          + '<span style="font-weight:700">' + pt + '</span>'
+          + ' &nbsp;·&nbsp; ₹' + avgA.toLocaleString('en-IN') + ' avg'
+          + ' <span style="color:var(--muted)">(' + byPack[pt].count + ')</span></div>';
+      });
+      html += '</div>';
+    }
+
+    html += '<div style="font-size:10px;color:var(--muted);margin-top:10px">Active Users = customers with ≥1 attendance that month. Income from finance records in the selected period.</div>';
+    el.innerHTML = html;
+  })();
+
+  // ── Customer Lifetime Value (CLV) ──
+  (function() {
+    var el = document.getElementById('analytics-clv'); if (!el) return;
+
+    // CLV per customer = current pack_price + all historical renewal prices
+    var clvData = filtCusts.map(function(c) {
+      var renewalTotal = (D.packHistory || [])
+        .filter(function(p) { return p.customer_name === c.name; })
+        .reduce(function(s, p) { return s + (Number(p.price) || 0); }, 0);
+      var clv = (Number(c.pack_price) || 0) + renewalTotal;
+      var renewalCount = (D.packHistory || []).filter(function(p) { return p.customer_name === c.name; }).length;
+      // Tenure in months since pack_start_date
+      var startDate = c.pack_start_date ? new Date(c.pack_start_date) : null;
+      var tenureMonths = startDate ? Math.max(1, Math.round((new Date() - startDate) / (30 * 86400000))) : 1;
+      return { name: c.name, clv: clv, renewals: renewalCount, tenureMonths: tenureMonths, packType: c.pack_type || '—', goal: c.goal || '—' };
+    }).filter(function(d) { return d.clv > 0; })
+      .sort(function(a, b) { return b.clv - a.clv; });
+
+    if (!clvData.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px">No pack price data found. Add pack prices when creating customers to enable CLV.</div>';
+      return;
+    }
+
+    var totalCLV    = clvData.reduce(function(s, d) { return s + d.clv; }, 0);
+    var avgCLV      = Math.round(totalCLV / clvData.length);
+    var maxCLV      = clvData[0];
+    var avgTenure   = Math.round(clvData.reduce(function(s, d) { return s + d.tenureMonths; }, 0) / clvData.length);
+    var avgMonthly  = avgTenure > 0 ? Math.round(avgCLV / avgTenure) : 0;
+
+    // CLV by pack type
+    var byPack = {};
+    clvData.forEach(function(d) {
+      if (!byPack[d.packType]) byPack[d.packType] = { total: 0, count: 0 };
+      byPack[d.packType].total += d.clv;
+      byPack[d.packType].count++;
+    });
+
+    // Summary cards
+    var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px">'
+      + '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px">'
+        + '<div style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.4px">Avg CLV</div>'
+        + '<div style="font-size:22px;font-weight:700;color:#16a34a;margin:4px 0">₹' + avgCLV.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">per customer</div>'
+      + '</div>'
+      + '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px">'
+        + '<div style="font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.4px">Avg Monthly Spend</div>'
+        + '<div style="font-size:22px;font-weight:700;color:#2563eb;margin:4px 0">₹' + avgMonthly.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">avg ' + avgTenure + ' months tenure</div>'
+      + '</div>'
+      + '<div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:10px;padding:12px 16px">'
+        + '<div style="font-size:11px;font-weight:700;color:#6b21a8;text-transform:uppercase;letter-spacing:.4px">Top Customer</div>'
+        + '<div style="font-size:16px;font-weight:700;color:#7c3aed;margin:4px 0">' + maxCLV.name + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">₹' + maxCLV.clv.toLocaleString('en-IN') + ' · ' + maxCLV.renewals + ' renewal' + (maxCLV.renewals !== 1 ? 's' : '') + '</div>'
+      + '</div>'
+      + '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px">'
+        + '<div style="font-size:11px;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.4px">Total Revenue (CLV)</div>'
+        + '<div style="font-size:22px;font-weight:700;color:#ea580c;margin:4px 0">₹' + totalCLV.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">' + clvData.length + ' customers</div>'
+      + '</div>'
+    + '</div>';
+
+    // CLV by pack type
+    html += '<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Avg CLV by Pack Type</div>'
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap">';
+    Object.keys(byPack).forEach(function(pt) {
+      var avg = Math.round(byPack[pt].total / byPack[pt].count);
+      html += '<div style="background:var(--surface2);border-radius:8px;padding:8px 14px;font-size:12px">'
+        + '<span style="font-weight:700">'+pt+'</span>'
+        + ' &nbsp;·&nbsp; Avg ₹' + avg.toLocaleString('en-IN')
+        + ' <span style="color:var(--muted)">('+byPack[pt].count+' customers)</span></div>';
+    });
+    html += '</div></div>';
+
+    // Top 10 table
+    html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Top Customers by CLV</div>'
+      + '<div class="twrap"><table><thead><tr><th>#</th><th>Customer</th><th>Pack Type</th><th>Renewals</th><th>Tenure</th><th>CLV</th><th>Avg/Month</th></tr></thead><tbody>';
+    clvData.slice(0, 10).forEach(function(d, i) {
+      var avgMo = Math.round(d.clv / d.tenureMonths);
+      html += '<tr>'
+        + '<td style="font-weight:700;color:var(--muted)">' + (i + 1) + '</td>'
+        + '<td><strong>' + d.name + '</strong></td>'
+        + '<td>' + d.packType + '</td>'
+        + '<td style="text-align:center">' + d.renewals + '</td>'
+        + '<td style="text-align:center">' + d.tenureMonths + ' mo</td>'
+        + '<td style="font-weight:700;color:#16a34a">₹' + d.clv.toLocaleString('en-IN') + '</td>'
+        + '<td style="color:var(--muted)">₹' + avgMo.toLocaleString('en-IN') + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>'
+      + '<div style="font-size:10px;color:var(--muted);margin-top:8px">CLV = Current pack price + all renewal prices. Only customers with a recorded pack price are included.</div>';
+
+    el.innerHTML = html;
+  })();
+
+  // ── Cohort Retention Analysis ──
+  (function() {
+    var el = document.getElementById('analytics-cohort'); if (!el) return;
+
+    // Group filtered customers by join month (pack_start_date)
+    var cohortMap = {};
+    filtCusts.forEach(function(c) {
+      var start = c.pack_start_date || c.created_at;
+      if (!start) return;
+      var ym = start.substring(0, 7); // "2024-11"
+      if (!cohortMap[ym]) cohortMap[ym] = [];
+      cohortMap[ym].push(c);
+    });
+
+    var cohortMonths = Object.keys(cohortMap).sort();
+    if (cohortMonths.length < 2) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px">Need at least 2 cohort months of data to show retention grid.</div>';
+      return;
+    }
+
+    // Max months to track forward (cap at 6)
+    var maxForward = Math.min(6, cohortMonths.length);
+
+    // For a customer in cohort, did they have any attendance in a given month?
+    function hadAttendanceInMonth(custId, ym) {
+      return D.attendance.some(function(a) {
+        return a.customer_id === custId && a.status === 'present' && a.date.substring(0, 7) === ym;
+      });
+    }
+
+    // Add months helper
+    function addMonths(ym, n) {
+      var d = new Date(ym + '-01');
+      d.setMonth(d.getMonth() + n);
+      return d.toISOString().substring(0, 7);
+    }
+
+    // Build retention grid
+    // cell[cohortIdx][monthOffset] = { retained, total }
+    var grid = cohortMonths.map(function(ym) {
+      var members = cohortMap[ym];
+      var row = [];
+      for (var offset = 0; offset < maxForward; offset++) {
+        var checkYm = addMonths(ym, offset);
+        var now = new Date().toISOString().substring(0, 7);
+        if (checkYm > now) { row.push(null); continue; } // future month
+        var retained = members.filter(function(c) {
+          return hadAttendanceInMonth(c.id, checkYm);
+        }).length;
+        row.push({ retained: retained, total: members.length });
+      }
+      return { ym: ym, members: members.length, cells: row };
+    });
+
+    // Color based on retention %
+    function retColor(pct) {
+      if (pct === null) return { bg: '#f8fafc', text: 'var(--muted)' };
+      if (pct >= 80) return { bg: '#d1fae5', text: '#065f46' };
+      if (pct >= 60) return { bg: '#dcfce7', text: '#166534' };
+      if (pct >= 40) return { bg: '#fef3c7', text: '#92400e' };
+      if (pct >= 20) return { bg: '#fee2e2', text: '#991b1b' };
+      return { bg: '#fecaca', text: '#7f1d1d' };
+    }
+
+    var html = '<div class="twrap"><table style="min-width:500px"><thead><tr>'
+      + '<th>Cohort</th><th>Size</th>';
+    for (var i = 0; i < maxForward; i++) {
+      html += '<th style="text-align:center">Month ' + i + (i === 0 ? ' (joined)' : '') + '</th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    grid.forEach(function(row) {
+      var label = new Date(row.ym + '-01').toLocaleString('en-IN', { month: 'short', year: '2-digit' });
+      html += '<tr><td><strong>' + label + '</strong></td><td>' + row.members + '</td>';
+      row.cells.forEach(function(cell, i) {
+        if (cell === null) {
+          html += '<td style="text-align:center;color:var(--muted);font-size:12px">—</td>';
+        } else {
+          var pct = cell.total > 0 ? Math.round((cell.retained / cell.total) * 100) : 0;
+          var col = retColor(i === 0 ? 100 : pct);
+          html += '<td style="text-align:center;background:' + col.bg + ';color:' + col.text + ';font-weight:700;border-radius:4px">'
+            + (i === 0 ? '100%' : pct + '%')
+            + '<div style="font-size:10px;font-weight:400;opacity:.8">' + (i === 0 ? row.members : cell.retained) + '/' + cell.total + '</div></td>';
+        }
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:11px">'
+      + '<span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px">≥80% Excellent</span>'
+      + '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px">40–60% Fair</span>'
+      + '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px">&lt;40% Poor</span>'
+      + '<span style="color:var(--muted)">— = future month not yet reached</span>'
+      + '</div>';
+
+    el.innerHTML = html;
+  })();
+
+  // ── RFM Analysis ──
+  (function() {
+    var rfmEl = document.getElementById('analytics-rfm'); if (!rfmEl) return;
+    var today = new Date(); today.setHours(0,0,0,0);
+
+    // Score each filtered customer
+    var scored = filtCusts.map(function(c) {
+      // Recency: days since last present attendance
+      var custAtt = D.attendance.filter(function(a){ return a.customer_id === c.id && a.status === 'present'; });
+      var lastDate = custAtt.length ? custAtt.reduce(function(mx,a){ return a.date > mx ? a.date : mx; }, '') : null;
+      var recencyDays = lastDate ? Math.floor((today - new Date(lastDate)) / 86400000) : 999;
+
+      // Frequency: visits per week over pack duration
+      var packDays = parsePack(c.pack_type) || 30;
+      var freqPerWeek = packDays > 0 ? (custAtt.length / packDays * 7) : 0;
+
+      // Monetary: pack_price + sum of renewals from pack history
+      var renewals = (D.packHistory||[]).filter(function(p){ return p.customer_name === c.name; });
+      var monetary = (Number(c.pack_price)||0) + renewals.reduce(function(s,p){ return s + (Number(p.price)||0); }, 0);
+
+      // R score 1-5 (5 = visited very recently)
+      var rScore = recencyDays <= 7 ? 5 : recencyDays <= 14 ? 4 : recencyDays <= 30 ? 3 : recencyDays <= 60 ? 2 : 1;
+      // F score 1-5 (5 = visits 5+ days/week)
+      var fScore = freqPerWeek >= 5 ? 5 : freqPerWeek >= 4 ? 4 : freqPerWeek >= 3 ? 3 : freqPerWeek >= 2 ? 2 : 1;
+      // M score 1-5 (relative to filtered set — assigned after all calculated)
+      return { c:c, recencyDays:recencyDays, freqPerWeek:parseFloat(freqPerWeek.toFixed(1)), monetary:monetary, rScore:rScore, fScore:fScore };
+    });
+
+    // M score: quintile-based within filtered set
+    var monVals = scored.map(function(s){ return s.monetary; }).sort(function(a,b){ return a-b; });
+    var q1 = monVals[Math.floor(monVals.length*0.2)]||0;
+    var q2 = monVals[Math.floor(monVals.length*0.4)]||0;
+    var q3 = monVals[Math.floor(monVals.length*0.6)]||0;
+    var q4 = monVals[Math.floor(monVals.length*0.8)]||0;
+    scored.forEach(function(s) {
+      s.mScore = s.monetary > q4 ? 5 : s.monetary > q3 ? 4 : s.monetary > q2 ? 3 : s.monetary > q1 ? 2 : 1;
+    });
+
+    // Segment assignment
+    function segment(r, f, m) {
+      var avg = (r + f + m) / 3;
+      if (r >= 4 && f >= 4)                  return { label:'Champion',     emoji:'🏆', bg:'#d1fae5', c:'#065f46', desc:'Highly active, recent, and valuable' };
+      if (r >= 3 && f >= 3 && m >= 3)        return { label:'Loyal',        emoji:'💚', bg:'#dcfce7', c:'#166534', desc:'Consistent visits and spend' };
+      if (r >= 3 && m >= 4)                  return { label:'Big Spender',   emoji:'💰', bg:'#fef9c3', c:'#854d0e', desc:'High monetary value' };
+      if (r <= 2 && f >= 3)                  return { label:'At Risk',       emoji:'⚠️',  bg:'#fef3c7', c:'#92400e', desc:'Was active but not visiting recently' };
+      if (r >= 4 && f <= 2)                  return { label:'New Customer',  emoji:'🌱', bg:'#dbeafe', c:'#1e40af', desc:'Recently joined, building habit' };
+      if (r <= 2 && f <= 2 && m >= 3)        return { label:'Hibernating',   emoji:'😴', bg:'#f3e8ff', c:'#6b21a8', desc:'Paid well but gone quiet' };
+      if (r === 1 && f === 1)                return { label:'Lost',          emoji:'🔴', bg:'#fee2e2', c:'#991b1b', desc:'No recent activity' };
+      return { label:'Occasional',           emoji:'🔵', bg:'#e0f2fe', c:'#075985', desc:'Visits sometimes' };
+    }
+
+    scored.forEach(function(s) { s.seg = segment(s.rScore, s.fScore, s.mScore); });
+
+    // Group by segment
+    var groups = {};
+    scored.forEach(function(s) {
+      var k = s.seg.label;
+      if (!groups[k]) groups[k] = { seg: s.seg, members: [] };
+      groups[k].members.push(s);
+    });
+
+    var order = ['Champion','Loyal','Big Spender','New Customer','At Risk','Hibernating','Occasional','Lost'];
+    var sorted = order.filter(function(k){ return groups[k]; }).map(function(k){ return groups[k]; });
+
+    if (!scored.length) { rfmEl.innerHTML = '<div style="color:var(--muted);font-size:13px">No customer data available.</div>'; return; }
+
+    // Legend
+    var html = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">';
+    sorted.forEach(function(g) {
+      html += '<div style="background:'+g.seg.bg+';color:'+g.seg.c+';border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;cursor:default" title="'+g.seg.desc+'">'
+        + g.seg.emoji + ' ' + g.seg.label + ' <span style="font-weight:400">('+g.members.length+')</span></div>';
+    });
+    html += '</div>';
+
+    // Table
+    html += '<div class="twrap"><table><thead><tr>'
+      + '<th>Customer</th><th>Segment</th><th>Last Visit</th><th>Visits/wk</th><th>Total Spend</th><th>R</th><th>F</th><th>M</th>'
+      + '</tr></thead><tbody>';
+    scored.sort(function(a,b){ return (b.rScore+b.fScore+b.mScore)-(a.rScore+a.fScore+a.mScore); }).forEach(function(s) {
+      html += '<tr>'
+        + '<td><strong>' + s.c.name + '</strong></td>'
+        + '<td><span style="background:'+s.seg.bg+';color:'+s.seg.c+';border-radius:12px;padding:2px 9px;font-size:11px;font-weight:700">'+s.seg.emoji+' '+s.seg.label+'</span></td>'
+        + '<td>' + (s.recencyDays === 999 ? '—' : s.recencyDays + 'd ago') + '</td>'
+        + '<td>' + s.freqPerWeek + '</td>'
+        + '<td>' + (s.monetary ? '₹' + s.monetary.toLocaleString('en-IN') : '—') + '</td>'
+        + '<td style="text-align:center;font-weight:700;color:' + (s.rScore>=4?'#16a34a':s.rScore<=2?'#e74c3c':'#b07800') + '">' + s.rScore + '</td>'
+        + '<td style="text-align:center;font-weight:700;color:' + (s.fScore>=4?'#16a34a':s.fScore<=2?'#e74c3c':'#b07800') + '">' + s.fScore + '</td>'
+        + '<td style="text-align:center;font-weight:700;color:' + (s.mScore>=4?'#16a34a':s.mScore<=2?'#e74c3c':'#b07800') + '">' + s.mScore + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div style="font-size:10px;color:var(--muted);margin-top:8px">R = Recency (5=visited this week), F = Frequency (5=5+ visits/wk), M = Monetary (5=top 20% spender). Scores are relative to filtered customers.</div>';
+    rfmEl.innerHTML = html;
+  })();
 }
 
 // ── Slicer helpers ──
@@ -8181,22 +9301,26 @@ function switchBodyTab(name, el) {
 // ── SUPERVISOR BODY COMPOSITION ──
 function saveSvProfile() {
   var p = {
-    name: (document.getElementById('sv-name')||{}).value||'',
-    age:  (document.getElementById('sv-age')||{}).value||'',
+    name:   (document.getElementById('sv-name')||{}).value||'',
+    age:    (document.getElementById('sv-age')||{}).value||'',
+    height: (document.getElementById('sv-height')||{}).value||'',
     gender: (document.getElementById('sv-gender')||{}).value||'',
-    goal: (document.getElementById('sv-goal')||{}).value||'Weight Loss'
+    goal:   (document.getElementById('sv-goal')||{}).value||'Weight Loss'
   };
   localStorage.setItem('sv_profile', JSON.stringify(p));
 }
 function loadSvProfile() {
   var p = JSON.parse(localStorage.getItem('sv_profile')||'{}');
-  var n=document.getElementById('sv-name'); if(n) n.value=p.name||'';
-  var a=document.getElementById('sv-age');  if(a) a.value=p.age||'';
+  var n=document.getElementById('sv-name');   if(n) n.value=p.name||'';
+  var a=document.getElementById('sv-age');    if(a) a.value=p.age||'';
+  var h=document.getElementById('sv-height'); if(h) h.value=p.height||'';
   var g=document.getElementById('sv-gender'); if(g) g.value=p.gender||'';
-  var gl=document.getElementById('sv-goal'); if(gl&&p.goal) gl.value=p.goal;
+  var gl=document.getElementById('sv-goal');  if(gl&&p.goal) gl.value=p.goal;
 }
 function renderSvBody() {
-  var recs = JSON.parse(localStorage.getItem('sv_body_records')||'[]');
+  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var svId = op.sv_body_id;
+  var recs = svId ? (D.body||[]).filter(function(b){ return b.customer_id===svId; }) : [];
   var tb=document.getElementById('sv-body-body');
   var empty=document.getElementById('sv-body-empty');
   var wrap=document.getElementById('sv-body-records-wrap');
@@ -8206,6 +9330,33 @@ function renderSvBody() {
   var p=JSON.parse(localStorage.getItem('sv_profile')||'{}');
   var revWeight=(p.goal||'Weight Loss')==='Weight Gain';
   var sorted=recs.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+  // ── Health Score Card ──
+  var latest=sorted[sorted.length-1], first=sorted[0];
+  var scoreEl=document.getElementById('sv-body-score-card');
+  if(scoreEl && latest) {
+    var lVfKg=parseFloat(latest.visceral_fat)||0;
+    var svPhone=(JSON.parse(localStorage.getItem('sv_profile')||'{}')).phone||'';
+    var wChange=(first&&latest&&first.weight&&latest.weight)?(Number(latest.weight)-Number(first.weight)).toFixed(1):null;
+    var fChange=(first&&latest&&first.fat_percentage&&latest.fat_percentage)?(Number(latest.fat_percentage)-Number(first.fat_percentage)).toFixed(1):null;
+    var mChange=(first&&latest&&first.muscle_percentage&&latest.muscle_percentage)?(Number(latest.muscle_percentage)-Number(first.muscle_percentage)).toFixed(1):null;
+    function svDiffColor(val,goodWhenNeg){if(val===null)return'rgba(255,255,255,.6)';var n=Number(val);if(n===0)return'rgba(255,255,255,.6)';return(goodWhenNeg?n<0:n>0)?'#a8e6b8':'#f4a7a0';}
+    function svFmt(val,unit){if(val===null)return'—';return(Number(val)>0?'+':'')+val+(unit||'');}
+    // Ideal card — build synthetic cust from sv_profile
+    var svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+    var svCust = { name: op.name||'Supervisor', gender: svP.gender||'', dob: svP.age ? String(new Date().getFullYear() - parseInt(svP.age)) : null };
+    renderIdealCard(svCust, latest, 'sv-ideal-card');
+    scoreEl.innerHTML = svBuildHealthScoreCard(latest.bmi, latest.fat_percentage, lVfKg, latest.date, {name:op.name||'Supervisor', phone:svPhone, weight:latest.weight, musclePct:latest.muscle_percentage, gender:svP.gender||''}) +
+      '<div class="body-profile" style="margin-top:10px">' +
+      '<div class="body-profile-name">'+(p.name||'Supervisor')+'</div>' +
+      '<div class="body-profile-meta">'+(p.goal?'🎯 '+p.goal+' &nbsp;·&nbsp; ':'')+sorted.length+' scan'+(sorted.length===1?'':'s')+' total</div>' +
+      '<div class="body-profile-stats">' +
+        '<div class="body-profile-stat"><div class="body-profile-stat-lbl">Current Weight</div><div class="body-profile-stat-val">'+(latest.weight?latest.weight+' kg':'—')+'</div>'+(wChange?'<div class="body-profile-stat-diff" style="color:'+svDiffColor(wChange,revWeight)+'">'+svFmt(wChange,' kg')+'</div>':'')+'</div>' +
+        '<div class="body-profile-stat"><div class="body-profile-stat-lbl">Body Fat</div><div class="body-profile-stat-val">'+(latest.fat_percentage?latest.fat_percentage+'%':'—')+'</div>'+(fChange?'<div class="body-profile-stat-diff" style="color:'+svDiffColor(fChange,true)+'">'+svFmt(fChange,' %')+'</div>':'')+'</div>' +
+        '<div class="body-profile-stat"><div class="body-profile-stat-lbl">Muscle</div><div class="body-profile-stat-val">'+(latest.muscle_percentage?latest.muscle_percentage+'%':'—')+'</div>'+(mChange?'<div class="body-profile-stat-diff" style="color:'+svDiffColor(mChange,false)+'">'+svFmt(mChange,' %')+'</div>':'')+'</div>' +
+        '<div class="body-profile-stat"><div class="body-profile-stat-lbl">BMI</div><div class="body-profile-stat-val">'+(latest.bmi||'—')+'</div></div>' +
+        '<div class="body-profile-stat"><div class="body-profile-stat-lbl">BMR</div><div class="body-profile-stat-val">'+(latest.bmr||'—')+'</div></div>' +
+      '</div></div>';
+  }
   tb.innerHTML=sorted.map(function(b,idx){
     var prev=sorted[idx-1]||null;
     var cw=Number(b.weight),pw=prev?Number(prev.weight):null;
@@ -8238,20 +9389,192 @@ function renderSvBody() {
       +'</tr>';
   }).join('');
 }
+async function migrateSvBodyToSupabase() {
+  var old = JSON.parse(localStorage.getItem('sv_body_records')||'[]');
+  if (!old.length) return;
+  getCredentials(); if (!SB_URL || !SB_KEY) return;
+  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  if (!op.sv_body_id) {
+    op.sv_body_id = (crypto.randomUUID ? crypto.randomUUID() : 'sv-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    localStorage.setItem('ownerProfile', JSON.stringify(op));
+  }
+  var svId = op.sv_body_id;
+  var existing = (D.body||[]).filter(function(b){ return b.customer_id===svId; }).map(function(b){ return b.date; });
+  var toMigrate = old.filter(function(r){ return !existing.includes(r.date); });
+  for (var i=0; i<toMigrate.length; i++) {
+    var r = toMigrate[i];
+    try {
+      await dbInsert('body_composition', {
+        customer_id:svId, customer_name:op.name||'Supervisor',
+        date:r.date, height:r.height||null, age:r.age||null, weight:r.weight||null,
+        fat_percentage:r.fat_percentage||null, visceral_fat:r.visceral_fat||null,
+        bmr:r.bmr||null, bmi:r.bmi||null, body_age:r.body_age||null,
+        subcutaneous_fat_percentage:r.subcutaneous_fat_percentage||null,
+        muscle_percentage:r.muscle_percentage||null, notes:r.notes||null
+      });
+    } catch(e) {}
+  }
+  if (toMigrate.length) {
+    localStorage.removeItem('sv_body_records');
+    await loadBody(); renderSvBody();
+    showToast(toMigrate.length + ' old supervisor body record(s) migrated to Supabase ✓', 'success');
+  }
+}
+var _svDietDay = null;
+var _svDietInFlight = false;
+
+function renderSvDietPlan() {
+  var el = document.getElementById('sv-diet-output'); if (!el) return;
+  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var plan = op.sv_diet_plan ? JSON.parse(op.sv_diet_plan) : null;
+  if (!plan) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 0">No plan yet — fill in Goal, Diet Type and Activity Level, then click Generate My Plan.</div>'; return; }
+  // Restore dropdown selections from saved plan
+  var dg = document.getElementById('sv-diet-goal'), dt = document.getElementById('sv-diet-type'), da = document.getElementById('sv-diet-activity');
+  if (dg && plan.goal) dg.value = plan.goal;
+  if (dt && plan.diet_type) dt.value = plan.diet_type;
+  if (da && plan.activity) da.value = plan.activity;
+  var dayKeys = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  var dayLabels = {monday:'Mon',tuesday:'Tue',wednesday:'Wed',thursday:'Thu',friday:'Fri',saturday:'Sat',sunday:'Sun'};
+  var todayKey = dayKeys[new Date().getDay() === 0 ? 6 : new Date().getDay()-1];
+  if (!_svDietDay || !plan.days[_svDietDay]) _svDietDay = todayKey;
+  var meals = plan.days[_svDietDay] || {};
+  var html = '<div class="diet-header"><h2>My 7-Day Diet Plan</h2>'
+    + '<p>Goal: ' + (plan.goal||'') + ' &nbsp;|&nbsp; Generated: ' + (plan.generated||'') + '</p>'
+    + '<div class="diet-macros">'
+    + '<div class="diet-macro"><div class="diet-macro-val">' + (plan.target_calories||'—') + '</div><div class="diet-macro-lbl">Target kcal</div></div>'
+    + '<div class="diet-macro"><div class="diet-macro-val">' + (plan.target_protein||'—') + 'g</div><div class="diet-macro-lbl">Target Protein</div></div>'
+    + '<div class="diet-macro"><div class="diet-macro-val">' + (meals.total_calories||0) + '</div><div class="diet-macro-lbl">Today kcal</div></div>'
+    + '<div class="diet-macro"><div class="diet-macro-val">' + (meals.total_protein||0) + 'g</div><div class="diet-macro-lbl">Today Protein</div></div>'
+    + '<div class="diet-macro"><div class="diet-macro-val">' + Math.round(plan.rmr||0) + '</div><div class="diet-macro-lbl">RMR</div></div>'
+    + '</div></div>'
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';
+  dayKeys.forEach(function(dk) {
+    var isActive = dk === _svDietDay, isToday = dk === todayKey;
+    html += '<button onclick="_svDietDay=\''+dk+'\';renderSvDietPlan()" style="padding:6px 12px;border-radius:20px;border:2px solid '+(isActive?'#16a34a':'#e2e8f0')+';background:'+(isActive?'#16a34a':'#fff')+';color:'+(isActive?'#fff':'#374151')+';font-family:inherit;font-size:12px;font-weight:'+(isToday?'700':'500')+';cursor:pointer">' + dayLabels[dk] + (isToday?' ★':'') + '</button>';
+  });
+  html += '</div>';
+  var slots = [
+    { key:'breakfast', icon:'🌅', iconBg:'#d97706', title:'Breakfast', fixed:'shake' },
+    { key:'mid_morning', icon:'🍎', iconBg:'#16a34a', title:'Mid-Morning Snack' },
+    { key:'lunch', icon:'☀️', iconBg:'#2563eb', title:'Lunch' },
+    { key:'evening', icon:'🌆', iconBg:'#db2777', title:'Evening Snack' },
+    { key:'dinner', icon:'🌙', iconBg:'#7c3aed', title:'Dinner' }
+  ];
+  slots.forEach(function(slot) {
+    var items = slot.fixed ? null : meals[slot.key];
+    var slotCal = 0, slotPro = 0, itemsHtml = '';
+    if (slot.fixed === 'shake') {
+      itemsHtml = '<div class="meal-item"><div><div class="meal-item-name">Protein Shake</div><div class="meal-item-detail">Morning shake — mixed with 250ml low-fat milk</div></div></div>';
+    } else if (!items) { return; }
+    else if (Array.isArray(items)) {
+      items.forEach(function(it) { slotCal += Number(it.calories||0); slotPro += Number(it.protein||0); itemsHtml += '<div class="meal-item"><div><div class="meal-item-name">'+it.name+'</div><div class="meal-item-detail">'+it.grams+'g &nbsp;·&nbsp; '+Number(it.calories).toFixed(0)+' kcal</div></div><div class="meal-item-badge">'+Number(it.protein).toFixed(1)+'g protein</div></div>'; });
+    } else {
+      slotCal = Number(items.calories||0); slotPro = Number(items.protein||0);
+      itemsHtml = '<div class="meal-item"><div><div class="meal-item-name">'+items.name+'</div><div class="meal-item-detail">'+items.grams+'g &nbsp;·&nbsp; '+Number(items.calories).toFixed(0)+' kcal</div></div><div class="meal-item-badge">'+Number(items.protein).toFixed(1)+'g protein</div></div>';
+    }
+    html += '<div class="meal-slot"><div class="meal-slot-header"><div class="meal-slot-icon" style="background:'+slot.iconBg+'">'+slot.icon+'</div><div style="flex:1"><div class="meal-slot-title">'+slot.title+'</div>'+(slotCal>0?'<div class="meal-slot-cal">~'+Math.round(slotCal)+' kcal &nbsp;·&nbsp; '+Number(slotPro).toFixed(1)+'g protein</div>':'')+'</div></div>'+itemsHtml+'</div>';
+  });
+  el.innerHTML = html;
+}
+
+async function generateSvDietPlan() {
+  if (_svDietInFlight) return;
+  var groqKey = localStorage.getItem('groqKey');
+  if (!groqKey) { showToast('Set Groq API key in SQL/Config section first', 'error'); return; }
+  if (!D_FOODS.length) { showToast('Add foods to the Food Database first', 'error'); return; }
+  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var svId = op.sv_body_id;
+  var latestBody = svId ? (D.body||[]).filter(function(b){ return b.customer_id===svId; }).sort(function(a,b){ return b.date>a.date?1:-1; })[0] : null;
+  var weight = latestBody ? parseFloat(latestBody.weight) : null;
+  var height = latestBody ? parseFloat(latestBody.height) : null;
+  var age = svP.age ? parseInt(svP.age) : null;
+  var gender = (svP.gender||'').toLowerCase();
+  if (!weight || !height || !age) { showToast('Need weight, height (from body records) and age (from Your Profile) to generate', 'error'); return; }
+  var goal = document.getElementById('sv-diet-goal').value;
+  var dietType = document.getElementById('sv-diet-type').value;
+  var activity = document.getElementById('sv-diet-activity').value;
+  var isWL = goal === 'Weight Loss';
+  var rmr = (10*weight) + (6.25*height) - (5*age) + (gender==='female' ? -161 : 5);
+  var actMult = { sedentary:1.2, light:1.375, moderate:1.55, active:1.725 }[activity] || 1.375;
+  var tdee = Math.round(rmr * actMult);
+  var targetCal = isWL ? Math.round(tdee-400) : Math.round(tdee+400);
+  var targetProtein = Math.round(weight * 2.0);
+  var shakeKcal = isWL ? 170 : 178, shakeProtein = 19.3;
+  var foodCalBudget = targetCal - shakeKcal;
+  var foodProteinBudget = targetProtein - shakeProtein;
+  var foods = D_FOODS.filter(function(f){ return !(dietType==='veg' && f.category==='non-veg'); });
+  var foodList = foods.map(function(f){ return f.name+' (Cal:'+f.calories+' Protein:'+f.protein+'g Carbs:'+f.carbs+'g Fat:'+f.fat+'g per 100g, best for: '+f.meal_time+')'; }).join('\n');
+  var dayTemplate = '{"mid_morning":{"name":"","grams":0,"calories":0,"protein":0},"lunch":[{"name":"","grams":0,"calories":0,"protein":0}],"evening":{"name":"","grams":0,"calories":0,"protein":0},"dinner":[{"name":"","grams":0,"calories":0,"protein":0}],"total_calories":0,"total_protein":0}';
+  var prompt = 'You are a sports nutritionist. Create a personalized 7-day meal plan (Monday to Sunday) for a wellness center supervisor.\n\n'
+    + 'Name: '+(op.name||'Supervisor')+' | Age: '+age+' | Gender: '+(gender||'not specified')+' | Goal: '+goal+'\n'
+    + 'Diet: '+(dietType==='veg'?'Vegetarian':'Non-Vegetarian')+'\n'
+    + 'RMR: '+Math.round(rmr)+' kcal | TDEE: '+tdee+' kcal\n'
+    + 'Total Daily Target: '+targetCal+' kcal | '+targetProtein+'g protein\n'
+    + 'Protein Shake accounts for: '+shakeKcal+' kcal + '+shakeProtein+'g protein\n'
+    + 'Remaining food budget: '+foodCalBudget+' kcal | '+Math.round(foodProteinBudget)+'g protein\n'
+    + 'Weight: '+weight+'kg | Height: '+height+'cm\n\n'
+    + 'RULES: Breakfast shake is already accounted for — do NOT include in JSON. Each day: Mid-Morning Snack (1 item), Lunch (2-3 items), Evening Snack (1 item), Dinner (2-3 items). Pick ONLY from the food list. Vary meals across days.\n\n'
+    + 'AVAILABLE FOODS:\n'+foodList+'\n\n'
+    + 'Return ONLY valid JSON:\n'
+    + '{"target_calories":'+targetCal+',"target_protein":'+targetProtein+',"rmr":'+Math.round(rmr)+',"tdee":'+tdee
+    + ',"goal":"'+goal+'","shake_kcal":'+shakeKcal+',"shake_protein":'+shakeProtein+',"note":"",'
+    + '"days":{"monday":'+dayTemplate+',"tuesday":'+dayTemplate+',"wednesday":'+dayTemplate+','
+    + '"thursday":'+dayTemplate+',"friday":'+dayTemplate+',"saturday":'+dayTemplate+',"sunday":'+dayTemplate+'}}';
+
+  var btn = document.getElementById('sv-diet-gen-btn');
+  btn.textContent = '⏳ Generating...'; btn.disabled = true;
+  _svDietInFlight = true;
+  try {
+    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST', headers:{'Authorization':'Bearer '+groqKey,'Content-Type':'application/json'},
+      body: JSON.stringify({ model: GROQ_MODEL, messages:[{role:'user',content:prompt}], temperature:0.3 })
+    });
+    if (!res.ok) throw new Error('Groq error: '+res.status);
+    var data = await res.json();
+    var raw = data.choices[0].message.content.trim();
+    var jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI did not return valid JSON');
+    var plan = JSON.parse(jsonMatch[0]);
+    plan.generated = new Date().toISOString().split('T')[0];
+    plan.diet_type = dietType;
+    plan.activity = activity;
+    op.sv_diet_plan = JSON.stringify(plan);
+    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    _svDietDay = null;
+    renderSvDietPlan();
+    showToast('Diet plan generated!', 'success');
+  } catch(e) { showToast('Error: '+e.message, 'error'); }
+  finally { btn.textContent = '🤖 Generate My Plan'; btn.disabled = false; _svDietInFlight = false; }
+}
+
 function openBodyModalSv() {
   document.getElementById('body-id').value='';
   document.getElementById('body-customer').value='__sv__';
   document.getElementById('body-date').value=new Date().toISOString().slice(0,10);
-  var p=JSON.parse(localStorage.getItem('sv_profile')||'{}');
-  document.getElementById('body-age-field').value=p.age||'';
+  // Clear all body fields first
   ['body-height','body-weight','body-fat','body-visceral','body-bmr','body-bmi','body-age','body-subfat','body-muscle','body-notes'].forEach(function(id){
     var el=document.getElementById(id); if(el) { el.value=''; el.dataset.manual=''; }
   });
+  document.getElementById('body-age-field').value='';
+  // Auto-fill height and age from latest body record (stored in Supabase via body_composition)
+  var op=JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var svId=op.sv_body_id;
+  var lastRec=svId ? (D.body||[]).filter(function(b){return b.customer_id===svId;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0] : null;
+  if(lastRec) {
+    if(lastRec.height) document.getElementById('body-height').value=lastRec.height;
+    if(lastRec.age)    document.getElementById('body-age-field').value=lastRec.age;
+  } else {
+    // First scan — fallback to My Profile fields
+    var p=JSON.parse(localStorage.getItem('sv_profile')||'{}');
+    if(p.height) document.getElementById('body-height').value=p.height;
+    if(p.age)    document.getElementById('body-age-field').value=p.age;
+  }
   openModal('body');
 }
 function editSvBody(id) {
-  var recs=JSON.parse(localStorage.getItem('sv_body_records')||'[]');
-  var b=recs.find(function(x){return x.id===id;}); if(!b) return;
+  var op=JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var b=(D.body||[]).find(function(x){return x.id===id && x.customer_id===op.sv_body_id;}); if(!b) return;
   document.getElementById('body-id').value=b.id;
   document.getElementById('body-customer').value='__sv__';
   document.getElementById('body-date').value=b.date;
@@ -8269,11 +9592,11 @@ function editSvBody(id) {
   calcBody();
   openModal('body');
 }
-function delSvBody(id) {
+async function delSvBody(id) {
   if(!confirm('Delete this record?')) return;
-  var recs=JSON.parse(localStorage.getItem('sv_body_records')||'[]');
-  localStorage.setItem('sv_body_records',JSON.stringify(recs.filter(function(x){return x.id!==id;})));
-  renderSvBody();
+  getCredentials(); if(!SB_URL||!SB_KEY) return;
+  try { await dbDelete('body_composition', id); await loadBody(); renderSvBody(); }
+  catch(e) { showToast('Error: '+e.message,'error'); }
 }
 
 function updateBodyCustSelect() {
@@ -8296,53 +9619,6 @@ function onBodySearch() {
   if(match){_selectedBodyCustId=match.id;sel.value=match.id;}
   else{_selectedBodyCustId=null;sel.value='';}
   renderBody();
-}
-function renderRecheckBadge() {
-  var count = D.customers.filter(function(c){
-    var r=D.body.filter(function(b){return b.customer_id===c.id;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
-    if(!r.length) return false;
-    return Math.floor((new Date()-new Date(r[0].date))/86400000)>=7;
-  }).length;
-  var el=document.getElementById('recheck-count-badge'); if(el) el.textContent=count;
-}
-function renderRecheckList() {
-  var container=document.getElementById('recheck-list'); if(!container) return;
-  var data=D.customers.map(function(c){
-    var r=D.body.filter(function(b){return b.customer_id===c.id;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
-    var lastScan=r.length?r[0].date:null;
-    var days=lastScan?Math.floor((new Date()-new Date(lastScan))/86400000):9999;
-    return{c:c,lastScan:lastScan,days:days};
-  }).filter(function(x){return x.days>=7;}).sort(function(a,b){return b.days-a.days;});
-  if(!data.length){container.innerHTML='<div class="tcard" style="padding:40px;text-align:center;color:var(--muted)"><div style="font-size:36px;margin-bottom:10px">✅</div><p style="font-size:15px;font-weight:600;color:var(--text)">All up to date!</p></div>';return;}
-  container.innerHTML=data.map(function(x){
-    var c=x.c; var isOverdue=x.days>=14; var cls=isOverdue?'overdue':'due-soon';
-    var phone=(c.contact||'').replace(/\D/g,''); if(phone.length===10)phone=COUNTRY_CODE+phone;
-    return'<div class="recheck-card '+cls+'">'
-      +'<div><div style="font-weight:700;font-size:14px">'+c.name+(isOverdue?' <span class="badge br" style="font-size:10px">Overdue</span>':' <span class="badge by" style="font-size:10px">Due</span>')+'</div>'
-      +'<div style="font-size:12px;color:var(--muted);margin-top:3px">'+(x.lastScan?x.days+' days since last scan · Last: '+x.lastScan:'Never scanned')+'</div></div>'
-      +'<div style="display:flex;align-items:center;gap:10px">'
-      +'<div style="text-align:center"><div class="recheck-days" style="color:'+(isOverdue?'var(--danger)':'var(--accent)')+'">'+( x.lastScan?x.days:'∞')+'</div><div style="font-size:10px;color:var(--muted)">days</div></div>'
-      +'<div style="display:flex;flex-direction:column;gap:5px">'
-      +(phone?'<button class="wa-btn" style="font-size:11px;padding:4px 10px" onclick="sendRecheckWA(\''+c.id+'\')">💬 Remind</button>':'')
-      +'<button class="btn-p" style="font-size:11px;padding:4px 10px" onclick="selectBodyCustomer(\''+c.id+'\')">📋 Records</button>'
-      +'</div></div></div>';
-  }).join('');
-}
-function selectBodyCustomer(cid){
-  _selectedBodyCustId=cid;
-  var sel=document.getElementById('body-cust-select'); if(sel) sel.value=cid;
-  switchBodyTab('records',document.getElementById('body-tab-records'));
-  renderBody();
-}
-function sendRecheckWA(cid){
-  var c=D.customers.find(function(x){return x.id===cid;}); if(!c||!c.contact) return;
-  var r=D.body.filter(function(b){return b.customer_id===cid;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
-  var days=r.length?Math.floor((new Date()-new Date(r[0].date))/86400000):null;
-  var msg='🌿 *Body Scan Reminder — '+getCenterName()+'*\n\nHi *'+c.name+'*! 😊\n\n'
-    +(days?'It\'s been *'+days+' days* since your last scan.':'You haven\'t done a body scan yet!')
-    +' Time for your weekly recheck! 📊\n\nRegular scans help us track your progress accurately.\n\n📅 *Please visit the center this week for your scan.*\n\n_Your '+getCenterName()+' Team_ 💚';
-  var phone=c.contact.replace(/\D/g,''); if(phone.length===10)phone=COUNTRY_CODE+phone;
-  window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
 
 // ══════════════════════════════════════════════
@@ -8570,7 +9846,7 @@ function sendLoyaltyWA(cid){
 }
 async function loadPackHistory(){
   getCredentials();if(!SB_URL||!SB_KEY)return;
-  try{var r=await dbGet('pack_history','start_date');D.packHistory=Array.isArray(r)?r:[];}
+  try{var r=await dbGet('pack_history','start_date', _custIdsFilter());D.packHistory=Array.isArray(r)?r:[];}
   catch(e){D.packHistory=[];}
 }
 
@@ -8775,13 +10051,15 @@ function renderBizAnalyst() {
   var month = (document.getElementById('biz-month')||{}).value || new Date().toISOString().substring(0,7);
   var todayStr = new Date().toISOString().split('T')[0];
 
-  // ── Org Summary ──
+  // ── Org Summary — scoped to active center ──
+  var _bizCusts = filterByCenter(D.customers);
+  var _bizCustIds = _bizCusts.map(function(c){return c.id;});
   var totalPersonalVP = getPersonalVP(month);
   var totalOrgVP = getOrgVP(month);
   var totalVP = totalPersonalVP + totalOrgVP;
-  var allActiveCusts = D.customers.filter(function(c){ return getDaysLeft(c).active; }).length;
-  var allInactive = D.customers.filter(function(c){ return isInactive(c.id); }).length;
-  var monthRenewals = (D.packHistory||[]).filter(function(h){ return h.start_date&&h.start_date.startsWith(month); }).length;
+  var allActiveCusts = _bizCusts.filter(function(c){ return getDaysLeft(c).active; }).length;
+  var allInactive = _bizCusts.filter(function(c){ return isInactive(c.id); }).length;
+  var monthRenewals = (D.packHistory||[]).filter(function(h){ return h.start_date&&h.start_date.startsWith(month)&&(!ACTIVE_CENTER||_bizCustIds.indexOf(h.customer_id)>-1); }).length;
 
   document.getElementById('biz-org-summary').innerHTML =
     '<div class="stats" style="margin-bottom:0">' +
@@ -8793,8 +10071,12 @@ function renderBizAnalyst() {
     '<div class="stat"><div class="stat-ic">🔄</div><div class="stat-l">Renewals This Month</div><div class="stat-v" style="color:var(--success)">'+monthRenewals+'</div></div>' +
     '</div>';
 
-  // ── Per-coach cards ──
-  var coachData = D.coaches.map(function(coach) {
+  // ── Per-coach cards — scoped to active center ──
+  var coachData = D.coaches.filter(function(coach){
+    if(!ACTIVE_CENTER) return true;
+    var center = D.centers.find(function(c){ return c.owner_id===coach.id; });
+    return center && center.id === ACTIVE_CENTER;
+  }).map(function(coach) {
     var center = D.centers.find(function(c){ return c.owner_id===coach.id; });
     var cid = center ? center.id : null;
     var custs = D.customers.filter(function(c){ return c.wellness_center_id===cid; });
@@ -8928,7 +10210,7 @@ async function generateBizAIReport() {
     return c.name+' ('+( c.herbalife_pin||'Associate')+', VP:'+vp+', customers:'+custs.length+')';
   }).join('; ');
 
-  var prompt = 'You are a Herbalife business coach analysing a wellness center supervisor\'s monthly performance for '+month+'. Here is their data:\n\n'
+  var prompt = 'You are a wellness business coach analysing a wellness center supervisor\'s monthly performance for '+month+'. Here is their data:\n\n'
     +'- Total org VP: '+totalVP+'\n'
     +'- Active customers: '+activeCusts+'\n'
     +'- Inactive customers (7+ days absent): '+inactiveCusts+'\n'
@@ -9049,7 +10331,14 @@ function renderCouponView(){
 }
 function renderCoupons(){
   var cid=document.getElementById('coupon-coach-sel')?document.getElementById('coupon-coach-sel').value:'';
-  var rows=(D.coupons||[]).filter(function(x){return!cid||x.coach_id===cid;});
+  var _centerPersonIds=null;
+  if(ACTIVE_CENTER){
+    var _ccIds=filterByCenter(D.customers).map(function(c){return c.id;});
+    var _coIds=D.coaches.filter(function(co){return D.centers.some(function(ct){return ct.id===ACTIVE_CENTER&&ct.owner_id===co.id;});}).map(function(co){return co.id;});
+    _centerPersonIds=_ccIds.concat(_coIds);
+  }
+  var allCoupons=(_centerPersonIds?(D.coupons||[]).filter(function(x){return _centerPersonIds.indexOf(x.coach_id)>-1;}):(D.coupons||[]));
+  var rows=allCoupons.filter(function(x){return!cid||x.coach_id===cid;});
   var tb=document.getElementById('coupon-body');if(!tb)return;
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">🎟️</div><p>No coupons yet.</p></div></td></tr>';return;}
   rows.sort(function(a,b){return new Date(b.date||b.created_at)-new Date(a.date||a.created_at);});
@@ -9063,16 +10352,16 @@ function renderCoupons(){
       +'<td>'+(r.date||'—')+'</td><td>'+(r.referred_person||'—')+'</td>'
       +'<td><button class="btn-d" onclick="delCoupon(\''+r.id+'\')">Del</button></td></tr>';
   }).join('');
-  // Stats: count across ALL people who have coupons
-  var allPersonIds={};
-  (D.coupons||[]).forEach(function(x){ allPersonIds[x.coach_id]=true; });
+  // Stats: scoped to active center
+  var statsPersonIds={};
+  allCoupons.forEach(function(x){ statsPersonIds[x.coach_id]=true; });
   var total=0;
-  Object.keys(allPersonIds).forEach(function(pid){ total+=getCouponBalance(pid).balance; });
+  Object.keys(statsPersonIds).forEach(function(pid){ total+=getCouponBalance(pid).balance; });
   var el=document.getElementById('coupon-stats');
   if(el)el.innerHTML='<div class="stat"><div class="stat-l">Total Earned</div><div class="stat-v">'+
-    (D.coupons||[]).filter(function(x){return x.type==='earn';}).reduce(function(s,x){return s+Number(x.quantity);},0)+'</div></div>'+
+    allCoupons.filter(function(x){return x.type==='earn';}).reduce(function(s,x){return s+Number(x.quantity);},0)+'</div></div>'+
     '<div class="stat"><div class="stat-l">Total Used</div><div class="stat-v">'+
-    (D.coupons||[]).filter(function(x){return x.type==='use';}).reduce(function(s,x){return s+Number(x.quantity);},0)+'</div></div>'+
+    allCoupons.filter(function(x){return x.type==='use';}).reduce(function(s,x){return s+Number(x.quantity);},0)+'</div></div>'+
     '<div class="stat"><div class="stat-l">Outstanding</div><div class="stat-v" style="color:var(--accent)">'+total+'</div></div>';
 }
 async function saveCoupon(){
@@ -9213,7 +10502,14 @@ function calcBalance(){
 }
 function renderPayments(){
   var q=(document.getElementById('payment-search')||{value:''}).value.toLowerCase();
-  var rows=(D.payments||[]).filter(function(p){return(p.person_name||'').toLowerCase().includes(q)||(p.description||'').toLowerCase().includes(q);});
+  var allPayments=(D.payments||[]);
+  if(ACTIVE_CENTER){
+    var _pCustIds=filterByCenter(D.customers).map(function(c){return c.id;});
+    var _pCoachIds=D.coaches.filter(function(co){return D.centers.some(function(ct){return ct.id===ACTIVE_CENTER&&ct.owner_id===co.id;});}).map(function(co){return co.id;});
+    var _pPersonIds=_pCustIds.concat(_pCoachIds);
+    allPayments=allPayments.filter(function(p){return _pPersonIds.indexOf(p.person_id)>-1;});
+  }
+  var rows=allPayments.filter(function(p){return(p.person_name||'').toLowerCase().includes(q)||(p.description||'').toLowerCase().includes(q);});
   var tb=document.getElementById('payment-body');if(!tb)return;
   if(!rows.length){tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">💳</div><p>No payments yet.</p></div></td></tr>';return;}
   rows.sort(function(a,b){return new Date(b.payment_date)-new Date(a.payment_date);});
@@ -9236,12 +10532,12 @@ function renderPayments(){
       +'<button class="btn-e" onclick="editPayment(\''+p.id+'\')">Edit</button>'
       +'<button class="btn-d" onclick="delPayment(\''+p.id+'\')">Del</button></div></td></tr>';
   }).join('');
-  var totalBal=(D.payments||[]).reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0);
-  var overdueCount=(D.payments||[]).filter(function(p){return Math.max(0,Number(p.total_amount)-Number(p.amount_paid))>0&&p.due_date&&p.due_date<today;}).length;
+  var totalBal=allPayments.reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0);
+  var overdueCount=allPayments.filter(function(p){return Math.max(0,Number(p.total_amount)-Number(p.amount_paid))>0&&p.due_date&&p.due_date<today;}).length;
   var el=document.getElementById('payment-stats');
   if(el)el.innerHTML='<div class="stat"><div class="stat-l">Outstanding</div><div class="stat-v" style="color:var(--danger)">₹'+totalBal.toLocaleString('en-IN')+'</div></div>'
     +'<div class="stat"><div class="stat-l">Overdue</div><div class="stat-v" style="color:var(--danger)">'+overdueCount+'</div></div>'
-    +'<div class="stat"><div class="stat-l">Records</div><div class="stat-v">'+(D.payments||[]).length+'</div></div>';
+    +'<div class="stat"><div class="stat-l">Records</div><div class="stat-v">'+allPayments.length+'</div></div>';
 }
 // ── CUSTOMER PAYMENT MODAL HELPERS ──
 // ── COACH PAYMENT SETUP (for existing coaches) ──
@@ -9810,7 +11106,7 @@ function toggleGuideCard(idx) {
 // ══════════════════════════════════════════════
 
 async function loadLeads() {
-  D.leads = await dbGet('leads', 'id');
+  D.leads = await dbGet('leads', 'id', _cFilter());
   D.leadFollowups = await dbGet('lead_followups', 'called_at');
   renderLeadsStats();
   renderLeads();
@@ -10146,7 +11442,7 @@ function expToDB(e) {
 }
 function getExpenses() { return D.expenses; }
 async function loadExpenses() {
-  var rows = await dbGet('expenses', 'date');
+  var rows = await dbGet('expenses', 'date', _cFilter('center_id'));
   D.expenses = rows.map(expFromDB);
   await migrateExpensesFromLocalStorage();
 }
@@ -10555,17 +11851,20 @@ function renderGoals() {
   if (gaEl && !gaEl.value) gaEl.value = goals.attendance || '';
   if (glEl && !glEl.value) glEl.value = goals.leads || '';
 
-  // Calculate actuals
-  var newMembers  = D.customers.filter(function(c){ return (c.created_at||'').startsWith(ym) || (c.join_date||'').startsWith(ym); }).length;
+  // Calculate actuals — scoped to active center
+  var _gcusts = filterByCenter(D.customers);
+  var _gatt   = filterByCenterViaCustomer(D.attendance);
+  var _gleads = ACTIVE_CENTER ? (D.leads||[]).filter(function(l){return l.center_id===ACTIVE_CENTER;}) : (D.leads||[]);
+  var newMembers  = _gcusts.filter(function(c){ return (c.created_at||'').startsWith(ym) || (c.join_date||'').startsWith(ym); }).length;
   var todayStr    = new Date().toISOString().split('T')[0];
   // Attendance avg this month
   var monthDays   = Math.max(d.getDate(), 1);
-  var monthAttTotal = D.attendance.filter(function(a){ return a.date && a.date.startsWith(ym) && a.status==='present'; }).length;
+  var monthAttTotal = _gatt.filter(function(a){ return a.date && a.date.startsWith(ym) && a.status==='present'; }).length;
   var avgDailyAtt = Math.round(monthAttTotal / monthDays);
   // Revenue estimate from pack prices
-  var monthRevenue = D.customers.filter(function(c){ return (c.created_at||'').startsWith(ym) || (c.join_date||'').startsWith(ym); })
+  var monthRevenue = _gcusts.filter(function(c){ return (c.created_at||'').startsWith(ym) || (c.join_date||'').startsWith(ym); })
     .reduce(function(s,c){ var days=parseInt((c.pack_type||'').split(' ')[0])||0; var price=days===26?2600:days===3?300:days===30?3000:0; return s+price; }, 0);
-  var leadsConverted = (D.leads||[]).filter(function(l){ return l.status==='Joined' && (l.created_at||'').startsWith(ym); }).length;
+  var leadsConverted = _gleads.filter(function(l){ return l.status==='Joined' && (l.created_at||'').startsWith(ym); }).length;
 
   function progressCard(label, icon, actual, target, color, unit) {
     var pct = target ? Math.min(Math.round((actual/target)*100), 100) : 0;
@@ -10804,7 +12103,7 @@ async function generateDietPlan(custId, silent) {
     ? '{"mid_morning":{"name":"","grams":0,"calories":0,"protein":0},"lunch":[{"name":"","grams":0,"calories":0,"protein":0}],"dinner":[{"name":"","grams":0,"calories":0,"protein":0}],"total_calories":0,"total_protein":0}'
     : '{"mid_morning":{"name":"","grams":0,"calories":0,"protein":0},"lunch":[{"name":"","grams":0,"calories":0,"protein":0}],"evening":{"name":"","grams":0,"calories":0,"protein":0},"dinner":[{"name":"","grams":0,"calories":0,"protein":0}],"total_calories":0,"total_protein":0}';
 
-  var prompt = 'You are a sports nutritionist at a Herbalife wellness center in India. Create a personalized 7-day meal plan (Monday to Sunday) for this client.\n\n'+
+  var prompt = 'You are a sports nutritionist at a nutrition wellness center in India. Create a personalized 7-day meal plan (Monday to Sunday) for this client.\n\n'+
     'Client: '+c.name+'\n'+
     'Primary Goal: '+(isWL?'Weight Loss (fat loss while preserving muscle)':'Weight Gain (lean muscle mass)')+'\n'+
     'Secondary Goal: MUSCLE GAIN — applies to ALL clients\n'+
@@ -10812,7 +12111,7 @@ async function generateDietPlan(custId, silent) {
     'Training: '+trainingDesc+'\n'+
     'RMR: '+Math.round(rmr)+' kcal | TDEE: '+tdee+' kcal\n'+
     'Total Daily Target: '+targetCal+' kcal | '+targetProtein+'g protein\n'+
-    'Herbalife Shake already accounts for: '+shakeCal+' kcal + '+shakeProtein+'g protein ('+shakeCount+'x shake/day)\n'+
+    'Protein Shake already accounts for: '+shakeCal+' kcal + '+shakeProtein+'g protein ('+shakeCount+'x shake/day)\n'+
     'Remaining food budget: '+foodCalBudget+' kcal | '+Math.round(foodProteinBudget)+'g protein from food\n'+
     'Weight: '+latestWeight+'kg | Height: '+height+'cm | Age: '+age+'\n\n'+
     'RULES:\n'+
@@ -11044,13 +12343,13 @@ async function _doBulkGenerate() {
       }).join('\n');
 
       var dayTpl = '{"mid_morning":{"name":"","grams":0,"calories":0,"protein":0},"lunch":[{"name":"","grams":0,"calories":0,"protein":0}],"evening":{"name":"","grams":0,"calories":0,"protein":0},"dinner":[{"name":"","grams":0,"calories":0,"protein":0}],"total_calories":0,"total_protein":0}';
-      var prompt = 'You are a sports nutritionist at a Herbalife wellness center in India. Create a 7-day meal plan (Monday to Sunday) for this client.\n\n'+
+      var prompt = 'You are a sports nutritionist at a nutrition wellness center in India. Create a 7-day meal plan (Monday to Sunday) for this client.\n\n'+
         'Client: '+c.name+'\nPrimary Goal: '+(isWL?'Weight Loss (fat loss while preserving muscle)':'Weight Gain (lean muscle mass)')+'\n'+
         'Secondary Goal: MUSCLE GAIN — applies to ALL clients\nDiet: '+(dietType==='veg'?'Vegetarian':'Non-Vegetarian')+'\n'+
         'Training: '+trainingDesc+'\nRMR: '+Math.round(rmr)+' kcal | TDEE: '+tdee+' kcal\n'+
         'Target Calories: '+targetCal+' kcal/day | Target Protein: '+targetProtein+'g/day ('+proteinRatio+'g/kg)\n'+
         'Weight: '+latestWeight+'kg | Height: '+height+'cm | Age: '+age+'\n\n'+
-        'RULES:\n- Breakfast is ALWAYS Herbalife Protein Shake — do NOT include in JSON\n'+
+        'RULES:\n- Breakfast is ALWAYS Protein Shake — do NOT include in JSON\n'+
         '- Pick ONLY from the food list below\n- Specify exact grams\n'+
         '- Each day: Mid-Morning Snack (1 item), Lunch (2-3 items), Evening Snack (1 item), Dinner (2-3 items)\n'+
         '- Vary meals across days — no same lunch or dinner two days in a row\n'+
@@ -11553,7 +12852,7 @@ async function saveContest() {
   var startD = new Date(start);
   var endD   = new Date(startD); endD.setDate(endD.getDate() + days);
   var endDate = endD.toISOString().slice(0,10);
-  var payload = { name:name, type:type, start_date:start, end_date:endDate, duration_days:days, prize_amount:prize||0, entry_fee:entryFee||0, senior_amount:seniorAmt||0, description:desc, status:'active' };
+  var payload = { name:name, type:type, start_date:start, end_date:endDate, duration_days:days, prize_amount:prize||0, entry_fee:entryFee||0, senior_amount:seniorAmt||0, description:desc, status:'active', wellness_center_id:ACTIVE_CENTER||null };
   try {
     if (id) {
       await dbUpdate('contests', id, payload);
@@ -11600,7 +12899,10 @@ function filterContestType(type, el) {
 
 function renderContests() {
   var filter = _contestTypeFilter;
-  var all = D.contests.filter(function(c){ return filter==='all' || c.type===filter; });
+  var all = D.contests.filter(function(c){
+    if(ACTIVE_CENTER && c.wellness_center_id && c.wellness_center_id !== ACTIVE_CENTER) return false;
+    return filter==='all' || c.type===filter;
+  });
   var active    = all.filter(function(c){ return c.status !== 'completed'; });
   var completed = all.filter(function(c){ return c.status === 'completed'; });
   var today = new Date(); today.setHours(0,0,0,0);
