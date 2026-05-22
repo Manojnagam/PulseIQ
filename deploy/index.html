@@ -617,7 +617,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
       <div class="nav-lbl" onclick="toggleNavGroup('g-mgmt')"><span data-t="nav_management">Management</span><span class="nav-arrow">▾</span></div>
       <div id="g-mgmt">
         <button class="nav-item active" onclick="goTo(&#39;overview&#39;,this)"><span class="ic">🏠</span><span data-t="nav_overview">Overview</span></button>
-        <button class="nav-item" onclick="goTo(&#39;centers&#39;,this)"><span class="ic">🏢</span><span data-t="nav_centers">Wellness Centers</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo(&#39;centers&#39;,this)"><span class="ic">🏢</span><span data-t="nav_centers">Wellness Centers</span></button>
         <button class="nav-item" onclick="goTo(&#39;coaches&#39;,this)"><span class="ic">👨‍🏫</span><span data-t="nav_coaches">Coaches</span></button>
         <button id="nav-customers" class="nav-item" onclick="goTo(&#39;customers&#39;,this)"><span class="ic">👤</span><span data-t="nav_customers">Customers</span></button>
         <button class="nav-item" onclick="goTo(&#39;leads&#39;,this)"><span class="ic">📞</span><span data-t="nav_leads">Leads</span></button>
@@ -651,8 +651,8 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-setup')"><span data-t="nav_setup">Setup</span><span class="nav-arrow">▾</span></div>
       <div id="g-setup" style="display:none">
         <button class="nav-item" onclick="goTo('guide',this)"><span class="ic">📖</span><span data-t="nav_guide">How to Use</span></button>
-        <button class="nav-item" onclick="goTo('profile',this)"><span class="ic">👤</span><span data-t="nav_profile">My Profile</span></button>
-        <button class="nav-item" onclick="goTo(&#39;sql&#39;,this)"><span class="ic">🛠️</span><span data-t="nav_sql">SQL Setup Guide</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('profile',this)"><span class="ic">👤</span><span data-t="nav_profile">My Profile</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo(&#39;sql&#39;,this)"><span class="ic">🛠️</span><span data-t="nav_sql">SQL Setup Guide</span></button>
       </div>
     </div>
     <div class="sb-center-switch">
@@ -712,6 +712,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
       <div class="ph">
         <div><div class="pt" data-t="pt_centers">Wellness Centers</div><div class="ps" data-t="ps_centers">Manage all centers in your network</div></div>
         <button class="btn-p" onclick="updateCenterOwnerSelect();openModal(&#39;center&#39;)">+ Add Center</button>
+        <button class="btn-p" onclick="openModal('onboard-customer')" style="background:linear-gradient(135deg,#7c3aed,#a855f7);margin-left:8px">+ Onboard ₹1999 Customer</button>
       </div>
       <div class="stats" id="centers-stats"><div class="stat"><div class="stat-l">Total Centers</div><div class="stat-v">1</div></div><div class="stat"><div class="stat-l">Downline</div><div class="stat-v">0</div></div><div class="stat"><div class="stat-l">Branches</div><div class="stat-v">0</div></div></div>
       <div class="tcard">
@@ -984,12 +985,6 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
           <div class="agent-name">Weekly Coach Report</div>
           <div class="agent-desc">Generates a weekly summary for each coach — their customer count, attendance this week, expiring packs, and inactive customers.</div>
           <button class="agent-run-btn" onclick="runCoachReportAgent()">▶ Run Agent</button>
-        </div>
-        <div class="agent-card">
-          <div class="agent-icon">🛒</div>
-          <div class="agent-name">Inventory Reorder</div>
-          <div class="agent-desc">Scans products below threshold or out of stock. AI suggests reorder quantities based on usage and generates a reorder checklist.</div>
-          <button class="agent-run-btn" onclick="runInventoryAgent()">▶ Run Agent</button>
         </div>
         <div class="agent-card">
           <div class="agent-icon">🆕</div>
@@ -2216,6 +2211,31 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 
 
 
+<div class="overlay" id="modal-onboard-customer">
+  <div class="modal">
+    <div class="mh"><div class="mt">🟣 Onboard ₹1999 Customer</div><button class="mc" onclick="closeModal('onboard-customer')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">This adds the center to the <strong>paying customers database</strong> (separate from your family centers). They will use <strong>app.pulsezen.in</strong> + their PIN to access the dashboard.</p>
+      <div class="fg"><label>Center Name *</label><input type="text" id="oc-name" placeholder="e.g. Ravi's Wellness Center"></div>
+      <div class="fg"><label>Owner Name</label><input type="text" id="oc-owner" placeholder="e.g. Ravi Kumar"></div>
+      <div class="fg"><label>WhatsApp Number</label><input type="text" id="oc-phone" placeholder="e.g. 9876543210"></div>
+      <div class="fg"><label>Location</label><input type="text" id="oc-location" placeholder="e.g. Kurnool, AP"></div>
+      <div class="fg"><label>🔐 Dashboard PIN (4 digits) *</label>
+        <div style="display:flex;align-items:center;gap:8px;max-width:260px">
+          <input type="password" id="oc-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 4321" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit">
+          <button type="button" onclick="togglePinVis('oc-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px">👁️</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">They will use this PIN to log in to app.pulsezen.in</div>
+      </div>
+      <div id="oc-msg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-top:8px"></div>
+    </div>
+    <div class="mf">
+      <button class="btn-c" onclick="closeModal('onboard-customer')">Cancel</button>
+      <button class="btn-p" style="background:linear-gradient(135deg,#7c3aed,#a855f7)" onclick="saveOnboardCustomer()">Save & Onboard</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="modal-center">
   <div class="modal">
     <div class="mh"><div class="mt" id="center-modal-title">Add Wellness Center</div><button class="mc" onclick="closeModal(&#39;center&#39;)">✕</button></div>
@@ -2231,7 +2251,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       </div>
       <div class="fg"><label>Center Owner (Coach)</label><select id="center-owner"><option value="">— No owner assigned —</option></select></div>
       <div class="fg"><label>🚫 Unavailable Foods in this Area</label><input type="text" id="center-unavailable-foods" placeholder="e.g. Fish, Tofu, Rajma (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:4px">AI will avoid these foods for ALL customers in this center when generating diet plans.</div></div>
-      <div class="fg" id="center-pin-row" style="display:none"><label>🔐 Center PIN for this person (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="center-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 5678" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1"><button type="button" onclick="togglePinVis('center-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">This person will enter this PIN to access only their center's data.</div></div>
+      <div class="fg" id="center-pin-row"><label>🔐 Center PIN for this person (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="center-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 5678" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1"><button type="button" onclick="togglePinVis('center-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">This person will enter this PIN to access only their center's data.</div></div>
       <div class="mf"><button class="btn-c" onclick="closeModal(&#39;center&#39;)">Cancel</button><button class="btn-p" onclick="saveCenter()">Save Center</button></div>
     </div>
   </div>
@@ -2671,6 +2691,13 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 <script>
 // ── STATE ──
 var SB_URL = null; var SB_KEY = null;
+// Center owners (₹1999) use a separate Supabase project — keeps their data isolated from supervisor's data
+var CENTER_SB_URL = 'https://jvnhcwqtdxbpwvxbnzok.supabase.co';
+var CENTER_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2bmhjd3F0ZHhicHd2eGJuem9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzQ0NDYsImV4cCI6MjA5NDk1MDQ0Nn0.5zVOEAe7NR_Uz1Zz5sx6CSLWd6o29KL5R8l29HJZ7j0';
+function isCenterSession() { return _centerAuth && _centerAuth.type === 'center'; }
+// Use main Supabase if credentials exist, otherwise fall back to center Supabase (for paying customers)
+function getActiveSbUrl() { return SB_URL || CENTER_SB_URL; }
+function getActiveSbKey() { return SB_KEY || CENTER_SB_KEY; }
 var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
 var WA_LANG = localStorage.getItem('waLang') || 'English';
 var ACTIVE_CENTER = localStorage.getItem('activeCenter') || '';
@@ -2899,12 +2926,18 @@ function verifyPinPrompt() {
     return;
   }
 
-  // Check center-specific PIN
+  // Check center-specific PIN — if targetCenter known, check directly; else search all pins (welcome prompt)
+  var matchedCenter = null;
   if(targetCenter && pins[targetCenter] && entered === pins[targetCenter]) {
-    _centerAuth = { type: 'center', centerId: targetCenter };
+    matchedCenter = targetCenter;
+  } else if(!targetCenter) {
+    for(var cid in pins) { if(pins[cid] && entered === pins[cid]) { matchedCenter = cid; break; } }
+  }
+  if(matchedCenter) {
+    _centerAuth = { type: 'center', centerId: matchedCenter };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     closeModal('pin-prompt');
-    _applySwitch(targetCenter);
+    _applySwitch(matchedCenter);
     updateCenterSwitcher();
     return;
   }
@@ -3012,12 +3045,21 @@ function checkStartupAuth() {
 
   var hasCenterPins = Object.keys(pins).length > 0;
 
-  // No center PINs from other centers, OR no master PIN configured — full access, no prompt needed
-  if(!hasCenterPins || !masterPin) {
+  // No PINs at all — full access (first-time setup)
+  if(!hasCenterPins && !masterPin) {
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     updateCenterSwitcher();
     return;
+  }
+
+  // If center PINs now exist (loaded from DB) but session was auto-granted master
+  // before data loaded (empty localStorage on fresh device) — reset and prompt
+  var sessionRaw = sessionStorage.getItem('centerAuth');
+  var sessionWasAutoGranted = !sessionRaw || sessionRaw === '{"type":"master"}';
+  if(hasCenterPins && sessionWasAutoGranted && !masterPin) {
+    _centerAuth = {};
+    sessionStorage.removeItem('centerAuth');
   }
 
   // If session was 'center' but that center's PIN was just cleaned up, upgrade to master
@@ -3028,8 +3070,8 @@ function checkStartupAuth() {
     return;
   }
 
-  // If session auth exists, apply it
-  if(_centerAuth.type === 'master') {
+  // If session auth exists and was explicitly set (not auto-granted), apply it
+  if(_centerAuth.type === 'master' && masterPin) {
     updateCenterSwitcher();
     return;
   }
@@ -3339,7 +3381,7 @@ function showCoachPinTip() {
 function getCredentials() {
   if (!SB_URL) SB_URL = (localStorage.getItem('sb_url') || '').replace(/\/$/, '');
   if (!SB_KEY) SB_KEY = localStorage.getItem('sb_key') || '';
-  return SB_URL && SB_KEY;
+  return true; // always proceed — CENTER_SB is the fallback when no main credentials
 }
 var D = { centers:[], customers:[], attendance:[], body:[], finance:[], coaches:[], inventory:[], leads:[], leadFollowups:[], expenses:[], contests:[], contestParticipants:[] };
 var _leadTab = 'today';
@@ -3348,10 +3390,12 @@ var _leadTab = 'today';
 async function req(method, table, body, filter) {
   getCredentials();
   filter = filter || '';
-  var url = SB_URL + '/rest/v1/' + table + filter;
+  var activeUrl = getActiveSbUrl();
+  var activeKey = getActiveSbKey();
+  var url = activeUrl + '/rest/v1/' + table + filter;
   var headers = {
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + SB_KEY,
+    'apikey': activeKey,
+    'Authorization': 'Bearer ' + activeKey,
     'Content-Type': 'application/json',
     'Prefer': 'return=representation'
   };
@@ -3429,6 +3473,8 @@ function doDisconnect() {
   document.getElementById('app').style.display = 'none';
 }
 var GROQ_MODEL = localStorage.getItem('groqModel') || 'llama-3.3-70b-versatile';
+var DEFAULT_GROQ_KEY = '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';
+function getGroqKey() { return localStorage.getItem('groqKey') || DEFAULT_GROQ_KEY; }
 
 // ── HERBALIFE SHAKE NUTRITION (hidden from clients) ──
 // WL: 3 scoops F1 + 1 scoop Protein + 1 scoop Shakemate
@@ -3471,7 +3517,7 @@ function saveWaLang() {
 window.onload = async function() {
   var url = localStorage.getItem('sb_url');
   var key = localStorage.getItem('sb_key');
-  var gKey = localStorage.getItem('groqKey');
+  var gKey = getGroqKey();
   var cc = localStorage.getItem('countryCode');
   if(gKey) document.getElementById('cfg-groq-key').value = gKey;
   if(cc) { document.getElementById('cfg-country-code').value = cc; COUNTRY_CODE = cc; }
@@ -3489,6 +3535,11 @@ window.onload = async function() {
     SB_URL = url.replace(/\/$/, '');
     SB_KEY = key;
     await doConnect();
+  } else {
+    // No main Supabase credentials — use CENTER_SB fallback (paying customer devices)
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    await loadAll();
   }
   var _d=new Date(); var today=_d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
   ['att-date','body-date','fin-date','inv-in-date','inv-out-date','inv-sum-date','inv-usage-date'].forEach(function(id){
@@ -3530,7 +3581,7 @@ async function loadCenters() {
   D.centers = await dbGet('wellness_centers');
   // Rebuild centerPins from DB so all devices share the same PINs
   var pins = {};
-  D.centers.forEach(function(c){ if(c.center_pin && c.type !== 'main') pins[c.id] = c.center_pin; });
+  D.centers.forEach(function(c){ if(c.center_pin) pins[c.id] = c.center_pin; });
   localStorage.setItem('centerPins', JSON.stringify(pins));
   renderCenters(); updateCenterSelects(); updateCenterSwitcher(); updateSidebarLogo();
 }
@@ -4050,7 +4101,7 @@ function getChurnRisk(custId) {
 
 // ── AI INSIGHTS ──
 async function generateWeeklySummary() {
-  var apiKey = localStorage.getItem('groqKey');
+  var apiKey = getGroqKey();
   if(!apiKey) { showToast('Please setup Groq API Key in Config tab', 'error'); return; }
   var btn = document.getElementById('ai-overview-btn');
   var div = document.getElementById('ai-overview-summary');
@@ -4104,7 +4155,7 @@ var _renewalResults = [];
 var _expiringItems  = [];
 
 async function runRenewalAgent() {
-  var apiKey = localStorage.getItem('groqKey');
+  var apiKey = getGroqKey();
   if (!apiKey) { showToast('Please set your Groq API Key in Config tab first', 'error'); return; }
 
   // Find customers expiring in 0–5 days (within active center filter)
@@ -4210,7 +4261,7 @@ function sendAgentWA(i) {
 }
 
 async function regenRenewalMsg(i) {
-  var apiKey = localStorage.getItem('groqKey');
+  var apiKey = getGroqKey();
   if (!apiKey) { showToast('No Groq API key', 'error'); return; }
   var r = _renewalResults[i];
   var item = _expiringItems[i];
@@ -4250,7 +4301,7 @@ var _agentResults = [];
 var _agentCfg     = null;
 
 async function runGenericAgent(cfg) {
-  var apiKey = localStorage.getItem('groqKey');
+  var apiKey = getGroqKey();
   if (!apiKey) { showToast('Set your Groq API Key in Config tab first', 'error'); return; }
   if (!cfg.items || !cfg.items.length) { showToast(cfg.emptyMsg || 'Nothing found matching this agent\'s criteria.', 'success'); return; }
   _agentCfg     = cfg;
@@ -4332,7 +4383,7 @@ function sendAgentMsg(i) {
 }
 
 async function regenAgentMsg(i) {
-  var apiKey = localStorage.getItem('groqKey'); if (!apiKey) return;
+  var apiKey = getGroqKey(); if (!apiKey) return;
   var r  = _agentResults[i];
   var ta = document.getElementById('ag-msg-'+i);
   if (ta) { ta.value = 'Regenerating...'; ta.style.color = 'var(--muted)'; }
@@ -4582,7 +4633,7 @@ function runWelcomeAgent() {
 //  AGENT 8 — 💹 Finance Analyst
 // ══════════════════════════════════════════
 async function runFinanceAnalystAgent() {
-  var apiKey = localStorage.getItem('groqKey');
+  var apiKey = getGroqKey();
   if (!apiKey) { showToast('Set Groq API Key in Config tab first', 'error'); return; }
 
   var today       = new Date();
@@ -4724,7 +4775,7 @@ function _copyFinanceReport() {
 
 // ── FINANCE AI INSIGHTS ──
 async function generateFinanceInsights() {
-  var apiKey = localStorage.getItem('groqKey');
+  var apiKey = getGroqKey();
   if (!apiKey) { showToast('Please setup Groq API Key in SQL/Config section', 'error'); return; }
   var btn = document.getElementById('fin-ai-btn');
   var outEl = document.getElementById('fin-ai-output');
@@ -4844,7 +4895,7 @@ async function generateFinanceInsights() {
 
 var _aiInFlight = {};
 async function askBodyAI(cid, rid) {
-  var apiKey = localStorage.getItem('groqKey');
+  var apiKey = getGroqKey();
   if(!apiKey) { showToast('Please setup Groq API Key in Config tab', 'error'); return; }
   var row = document.getElementById('ai-row-'+rid);
   var content = document.getElementById('ai-content-'+rid);
@@ -4902,7 +4953,7 @@ async function askBodyAI(cid, rid) {
 }
 
 async function doGroqReport(cid, systemPrompt, userPrompt, title) {
-  var apiKey = localStorage.getItem('groqKey');
+  var apiKey = getGroqKey();
   if (!apiKey) { showToast('Please setup Groq API Key in Config tab', 'error'); return; }
   
   var c = D.customers.find(function(x){return x.id === cid});
@@ -5194,7 +5245,6 @@ function renderOverview() {
     '<button class="ov-quick-btn" onclick="openModal(\'customer\')">👤 Add Customer</button>'+
     '<button class="ov-quick-btn" onclick="openModal(\'finance\')">💰 Add Transaction</button>'+
     '<button class="ov-quick-btn" onclick="goTo(\'analytics\',document.querySelector(\'[onclick*=analytics]\'))">📊 Analytics</button>'+
-    '<button class="ov-quick-btn" onclick="goTo(\'inventory\',document.querySelector(\'[onclick*=inventory]\'))">📦 Inventory</button>'+
     '<button class="ov-quick-btn" onclick="goTo(\'agents\',document.querySelector(\'[onclick*=agents]\'))" style="border-color:#7c3aed;color:#7c3aed">🤖 AI Agents</button>';
 
   // ── Stat Cards ──
@@ -6476,6 +6526,7 @@ function renderAttendance() {
   var activeCusts = filterByCenter(D.customers).filter(function(c){
     var packActive = getDaysLeft(c).active;
     if (!packActive) return false; // always hide expired-pack customers
+    if (isInactive(c) && !ATT_SHOW_INACTIVE) return false; // hide inactive unless toggled
     return (c.name||'').toLowerCase().includes(q);
   });
 
@@ -7068,6 +7119,48 @@ function renderFinance() {
 }
 
 // ── SAVE CENTERS ──
+async function saveOnboardCustomer() {
+  var name = (document.getElementById('oc-name').value||'').trim();
+  var pin  = (document.getElementById('oc-pin').value||'').trim();
+  if(!name) { showToast('Center name is required','error'); return; }
+  if(!/^\d{4}$/.test(pin)) { showToast('PIN must be exactly 4 digits','error'); return; }
+  var msgEl = document.getElementById('oc-msg');
+  msgEl.style.display='block'; msgEl.style.background='#f0fdf4'; msgEl.style.color='#166534';
+  msgEl.textContent = 'Saving...';
+  try {
+    var payload = {
+      name: name,
+      owner_name: (document.getElementById('oc-owner').value||'').trim() || null,
+      contact: (document.getElementById('oc-phone').value||'').trim() || null,
+      location: (document.getElementById('oc-location').value||'').trim() || null,
+      center_pin: pin,
+      type: 'main'
+    };
+    var res = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers', {
+      method: 'POST',
+      headers: {
+        'apikey': CENTER_SB_KEY,
+        'Authorization': 'Bearer ' + CENTER_SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error('Save failed: ' + res.status);
+    msgEl.textContent = '✅ Onboarded! Send them: app.pulsezen.in + PIN ' + pin;
+    msgEl.style.background='#f0fdf4'; msgEl.style.color='#166534';
+    document.getElementById('oc-name').value='';
+    document.getElementById('oc-owner').value='';
+    document.getElementById('oc-phone').value='';
+    document.getElementById('oc-location').value='';
+    document.getElementById('oc-pin').value='';
+    showToast(name + ' onboarded successfully!', 'success');
+  } catch(e) {
+    msgEl.style.background='#fef2f2'; msgEl.style.color='#dc2626';
+    msgEl.textContent = '❌ Error: ' + e.message;
+  }
+}
+
 async function saveCenter() {
   getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('center-id').value;
@@ -7075,7 +7168,7 @@ async function saveCenter() {
   var ownerId = (ownerRaw && ownerRaw !== 'owner-profile') ? ownerRaw : null;
   var pinVal = (document.getElementById('center-pin').value||'').trim();
   if(pinVal && !/^\d{4}$/.test(pinVal)) { showToast('PIN must be exactly 4 digits','error'); return; }
-  var payload = { name:document.getElementById('center-name').value.trim(), location:document.getElementById('center-location').value.trim(), contact:document.getElementById('center-contact').value.trim(), type:document.getElementById('center-type').value, owner_id:ownerId, center_pin: (pinVal && document.getElementById('center-type').value !== 'main') ? pinVal : null, unavailable_foods: document.getElementById('center-unavailable-foods').value.trim()||null };
+  var payload = { name:document.getElementById('center-name').value.trim(), location:document.getElementById('center-location').value.trim(), contact:document.getElementById('center-contact').value.trim(), type:document.getElementById('center-type').value, owner_id:ownerId, center_pin: pinVal || null, unavailable_foods: document.getElementById('center-unavailable-foods').value.trim()||null };
   // Track profile-owner mapping locally (owner_id is uuid-only in DB)
   var profileCenters = JSON.parse(localStorage.getItem('profileCenterOwner') || '{}');
   if(ownerRaw === 'owner-profile') profileCenters[payload.name] = true;
@@ -7113,8 +7206,7 @@ function editCenter(id) {
 }
 function onCenterTypeChange() {
   var type = document.getElementById('center-type').value;
-  document.getElementById('center-pin-row').style.display = (type === 'downline' || type === 'branch') ? 'block' : 'none';
-  if(type === 'main') document.getElementById('center-pin').value = '';
+  document.getElementById('center-pin-row').style.display = 'block';
 }
 function updateCenterOwnerSelect() {
   var sel = document.getElementById('center-owner'); if(!sel) return;
@@ -7316,7 +7408,7 @@ async function saveCustomer() {
     if(planCustId){
       var planCust = D.customers.find(function(x){return x.id===planCustId;});
       // Only generate if no plan exists yet and basic fields are present
-      if(planCust && !planCust.diet_plan && planCust.height && (planCust.age || planCust.dob) && D_FOODS.length && localStorage.getItem('groqKey')){
+      if(planCust && !planCust.diet_plan && planCust.height && (planCust.age || planCust.dob) && D_FOODS.length && getGroqKey()){
         generateDietPlan(planCustId, true).catch(function(){});
       }
     }
@@ -9479,7 +9571,7 @@ function renderSvDietPlan() {
 
 async function generateSvDietPlan() {
   if (_svDietInFlight) return;
-  var groqKey = localStorage.getItem('groqKey');
+  var groqKey = getGroqKey();
   if (!groqKey) { showToast('Set Groq API key in SQL/Config section first', 'error'); return; }
   if (!D_FOODS.length) { showToast('Add foods to the Food Database first', 'error'); return; }
   var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
@@ -10184,7 +10276,7 @@ function renderBizAnalyst() {
 var _bizAiInFlight = false;
 async function generateBizAIReport() {
   if(_bizAiInFlight) return;
-  var groqKey = localStorage.getItem('groqKey');
+  var groqKey = getGroqKey();
   if(!groqKey) { showToast('Add your Groq API key in SQL/Config to use AI Report','error'); return; }
   var month = (document.getElementById('biz-month')||{}).value || new Date().toISOString().substring(0,7);
   _bizAiInFlight = true;
@@ -12028,7 +12120,7 @@ async function generateDietPlan(custId, silent) {
   if(!latestWeight || !height || !age){ if(!silent) showToast('Client needs weight (body record), height, and age to generate plan','error'); return; }
   if(!D_FOODS.length){ if(!silent) showToast('Add foods to the Food Database first','error'); return; }
 
-  var groqKey = localStorage.getItem('groqKey');
+  var groqKey = getGroqKey();
   if(!groqKey){ if(!silent) showToast('Set your Groq API key in SQL/Config section first','error'); return; }
 
   // Calculate RMR (Mifflin-St Jeor)
@@ -12232,7 +12324,7 @@ async function viewMealCompliance(custId, custName) {
 // ── BULK DIET PLAN GENERATOR ──
 async function bulkGenerateDietPlans() {
   if(_dietInFlight){ showToast('Already generating a plan...','error'); return; }
-  var groqKey = localStorage.getItem('groqKey');
+  var groqKey = getGroqKey();
   if(!groqKey){ showToast('Set your Groq API key in SQL/Config section first','error'); return; }
   if(!D_FOODS.length){ showToast('Add foods to the Food Database first','error'); return; }
 
@@ -12285,7 +12377,7 @@ async function bulkGenerateDietPlans() {
 }
 
 async function _doBulkGenerate() {
-  var groqKey = localStorage.getItem('groqKey');
+  var groqKey = getGroqKey();
   var pending = D.customers.filter(function(c){
     if(c.diet_plan) return false;
     var bodyRecs = D.body.filter(function(b){return b.customer_id===c.id;});

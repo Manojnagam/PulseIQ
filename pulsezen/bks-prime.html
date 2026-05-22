@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="BK's Prime Wellness Studio, Kurnool — Lose weight, gain muscle or fix health issues with a personalised nutrition plan. Real results, daily coach support. Free first consultation. Walk in or WhatsApp us today.">
-  <meta name="keywords" content="wellness center in Kurnool, weight loss center Kurnool, weight gain center Kurnool, nutrition center Kurnool, wellness center Revenue Colony Kurnool, wellness center near Ravindra High School Kurnool, muscle gain program Kurnool, weight gain program Kurnool, diet plan Kurnool, health center Kurnool, nutrition coach Kurnool, back pain relief Kurnool, sleep problems solution Kurnool, digestive problems Kurnool, skin problems acne Kurnool, knee pain relief Kurnool, sciatica relief Kurnool, low energy fatigue Kurnool, post illness recovery Kurnool">
+  <meta name="keywords" content="wellness center in Kurnool, weight loss center Kurnool, weight gain center Kurnool, nutrition center Kurnool, wellness center Revenue Colony Kurnool, wellness center near Ravindra High School Kurnool, health center Kurnool 518002, muscle gain program Kurnool, weight gain program Kurnool, diet plan Kurnool, health center Kurnool, nutrition coach Kurnool, back pain relief Kurnool, sleep problems solution Kurnool, digestive problems Kurnool, skin problems acne Kurnool, knee pain relief Kurnool, sciatica relief Kurnool, low energy fatigue Kurnool, post illness recovery Kurnool">
   <meta property="og:title" content="BK's Prime Wellness Studio — Kurnool | Lose Weight · Gain Muscle · Feel Better">
   <meta property="og:description" content="Personalised nutrition programs with daily coach support. Real member results in Kurnool. Free first consultation — walk in or WhatsApp us.">
   <meta property="og:type" content="website">
@@ -799,7 +799,7 @@
             <div class="location-item-label">Address</div>
             <div class="location-item-val">
               BK's Prime Wellness Studio<br>
-              Revenue Colony Road No.5, Kurnool<br>
+              Revenue Colony Road No.5, Kurnool — 518002<br>
               <span style="font-size:12px;color:rgba(255,255,255,.5)">Opp. Ravindra High School · Near Nandyal Check Post</span><br>
               <a href="https://maps.app.goo.gl/aK8y1decz7b1ybaD7" target="_blank">View on Google Maps →</a>
             </div>
@@ -875,7 +875,29 @@
     PulseZen is an independent wellness platform. Not affiliated with any nutrition brand.<br>
     Results may vary. These programs support wellness goals and are not a substitute for medical advice.
   </div>
+  <div style="margin-top:16px">
+    <a id="consentBtn" href="#" onclick="sendConsent(event)"
+      style="font-size:11px;color:rgba(255,255,255,.3);text-decoration:underline;cursor:pointer">
+      📋 Send Photo Consent Request to Member
+    </a>
+  </div>
 </footer>
+
+<script>
+function sendConsent(e) {
+  e.preventDefault();
+  var name = prompt('Enter member name:');
+  if (!name) return;
+  var lang = confirm('Send in Telugu?\n\nOK = Telugu\nCancel = English');
+  var msg;
+  if (lang) {
+    msg = 'హాయ్ ' + name + ' 🙏\n\nమీ transformation journey ని మా wellness center website లో చూపించాలని అనుకుంటున్నాం — మీలాంటి వారికి inspire అవ్వడానికి.\n\nఇందులో ఉంటుంది:\n📸 మీ before & after photos\n💬 మీ results మరియు experience\n\nమీ పేరు మీకు నచ్చిన విధంగా చూపిస్తాం — full name, first name లేదా initials.\n\nదయచేసి reply చేయండి:\n✅ అవును — నా consent ఉంది\n❌ వద్దు — వద్దు అనిపిస్తోంది\n\nమీ photos మా website కి మాత్రమే వాడతాం. మీ privacy మాకు చాలా important.\n\nధన్యవాదాలు! 🌿 — BK\'s Prime Wellness Studio';
+  } else {
+    msg = 'Hi ' + name + ' 🙏\n\nWe would like to feature your transformation journey on our wellness center\'s website to inspire others in our community.\n\nThis includes:\n📸 Your before & after photos\n💬 Your results and experience (weight loss, health improvements etc.)\n\nYour name will be shown as you prefer — full name, first name only, or initials.\n\nPlease reply with one of the following:\n✅ YES — I give my consent\n❌ NO — I prefer not to be featured\n\nYour privacy is important to us. Photos will only be used on our website and nowhere else without your permission.\n\nThank you! 🌿 — BK\'s Prime Wellness Studio';
+  }
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+</script>
 
 </body>
 </html>

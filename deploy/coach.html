@@ -298,7 +298,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .hs-grade-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:6px}
 .hs-breakdown{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
 .hs-metric{font-size:11px;color:rgba(255,255,255,.65)}
+.hs-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.hs-info-panel{display:none;background:rgba(0,0,0,.25);border-radius:8px;padding:12px 14px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.85);line-height:1.7}
+.hs-grade-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.hs-grade-pip{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
 .hs-metric span{color:#fff;font-weight:700}
+
+/* ── DIET PLAN ── */
+.diet-header{background:linear-gradient(135deg,#052e16,#14532d,#166534);border-radius:var(--radius);padding:20px 22px;margin-bottom:16px;color:#fff}
+.diet-header h2{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px}
+.diet-header p{font-size:12px;opacity:.7}
+.diet-macros{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.diet-macro{background:rgba(255,255,255,.12);border-radius:10px;padding:8px 14px;text-align:center;flex:1;min-width:70px}
+.diet-macro-val{font-size:18px;font-weight:700}
+.diet-macro-lbl{font-size:10px;opacity:.7;margin-top:2px}
+.meal-slot{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.meal-slot-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.meal-slot-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.meal-slot-title{font-weight:700;font-size:14px}
+.meal-slot-cal{font-size:11px;color:var(--muted);margin-top:1px}
+.meal-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--surface2)}
+.meal-item:last-child{border-bottom:none}
+.meal-item-name{font-size:13px;font-weight:600}
+.meal-item-detail{font-size:11px;color:var(--muted);margin-top:2px}
+.meal-item-badge{background:var(--surface2);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--primary);white-space:nowrap}
 
 /* ── MODAL LIVE SCORE ── */
 .modal-hs-bar{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
@@ -831,6 +854,20 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
               <option value="improve_stamina">Improve Stamina</option>
             </select>
           </div>
+          <div class="fg"><label>Diet Type</label>
+            <select id="my-diet-type">
+              <option value="veg">Vegetarian</option>
+              <option value="nonveg">Non-Vegetarian</option>
+            </select>
+          </div>
+          <div class="fg"><label>Activity Level</label>
+            <select id="my-activity">
+              <option value="light">Light</option>
+              <option value="moderate">Moderate</option>
+              <option value="active">Active</option>
+              <option value="sedentary">Sedentary</option>
+            </select>
+          </div>
         </div>
         <div id="my-diet-body-summary" style="background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--muted);margin-bottom:12px">
           Loading latest body stats...
@@ -1265,7 +1302,7 @@ async function loadCoachList() {
       return;
     }
     sel.innerHTML = '<option value="">— Select your name —</option>' +
-      coaches.map(function(c){ return '<option value="'+c.id+'" data-pin="'+(c.coach_pin||'')+'">'+c.name+'</option>'; }).join('');
+      coaches.map(function(c){ return '<option value="'+c.id+'" data-pin="'+(c.coach_pin||'')+'" data-gender="'+(c.gender||'')+'">'+c.name+'</option>'; }).join('');
   } catch(e) {
     console.error('loadCoachList error:', e);
     errEl.innerHTML = 'Could not load coaches: ' + (e.message || 'Network error') +
@@ -1286,6 +1323,10 @@ async function doLogin() {
   if (pin !== storedPin) { err.textContent = 'Incorrect PIN. Try again.'; return; }
   COACH_ID   = opt.value;
   COACH_NAME = opt.text;
+  var dbGender = (opt.getAttribute('data-gender') || '').toLowerCase();
+  if (dbGender === 'male' || dbGender === 'female') {
+    localStorage.setItem('coachGender_' + COACH_ID, dbGender);
+  }
   sessionStorage.setItem('coachId',   COACH_ID);
   sessionStorage.setItem('coachName', COACH_NAME);
   startApp();
@@ -2157,7 +2198,8 @@ function renderBodyRecords() {
   var latestVfKg   = parseFloat(latest.visceral_fat) || 0;
 
   // ── Health Score card ──
-  statsEl.innerHTML = buildHealthScoreCard(latest.bmi, latest.fat_percentage, latestVfKg, latest.date) +
+  var _hsCust = _bodySelCustId === COACH_ID ? {name: COACH_NAME, contact: '', gender: COACH_GENDER} : (D.customers.find(function(c){ return c.id === _bodySelCustId; }) || {});
+  statsEl.innerHTML = buildHealthScoreCard(latest.bmi, latest.fat_percentage, latestVfKg, latest.date, {name: _hsCust.name||'', phone: _hsCust.contact||'', weight: latest.weight, musclePct: latest.muscle_percentage, gender: (_hsCust.gender||'')}) +
     '<div class="stats" style="margin-top:0">' +
     '<div class="stat"><div class="stat-l">Weight</div><div class="stat-v">'+(latest.weight||'—')+'<span style="font-size:13px;font-family:DM Sans,sans-serif"> kg</span></div></div>'+
     (latestFatKg  ? '<div class="stat"><div class="stat-l">Body Fat</div><div class="stat-v" style="color:var(--danger)">'  +latestFatKg +'<span style="font-size:13px;font-family:DM Sans,sans-serif"> kg</span></div></div>' : '')+
@@ -2213,8 +2255,12 @@ function renderBodyRecords() {
     var wdHtml = wd !== null
       ? '<span class="'+(parseFloat(wd)<0?'body-diff-down':'body-diff-up')+'">'+(parseFloat(wd)<0?'↓ ':'↑ ')+Math.abs(wd)+' kg</span>'
       : '';
+    var vfKgRec = parseFloat(r.visceral_fat)||0;
+    var hsRec = calcHealthScore(parseFloat(r.bmi)||0, parseFloat(r.fat_percentage)||0, vfKgRec);
+    var hsRecColor = hsRec >= 80 ? '#27ae60' : hsRec >= 55 ? '#e8a838' : '#c0392b';
+    var hsRecBadge = hsRec !== null ? ' <span style="background:'+hsRecColor+';color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 8px">'+hsRec+'/100</span>' : '';
     return '<div class="body-rec">'+
-      '<div class="body-rec-date"><span>'+r.date+(i===0?' <span style="background:var(--success);color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;font-weight:700;margin-left:6px">Latest</span>':'')+'</span>'+wdHtml+'</div>'+
+      '<div class="body-rec-date"><span>'+r.date+(i===0?' <span style="background:var(--success);color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;font-weight:700;margin-left:6px">Latest</span>':'')+hsRecBadge+'</span>'+wdHtml+'</div>'+
       (r.notes ? '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">📝 '+r.notes+'</div>' : '')+
       '<div class="body-rec-grid">'+
         statBox('Weight',   r.weight, ' kg', wd,      true)+
@@ -2345,7 +2391,11 @@ function coachCalcBody() {
   setBodyHint('body-visceral-hint', vfHint(vfKg));
 
   // Live Health Score in modal
-  var score = calcHealthScore(bmi || 0, f || 0, vfKg || 0);
+  var muscleLive = parseFloat(document.getElementById('body-muscle').value) || 0;
+  var weightLive = parseFloat(document.getElementById('body-weight') ? document.getElementById('body-weight').value : 0) || 0;
+  var _modalCustId = _bodySelCustId;
+  var _modalC = _modalCustId === COACH_ID ? {gender: COACH_GENDER} : (D.customers||[]).find(function(x){return x.id===_modalCustId;}) || {};
+  var score = calcHealthScore(bmi || 0, f || 0, vfKg || 0, muscleLive || null, _modalC.gender||'', weightLive);
   updateModalHealthScore(score);
 }
 
@@ -2376,25 +2426,36 @@ function vfHint(kg) {
   if (kg <= 4)  return {cls:'warn', icon:'⚠️', label:'Moderate'};
   return              {cls:'bad',  icon:'🔴', label:'High Risk'};
 }
-function calcHealthScore(bmi, fatPct, vfKg) {
+function calcHealthScore(bmi, fatPct, vfKg, musclePct, gender, weight) {
+  var g = (gender || '').toLowerCase();
+  var isMale = g === 'male', isFemale = g === 'female';
+  var fatLo = isMale ? 10 : isFemale ? 20 : 10;
+  var fatHi = isMale ? 20 : isFemale ? 26 : 25;
+  var musIdealKg = isMale ? 30 : 22, musMinKg = isMale ? 10 : 8;
   var score = 0, total = 0;
   if (bmi) {
-    total += 40;
-    if (bmi >= 18.5 && bmi <= 24.9) score += 40;
-    else if (bmi < 18.5) score += Math.max(0, 40 - (18.5 - bmi) * 5);
-    else score += Math.max(0, 40 - (bmi - 24.9) * 4);
+    total += 25;
+    if (bmi >= 18.5 && bmi <= 24.9) score += 25;
+    else if (bmi < 18.5) score += Math.max(0, 25 - (18.5 - bmi) * 4);
+    else score += Math.max(0, 25 - (bmi - 24.9) * 3);
   }
   if (fatPct) {
-    total += 35;
-    if (fatPct >= 8 && fatPct <= 25) score += 35;
-    else if (fatPct < 8) score += Math.max(0, 35 - (8 - fatPct) * 4);
-    else score += Math.max(0, 35 - (fatPct - 25) * 2);
+    total += 30;
+    if (fatPct >= fatLo && fatPct <= fatHi) score += 30;
+    else if (fatPct < fatLo) score += Math.max(0, 30 - (fatLo - fatPct) * 3);
+    else score += Math.max(0, 30 - (fatPct - fatHi) * 1.8);
   }
   if (vfKg > 0) {
+    total += 20;
+    if (vfKg <= 2) score += 20;
+    else if (vfKg <= 4) score += 12;
+    else if (vfKg <= 6) score += 5;
+  }
+  if (musclePct) {
     total += 25;
-    if (vfKg <= 2) score += 25;
-    else if (vfKg <= 4) score += 15;
-    else if (vfKg <= 6) score += 8;
+    var muscleKg = weight > 0 ? weight * musclePct / 100 : 0;
+    if (muscleKg > 0) score += Math.min(25, Math.max(0, (muscleKg - musMinKg) / (musIdealKg - musMinKg) * 25));
+    else score += Math.min(25, Math.max(0, (musclePct - 15) / 20 * 25));
   }
   if (total === 0) return null;
   return Math.round((score / total) * 100);
@@ -2422,8 +2483,17 @@ function updateModalHealthScore(score) {
   gradeEl.style.background = grade.bg;
   gradeEl.style.color = grade.c;
 }
-function buildHealthScoreCard(bmi, fatPct, vfKg, date) {
-  var score = calcHealthScore(parseFloat(bmi)||0, parseFloat(fatPct)||0, parseFloat(vfKg)||0);
+function buildHealthScoreCard(bmi, fatPct, vfKg, date, opts) {
+  opts = opts || {};
+  var musV = parseFloat(opts.musclePct)||0;
+  var gender = (opts.gender || '').toLowerCase();
+  var isMale = gender === 'male', isFemale = gender === 'female';
+  var fatIdealLo = isMale ? 10 : isFemale ? 20 : 10;
+  var fatIdealHi = isMale ? 20 : isFemale ? 26 : 25;
+  var musIdealKg = isMale ? 30 : 22;
+  var weightV = parseFloat(opts.weight) || 0;
+  var muscleKg = (weightV > 0 && musV > 0) ? parseFloat((weightV * musV / 100).toFixed(1)) : 0;
+  var score = calcHealthScore(parseFloat(bmi)||0, parseFloat(fatPct)||0, parseFloat(vfKg)||0, musV||null, gender, weightV);
   if (score === null) return '';
   var color = score >= 80 ? '#27ae60' : score >= 55 ? '#e8a838' : '#c0392b';
   var maxDash = 157.08;
@@ -2433,6 +2503,20 @@ function buildHealthScoreCard(bmi, fatPct, vfKg, date) {
             : score >= 55 ? {t:'Fair',bg:'rgba(254,243,199,.3)',c:'#fde68a'}
             : score >= 40 ? {t:'Poor',bg:'rgba(254,226,226,.3)',c:'#fca5a5'}
             :               {t:'Critical',bg:'rgba(254,226,226,.3)',c:'#fca5a5'};
+  var bmiV = parseFloat(bmi)||0, fatV = parseFloat(fatPct)||0;
+  var bmiLbl = bmiV ? (bmiV < 18.5 ? '⬇️ Underweight' : bmiV <= 24.9 ? '✅ Normal' : bmiV <= 29.9 ? '⚠️ Overweight' : '🔴 Obese') : '—';
+  var fatLbl = fatV ? (fatV >= fatIdealLo && fatV <= fatIdealHi ? '✅ Ideal' : fatV <= fatIdealHi + 6 ? '⚠️ High' : '🔴 Very High') : '—';
+  var vfLbl  = vfKg > 0 ? (vfKg <= 2 ? '✅ Low' : vfKg <= 4 ? '⚠️ Moderate' : '🔴 High') : '—';
+  var musLbl = muscleKg > 0
+    ? (muscleKg >= musIdealKg ? '✅ Excellent' : muscleKg >= musIdealKg * 0.85 ? '✅ Good' : muscleKg >= musIdealKg * 0.65 ? '⚠️ Average' : '🔴 Low')
+    : musV ? '⚠️ Average' : '—';
+  var uid = 'hs-' + Date.now();
+  var centerName = (D.centers && D.centers[0]) ? D.centers[0].name : 'Our Wellness Center';
+  window._hsWaData = window._hsWaData || {};
+  window._hsWaData[uid] = {name:opts.name||'', phone:opts.phone||'', score:score, grade:grade.t, bmi:bmiV, fatPct:fatV, vfKg:vfKg, weight:opts.weight||0, musclePct:opts.musclePct||0, date:date||'', center:centerName};
+  var waBtn = opts.phone
+    ? '<button onclick="var d=window._hsWaData[\''+uid+'\'];sendHealthScoreWA(d.name,d.phone,d.score,d.grade,d.bmi,d.fatPct,d.vfKg,d.weight,d.musclePct,d.date,d.center)" style="background:#25D366;color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">💬 Share Score</button>'
+    : '';
   return '<div class="hs-card">' +
     '<div class="hs-gauge">' +
       '<svg viewBox="0 0 120 72" width="120" height="72">' +
@@ -2441,13 +2525,55 @@ function buildHealthScoreCard(bmi, fatPct, vfKg, date) {
         '<text x="60" y="62" text-anchor="middle" font-size="20" font-weight="700" fill="#fff" font-family="DM Sans,sans-serif">' + score + '</text>' +
       '</svg>' +
     '</div>' +
-    '<div class="hs-info">' +
+    '<div class="hs-info" style="flex:1">' +
       '<div class="hs-title">Health Score</div>' +
       '<div class="hs-score-big">' + score + '<span style="font-size:16px;font-weight:400;color:rgba(255,255,255,.5)">/100</span></div>' +
       '<div class="hs-grade-badge" style="background:' + grade.bg + ';color:' + grade.c + '">' + grade.t + '</div>' +
       (date ? '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px">Last scan: ' + date + '</div>' : '') +
+      '<div class="hs-actions">' +
+        waBtn +
+        '<button onclick="var p=document.getElementById(\''+uid+'\');p.style.display=p.style.display===\'block\'?\'none\':\'block\'" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer">ℹ️ How is this scored?</button>' +
+      '</div>' +
+      '<div class="hs-info-panel" id="'+uid+'">' +
+        '<div style="font-weight:700;color:#fff;margin-bottom:10px">How Health Score is calculated</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px">' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">BMI (25 pts)</span><span style="color:#fff;font-size:12px">'+bmiV+' — '+bmiLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: 18.5–24.9</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Body Fat % (30 pts)</span><span style="color:#fff;font-size:12px">'+fatV+'% — '+fatLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: '+fatIdealLo+'–'+fatIdealHi+'%</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Visceral Fat (20 pts)</span><span style="color:#fff;font-size:12px">'+(vfKg||'—')+' kg — '+vfLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: ≤ 2 kg</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Muscle Mass (25 pts)</span><span style="color:#fff;font-size:12px">'+(muscleKg > 0 ? muscleKg+' kg' : (musV||'—')+'%')+' — '+musLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: ≥ '+musIdealKg+' kg</span></div>' +
+        '</div>' +
+        '<div class="hs-grade-row" style="margin-top:10px">' +
+          '<div class="hs-grade-pip" style="background:#d1fae5;color:#065f46">85–100 Excellent</div>' +
+          '<div class="hs-grade-pip" style="background:#d1fae5;color:#065f46">70–84 Good</div>' +
+          '<div class="hs-grade-pip" style="background:#fef3c7;color:#92400e">55–69 Fair</div>' +
+          '<div class="hs-grade-pip" style="background:#fee2e2;color:#991b1b">40–54 Poor</div>' +
+          '<div class="hs-grade-pip" style="background:#fee2e2;color:#991b1b">&lt;40 Critical</div>' +
+        '</div>' +
+      '</div>' +
     '</div>' +
   '</div>';
+}
+function sendHealthScoreWA(name, phone, score, grade, bmi, fatPct, vfKg, weight, musclePct, date, centerName) {
+  var emoji = score >= 85 ? '🌟' : score >= 70 ? '💚' : score >= 55 ? '🟡' : '🔴';
+  var msg = '🏥 *Health Score Report*\n'
+    + 'Hi ' + name + '! Here\'s your latest body analysis from ' + centerName + '.\n\n'
+    + emoji + ' *Health Score: ' + score + '/100 — ' + grade + '*\n\n'
+    + '📊 *Your Numbers:*\n'
+    + (weight  ? '⚖️ Weight: ' + weight + ' kg\n' : '')
+    + (bmi     ? '📏 BMI: ' + bmi + (bmi < 18.5 ? ' (Underweight)' : bmi <= 24.9 ? ' (Normal ✅)' : bmi <= 29.9 ? ' (Overweight ⚠️)' : ' (Obese 🔴)') + '\n' : '')
+    + (fatPct  ? '🔥 Body Fat: ' + fatPct + '%' + (fatPct <= 26 ? ' ✅' : ' ⚠️') + '\n' : '')
+    + (musclePct ? '💪 Muscle: ' + musclePct + '%' + (weight ? ' (' + (weight * musclePct / 100).toFixed(1) + ' kg)' : '') + '\n' : '')
+    + (vfKg > 0 ? '🫀 Visceral Fat: ' + vfKg + ' kg' + (vfKg <= 2 ? ' ✅' : ' ⚠️') + '\n' : '')
+    + (date    ? '📅 Scan Date: ' + date + '\n' : '')
+    + '\n📖 *What does Health Score mean?*\n'
+    + '• BMI (25 pts) — ideal: 18.5–24.9\n'
+    + '• Body Fat % (30 pts) — ideal: 10–20% (Men) / 20–26% (Women)\n'
+    + '• Visceral Fat (20 pts) — ideal: ≤ 2 kg\n'
+    + '• Muscle Mass (25 pts) — ideal: ≥ 30 kg (Men) / ≥ 22 kg (Women)\n\n'
+    + (score >= 70 ? '✨ Great work! Keep up your healthy habits. 💪' : '💡 With the right nutrition & consistency, your score will improve. We\'re here to support you! 🌱')
+    + '\n\n— ' + centerName;
+  var ph = (phone || '').replace(/\D/g, '');
+  window.open('https://api.whatsapp.com/send?' + (ph ? 'phone=' + COUNTRY_CODE + ph + '&' : '') + 'text=' + encodeURIComponent(msg), '_blank');
 }
 
 function openBodyModal(id) {
@@ -3381,9 +3507,11 @@ function renderMyBodyIdeals() {
   var musSt = status(latest && latest.muscle_percentage, musMin, musMax);
   var bmi   = latest ? parseFloat(latest.bmi||0) : null;
   var bmiSt = bmi ? (bmi < 18.5 ? {icon:'⬇️',cls:'color:var(--accent)',label:'Underweight'} : bmi <= 24.9 ? {icon:'✅',cls:'color:var(--success)',label:'Normal'} : bmi <= 29.9 ? {icon:'⬆️',cls:'color:var(--accent)',label:'Overweight'} : {icon:'🔴',cls:'color:var(--danger)',label:'Obese'}) : {icon:'—',cls:'',label:'No data'};
+  var latestVfKg = latest ? (parseFloat(latest.visceral_fat)||0) : 0;
 
   document.getElementById('my-body-ideals').innerHTML =
-    '<div style="font-weight:700;font-size:14px;margin-bottom:14px">My Ideal Targets (' + (isMale ? 'Male' : 'Female') + ')</div>' +
+    buildHealthScoreCard(latest && latest.bmi, latest && latest.fat_percentage, latestVfKg, latest && latest.date, {weight: latest && latest.weight, musclePct: latest && latest.muscle_percentage, gender: COACH_GENDER||''}) +
+    '<div style="font-weight:700;font-size:14px;margin-bottom:14px;margin-top:4px">My Ideal Targets (' + (isMale ? 'Male' : 'Female') + ')</div>' +
     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">' +
       mkIdealCard('Body Fat', latest ? latest.fat_percentage : null, '%', fatMin+'-'+fatMax+'%', fatSt) +
       mkIdealCard('Muscle Mass', latest ? latest.muscle_percentage : null, '%', musMin+'-'+musMax+'%', musSt) +
@@ -3417,9 +3545,13 @@ function renderMyBodyHistory() {
       var sign = d > 0 ? '+' : '';
       return ' <span style="font-size:11px;color:' + (d > 0 ? 'var(--danger)' : 'var(--success)') + '">' + sign + d.toFixed(1) + '</span>';
     }
+    var vfKg = parseFloat(r.visceral_fat)||0;
+    var hs = calcHealthScore(parseFloat(r.bmi)||0, parseFloat(r.fat_percentage)||0, vfKg);
+    var hsColor = hs >= 80 ? '#27ae60' : hs >= 55 ? '#e8a838' : '#c0392b';
+    var hsBadge = hs !== null ? '<span style="background:'+hsColor+';color:#fff;border-radius:20px;font-size:11px;font-weight:700;padding:2px 9px;margin-left:8px">Score '+hs+'</span>' : '';
     return '<div class="body-rec">' +
       '<div>' +
-        '<div class="body-rec-date">' + r.date + '</div>' +
+        '<div class="body-rec-date">' + r.date + hsBadge + '</div>' +
         (r.notes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + r.notes + '</div>' : '') +
       '</div>' +
       '<div class="body-rec-vals">' +
@@ -3559,9 +3691,17 @@ async function loadMyDiet() {
       _myGoalFoodRestrict = JSON.parse(cr.personal_food_restrict||'[]');
       // Show saved diet plan
       if (cr.personal_diet_plan) {
-        document.getElementById('my-diet-plan-output').innerHTML =
-          '<div class="tcard" style="margin-top:0"><div style="font-weight:700;font-size:14px;margin-bottom:10px">My Saved Diet Plan</div>' +
-          '<div style="white-space:pre-wrap;font-size:13px;line-height:1.8;color:var(--text)">' + cr.personal_diet_plan + '</div></div>';
+        try {
+          _myDietPlan = JSON.parse(cr.personal_diet_plan);
+          _myDietDay = null;
+          renderMyDietPlan();
+        } catch(e) {
+          // Legacy plain-text plan — show as-is
+          document.getElementById('my-diet-plan-output').innerHTML =
+            '<div class="tcard" style="margin-top:0"><div style="font-weight:700;font-size:14px;margin-bottom:10px">My Saved Diet Plan</div>' +
+            '<div style="white-space:pre-wrap;font-size:13px;line-height:1.8;color:var(--text)">' + cr.personal_diet_plan + '</div>' +
+            '<div style="font-size:12px;color:var(--muted);margin-top:10px">⚠️ Old format — click Generate to upgrade to the new 7-day plan</div></div>';
+        }
       }
     }
   } catch(e) { _myGoalFoodRestrict = []; }
@@ -3586,6 +3726,8 @@ async function loadMyDiet() {
   var savedAge = localStorage.getItem('myAge_' + COACH_ID) || '';
   document.getElementById('my-goal').value = savedGoal;
   document.getElementById('my-age').value = savedAge;
+  document.getElementById('my-diet-type').value = localStorage.getItem('myDietType_' + COACH_ID) || 'veg';
+  document.getElementById('my-activity').value = localStorage.getItem('myActivity_' + COACH_ID) || 'light';
 
   renderMyGoalFoods();
 }
@@ -3634,69 +3776,157 @@ function toggleMyFoodPref(name, cb) {
     .catch(function(e){ console.warn('Food pref save error:', e); });
 }
 
+var _myDietDay = null;
+var _myDietPlan = null;
+
+function renderMyDietPlan() {
+  var el = document.getElementById('my-diet-plan-output'); if (!el) return;
+  if (!_myDietPlan) { el.innerHTML = ''; return; }
+  var plan = _myDietPlan;
+  var is7Day = plan.days && typeof plan.days === 'object';
+  var dayKeys = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  var dayLabels = {monday:'Mon',tuesday:'Tue',wednesday:'Wed',thursday:'Thu',friday:'Fri',saturday:'Sat',sunday:'Sun'};
+  var todayKey = dayKeys[new Date().getDay() === 0 ? 6 : new Date().getDay()-1];
+  if (!_myDietDay || (is7Day && !plan.days[_myDietDay])) _myDietDay = todayKey;
+  var meals = is7Day ? (plan.days[_myDietDay] || {}) : {};
+  var dayTotalCal = meals.total_calories || 0;
+  var dayTotalPro = meals.total_protein || 0;
+
+  var html = '<div class="diet-header">'
+    + '<h2>My 7-Day Diet Plan</h2>'
+    + '<p>Goal: ' + (plan.goal||'') + ' &nbsp;|&nbsp; Generated: ' + (plan.generated||'') + '</p>'
+    + '<div class="diet-macros">'
+    + '<div class="diet-macro"><div class="diet-macro-val">' + (plan.target_calories||'—') + '</div><div class="diet-macro-lbl">Target kcal</div></div>'
+    + '<div class="diet-macro"><div class="diet-macro-val">' + (plan.target_protein||'—') + 'g</div><div class="diet-macro-lbl">Target Protein</div></div>'
+    + '<div class="diet-macro"><div class="diet-macro-val">' + dayTotalCal + '</div><div class="diet-macro-lbl">Today kcal</div></div>'
+    + '<div class="diet-macro"><div class="diet-macro-val">' + dayTotalPro + 'g</div><div class="diet-macro-lbl">Today Protein</div></div>'
+    + '<div class="diet-macro"><div class="diet-macro-val">' + Math.round(plan.rmr||0) + '</div><div class="diet-macro-lbl">RMR</div></div>'
+    + '</div></div>';
+
+  if (is7Day) {
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';
+    dayKeys.forEach(function(dk) {
+      var isActive = dk === _myDietDay, isToday = dk === todayKey;
+      html += '<button onclick="switchMyDietDay(\''+dk+'\')" style="padding:6px 12px;border-radius:20px;border:2px solid '+(isActive?'#16a34a':'#e2e8f0')+';background:'+(isActive?'#16a34a':'#fff')+';color:'+(isActive?'#fff':'#374151')+';font-family:inherit;font-size:12px;font-weight:'+(isToday?'700':'500')+';cursor:pointer">' + dayLabels[dk] + (isToday?' ★':'') + '</button>';
+    });
+    html += '</div>';
+  }
+
+  var slots = [
+    { key:'breakfast', icon:'🌅', iconBg:'#d97706', title:'Breakfast', fixed:'shake' },
+    { key:'mid_morning', icon:'🍎', iconBg:'#16a34a', title:'Mid-Morning Snack' },
+    { key:'lunch', icon:'☀️', iconBg:'#2563eb', title:'Lunch' },
+    { key:'evening', icon:'🌆', iconBg:'#db2777', title:'Evening Snack' },
+    { key:'dinner', icon:'🌙', iconBg:'#7c3aed', title:'Dinner' }
+  ];
+  slots.forEach(function(slot) {
+    var items = slot.fixed ? null : meals[slot.key];
+    var slotCal = 0, slotProtein = 0, itemsHtml = '';
+    if (slot.fixed === 'shake') {
+      itemsHtml = '<div class="meal-item"><div><div class="meal-item-name">Herbalife Protein Shake</div><div class="meal-item-detail">Morning shake — mixed with 250ml low-fat milk</div></div></div>';
+    } else if (!items) { return; }
+    else if (Array.isArray(items)) {
+      items.forEach(function(it) {
+        slotCal += Number(it.calories||0); slotProtein += Number(it.protein||0);
+        itemsHtml += '<div class="meal-item"><div><div class="meal-item-name">'+it.name+'</div><div class="meal-item-detail">'+it.grams+'g &nbsp;·&nbsp; '+Number(it.calories).toFixed(0)+' kcal</div></div><div class="meal-item-badge">'+Number(it.protein).toFixed(1)+'g protein</div></div>';
+      });
+    } else {
+      slotCal = Number(items.calories||0); slotProtein = Number(items.protein||0);
+      itemsHtml = '<div class="meal-item"><div><div class="meal-item-name">'+items.name+'</div><div class="meal-item-detail">'+items.grams+'g &nbsp;·&nbsp; '+Number(items.calories).toFixed(0)+' kcal</div></div><div class="meal-item-badge">'+Number(items.protein).toFixed(1)+'g protein</div></div>';
+    }
+    html += '<div class="meal-slot"><div class="meal-slot-header"><div class="meal-slot-icon" style="background:'+slot.iconBg+'">'+slot.icon+'</div><div style="flex:1"><div class="meal-slot-title">'+slot.title+'</div>'+(slotCal>0?'<div class="meal-slot-cal">~'+Math.round(slotCal)+' kcal &nbsp;·&nbsp; '+Number(slotProtein).toFixed(1)+'g protein</div>':'')+'</div></div>'+itemsHtml+'</div>';
+  });
+  el.innerHTML = html;
+}
+
+function switchMyDietDay(dk) { _myDietDay = dk; renderMyDietPlan(); }
+
 async function generateMyDietPlan() {
   if (_myDietGenInFlight) return;
   var groqKey = localStorage.getItem('groqKey') || localStorage.getItem('coach_groq_key');
-  if (!groqKey) { showToast('Set Groq API key in index.html Settings first', 'error'); return; }
+  if (!groqKey) { showToast('Set Groq API key in Settings first', 'error'); return; }
 
-  var age = document.getElementById('my-age').value;
+  var age = parseInt(document.getElementById('my-age').value) || null;
   var goal = document.getElementById('my-goal').value;
+  var dietType = document.getElementById('my-diet-type').value;
+  var activity = document.getElementById('my-activity').value;
   var latest = D_MY_BODY[0] || {};
+  var weight = parseFloat(latest.weight) || null;
+  var height = parseFloat(latest.height) || null;
 
-  // Save preferences
+  if (!weight || !height || !age) { showToast('Need weight (from My Body Stats), height, and age to generate', 'error'); return; }
+
   localStorage.setItem('myGoal_' + COACH_ID, goal);
   localStorage.setItem('myAge_' + COACH_ID, age);
+  localStorage.setItem('myDietType_' + COACH_ID, dietType);
+  localStorage.setItem('myActivity_' + COACH_ID, activity);
 
-  var goalLabel = { build_muscle: 'Build Muscle', stay_fit: 'Stay Fit', lose_fat: 'Lose Body Fat', improve_stamina: 'Improve Stamina' }[goal] || goal;
-  var availFoods = _myGoalFoodsAll.filter(function(f){ return _myGoalFoodRestrict.indexOf(f.name) === -1; }).map(function(f){ return f.name; }).slice(0, 30).join(', ');
+  var isWL = goal === 'lose_fat';
+  var goalLabel = { build_muscle:'Build Muscle', stay_fit:'Stay Fit', lose_fat:'Lose Fat', improve_stamina:'Improve Stamina' }[goal] || goal;
+  var rmr = (10 * weight) + (6.25 * height) - (5 * age) + (COACH_GENDER === 'female' ? -161 : 5);
+  var actMult = { sedentary:1.2, light:1.375, moderate:1.55, active:1.725 }[activity] || 1.375;
+  var tdee = Math.round(rmr * actMult);
+  var targetCal = isWL ? Math.round(tdee - 400) : Math.round(tdee + 400);
+  var targetProtein = Math.round(weight * 2.0);
+  var shakeKcal = isWL ? 170 : 178, shakeProtein = 19.3;
+  var foodCalBudget = targetCal - shakeKcal;
+  var foodProteinBudget = targetProtein - shakeProtein;
 
-  var prompt = 'You are a certified sports nutritionist. Create a practical 7-day diet plan.\n\n' +
-    'Coach Details:\n' +
-    '- Name: ' + COACH_NAME + '\n' +
-    '- Age: ' + (age || 'not provided') + '\n' +
-    '- Gender: ' + COACH_GENDER + '\n' +
-    '- Goal: ' + goalLabel + '\n' +
-    (latest.weight ? '- Weight: ' + latest.weight + ' kg\n' : '') +
-    (latest.height ? '- Height: ' + latest.height + ' cm\n' : '') +
-    (latest.fat_percentage ? '- Body Fat: ' + latest.fat_percentage + '%\n' : '') +
-    (latest.muscle_percentage ? '- Muscle Mass: ' + latest.muscle_percentage + '%\n' : '') +
-    (latest.bmi ? '- BMI: ' + latest.bmi + '\n' : '') +
-    '\nAvailable local foods: ' + (availFoods || 'standard Indian foods') + '\n\n' +
-    'Format: 7-day plan with Breakfast, Mid-Morning Snack, Lunch, Evening Snack, Dinner. ' +
-    'Include approximate calories and protein per meal. Keep it practical for South Indian (Nandyal, AP) lifestyle. ' +
-    'Add daily water intake target and 3 practical tips. Respond in English. Keep it concise.';
+  var foods = _myGoalFoodsAll.filter(function(f) {
+    if (dietType === 'veg' && f.category === 'non-veg') return false;
+    if (_myGoalFoodRestrict.indexOf(f.name) !== -1) return false;
+    return true;
+  });
+  var foodList = foods.map(function(f) {
+    return f.name + ' (Cal:' + f.calories + ' Protein:' + f.protein + 'g Carbs:' + f.carbs + 'g Fat:' + f.fat + 'g per 100g, best for: ' + f.meal_time + ')';
+  }).join('\n');
+
+  var dayTemplate = '{"mid_morning":{"name":"","grams":0,"calories":0,"protein":0},"lunch":[{"name":"","grams":0,"calories":0,"protein":0}],"evening":{"name":"","grams":0,"calories":0,"protein":0},"dinner":[{"name":"","grams":0,"calories":0,"protein":0}],"total_calories":0,"total_protein":0}';
+
+  var prompt = 'You are a sports nutritionist at a Herbalife wellness center in India. Create a personalized 7-day meal plan (Monday to Sunday) for this coach.\n\n'
+    + 'Name: ' + COACH_NAME + ' | Age: ' + age + ' | Gender: ' + COACH_GENDER + ' | Goal: ' + goalLabel + '\n'
+    + 'Diet: ' + (dietType === 'veg' ? 'Vegetarian' : 'Non-Vegetarian') + '\n'
+    + 'RMR: ' + Math.round(rmr) + ' kcal | TDEE: ' + tdee + ' kcal\n'
+    + 'Total Daily Target: ' + targetCal + ' kcal | ' + targetProtein + 'g protein\n'
+    + 'Herbalife Shake accounts for: ' + shakeKcal + ' kcal + ' + shakeProtein + 'g protein (1x shake/day)\n'
+    + 'Remaining food budget: ' + foodCalBudget + ' kcal | ' + Math.round(foodProteinBudget) + 'g protein from food\n'
+    + 'Weight: ' + weight + 'kg | Height: ' + height + 'cm\n\n'
+    + 'RULES:\n'
+    + '- Breakfast shake is already accounted for — do NOT include in JSON\n'
+    + '- Each day: Mid-Morning Snack (1 item), Lunch (2-3 items), Evening Snack (1 item), Dinner (2-3 items)\n'
+    + '- Pick ONLY from the food list below\n'
+    + '- Specify exact grams for each food item\n'
+    + '- Vary meals across days\n'
+    + '- Food must provide ' + Math.round(foodProteinBudget) + 'g protein and ' + foodCalBudget + ' kcal\n\n'
+    + 'AVAILABLE FOODS:\n' + foodList + '\n\n'
+    + 'Return ONLY valid JSON:\n'
+    + '{"target_calories":' + targetCal + ',"target_protein":' + targetProtein + ',"rmr":' + Math.round(rmr) + ',"tdee":' + tdee
+    + ',"goal":"' + goalLabel + '","shake_kcal":' + shakeKcal + ',"shake_protein":' + shakeProtein + ',"note":"",'
+    + '"days":{"monday":' + dayTemplate + ',"tuesday":' + dayTemplate + ',"wednesday":' + dayTemplate + ','
+    + '"thursday":' + dayTemplate + ',"friday":' + dayTemplate + ',"saturday":' + dayTemplate + ',"sunday":' + dayTemplate + '}}';
 
   var btn = document.getElementById('my-diet-gen-btn');
   btn.textContent = '⏳ Generating...'; btn.disabled = true;
   _myDietGenInFlight = true;
-
   try {
     var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1500, temperature: 0.7
-      })
+      body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }], temperature: 0.3 })
     });
     if (!res.ok) { var er = await res.json().catch(function(){return{};}); throw new Error(er.error && er.error.message || res.statusText); }
     var data = await res.json();
-    var plan = data.choices[0].message.content.trim();
-
-    // Save to coaches table
-    await dbUpdate('coaches', COACH_ID, { personal_diet_plan: plan });
-
-    document.getElementById('my-diet-plan-output').innerHTML =
-      '<div class="tcard" style="margin-top:0"><div style="font-weight:700;font-size:14px;margin-bottom:10px">My Diet Plan — ' + goalLabel + '</div>' +
-      '<div style="white-space:pre-wrap;font-size:13px;line-height:1.8;color:var(--text)">' + plan + '</div></div>';
+    var raw = data.choices[0].message.content.trim();
+    var jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI did not return valid JSON');
+    var plan = JSON.parse(jsonMatch[0]);
+    plan.generated = new Date().toISOString().split('T')[0];
+    await dbUpdate('coaches', COACH_ID, { personal_diet_plan: JSON.stringify(plan) });
+    _myDietPlan = plan; _myDietDay = null;
+    renderMyDietPlan();
     showToast('Diet plan generated!', 'success');
-  } catch(e) {
-    showToast('Error: ' + e.message, 'error');
-  } finally {
-    btn.textContent = '🤖 Generate My Diet Plan'; btn.disabled = false;
-    _myDietGenInFlight = false;
-  }
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  finally { btn.textContent = '🤖 Generate My Diet Plan'; btn.disabled = false; _myDietGenInFlight = false; }
 }
 
 // ══════════════════════════════════════════

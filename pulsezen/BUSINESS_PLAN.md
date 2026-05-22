@@ -1,5 +1,5 @@
 # PulseZen — Business Plan & Strategy
-*Last updated: 2026-05-17*
+*Last updated: 2026-05-20*
 
 ---
 
@@ -51,21 +51,16 @@
 | Tier | Who | Price | What They Get |
 |---|---|---|---|
 | Free | Family only | ₹0 | Full PulseZen page — brother's center (Nandyal) + mom's center (Kurnool) |
-| Exclusive — First | First center in locality | ₹999/month | Full exclusivity — no competitor ever in that area |
-| Exclusive — Others | Other localities, still exclusive | ₹499/month | Exclusivity in their own area |
+| Exclusive | First center in locality (area is free) | ₹999/month | Full exclusivity — no competitor ever in that area |
 | Non-exclusive | Locality already taken | ₹299/month | PulseZen page only, no area lock |
 | Elite | Any tier upgrade | ₹1999/month | Everything + priority support + AI features |
 
 **Important:** Free tier is ONLY for family. Never give free to other centers — it creates competitor conflicts and devalues the product.
 
-### Why Center 1 Pays More (₹999)
-Center 1 gets the most valuable benefit — full area exclusivity with no competitor ever allowed in their locality. More benefit = higher price. This is the correct logic.
-
-### Introductory Offer for Center 1 (To Ease the First Sale)
-> "Normally ₹999 for an exclusive spot. Since you're our founding center in this area — ₹499 for the first 3 months, then ₹999."
-- Lowers entry barrier when product is new and unproven
-- After 3 months they see results → no resistance to ₹999
-- Price logic still holds — they end up paying ₹999 for the premium tier
+### Why Simple 3 Tiers
+- ₹499 tier was confusing — no clear difference from ₹999 or ₹299
+- Either your area is free (₹999) or it's taken (₹299) — that's it
+- Simpler = easier to sell, no confusion on the call
 
 ---
 
@@ -117,7 +112,7 @@ Remaining centers → two choices:
 | Area exclusivity | ✅ Only one in locality | ❌ Waitlisted or non-exclusive |
 | Google ranking | ✅ 3+ months head start | ❌ Starts from zero |
 | Customer trust | ✅ Established online presence | ❌ No online presence |
-| Price | ✅ ₹499 locked forever | ❌ Pays higher current price |
+| Price | ✅ ₹999 locked forever | ❌ Pays higher current price |
 | Competitor threat | ✅ Competitors blocked from same area | ❌ Center 1 already established |
 | New customer flow | ✅ Inquiries 24/7 | ❌ Word of mouth only |
 | Instagram/WhatsApp | ✅ Professional page to share | ❌ Just a phone number |
@@ -129,10 +124,10 @@ Remaining centers → two choices:
 - Center 10 can NEVER catch up even if they join later
 
 ### Price Lock
-- Center 1 joins at ₹499 → locked forever
-- Price increases to ₹699 after 6 months
-- Center 10 pays ₹699 for less benefit
-- Center 1 pays ₹499 for full exclusivity
+- Center 1 joins at ₹999 → locked forever
+- Price increases after first 50 centers
+- Center 10 pays more for less benefit
+- Center 1 pays ₹999 for full exclusivity forever
 
 ---
 
@@ -166,7 +161,7 @@ Remaining centers → two choices:
 | Regular updates | ✅ Results, testimonials added | ❌ Most centers never update |
 | Professional design | ✅ Always clean and modern | ⚠️ Usually outdated |
 | WhatsApp booking | ✅ Built in | ❌ Most don't have this |
-| Cost | ✅ ₹499/month | ❌ ₹3000–10000 for a developer |
+| Cost | ✅ ₹999/month | ❌ ₹3000–10000 for a developer |
 
 Most wellness center websites in small cities are built by a local developer 3 years ago, never updated, not mobile friendly, no WhatsApp booking, slow loading. PulseZen beats all of these automatically.
 
@@ -252,9 +247,11 @@ Customer walks in → PulseIQ manages them
 ### Scale
 | Districts | Centers avg | Price avg | Monthly |
 |---|---|---|---|
-| 1 district | 10 centers | ₹499 | ₹4,990 |
-| 5 districts | 50 centers | ₹499 | ₹24,950 |
-| 26 districts (AP) | 260 centers | ₹499 | ₹1,29,740 |
+| 1 district | 10 centers | ₹799 | ₹7,990 |
+| 5 districts | 50 centers | ₹799 | ₹39,950 |
+| 26 districts (AP) | 260 centers | ₹799 | ₹2,07,740 |
+
+*(₹799 avg = mix of ₹999 exclusive + ₹299 non-exclusive + some ₹1999 elite)*
 
 **₹1000/year investment → potential ₹1.3 lakh/month at AP scale.**
 
@@ -362,6 +359,32 @@ Customer walks in → PulseIQ manages them
 - Restaurant 1 had 3 years of reviews, ratings, visibility
 - Restaurant 10 started from zero in crowded market
 - **Same logic: first center on PulseZen in any area wins permanently**
+
+---
+
+## What You Do Per Plan After Payment
+
+### ₹299 Non-Exclusive (~15 min setup, ~10 min/month)
+1. Copy `dharanis.html` → rename centername.html, update name/photos/timings/maps/testimonials
+2. Run `npx wrangler deploy`
+3. Supabase → set status = `active`
+4. Send them: `pulsezen.in/centername`
+5. Monthly: add new results/photos when they send on WhatsApp
+
+### ₹999 Exclusive (~20 min setup, ~10 min/month)
+1. Same as ₹299, plus:
+2. Add to `wrangler.jsonc`: `{ "pattern": "centername.pulsezen.in/*", "zone_name": "pulsezen.in" }`
+3. Run `npx wrangler deploy`
+4. Send them: `centername.pulsezen.in`
+5. Area locked automatically via Supabase row
+
+### ₹1999 Elite (~20 min setup, ~45 min/month)
+1. Same as ₹999, plus:
+2. Monthly performance report → WhatsApp (member count, attendance, revenue trend from PulseIQ)
+3. AI churn risk alerts → check inactive members in PulseIQ → send list on WhatsApp
+4. Pack expiry reminders → notify when members' packs expiring
+5. Direct WhatsApp support — respond within a few hours
+6. Priority on new PulseZen features
 
 ---
 

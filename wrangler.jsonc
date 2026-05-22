@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pulseiq-app",
+  "compatibility_date": "2026-05-21",
+  "assets": {
+    "directory": "./deploy"
+  },
+  "routes": [
+    { "pattern": "app.pulsezen.in/*", "zone_name": "pulsezen.in" }
+  ]
+}
