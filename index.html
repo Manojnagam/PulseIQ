@@ -3473,7 +3473,7 @@ function doDisconnect() {
   document.getElementById('app').style.display = 'none';
 }
 var GROQ_MODEL = localStorage.getItem('groqModel') || 'llama-3.3-70b-versatile';
-var DEFAULT_GROQ_KEY = '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';
+var DEFAULT_GROQ_KEY = ''; // set in deploy/index.html — not stored in repo
 function getGroqKey() { return localStorage.getItem('groqKey') || DEFAULT_GROQ_KEY; }
 
 // ── HERBALIFE SHAKE NUTRITION (hidden from clients) ──
