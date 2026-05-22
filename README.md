@@ -3,7 +3,7 @@
 A full-stack single-page application for managing wellness centers — built with vanilla JavaScript, Supabase (PostgreSQL), Chart.js, and Groq AI.
 
 ## Live Demo
-https://pulseiq-app.nagam-kumar.workers.dev/. <!-- Update this with your actual Netlify URL -->
+app.pulsezen.in <!-- Update this with your actual Netlify URL -->
 
 ## Features
 
