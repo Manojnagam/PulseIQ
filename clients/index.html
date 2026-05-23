@@ -1,0 +1,2482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard — Dharani's</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f5f2ee;--surface:#fff;--surface2:#f0ede8;--primary:#2d5a3d;--primary-light:#3d7a52;--accent:#e8a838;--text:#1a2e1f;--muted:#6b7c6f;--border:#ddd8d0;--danger:#c0392b;--danger-light:#fdf0ef;--success:#27ae60;--success-light:#eafaf1;--shadow:0 2px 12px rgba(45,90,61,.08);--radius:12px;--sw:210px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── LOGIN ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a28 0%,#2d5a3d 60%,#3d7a52 100%);padding:20px}
+.login-box{background:#fff;border-radius:20px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--primary)}
+.login-logo p{color:var(--muted);font-size:13px;margin-top:6px}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.login-field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;outline:none;transition:border .2s;letter-spacing:1px}
+.login-field input:focus{border-color:var(--primary)}
+.login-btn{width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s}
+.login-btn:hover{background:var(--primary-light)}
+.login-err{color:var(--danger);font-size:13px;text-align:center;margin-top:12px;min-height:18px}
+
+/* ── APP LAYOUT ── */
+#app{display:none;min-height:100vh}
+#sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:linear-gradient(180deg,#1a3a28 0%,#2d5a3d 100%);display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-logo h1{font-family:'DM Serif Display',serif;font-size:18px;color:#fff}
+.sb-logo span{color:var(--accent);font-size:11px;font-weight:600;display:block;margin-top:2px}
+.sb-badge{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px}
+.sb-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.sb-name{color:#fff;font-size:13px;font-weight:600;line-height:1.3}
+.sb-sub{color:rgba(255,255,255,.55);font-size:11px;margin-top:1px}
+.sb-nav{padding:12px 8px;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:8px;color:rgba(255,255,255,.75);cursor:pointer;transition:all .18s;font-weight:500;font-size:13px;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.18);color:#fff;font-weight:700}
+.nav-item .ic{font-size:16px;width:20px;text-align:center}
+.sb-bottom{padding:10px 12px;border-top:1px solid rgba(255,255,255,.1)}
+.sb-icon-btn{width:100%;padding:9px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer;transition:all .2s}
+.sb-icon-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+#main{margin-left:var(--sw);padding:24px;min-height:100vh}
+#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99}
+#menu-btn{display:none;position:fixed;top:14px;left:14px;z-index:101;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
+
+/* ── SECTIONS ── */
+.sec{display:none}.sec.active{display:block}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.pt{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text)}
+.ps{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* ── STATS ── */
+.stats{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.stat{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px 18px;flex:1;min-width:120px;box-shadow:var(--shadow)}
+.stat-l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-v{font-family:'DM Serif Display',serif;font-size:26px;color:var(--primary);margin-top:4px}
+
+/* ── CARDS ── */
+.tcard{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+.tcard h3{font-family:'DM Serif Display',serif;font-size:17px;margin-bottom:14px;color:var(--text)}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty .ei{font-size:40px;margin-bottom:10px}
+
+/* ── WELCOME CARD ── */
+.welcome-card{background:linear-gradient(135deg,#0f2318 0%,#1a3a28 50%,#2d5a3d 100%);border-radius:var(--radius);padding:22px 24px;margin-bottom:20px;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.25);position:relative;overflow:hidden}
+.welcome-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(232,168,56,.15) 0%,transparent 70%);pointer-events:none}
+.welcome-greeting{font-size:11px;color:rgba(255,255,255,.55);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.welcome-name{font-family:'DM Serif Display',serif;font-size:26px;color:#fff;margin-bottom:4px}
+.welcome-sub{font-size:13px;color:rgba(255,255,255,.65);line-height:1.5}
+
+/* ── MONTHLY REPORT ── */
+.report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.report-card h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px}
+.report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:14px}
+.report-stat{background:var(--surface2);border-radius:10px;padding:12px;text-align:center}
+.report-stat-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--primary)}
+.report-stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-top:2px}
+.report-month-nav{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.report-month-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:14px}
+.report-month-lbl{font-weight:600;font-size:14px;flex:1;text-align:center}
+
+/* ── COMP DAY EXPLAINER ── */
+.comp-banner{background:linear-gradient(135deg,#e8f4fd,#dbeeff);border:1px solid #b3d4f5;border-radius:var(--radius);padding:16px 18px;margin-bottom:16px}
+.comp-banner h4{font-size:14px;font-weight:700;color:#1a3a5c;margin-bottom:8px}
+.comp-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#2a4a6c;margin-bottom:6px}
+.comp-item:last-child{margin-bottom:0}
+
+/* ── REFERRAL TRACKER ── */
+.ref-card{background:linear-gradient(135deg,#fff8e1,#fef3c7);border:1.5px solid #f9c74f;border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.ref-card h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px;color:#7a5a00}
+.ref-sub{font-size:12px;color:#9a7a20;margin-bottom:14px}
+.ref-stats{display:flex;gap:12px;flex-wrap:wrap}
+.ref-stat{background:rgba(255,255,255,.7);border-radius:10px;padding:12px 16px;text-align:center;flex:1;min-width:80px}
+.ref-stat-val{font-family:'DM Serif Display',serif;font-size:28px;color:#b07800}
+.ref-stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#9a7a20;margin-top:2px}
+
+/* ── DIET PLAN ── */
+.diet-header{background:linear-gradient(135deg,#052e16,#14532d,#166534);border-radius:var(--radius);padding:20px 22px;margin-bottom:16px;color:#fff}
+.diet-header h2{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px}
+.diet-header p{font-size:12px;opacity:.7}
+.diet-macros{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.diet-macro{background:rgba(255,255,255,.12);border-radius:10px;padding:8px 14px;text-align:center;flex:1;min-width:70px}
+.diet-macro-val{font-size:18px;font-weight:700}
+.diet-macro-lbl{font-size:10px;opacity:.7;margin-top:2px}
+.meal-slot{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.meal-slot-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.meal-slot-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.meal-slot-title{font-weight:700;font-size:14px}
+.meal-slot-cal{font-size:11px;color:var(--muted);margin-top:1px}
+.meal-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--surface2)}
+.meal-item:last-child{border-bottom:none}
+.meal-item-name{font-size:13px;font-weight:600}
+.meal-item-detail{font-size:11px;color:var(--muted);margin-top:2px}
+.meal-item-badge{background:var(--surface2);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--primary);white-space:nowrap}
+
+/* ── BODY CHART ── */
+.chart-wrap{margin-top:14px;position:relative;height:180px}
+
+/* ── COACH MESSAGE ── */
+.coach-msg-card{background:linear-gradient(135deg,#e8f4fd,#dbeeff);border:1px solid #b3d4f5;border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.coach-msg-from{font-size:11px;font-weight:700;color:#4a7a9b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.coach-msg-text{font-size:14px;line-height:1.7;color:#1a3a5c;font-style:italic;padding-left:12px;border-left:3px solid #4a9fd4}
+
+/* ── GOAL CARD ── */
+.goal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.transform-card{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.transform-card h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px;color:#166534}
+.transform-photos{display:flex;gap:12px;margin-bottom:14px}
+.transform-photo-box{flex:1;text-align:center}
+.transform-photo-box img{width:100%;max-width:140px;height:140px;object-fit:cover;border-radius:10px;border:2px solid #86efac}
+.transform-photo-label{font-size:11px;font-weight:700;color:#166534;margin-top:5px;text-transform:uppercase;letter-spacing:.5px}
+.transform-upload-area{border:2px dashed #86efac;border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:#f0fdf4;transition:background .2s}
+.transform-upload-area:hover{background:#dcfce7}
+.transform-btns{display:flex;gap:8px;flex-wrap:wrap}
+.goal-card h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.goal-bar-wrap{background:var(--surface2);border-radius:20px;height:12px;overflow:hidden;margin:10px 0 6px}
+.goal-bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--primary),var(--primary-light));transition:width .6s ease}
+.goal-bar-fill.done{background:linear-gradient(90deg,var(--success),#2ecc71)}
+.goal-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:12px}
+.goal-set-row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.goal-set-row input{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;outline:none}
+.goal-set-row input:focus{border-color:var(--primary)}
+.goal-set-btn{padding:8px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.goal-achieved{background:var(--success-light);border:1.5px solid #82c99a;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:700;color:var(--success);text-align:center;margin-top:8px}
+
+/* ── STREAK CARD ── */
+.streak-card{border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#fff8e1,#fef3c7);border:1.5px solid #f9c74f;box-shadow:var(--shadow)}
+.streak-flame{font-size:40px;line-height:1;flex-shrink:0}
+.streak-count{font-family:'DM Serif Display',serif;font-size:36px;color:#b07800;line-height:1}
+.streak-label{font-size:12px;font-weight:700;color:#7a5a00;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.streak-sub{font-size:12px;color:#9a7a20;margin-top:4px}
+.streak-card.cold{background:linear-gradient(135deg,#f0ede8,#e8e4de);border-color:var(--border)}
+.streak-card.cold .streak-count{color:var(--muted)}
+.streak-card.cold .streak-label{color:var(--muted)}
+.streak-card.cold .streak-sub{color:var(--muted)}
+
+/* ── RENEWAL BANNER ── */
+.renewal-banner{border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;animation:pulseWarn 2s infinite}
+.renewal-banner.warn{background:linear-gradient(135deg,#fff8e1,#fef3c7);border:1.5px solid #f9c74f}
+.renewal-banner.danger{background:linear-gradient(135deg,#fdf0ef,#fde8e8);border:1.5px solid #fca5a5}
+.renewal-banner-text{font-size:14px;font-weight:600;flex:1}
+.renewal-banner.warn .renewal-banner-text{color:#7a5a00}
+.renewal-banner.danger .renewal-banner-text{color:#c0392b}
+.renewal-banner-sub{font-size:12px;margin-top:2px;opacity:.8}
+@keyframes pulseWarn{0%,100%{box-shadow:0 2px 12px rgba(249,199,79,.2)}50%{box-shadow:0 4px 20px rgba(249,199,79,.5)}}
+
+/* ── PACK CARD ── */
+.pack-card{border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.pack-card.active{background:linear-gradient(135deg,#eafaf1,#d4efdf);border:1.5px solid #82c99a}
+.pack-card.expiring{background:linear-gradient(135deg,#fff8e1,#fef3c7);border:1.5px solid #f9c74f}
+.pack-card.expired{background:linear-gradient(135deg,#fdf0ef,#fde8e8);border:1.5px solid #fca5a5}
+.pack-days{font-family:'DM Serif Display',serif;font-size:52px;line-height:1;margin:6px 0 2px}
+.pack-days.active{color:var(--success)}
+.pack-days.expiring{color:#b07800}
+.pack-days.expired{color:var(--danger)}
+.pack-type-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.pack-bar-wrap{background:rgba(0,0,0,.08);border-radius:20px;height:8px;overflow:hidden;margin:14px 0 8px}
+.pack-bar-fill{height:100%;border-radius:20px;transition:width .6s ease}
+.pack-bar-fill.active{background:linear-gradient(90deg,var(--success),#2ecc71)}
+.pack-bar-fill.expiring{background:linear-gradient(90deg,#f9c74f,#f8961e)}
+.pack-bar-fill.expired{background:var(--danger)}
+.pack-meta{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
+
+/* ── ATTENDANCE CALENDAR ── */
+.att-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.att-cal-head{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;text-transform:uppercase}
+.att-cal-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:var(--surface2);color:var(--muted)}
+.att-cal-day.present{background:var(--success);color:#fff}
+.att-cal-day.absent{background:var(--danger-light);color:var(--danger);border:1px solid #fca5a5}
+.att-cal-day.comp{background:#e8f4fd;color:#1a6fa0;border:1px solid #b3d4f5}
+.att-cal-day.today{outline:2px solid var(--primary);outline-offset:1px}
+.att-cal-day.empty{background:transparent}
+.att-legend{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+.att-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.att-legend-dot{width:14px;height:14px;border-radius:3px}
+
+/* ── PROGRESS ── */
+.hs-card{background:linear-gradient(135deg,#0f2318 0%,#1a3a28 50%,#2d5a3d 100%);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;color:#fff;display:flex;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+.hs-gauge{flex-shrink:0}
+.hs-info{flex:1;min-width:160px}
+.hs-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.55);margin-bottom:4px}
+.hs-score-big{font-size:32px;font-weight:700;color:#fff;line-height:1}
+.hs-grade-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:6px}
+.hs-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.hs-info-panel{display:none;background:rgba(0,0,0,.25);border-radius:8px;padding:12px 14px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.85);line-height:1.7}
+.hs-grade-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.hs-grade-pip{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.body-rec{background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.body-rec-date{font-weight:700;font-size:13px;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.body-rec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px}
+.body-rec-stat{background:#fff;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)}
+.body-rec-stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600}
+.body-rec-stat-val{font-family:'DM Serif Display',serif;font-size:20px;color:var(--primary);margin-top:2px}
+.diff-down{color:var(--success);font-size:11px;font-weight:700}
+.diff-up{color:var(--danger);font-size:11px;font-weight:700}
+
+/* ── PACK HISTORY ── */
+.pack-timeline{position:relative;padding-left:28px}
+.pack-timeline::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:2px;background:var(--border)}
+.pack-item{margin-bottom:16px;position:relative}
+.pack-dot{position:absolute;left:-28px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.pack-dot.active{background:var(--success)}.pack-dot.done{background:var(--primary)}
+.pack-box{background:var(--surface2);border-radius:8px;padding:10px 14px;border:1px solid var(--border)}
+.pack-box.active-pack{border-color:var(--success);background:var(--success-light)}
+
+/* ── COACH CARD ── */
+.coach-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);display:flex;align-items:center;gap:18px;margin-bottom:16px}
+.coach-avatar-lg{width:64px;height:64px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;flex-shrink:0}
+.coach-name{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text)}
+.coach-role{font-size:12px;color:var(--muted);margin-top:3px;margin-bottom:14px}
+.wa-btn{background:#25D366;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .2s}
+.wa-btn:hover{background:#1da851}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-item{padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.15);animation:slideIn .3s ease;max-width:300px}
+.toast-item.success{background:#1a7a3c;color:#fff}
+.toast-item.error{background:#c0392b;color:#fff}
+.toast-item.info{background:#2d5a3d;color:#fff}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%);transition:transform .3s}
+  #sidebar.open{transform:translateX(0)}
+  #sb-overlay.open{display:block}
+  #main{margin-left:0;padding:60px 14px 20px}
+  #menu-btn{display:block}
+  .stats{gap:8px}
+  .stat{min-width:calc(50% - 4px)}
+  .coach-card{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<button id="menu-btn" onclick="toggleSidebar()">☰</button>
+<div id="sb-overlay" onclick="toggleSidebar()"></div>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">
+      <h1 id="login-center-name">🌿 Client Portal</h1>
+      <p id="login-center-sub">Client Dashboard — Enter your details to continue</p>
+    </div>
+    <div class="login-field">
+      <label>Mobile Number</label>
+      <input type="tel" id="login-mobile" placeholder="9876543210" maxlength="10" autocomplete="off"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>Date of Birth <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+      <input type="date" id="login-dob" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">View My Dashboard →</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <div id="sidebar">
+    <div class="sb-logo">
+      <h1>🌿 Dharani's</h1>
+      <span>Client Dashboard</span>
+    </div>
+    <div class="sb-badge" id="sb-badge">
+      <div class="sb-avatar" id="sb-avatar">?</div>
+      <div>
+        <div class="sb-name" id="sb-name">—</div>
+        <div class="sb-sub" id="sb-sub">Client</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <button class="nav-item active" onclick="goTo('overview',this)"><span class="ic">🏠</span>Overview</button>
+      <button class="nav-item" onclick="goTo('attendance',this)"><span class="ic">📅</span>My Attendance</button>
+      <button class="nav-item" onclick="goTo('progress',this)"><span class="ic">⚖️</span>My Progress</button>
+      <button class="nav-item" onclick="goTo('pack',this)"><span class="ic">📦</span>My Pack</button>
+      <button class="nav-item" onclick="goTo('coach',this)"><span class="ic">👨‍🏫</span>My Coach</button>
+      <button class="nav-item" onclick="goTo('report',this)"><span class="ic">📊</span>Monthly Report</button>
+      <button class="nav-item" onclick="goTo('diet',this)"><span class="ic">🥗</span>My Diet Plan</button>
+      <button class="nav-item" onclick="goTo('foodlog',this)"><span class="ic">🍽️</span>Food Log</button>
+      <button class="nav-item" onclick="goTo('referral',this)"><span class="ic">🎟️</span>My Referrals</button>
+    </nav>
+    <div class="sb-bottom">
+      <button class="sb-icon-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div id="main">
+
+    <!-- OVERVIEW -->
+    <div class="sec active" id="sec-overview">
+      <div id="ov-streak"></div>
+      <div id="ov-payment-banner"></div>
+      <div class="welcome-card">
+        <div class="welcome-greeting" id="ov-greeting">Welcome back</div>
+        <div class="welcome-name" id="ov-name">—</div>
+        <div class="welcome-sub" id="ov-sub">Loading your dashboard...</div>
+      </div>
+      <div class="stats" id="ov-stats"></div>
+      <div id="ov-coach-msg"></div>
+      <div id="ov-transformation"></div>
+      <div id="ov-goal-card"></div>
+      <div id="ov-renewal-banner"></div>
+      <div id="ov-pack"></div>
+      <div class="tcard" id="ov-coach-card" style="display:none">
+        <h3>👨‍🏫 Your Coach</h3>
+        <div id="ov-coach-body"></div>
+      </div>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div class="sec" id="sec-attendance">
+      <div class="ph">
+        <div><div class="pt">My Attendance</div><div class="ps">Your daily check-in history</div></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="changeMonth(-1)" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">‹</button>
+          <span id="att-month-lbl" style="font-weight:600;font-size:14px;min-width:130px;text-align:center"></span>
+          <button onclick="changeMonth(1)" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">›</button>
+        </div>
+      </div>
+      <div class="stats" id="att-stats"></div>
+      <div class="tcard">
+        <div class="att-cal" id="att-cal-heads">
+          <div class="att-cal-head">Sun</div><div class="att-cal-head">Mon</div><div class="att-cal-head">Tue</div>
+          <div class="att-cal-head">Wed</div><div class="att-cal-head">Thu</div><div class="att-cal-head">Fri</div>
+          <div class="att-cal-head">Sat</div>
+        </div>
+        <div class="att-cal" id="att-cal"></div>
+        <div class="att-legend">
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--success)"></div>Present</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--danger-light);border:1px solid #fca5a5"></div>Absent</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:#e8f4fd;border:1px solid #b3d4f5"></div>Complementary</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>No record</div>
+          <div class="att-legend-item"><div class="att-legend-dot" style="background:var(--surface2);outline:2px solid var(--primary);outline-offset:1px"></div>Today</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="sec" id="sec-progress">
+      <div class="ph">
+        <div><div class="pt">My Progress</div><div class="ps">Body composition measurements over time</div></div>
+      </div>
+      <div id="prog-score-card" style="margin-bottom:4px"></div>
+      <div class="stats" id="prog-stats"></div>
+      <div id="prog-target-card" style="margin-bottom:16px"></div>
+      <div class="tcard" id="prog-chart-card" style="display:none">
+        <h3>📈 Weight Over Time</h3>
+        <div class="chart-wrap"><canvas id="weight-chart"></canvas></div>
+      </div>
+      <div id="prog-records"></div>
+    </div>
+
+    <!-- PACK -->
+    <div class="sec" id="sec-pack">
+      <div class="ph">
+        <div><div class="pt">My Pack</div><div class="ps">Membership details & history</div></div>
+      </div>
+      <div id="pack-current"></div>
+      <div class="tcard" id="pack-history-card" style="display:none">
+        <h3>Pack History</h3>
+        <div class="pack-timeline" id="pack-history"></div>
+      </div>
+    </div>
+
+    <!-- COACH -->
+    <div class="sec" id="sec-coach">
+      <div class="ph">
+        <div><div class="pt">My Coach</div><div class="ps">Your assigned wellness coach</div></div>
+      </div>
+      <div id="coach-detail"></div>
+    </div>
+
+    <!-- MONTHLY REPORT -->
+    <div class="sec" id="sec-report">
+      <div class="ph">
+        <div><div class="pt">Monthly Report</div><div class="ps">Your progress month by month</div></div>
+      </div>
+      <div class="report-card">
+        <div class="report-month-nav">
+          <button class="report-month-btn" onclick="changeReportMonth(-1)">‹</button>
+          <span class="report-month-lbl" id="report-month-lbl"></span>
+          <button class="report-month-btn" onclick="changeReportMonth(1)">›</button>
+        </div>
+        <div class="report-grid" id="report-grid"></div>
+        <div id="report-body-change"></div>
+        <div id="report-comp-banner"></div>
+      </div>
+    </div>
+
+    <!-- REFERRALS -->
+    <!-- DIET PLAN -->
+    <div class="sec" id="sec-diet">
+      <div class="ph">
+        <div><div class="pt">My Diet Plan</div><div class="ps">Personalised daily meal plan based on your goals</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="openFoodPreferences()" style="padding:8px 14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #16a34a;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">⚙️ Food Preferences</button>
+          <button onclick="openWishlistDirect()" style="padding:8px 14px;background:#fff7ed;color:#c2410c;border:1.5px solid #fb923c;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">🥩 Protein Wishlist</button>
+        </div>
+      </div>
+      <div id="diet-body"></div>
+    </div>
+
+    <!-- FOOD PREFERENCES MODAL -->
+    <div id="food-pref-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;padding:16px;overflow-y:auto">
+      <div style="background:#fff;border-radius:16px;padding:24px;max-width:480px;margin:0 auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0;font-size:16px;font-family:inherit">⚙️ My Food Preferences</h3>
+          <button onclick="closeFoodPreferences()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280">✕</button>
+        </div>
+        <!-- Tabs -->
+        <div style="display:flex;gap:0;border-bottom:2px solid #e5e7eb;margin-bottom:14px;overflow-x:auto">
+          <button id="fp-tab-list" onclick="switchFoodPrefTab('list')" style="flex:1;padding:8px;background:none;border:none;font-family:inherit;font-size:12px;font-weight:700;color:#16a34a;cursor:pointer;border-bottom:2px solid #16a34a;margin-bottom:-2px;white-space:nowrap">✅ Available</button>
+          <button id="fp-tab-add" onclick="switchFoodPrefTab('add')" style="flex:1;padding:8px;background:none;border:none;font-family:inherit;font-size:12px;font-weight:400;color:#6b7280;cursor:pointer;white-space:nowrap">🎯 Goal Foods</button>
+          <button id="fp-tab-wishlist" onclick="switchFoodPrefTab('wishlist')" style="flex:1;padding:8px;background:none;border:none;font-family:inherit;font-size:12px;font-weight:400;color:#6b7280;cursor:pointer;white-space:nowrap">🥩 Wishlist</button>
+          <button id="fp-tab-custom" onclick="switchFoodPrefTab('custom')" style="flex:1;padding:8px;background:none;border:none;font-family:inherit;font-size:12px;font-weight:400;color:#6b7280;cursor:pointer;white-space:nowrap">➕ Add Food</button>
+        </div>
+
+        <!-- Tab: Food List -->
+        <div id="food-pref-tab-list">
+          <p style="font-size:12px;color:#6b7280;margin-bottom:10px">Uncheck foods you <strong>can't buy</strong> or are <strong>too expensive</strong>. Foods marked <span style="background:#dcfce7;color:#166534;padding:1px 5px;border-radius:4px;font-size:10px">protein</span> are important for your targets.</p>
+          <div id="protein-warning" style="display:none;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;margin-bottom:10px"></div>
+          <input id="food-pref-search" type="text" placeholder="🔍 Search foods..." oninput="renderFoodPrefList()" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box;margin-bottom:10px">
+          <div id="food-pref-list" style="max-height:320px;overflow-y:auto"></div>
+          <div style="margin-top:14px;display:flex;gap:8px">
+            <button onclick="saveFoodPreferences()" style="flex:1;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">💾 Save</button>
+            <button onclick="closeFoodPreferences()" style="padding:12px 16px;background:#f3f4f6;border:none;border-radius:10px;font-family:inherit;font-size:14px;cursor:pointer">Cancel</button>
+          </div>
+          <p style="font-size:11px;color:#9ca3af;margin-top:8px;text-align:center">After saving, ask your coach to regenerate your diet plan.</p>
+        </div>
+
+        <!-- Tab: My Goal Foods -->
+        <div id="food-pref-tab-add" style="display:none">
+          <!-- Goal banner / selector -->
+          <div id="fp-goal-banner" style="margin-bottom:10px"></div>
+          <!-- Search -->
+          <input id="fp-goal-search" type="text" placeholder="🔍 Search foods..."
+            oninput="renderGoalFoods()"
+            style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box;margin-bottom:8px;outline:none">
+          <p style="font-size:11px;color:#6b7280;margin-bottom:8px">✅ Check = available &amp; affordable in your town &nbsp;·&nbsp; ❌ Uncheck = can't find or too expensive</p>
+          <div id="fp-goal-foods" style="max-height:280px;overflow-y:auto"></div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button onclick="saveFoodPreferences()" style="flex:1;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">💾 Save My Choices</button>
+            <button onclick="closeFoodPreferences()" style="padding:12px 16px;background:#f3f4f6;border:none;border-radius:10px;font-family:inherit;font-size:14px;cursor:pointer">Cancel</button>
+          </div>
+          <p style="font-size:11px;color:#9ca3af;margin-top:8px;text-align:center">After saving, ask your coach to regenerate your diet plan using your available foods.</p>
+        </div>
+
+        <!-- Tab: Protein Wishlist -->
+        <div id="food-pref-tab-wishlist" style="display:none">
+          <p style="font-size:12px;color:#6b7280;margin-bottom:10px">Select high-protein South Indian foods you <strong>like and want to eat</strong>. Your coach will use this to plan your diet.</p>
+          <input id="wishlist-search" type="text" placeholder="🔍 Search foods..." oninput="renderWishlist()"
+            style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box;margin-bottom:10px;outline:none">
+          <div id="wishlist-list" style="max-height:320px;overflow-y:auto"></div>
+          <div style="margin-top:14px;display:flex;gap:8px">
+            <button onclick="saveWishlist()" style="flex:1;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">💾 Save Wishlist</button>
+            <button onclick="closeFoodPreferences()" style="padding:12px 16px;background:#f3f4f6;border:none;border-radius:10px;font-family:inherit;font-size:14px;cursor:pointer">Cancel</button>
+          </div>
+          <p style="font-size:11px;color:#9ca3af;margin-top:8px;text-align:center">Share this with your coach to get a personalised meal plan.</p>
+        </div>
+
+        <!-- Tab: Add Custom Food -->
+        <div id="food-pref-tab-custom" style="display:none">
+          <p style="font-size:12px;color:#6b7280;margin-bottom:12px">Can't find a food in the list? Add it here and it becomes available for everyone at your center.</p>
+          <div style="margin-bottom:10px">
+            <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Food Name *</label>
+            <div style="display:flex;gap:8px">
+              <input id="cf-name" type="text" placeholder="e.g. Sabudana, Nachni, Kaju..." oninput="document.getElementById('ai-suggest-status').textContent=''"
+                style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+              <button id="ai-suggest-btn" onclick="suggestNutrition()"
+                style="padding:9px 14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #16a34a;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">🤖 Suggest</button>
+            </div>
+            <div id="ai-suggest-status" style="font-size:11px;color:#6b7280;margin-top:5px;min-height:16px"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Calories (per 100g) *</label>
+              <input id="cf-calories" type="number" min="0" placeholder="e.g. 340"
+                style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Protein (g per 100g)</label>
+              <input id="cf-protein" type="number" min="0" step="0.1" placeholder="e.g. 12"
+                style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Carbs (g per 100g)</label>
+              <input id="cf-carbs" type="number" min="0" step="0.1" placeholder="e.g. 71"
+                style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Fat (g per 100g)</label>
+              <input id="cf-fat" type="number" min="0" step="0.1" placeholder="e.g. 1.9"
+                style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Category</label>
+              <select id="cf-category" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+                <option value="veg">🥦 Vegetarian</option>
+                <option value="non-veg">🍗 Non-Vegetarian</option>
+                <option value="both">🥚 Both</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Best for Meal</label>
+              <select id="cf-meal" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;outline:none">
+                <option value="">Any meal</option>
+                <option value="breakfast">Breakfast</option>
+                <option value="mid_morning">Mid-Morning</option>
+                <option value="lunch">Lunch</option>
+                <option value="evening">Evening Snack</option>
+                <option value="dinner">Dinner</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onclick="submitCustomFood()" style="flex:1;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">➕ Add to Food List</button>
+            <button onclick="closeFoodPreferences()" style="padding:12px 16px;background:#f3f4f6;border:none;border-radius:10px;font-family:inherit;font-size:14px;cursor:pointer">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOD LOG -->
+    <div class="sec" id="sec-foodlog">
+      <div class="ph">
+        <div><div class="pt">Food Log</div><div class="ps" id="fl-date-label">Today's food diary</div></div>
+      </div>
+
+      <!-- Daily macro totals -->
+      <div id="fl-totals"></div>
+
+      <!-- Add food form -->
+      <div class="tcard">
+        <h3>➕ Add Food You Ate</h3>
+        <div style="position:relative;margin-bottom:8px">
+          <input id="fl-search" type="text" placeholder="🔍 Search food — e.g. Ragi, Eggs, Rice, Paneer..."
+            oninput="flSearch()" onfocus="flSearch()"
+            style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box;outline:none">
+          <div id="fl-dropdown" style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.12);z-index:200;max-height:220px;overflow-y:auto"></div>
+        </div>
+        <div id="fl-selected-info" style="margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div style="flex:1">
+            <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">How many grams?</label>
+            <input id="fl-grams" type="number" min="1" max="2000" placeholder="e.g. 150"
+              oninput="flUpdatePreview()"
+              style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;box-sizing:border-box;outline:none">
+          </div>
+          <button onclick="flAddEntry()" style="padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;height:42px">Add →</button>
+        </div>
+        <div id="fl-preview" style="margin-top:10px"></div>
+      </div>
+
+      <!-- Today's entries -->
+      <div class="tcard">
+        <h3 style="margin-bottom:14px">📋 Today's Log</h3>
+        <div id="fl-entries"></div>
+      </div>
+    </div>
+
+    <div class="sec" id="sec-referral">
+      <div class="ph">
+        <div><div class="pt">My Referrals</div><div class="ps" id="ref-subtitle">Friends you've brought to us</div></div>
+      </div>
+      <div id="referral-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;font-size:13px;font-family:inherit;font-weight:600;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:opacity .3s;max-width:90vw;text-align:center;'
+    + (type==='error' ? 'background:#fef2f2;color:#991b1b;border:1px solid #fca5a5' : 'background:#f0fdf4;color:#166534;border:1px solid #86efac');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
+
+var SB_URL = localStorage.getItem('sb_url') || localStorage.getItem('coach_sb_url') || 'https://erteibdxzdvsaujptxsd.supabase.co';
+var SB_KEY = localStorage.getItem('sb_key') || localStorage.getItem('coach_sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+var COUNTRY_CODE = '91';
+
+var CUST = null;
+var DATA = { attendance:[], body:[], packs:[], coach:null, payment:null, centerName:'' };
+var CENTER_ID = '';   // resolved from ?center= URL param
+var MEAL_LOGS = {}; // { "2026-04-19": { breakfast: true, mid_morning: false, ... } }
+var _attYear = null, _attMonth = null, _bodyChart = null;
+
+// ── SUPABASE ──
+async function req(method, table, body, params) {
+  var url = SB_URL + '/rest/v1/' + table + (params ? '?' + params : '');
+  var opts = {
+    method: method,
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  var r = await fetch(url, opts);
+  if (!r.ok) throw new Error(await r.text());
+  var t = await r.text();
+  return t ? JSON.parse(t) : [];
+}
+
+async function upsert(table, body) {
+  var url = SB_URL + '/rest/v1/' + table;
+  var r = await fetch(url, {
+    method: 'POST',
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  var t = await r.text();
+  return t ? JSON.parse(t) : [];
+}
+
+// ── TOAST ──
+function toast(msg, type) {
+  var d = document.createElement('div');
+  d.className = 'toast-item ' + (type || 'info');
+  d.textContent = msg;
+  document.getElementById('toast').appendChild(d);
+  setTimeout(function(){ d.remove(); }, 3500);
+}
+
+// ── SIDEBAR ──
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('open');
+}
+
+// ── NAV ──
+function goTo(sec, btn) {
+  document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('sec-' + sec).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  if (window.innerWidth <= 768) toggleSidebar();
+  if (sec === 'attendance') renderAttCalendar();
+  if (sec === 'progress')   renderProgress();
+  if (sec === 'pack')       renderPack();
+  if (sec === 'coach')      renderCoach();
+  if (sec === 'report')     renderReport();
+  if (sec === 'referral')   renderReferral();
+  if (sec === 'diet')       loadMealLogs().then(renderDietPlan);
+  if (sec === 'foodlog')    loadFoodLog();
+}
+
+// ── HELPERS ──
+function parsePack(packType) {
+  if (!packType) return 30;
+  var t = packType.toLowerCase();
+  if (/\b26\b/.test(t)) return 26;
+  if (/\b3\b/.test(t) && !/\b30\b/.test(t)) return 3;
+  return 30;
+}
+
+function getActivePack() {
+  if (DATA.packs && DATA.packs[0]) return DATA.packs[0];
+  if (CUST && CUST.pack_type && CUST.pack_start_date)
+    return { start_date: CUST.pack_start_date, pack_days: parsePack(CUST.pack_type), pack_name: CUST.pack_type };
+  return null;
+}
+
+function getServingsLeft() {
+  var pack = getActivePack();
+  if (!pack) return null;
+  var startDate = pack.start_date;
+  var total = parseInt(pack.pack_days) || parsePack(pack.pack_name || '');
+  if (!startDate || !total) return null;
+  var used = DATA.attendance.filter(function(a) {
+    return a.status === 'present' && a.date >= startDate;
+  }).length;
+  return total - used;
+}
+
+function fmtDate(str) {
+  if (!str) return '—';
+  return new Date(str).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function initials(name) {
+  return (name || '?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+}
+
+// ── CENTER PARAM ──
+async function resolveCenterParam() {
+  var param = new URLSearchParams(window.location.search).get('center');
+  if (!param) return;
+  try {
+    var centers = await req('GET', 'wellness_centers', null, 'network_id=eq.' + encodeURIComponent(param));
+    if (!centers.length) centers = await req('GET', 'wellness_centers', null, 'id=eq.' + encodeURIComponent(param));
+    if (centers.length) {
+      CENTER_ID = centers[0].id;
+      document.getElementById('login-center-name').textContent = '🌿 ' + centers[0].name;
+      document.getElementById('login-center-sub').textContent = (centers[0].network_id || '') + ' · Client Dashboard';
+    } else {
+      document.getElementById('login-center-sub').textContent = 'Center not found — contact your coach';
+    }
+  } catch(e) {
+    // silently skip — show default
+  }
+}
+
+// ── LOGIN ──
+async function doLogin() {
+  var mobile = document.getElementById('login-mobile').value.trim();
+  var dob    = document.getElementById('login-dob').value.trim();
+  var errEl  = document.getElementById('login-err');
+  errEl.textContent = '';
+  if (mobile.length < 10) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
+  try {
+    var centerFilter = CENTER_ID ? '&wellness_center_id=eq.' + encodeURIComponent(CENTER_ID) : '';
+    var results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent(mobile) + centerFilter);
+    if (!results.length) {
+      results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent('91' + mobile) + centerFilter);
+    }
+    if (!results.length) { errEl.textContent = 'No client found with this number. Contact your coach.'; return; }
+
+    var cust = null;
+    if (results.length === 1) {
+      var c = results[0];
+      if (c.dob && dob && c.dob !== dob) { errEl.textContent = 'Date of birth does not match. Contact your coach.'; return; }
+      cust = c;
+    } else {
+      if (!dob) { errEl.textContent = 'Multiple accounts use this number. Please enter your date of birth to identify yourself.'; return; }
+      cust = results.find(function(c) { return c.dob === dob; });
+      if (!cust) { errEl.textContent = 'Date of birth does not match any account on this number. Contact your coach.'; return; }
+    }
+
+    CUST = cust;
+    launchApp();
+  } catch(e) {
+    errEl.textContent = 'Connection error. Try again.';
+  }
+}
+
+async function launchApp() {
+  DATA = { attendance:[], body:[], packs:[], coach:null, payment:null, centerName:'' };
+  MEAL_LOGS = {};
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('sb-avatar').textContent = initials(CUST.name);
+  document.getElementById('sb-name').textContent = CUST.name;
+  document.getElementById('sb-sub').textContent = 'Client';
+  document.getElementById('ov-name').textContent = (CUST.name || '').split(' ')[0];
+  document.getElementById('ov-sub').textContent = 'Loading your dashboard...';
+  await loadData();
+  renderOverview();
+}
+
+async function loadData() {
+  try {
+    var att = await req('GET', 'attendance', null, 'customer_id=eq.' + CUST.id + '&order=date.desc');
+    DATA.attendance = att || [];
+  } catch(e) { console.error('attendance load failed', e); }
+
+  try {
+    var body = await req('GET', 'body_composition', null, 'customer_id=eq.' + CUST.id + '&order=date.desc');
+    DATA.body = (body || []).filter(function(r){ return r.customer_id === CUST.id; });
+  } catch(e) { console.error('body_composition load failed', e); DATA.body = []; }
+
+  try {
+    var packs = await req('GET', 'pack_history', null, 'customer_id=eq.' + CUST.id + '&order=start_date.desc');
+    DATA.packs = packs || [];
+  } catch(e) { console.error('pack_history load failed', e); }
+
+  try {
+    var payRec = await req('GET', 'payments', null, 'person_id=eq.' + CUST.id + '&order=payment_date.desc&limit=1');
+    DATA.payment = (payRec && payRec[0]) ? payRec[0] : null;
+  } catch(e) { console.error('payment load failed', e); }
+
+  try {
+    // Find coach by referred_by_id — could be a coach or another customer
+    if (CUST.referred_by_id) {
+      var byRef = await req('GET', 'coaches', null, 'id=eq.' + CUST.referred_by_id + '&limit=1');
+      if (byRef[0]) {
+        DATA.coach = byRef[0];
+      } else {
+        // Referrer might be another customer
+        var byCust = await req('GET', 'customers', null, 'id=eq.' + CUST.referred_by_id + '&limit=1');
+        if (byCust[0]) {
+          DATA.coach = { name: byCust[0].name, contact: byCust[0].contact || null, _isCustomer: true };
+        }
+      }
+    }
+    // Fallback: use external referrer name
+    if (!DATA.coach && CUST.external_referrer_name) {
+      DATA.coach = { name: CUST.external_referrer_name, contact: CUST.external_referrer_phone || null, _isCustomer: true };
+    }
+  } catch(e) { console.error('coach load failed', e); }
+
+  try {
+    if (CUST.wellness_center_id) {
+      var centers = await req('GET', 'wellness_centers', null, 'id=eq.' + CUST.wellness_center_id + '&limit=1');
+      if (centers && centers[0] && centers[0].name) DATA.centerName = centers[0].name;
+    }
+    if (!DATA.centerName) {
+      var allC = await req('GET', 'wellness_centers', null, 'limit=1');
+      if (allC && allC[0] && allC[0].name) DATA.centerName = allC[0].name;
+    }
+  } catch(e) { console.error('center load failed', e); }
+}
+
+// ── OVERVIEW ──
+function renderPaymentBanner() {
+  var el = document.getElementById('ov-payment-banner');
+  if (!el) return;
+  var p = DATA.payment;
+  if (!p) { el.innerHTML = ''; return; }
+  var bal = Math.max(0, Number(p.total_amount) - Number(p.amount_paid));
+  if (bal <= 0) { el.innerHTML = ''; return; }
+  var today = new Date().toISOString().split('T')[0];
+  var isOverdue = p.due_date && p.due_date < today;
+  var bgColor = isOverdue ? 'linear-gradient(135deg,#fef2f2,#fee2e2)' : 'linear-gradient(135deg,#fffbeb,#fef3c7)';
+  var borderColor = isOverdue ? '#fca5a5' : '#fcd34d';
+  var icon = isOverdue ? '🔴' : '⚠️';
+  var dueText = p.due_date ? ' due by ' + new Date(p.due_date).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : '';
+  el.innerHTML = '<div style="background:'+bgColor+';border:1.5px solid '+borderColor+';border-radius:12px;padding:14px 18px;margin-bottom:16px">' +
+    '<div style="font-weight:700;font-size:14px;margin-bottom:4px">' + icon + ' Outstanding Balance</div>' +
+    '<div style="font-size:13px;color:#374151">You have a balance of <strong style="color:#dc2626">₹' + bal.toLocaleString('en-IN') + '</strong>' + dueText + '. Please contact your coach to clear it.</div>' +
+  '</div>';
+}
+
+function renderOverview() {
+  // Update sidebar branding with real center name
+  var cname = getClientCenterName();
+  var sbLogo = document.querySelector('#sidebar .sb-logo h1');
+  if (sbLogo) sbLogo.textContent = '🌿 ' + cname;
+  document.title = 'My Dashboard — ' + cname;
+  var refSub = document.getElementById('ref-subtitle');
+  if (refSub) refSub.textContent = 'Friends you\'ve brought to ' + cname;
+
+  var left = getServingsLeft();
+  var todayStr = new Date().toISOString().split('T')[0];
+  var todayAtt  = DATA.attendance.find(function(a){ return a.date === todayStr; });
+  var totalPres = DATA.attendance.filter(function(a){ return a.status === 'present'; }).length;
+  var hour = new Date().getHours();
+  var greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+  renderPaymentBanner();
+  document.getElementById('ov-greeting').textContent = greet;
+  document.getElementById('ov-name').textContent = (CUST.name || '').split(' ')[0];
+
+  var subText = left === null ? 'No active pack' :
+                left > 5     ? left + ' servings remaining in your pack' :
+                left > 0     ? '⚠️ Pack almost done — ' + left + ' servings left' :
+                               '❌ Your pack is finished';
+  document.getElementById('ov-sub').textContent = subText;
+
+  var leftColor = left === null ? 'var(--muted)' : left > 5 ? 'var(--success)' : left > 0 ? '#b07800' : 'var(--danger)';
+  var todayText = todayAtt ? (todayAtt.status === 'present' ? '✅ Present' : '🎁 Complementary') : '—';
+
+  document.getElementById('ov-stats').innerHTML =
+    '<div class="stat"><div class="stat-l">Servings Left</div><div class="stat-v" style="color:' + leftColor + '">' + (left !== null ? Math.max(0,left) : '—') + '</div></div>' +
+    '<div class="stat"><div class="stat-l">Total Sessions</div><div class="stat-v">' + totalPres + '</div></div>' +
+    '<div class="stat"><div class="stat-l">Today</div><div class="stat-v" style="font-size:16px;margin-top:8px">' + todayText + '</div></div>';
+
+  renderStreak();
+  renderCoachMessage();
+  renderTransformation();
+  renderGoalCard();
+  buildPackCard(document.getElementById('ov-pack'));
+  renderRenewalBanner(left);
+
+  if (DATA.coach) {
+    var c = DATA.coach;
+    var coachLabel = c._isCustomer ? 'Referred by' : 'Your Coach';
+    document.getElementById('ov-coach-card').style.display = '';
+    document.getElementById('ov-coach-card').querySelector('h3').textContent = c._isCustomer ? '🤝 Your Referrer' : '👨‍🏫 Your Coach';
+    document.getElementById('ov-coach-body').innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">' +
+      '<div style="width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">' + initials(c.name) + '</div>' +
+      '<div><div style="font-weight:700;font-size:14px">' + c.name + '</div><div style="font-size:12px;color:var(--muted)">' + coachLabel + '</div></div>' +
+      (c.contact ? '<a href="https://wa.me/' + COUNTRY_CODE + c.contact.replace(/\D/g,'') + '" target="_blank" style="margin-left:auto"><button class="wa-btn">💬 WhatsApp</button></a>' : '') +
+      '</div>';
+  }
+}
+
+// ── COACH MESSAGE ──
+function renderCoachMessage() {
+  var el = document.getElementById('ov-coach-msg');
+  if (!DATA.coach || !DATA.coach.message) { el.innerHTML = ''; return; }
+  el.innerHTML =
+    '<div class="coach-msg-card">' +
+    '<div class="coach-msg-from">💬 Message from ' + DATA.coach.name + '</div>' +
+    '<div class="coach-msg-text">' + DATA.coach.message + '</div>' +
+    '</div>';
+}
+
+// ── TRANSFORMATION PHOTOS ──
+function renderTransformation() {
+  var el = document.getElementById('ov-transformation');
+  if (!el) return;
+  var before = CUST.photo_before || null;
+  var after  = CUST.photo_after  || null;
+  if (!before && !after) { el.innerHTML = ''; return; }
+
+  var photosHtml = '<div class="transform-photos">';
+  if (before) {
+    photosHtml += '<div class="transform-photo-box"><img src="'+before+'" alt="Before"><div class="transform-photo-label">Before</div></div>';
+  }
+  if (after) {
+    photosHtml += '<div class="transform-photo-box"><img src="'+after+'" alt="After"><div class="transform-photo-label">After</div></div>';
+  } else {
+    photosHtml += '<div class="transform-photo-box"><div class="transform-upload-area" onclick="document.getElementById(\'after-photo-input\').click()"><div style="font-size:28px;margin-bottom:6px">📸</div><div style="font-size:13px;font-weight:600;color:#166534">Upload After Photo</div><div style="font-size:11px;color:#4ade80;margin-top:2px">Tap to share your transformation</div></div></div>';
+  }
+  photosHtml += '</div>';
+
+  var btnsHtml = '<div class="transform-btns">';
+  if (!after) {
+    btnsHtml += '<input type="file" id="after-photo-input" accept="image/*" style="display:none" onchange="uploadAfterPhoto()">';
+    btnsHtml += '<button class="wa-btn" onclick="document.getElementById(\'after-photo-input\').click()" style="background:linear-gradient(135deg,#166534,#15803d)">📸 Upload After Photo</button>';
+  }
+  if (before && after) {
+    var shareMsg = encodeURIComponent('Check out my wellness transformation at ' + getClientCenterName() + '! 🌿💪\n\nMy progress dashboard: https://pulseiq-app.nagam-kumar.workers.dev/customer.html');
+    btnsHtml += '<a href="https://api.whatsapp.com/send?text='+shareMsg+'" target="_blank"><button class="wa-btn">💚 Share on WhatsApp</button></a>';
+  }
+  btnsHtml += '</div>';
+
+  el.innerHTML = '<div class="transform-card"><h3>✨ Transformation</h3>' + photosHtml + btnsHtml + '</div>';
+}
+
+async function uploadAfterPhoto() {
+  var file = document.getElementById('after-photo-input').files[0];
+  if (!file) return;
+  var el = document.getElementById('ov-transformation');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Uploading photo...</div>';
+  try {
+    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    var path = CUST.id + '/after_' + Date.now() + '.' + ext;
+    var res = await fetch(SB_URL + '/storage/v1/object/customer-photos/' + path, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' },
+      body: file
+    });
+    if (!res.ok) { var t = await res.text(); throw new Error(t); }
+    var photoUrl = SB_URL + '/storage/v1/object/public/customer-photos/' + path;
+    await req('PATCH', 'customers', { photo_after: photoUrl }, 'id=eq.' + CUST.id);
+    CUST.photo_after = photoUrl;
+    renderTransformation();
+    toast('After photo uploaded! Your transformation is visible.', 'success');
+  } catch(e) { toast('Upload failed: ' + e.message, 'error'); renderTransformation(); }
+}
+
+// ── GOAL ──
+function renderGoalCard() {
+  var el = document.getElementById('ov-goal-card');
+  if (!DATA.body.length) { el.innerHTML = ''; return; }
+  var startWeight  = parseFloat(DATA.body[DATA.body.length - 1].weight) || null;
+  var currentWeight= parseFloat(DATA.body[0].weight) || null;
+  var goalKey      = 'weightGoal_' + CUST.id;
+  var goalWeight   = parseFloat(localStorage.getItem(goalKey)) || null;
+  if (!startWeight || !currentWeight) { el.innerHTML = ''; return; }
+
+  var inputHtml =
+    '<div class="goal-set-row">' +
+    '<input type="number" id="goal-input" placeholder="Enter goal weight (kg)" step="0.1" value="' + (goalWeight || '') + '">' +
+    '<button class="goal-set-btn" onclick="saveGoal()">Set Goal</button>' +
+    '</div>';
+
+  if (!goalWeight) {
+    el.innerHTML = '<div class="goal-card"><h3>🎯 Set Your Weight Goal</h3>' +
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:8px">Current weight: <strong>' + currentWeight + ' kg</strong></div>' +
+      inputHtml + '</div>';
+    return;
+  }
+
+  var gaining   = goalWeight > startWeight;
+  var totalDiff = Math.abs(goalWeight - startWeight);
+  var progress  = gaining ? (currentWeight - startWeight) : (startWeight - currentWeight);
+  var pct       = totalDiff <= 0 ? 100 : Math.max(0, Math.min(100, (progress / totalDiff) * 100));
+  var achieved  = gaining ? currentWeight >= goalWeight : currentWeight <= goalWeight;
+  var changeAbs = Math.abs(currentWeight - startWeight).toFixed(1);
+  var changeLabel = gaining
+    ? 'Gained ' + changeAbs + ' kg so far'
+    : 'Lost ' + changeAbs + ' kg so far';
+  el.innerHTML =
+    '<div class="goal-card">' +
+    '<h3>🎯 Weight Goal</h3>' +
+    '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">' +
+    '<span>Start: <strong>' + startWeight + ' kg</strong></span>' +
+    '<span>Now: <strong>' + currentWeight + ' kg</strong></span>' +
+    '<span>Goal: <strong>' + goalWeight + ' kg</strong></span>' +
+    '</div>' +
+    '<div class="goal-bar-wrap"><div class="goal-bar-fill ' + (achieved ? 'done' : '') + '" style="width:' + pct + '%"></div></div>' +
+    '<div class="goal-meta"><span>' + changeLabel + '</span><span>' + pct.toFixed(0) + '% to goal</span></div>' +
+    (achieved ? '<div class="goal-achieved">🎉 Goal achieved! You reached ' + goalWeight + ' kg!</div>' : '') +
+    inputHtml + '</div>';
+}
+
+function saveGoal() {
+  var val = parseFloat(document.getElementById('goal-input').value);
+  if (!val || val <= 0) return;
+  localStorage.setItem('weightGoal_' + CUST.id, val);
+  renderGoalCard();
+}
+
+// ── STREAK ──
+function calcStreak() {
+  var presentDates = DATA.attendance
+    .filter(function(a){ return a.status === 'present'; })
+    .map(function(a){ return a.date; })
+    .sort().reverse();
+  if (!presentDates.length) return 0;
+  var streak = 0;
+  var check = new Date(); check.setHours(0,0,0,0);
+  // allow today or yesterday as streak start
+  var todayStr = check.toISOString().split('T')[0];
+  var yestStr  = new Date(check - 86400000).toISOString().split('T')[0];
+  if (presentDates[0] !== todayStr && presentDates[0] !== yestStr) return 0;
+  var prev = presentDates[0];
+  for (var i = 0; i < presentDates.length; i++) {
+    var diff = Math.round((new Date(prev) - new Date(presentDates[i])) / 86400000);
+    if (diff <= 1) { streak++; prev = presentDates[i]; }
+    else break;
+  }
+  return streak;
+}
+
+function renderStreak() {
+  var streak = calcStreak();
+  var el = document.getElementById('ov-streak');
+  var isHot = streak >= 3;
+  var flame = streak >= 7 ? '🔥' : streak >= 3 ? '⚡' : '💪';
+  var msg   = streak === 0 ? 'Come in today to start your streak!'
+            : streak === 1 ? 'Good start — come back tomorrow to keep it going!'
+            : streak < 7  ? 'Keep it up — don\'t break the chain!'
+            : 'Amazing consistency — you\'re on fire!';
+  el.innerHTML =
+    '<div class="streak-card ' + (isHot ? '' : 'cold') + '">' +
+    '<div class="streak-flame">' + flame + '</div>' +
+    '<div><div class="streak-count">' + streak + '</div>' +
+    '<div class="streak-label">Day Streak</div>' +
+    '<div class="streak-sub">' + msg + '</div></div>' +
+    '</div>';
+}
+
+// ── RENEWAL BANNER ──
+function renderRenewalBanner(left) {
+  var el = document.getElementById('ov-renewal-banner');
+  if (left === null || left > 5) { el.innerHTML = ''; return; }
+  var coachWa = DATA.coach && DATA.coach.contact
+    ? 'https://wa.me/' + COUNTRY_CODE + DATA.coach.contact.replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I would like to renew my pack at ' + getClientCenterName() + '.')
+    : null;
+  var cls  = left > 0 ? 'warn' : 'danger';
+  var icon = left > 0 ? '⚠️' : '🚨';
+  var msg  = left > 0
+    ? icon + ' Only <strong>' + left + ' servings left</strong> — renew before your pack runs out!'
+    : icon + ' <strong>Your pack is finished.</strong> Renew now to continue your sessions.';
+  var sub  = left > 0 ? 'Don\'t break your progress — renew today.' : 'Contact your coach to get started again.';
+  el.innerHTML =
+    '<div class="renewal-banner ' + cls + '">' +
+    '<div><div class="renewal-banner-text">' + msg + '</div><div class="renewal-banner-sub">' + sub + '</div></div>' +
+    (coachWa ? '<a href="' + coachWa + '" target="_blank"><button class="wa-btn">💬 Renew via WhatsApp</button></a>' : '') +
+    '</div>';
+}
+
+function getClientCenterName() {
+  return DATA.centerName || 'Our Wellness Center';
+}
+
+// ── PACK CARD ──
+function buildPackCard(container) {
+  var left = getServingsLeft();
+  var pack = getActivePack();
+  if (left === null || !pack) {
+    container.innerHTML = '<div class="tcard"><div class="empty"><div class="ei">📦</div>No active pack found</div></div>';
+    return;
+  }
+  var total = parseInt(pack.pack_days) || parsePack(pack.pack_name || '');
+  var cls   = left > 5 ? 'active' : left > 0 ? 'expiring' : 'expired';
+  var lbl   = left > 5 ? 'Servings Remaining' : left > 0 ? 'Almost Done — Renew Soon!' : 'Pack Finished';
+  var pct   = Math.max(0, Math.min(100, (left / total) * 100));
+  var coachPhone = DATA.coach && DATA.coach.contact ? DATA.coach.contact.replace(/\D/g,'') : '';
+  if (coachPhone.length === 10) coachPhone = COUNTRY_CODE + coachPhone;
+  var centerName = getClientCenterName();
+  var packName = pack.pack_name || CUST.pack_type || 'Pack';
+  var actionBtns = '';
+  if (left <= 5 && coachPhone) {
+    var renewMsg = encodeURIComponent('Hi! I\'d like to renew my ' + packName + ' pack at ' + centerName + '. Could you please arrange it? Thank you! \uD83D\uDE4F');
+    actionBtns += '<a href="https://api.whatsapp.com/send?phone=' + coachPhone + '&text=' + renewMsg + '" target="_blank" style="text-decoration:none">'
+      + '<button style="margin-top:12px;width:100%;padding:10px;background:#25D366;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">💬 Request Renewal via WhatsApp</button></a>';
+  }
+  if (coachPhone) {
+    var helpMsg = encodeURIComponent('Hi! I have a question about my membership at ' + centerName + '. Could you help me?');
+    actionBtns += '<a href="https://api.whatsapp.com/send?phone=' + coachPhone + '&text=' + helpMsg + '" target="_blank" style="text-decoration:none">'
+      + '<button style="margin-top:8px;width:100%;padding:9px;background:transparent;color:var(--primary);border:1.5px solid var(--primary);border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">📞 Contact Coach</button></a>';
+  }
+  container.innerHTML =
+    '<div class="pack-card ' + cls + '">' +
+    '<div class="pack-type-label">' + packName + '</div>' +
+    '<div class="pack-days ' + cls + '">' + Math.max(0, left) + '</div>' +
+    '<div class="pack-type-label">' + lbl + '</div>' +
+    '<div class="pack-bar-wrap"><div class="pack-bar-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+    '<div class="pack-meta"><span>Started ' + fmtDate(pack.start_date) + '</span><span>' + total + ' total servings</span></div>' +
+    (actionBtns ? '<div style="padding:0 4px">' + actionBtns + '</div>' : '') +
+    '</div>';
+}
+
+// ── ATTENDANCE ──
+function renderAttCalendar() {
+  var now = new Date();
+  if (_attYear === null) { _attYear = now.getFullYear(); _attMonth = now.getMonth(); }
+  document.getElementById('att-month-lbl').textContent =
+    new Date(_attYear, _attMonth, 1).toLocaleDateString('en-IN', { month:'long', year:'numeric' });
+
+  var presentSet = new Set(DATA.attendance.filter(function(a){ return a.status==='present'; }).map(function(a){ return a.date; }));
+  var compSet    = new Set(DATA.attendance.filter(function(a){ return a.status==='complementary'; }).map(function(a){ return a.date; }));
+  var todayStr   = new Date().toISOString().split('T')[0];
+
+  var firstDay    = new Date(_attYear, _attMonth, 1).getDay();
+  var daysInMonth = new Date(_attYear, _attMonth + 1, 0).getDate();
+
+  var monthPres = DATA.attendance.filter(function(a){
+    var d = new Date(a.date);
+    return d.getFullYear()===_attYear && d.getMonth()===_attMonth && a.status==='present';
+  }).length;
+
+  document.getElementById('att-stats').innerHTML =
+    '<div class="stat"><div class="stat-l">This Month</div><div class="stat-v">' + monthPres + '</div></div>' +
+    '<div class="stat"><div class="stat-l">All Time</div><div class="stat-v">' + DATA.attendance.filter(function(a){return a.status==='present';}).length + '</div></div>';
+
+  var cal = document.getElementById('att-cal');
+  cal.innerHTML = '';
+  for (var i = 0; i < firstDay; i++) cal.innerHTML += '<div class="att-cal-day empty"></div>';
+  for (var d = 1; d <= daysInMonth; d++) {
+    var ds = _attYear + '-' + String(_attMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    var cls = presentSet.has(ds) ? 'present' : compSet.has(ds) ? 'comp' : '';
+    if (ds === todayStr) cls += ' today';
+    cal.innerHTML += '<div class="att-cal-day ' + cls.trim() + '">' + d + '</div>';
+  }
+}
+
+function changeMonth(dir) {
+  _attMonth += dir;
+  if (_attMonth < 0)  { _attMonth = 11; _attYear--; }
+  if (_attMonth > 11) { _attMonth = 0;  _attYear++; }
+  renderAttCalendar();
+}
+
+// ── PROGRESS ──
+function calcHealthScore(bmi, fatPct, vfKg, musclePct, gender, weight) {
+  var g = (gender || '').toLowerCase();
+  var isMale = g === 'male', isFemale = g === 'female';
+  var fatLo = isMale ? 10 : isFemale ? 20 : 10;
+  var fatHi = isMale ? 20 : isFemale ? 26 : 25;
+  var musIdealKg = isMale ? 30 : 22, musMinKg = isMale ? 10 : 8;
+  var score = 0, total = 0;
+  if (bmi) { total += 25; if (bmi >= 18.5 && bmi <= 24.9) score += 25; else if (bmi < 18.5) score += Math.max(0, 25-(18.5-bmi)*4); else score += Math.max(0, 25-(bmi-24.9)*3); }
+  if (fatPct) { total += 30; if (fatPct >= fatLo && fatPct <= fatHi) score += 30; else if (fatPct < fatLo) score += Math.max(0, 30-(fatLo-fatPct)*3); else score += Math.max(0, 30-(fatPct-fatHi)*1.8); }
+  if (vfKg > 0) { total += 20; if (vfKg <= 2) score += 20; else if (vfKg <= 4) score += 12; else if (vfKg <= 6) score += 5; }
+  if (musclePct) { total += 25; var mkg = weight > 0 ? weight * musclePct / 100 : 0; score += mkg > 0 ? Math.min(25, Math.max(0, (mkg-musMinKg)/(musIdealKg-musMinKg)*25)) : Math.min(25, Math.max(0, (musclePct-15)/20*25)); }
+  if (total === 0) return null;
+  return Math.round((score / total) * 100);
+}
+function buildHealthScoreCard(bmi, fatPct, vfKg, date, musclePct, weight, gender) {
+  var musV = parseFloat(musclePct)||0;
+  var g = (gender || (typeof CUST !== 'undefined' ? CUST.gender : '') || '').toLowerCase();
+  var isMale = g === 'male', isFemale = g === 'female';
+  var fatIdealLo = isMale ? 10 : isFemale ? 20 : 10;
+  var fatIdealHi = isMale ? 20 : isFemale ? 26 : 25;
+  var musIdealKg = isMale ? 30 : 22;
+  var weightV = parseFloat(weight) || 0;
+  var muscleKg = (weightV > 0 && musV > 0) ? parseFloat((weightV * musV / 100).toFixed(1)) : 0;
+  var score = calcHealthScore(parseFloat(bmi)||0, parseFloat(fatPct)||0, parseFloat(vfKg)||0, musV||null, g, weightV);
+  if (score === null) return '';
+  var color = score >= 80 ? '#27ae60' : score >= 55 ? '#e8a838' : '#c0392b';
+  var maxDash = 157.08, offset = maxDash * (1 - score / 100);
+  var grade = score >= 85 ? {t:'Excellent',bg:'rgba(209,250,229,.3)',c:'#a7f3d0'}
+            : score >= 70 ? {t:'Good',bg:'rgba(209,250,229,.3)',c:'#a7f3d0'}
+            : score >= 55 ? {t:'Fair',bg:'rgba(254,243,199,.3)',c:'#fde68a'}
+            : score >= 40 ? {t:'Poor',bg:'rgba(254,226,226,.3)',c:'#fca5a5'}
+            :               {t:'Critical',bg:'rgba(254,226,226,.3)',c:'#fca5a5'};
+  var bmiV = parseFloat(bmi)||0, fatV = parseFloat(fatPct)||0;
+  var bmiLbl = bmiV ? (bmiV < 18.5 ? '⬇️ Underweight' : bmiV <= 24.9 ? '✅ Normal' : bmiV <= 29.9 ? '⚠️ Overweight' : '🔴 Obese') : '—';
+  var fatLbl = fatV ? (fatV >= fatIdealLo && fatV <= fatIdealHi ? '✅ Ideal' : fatV <= fatIdealHi + 6 ? '⚠️ High' : '🔴 Very High') : '—';
+  var vfLbl  = vfKg > 0 ? (vfKg <= 2 ? '✅ Low' : vfKg <= 4 ? '⚠️ Moderate' : '🔴 High') : '—';
+  var musLbl = muscleKg > 0 ? (muscleKg >= musIdealKg ? '✅ Excellent' : muscleKg >= musIdealKg*0.85 ? '✅ Good' : muscleKg >= musIdealKg*0.65 ? '⚠️ Average' : '🔴 Low') : musV ? '⚠️ Average' : '—';
+  var uid = 'hs-' + Date.now();
+  return '<div class="hs-card">' +
+    '<div class="hs-gauge"><svg viewBox="0 0 120 72" width="120" height="72">' +
+      '<path d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="9" stroke-linecap="round"/>' +
+      '<path d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="'+color+'" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+maxDash+'" stroke-dashoffset="'+offset+'"/>' +
+      '<text x="60" y="62" text-anchor="middle" font-size="20" font-weight="700" fill="#fff" font-family="DM Sans,sans-serif">'+score+'</text>' +
+    '</svg></div>' +
+    '<div class="hs-info" style="flex:1">' +
+      '<div class="hs-title">Health Score</div>' +
+      '<div class="hs-score-big">'+score+'<span style="font-size:16px;font-weight:400;color:rgba(255,255,255,.5)">/100</span></div>' +
+      '<div class="hs-grade-badge" style="background:'+grade.bg+';color:'+grade.c+'">'+grade.t+'</div>' +
+      (date ? '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px">Last scan: '+date+'</div>' : '') +
+      '<div class="hs-actions">' +
+        '<button onclick="var p=document.getElementById(\''+uid+'\');p.style.display=p.style.display===\'block\'?\'none\':\'block\'" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer">ℹ️ How is this scored?</button>' +
+      '</div>' +
+      '<div class="hs-info-panel" id="'+uid+'">' +
+        '<div style="font-weight:700;color:#fff;margin-bottom:10px">How Health Score is calculated</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px">' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">BMI (25 pts)</span><span style="color:#fff;font-size:12px">'+bmiV+' — '+bmiLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: 18.5–24.9</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Body Fat % (30 pts)</span><span style="color:#fff;font-size:12px">'+fatV+'% — '+fatLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: '+fatIdealLo+'–'+fatIdealHi+'%</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Visceral Fat (20 pts)</span><span style="color:#fff;font-size:12px">'+(vfKg||'—')+' kg — '+vfLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: ≤ 2 kg</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Muscle Mass (25 pts)</span><span style="color:#fff;font-size:12px">'+(muscleKg > 0 ? muscleKg+' kg' : (musV||'—')+'%')+' — '+musLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: ≥ '+musIdealKg+' kg</span></div>' +
+        '</div>' +
+        '<div class="hs-grade-row" style="margin-top:10px">' +
+          '<div class="hs-grade-pip" style="background:#d1fae5;color:#065f46">85–100 Excellent</div>' +
+          '<div class="hs-grade-pip" style="background:#d1fae5;color:#065f46">70–84 Good</div>' +
+          '<div class="hs-grade-pip" style="background:#fef3c7;color:#92400e">55–69 Fair</div>' +
+          '<div class="hs-grade-pip" style="background:#fee2e2;color:#991b1b">40–54 Poor</div>' +
+          '<div class="hs-grade-pip" style="background:#fee2e2;color:#991b1b">&lt;40 Critical</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+function renderProgress() {
+  var records = DATA.body;
+  if (!records.length) {
+    document.getElementById('prog-score-card').innerHTML = '';
+    document.getElementById('prog-stats').innerHTML = '';
+    document.getElementById('prog-target-card').innerHTML = '';
+    document.getElementById('prog-records').innerHTML = '<div class="tcard"><div class="empty"><div class="ei">⚖️</div>No body composition records yet</div></div>';
+    return;
+  }
+  var latest = records[0];
+  var lw = parseFloat(latest.weight) || 0;
+  var latestVfKg = parseFloat(latest.visceral_fat) || 0;
+  var latestFatKg = (latest.fat_percentage && lw) ? ((parseFloat(latest.fat_percentage)/100)*lw).toFixed(1) : null;
+  var latestMusKg = (latest.muscle_percentage && lw) ? ((parseFloat(latest.muscle_percentage)/100)*lw).toFixed(1) : null;
+  document.getElementById('prog-score-card').innerHTML = buildHealthScoreCard(latest.bmi, latest.fat_percentage, latestVfKg, latest.date, latest.muscle_percentage, lw, typeof CUST !== 'undefined' ? CUST.gender : '');
+  document.getElementById('prog-stats').innerHTML =
+    '<div class="stat"><div class="stat-l">Weight</div><div class="stat-v">' + (latest.weight || '—') + '<span style="font-size:14px;font-family:DM Sans"> kg</span></div></div>' +
+    (latestFatKg ? '<div class="stat"><div class="stat-l">Body Fat</div><div class="stat-v" style="color:var(--danger)">' + latestFatKg + '<span style="font-size:14px;font-family:DM Sans"> kg</span></div></div>' : '') +
+    (latestMusKg ? '<div class="stat"><div class="stat-l">Muscle</div><div class="stat-v" style="color:var(--success)">' + latestMusKg + '<span style="font-size:14px;font-family:DM Sans"> kg</span></div></div>' : '') +
+    '<div class="stat"><div class="stat-l">BMI</div><div class="stat-v">' + (latest.bmi || '—') + '</div></div>';
+
+  // Feature 8 — Weight chart
+  var chartCard = document.getElementById('prog-chart-card');
+  if (records.length >= 2) {
+    chartCard.style.display = '';
+    var chartData = records.slice().reverse();
+    var labels = chartData.map(function(r){ return fmtDate(r.date); });
+    var weights = chartData.map(function(r){ return parseFloat(r.weight) || null; });
+    if (_bodyChart) _bodyChart.destroy();
+    _bodyChart = new Chart(document.getElementById('weight-chart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{ label: 'Weight (kg)', data: weights, borderColor: '#2d5a3d', backgroundColor: 'rgba(45,90,61,.08)', borderWidth: 2.5, pointBackgroundColor: '#2d5a3d', pointRadius: 4, tension: 0.3, fill: true }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { color: '#f0ede8' } }, x: { grid: { display: false } } } }
+    });
+  } else { chartCard.style.display = 'none'; }
+
+  document.getElementById('prog-records').innerHTML = records.map(function(r, i) {
+    var prev   = records[i+1];
+    var w      = parseFloat(r.weight) || 0;
+    var fatKg  = (r.fat_percentage && w) ? ((parseFloat(r.fat_percentage)/100)*w).toFixed(1) : null;
+    var musKg  = (r.muscle_percentage && w) ? ((parseFloat(r.muscle_percentage)/100)*w).toFixed(1) : null;
+    var vf     = r.visceral_fat ? parseFloat(r.visceral_fat).toFixed(2) : null;
+
+    // prev diffs
+    var pw     = prev ? parseFloat(prev.weight)||0 : 0;
+    var wd     = (prev && r.weight && prev.weight) ? (parseFloat(r.weight) - parseFloat(prev.weight)).toFixed(1) : null;
+    var pFatKg = (prev && prev.fat_percentage && pw) ? ((parseFloat(prev.fat_percentage)/100)*pw) : null;
+    var fatDiff= (fatKg && pFatKg) ? (parseFloat(fatKg) - pFatKg).toFixed(1) : null;
+    var pMusKg = (prev && prev.muscle_percentage && pw) ? ((parseFloat(prev.muscle_percentage)/100)*pw) : null;
+    var musDiff= (musKg && pMusKg) ? (parseFloat(musKg) - pMusKg).toFixed(1) : null;
+
+    var diffHtml = wd !== null
+      ? '<span class="' + (parseFloat(wd)<0?'diff-down':'diff-up') + '">' + (parseFloat(wd)<0?'↓ ':'↑ ') + Math.abs(wd) + ' kg</span>'
+      : '';
+
+    function statBox(lbl, val, unit, diff, lowerIsBetter) {
+      if (!val) return '';
+      var diffHtml = '';
+      if (diff !== null) {
+        var cls = (lowerIsBetter ? parseFloat(diff)<0 : parseFloat(diff)>0) ? 'diff-down' : 'diff-up';
+        diffHtml = '<div class="' + cls + '" style="font-size:10px;margin-top:2px">' + (parseFloat(diff)<0?'↓ ':'↑ ') + Math.abs(diff) + ' kg</div>';
+      }
+      return '<div class="body-rec-stat"><div class="body-rec-stat-lbl">' + lbl + '</div>' +
+        '<div class="body-rec-stat-val">' + val + '<span style="font-size:11px">' + unit + '</span></div>' +
+        diffHtml + '</div>';
+    }
+
+    return '<div class="body-rec">' +
+      '<div class="body-rec-date"><span>' + fmtDate(r.date) + '</span>' + diffHtml + '</div>' +
+      '<div class="body-rec-grid">' +
+      statBox('Weight',   r.weight,         ' kg',  wd,      true) +
+      statBox('Body Fat', fatKg,            ' kg',  fatDiff, true) +
+      statBox('Muscle',   musKg,            ' kg',  musDiff, false) +
+      statBox('Belly Fat',vf,               ' kg',  null,    true) +
+      (r.bmi ? '<div class="body-rec-stat"><div class="body-rec-stat-lbl">BMI</div><div class="body-rec-stat-val">' + r.bmi + '</div></div>' : '') +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:6px">' +
+      (r.fat_percentage ? 'Fat: ' + r.fat_percentage + '%' : '') +
+      (r.muscle_percentage ? '  ·  Muscle: ' + r.muscle_percentage + '%' : '') +
+      '</div>' +
+      '</div>';
+  }).join('');
+
+  renderTargetCard(records[0]);
+}
+
+// ── TARGET CARD ──
+function renderTargetCard(latest) {
+  var card = document.getElementById('prog-target-card');
+  if (!card || !latest) return;
+
+  var gender = (CUST.gender || '').toLowerCase();
+  var isMale = gender === 'male';
+  var isFemale = gender === 'female';
+  var w = latest.weight ? Number(latest.weight) : null;
+  var h = latest.height ? Number(latest.height) / 100 : null;
+
+  function pctToKg(pct) { return (w && pct) ? +((w * pct) / 100).toFixed(2) : null; }
+
+  var fatLoPct = isMale ? 10 : isFemale ? 18 : 10;
+  var fatHiPct = isMale ? 20 : isFemale ? 28 : 28;
+  var musLoPct = isMale ? 33 : isFemale ? 24 : 24;
+  var musHiPct = isMale ? 39 : isFemale ? 30 : 39;
+
+  var metrics = [
+    {
+      icon: '⚖️', label: 'Weight',
+      val: w, unit: ' kg',
+      lo: h ? +(18.5 * h * h).toFixed(1) : null,
+      hi: h ? +(24.9 * h * h).toFixed(1) : null
+    },
+    {
+      icon: '🔥', label: 'Body Fat',
+      val: pctToKg(latest.fat_percentage), unit: ' kg',
+      lo: pctToKg(fatLoPct), hi: pctToKg(fatHiPct)
+    },
+    {
+      icon: '💪', label: 'Muscle',
+      val: pctToKg(latest.muscle_percentage), unit: ' kg',
+      lo: pctToKg(musLoPct), hi: pctToKg(musHiPct)
+    },
+    {
+      icon: '📊', label: 'BMI',
+      val: latest.bmi ? Number(latest.bmi) : null, unit: '',
+      lo: 18.5, hi: 24.9
+    },
+    {
+      icon: '🫀', label: 'Visceral Fat',
+      val: latest.visceral_fat ? Number(latest.visceral_fat) : null, unit: ' kg',
+      lo: 1, hi: 9
+    }
+  ].filter(function(m){ return m.val !== null && m.lo !== null && m.hi !== null; });
+
+  if (!metrics.length) { card.innerHTML = ''; return; }
+
+  function getStatus(m) {
+    if (m.val < m.lo) return { label: 'Too Low', color: '#f59e0b', bg: '#fffbeb' };
+    if (m.val > m.hi) return { label: 'Too High', color: '#ef4444', bg: '#fef2f2' };
+    return { label: 'On Target ✓', color: '#16a34a', bg: '#f0fdf4' };
+  }
+
+  var rows = metrics.map(function(m) {
+    var s = getStatus(m);
+    var target = +((m.lo + m.hi) / 2).toFixed(2);
+    var diff = +((target - m.val)).toFixed(2);
+    var diffStr = diff === 0 ? 'You\'re at target!' : (diff > 0 ? '▲ Need +' + Math.abs(diff) : '▼ Need -' + Math.abs(diff)) + m.unit;
+
+    return '<div style="background:'+s.bg+';border:1.5px solid '+s.color+'33;border-radius:12px;padding:14px 16px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">'
+        + '<div style="display:flex;align-items:center;gap:10px">'
+          + '<span style="font-size:22px">'+m.icon+'</span>'
+          + '<div style="font-weight:700;font-size:14px;color:#1e293b">'+m.label+'</div>'
+        + '</div>'
+        + '<div style="text-align:right">'
+          + '<div style="font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Current</div>'
+          + '<div style="font-size:20px;font-weight:800;color:'+s.color+';font-family:\'DM Serif Display\',serif">'+m.val+m.unit+'</div>'
+        + '</div>'
+      + '</div>'
+      + '<div style="margin-top:10px;background:rgba(0,0,0,.05);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'
+        + '<div style="text-align:center">'
+          + '<div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Your Value</div>'
+          + '<div style="font-size:15px;font-weight:800;color:'+s.color+'">'+m.val+m.unit+'</div>'
+        + '</div>'
+        + '<div style="font-size:18px;color:#cbd5e1">→</div>'
+        + '<div style="text-align:center">'
+          + '<div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px">🎯 Target</div>'
+          + '<div style="font-size:15px;font-weight:800;color:#2d5a3d">'+target+m.unit+'</div>'
+        + '</div>'
+        + '<div>'
+          + '<div style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:'+s.color+'22;color:'+s.color+'">'+s.label+'</div>'
+          + '<div style="font-size:10px;color:'+s.color+';font-weight:600;margin-top:4px;text-align:center">'+diffStr+'</div>'
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+
+  card.innerHTML = '<div class="tcard" style="padding:16px 18px;margin-bottom:4px">'
+    + '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">🎯 My Body Targets</div>'
+    + '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Based on your latest scan — '+fmtDate(latest.date)+'</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">'
+    + rows
+    + '</div>'
+  + '</div>';
+}
+
+// ── PACK ──
+function renderPack() {
+  buildPackCard(document.getElementById('pack-current'));
+  var packs = DATA.packs;
+  if (!packs.length) return;
+  document.getElementById('pack-history-card').style.display = '';
+  document.getElementById('pack-history').innerHTML = packs.map(function(p, i) {
+    var isActive = i === 0;
+    return '<div class="pack-item">' +
+      '<div class="pack-dot ' + (isActive ? 'active' : 'done') + '">' + (isActive ? '✓' : (packs.length - i)) + '</div>' +
+      '<div class="pack-box ' + (isActive ? 'active-pack' : '') + '">' +
+      '<div style="font-weight:700;font-size:13px">' + (p.pack_name || (p.pack_days + '-Day Pack')) +
+        (isActive ? ' <span style="background:var(--success);color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;font-weight:700;margin-left:6px">Active</span>' : '') +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--muted);margin-top:3px">' + fmtDate(p.start_date) + ' → ' + fmtDate(p.end_date) + '</div>' +
+      (p.price ? '<div style="font-size:13px;color:var(--primary);font-weight:700;margin-top:4px">₹' + p.price + '</div>' : '') +
+      '</div></div>';
+  }).join('');
+}
+
+// ── COACH ──
+function renderCoach() {
+  var el = document.getElementById('coach-detail');
+  if (!DATA.coach) {
+    el.innerHTML = '<div class="tcard"><div class="empty"><div class="ei">👨‍🏫</div>No coach assigned yet</div></div>';
+    return;
+  }
+  var c = DATA.coach;
+  var roleLabel = c._isCustomer ? 'Referred you to ' + getClientCenterName() : 'Your Wellness Coach';
+  var waLabel   = c._isCustomer ? '💬 WhatsApp' : '💬 WhatsApp Coach';
+  el.innerHTML =
+    '<div class="coach-card">' +
+    '<div class="coach-avatar-lg">' + initials(c.name) + '</div>' +
+    '<div>' +
+    '<div class="coach-name">' + c.name + '</div>' +
+    '<div class="coach-role">' + roleLabel + '</div>' +
+    (c.contact ? '<a href="https://wa.me/' + COUNTRY_CODE + c.contact.replace(/\D/g,'') + '" target="_blank"><button class="wa-btn">' + waLabel + '</button></a>' : '') +
+    '</div></div>' +
+    (c.contact ? '<div class="tcard"><h3>Contact</h3><div style="font-size:14px;color:var(--text)">📱 ' + c.contact + '</div></div>' : '');
+}
+
+// ── MONTHLY REPORT (Feature 5) ──
+var _reportYear = null, _reportMonth = null;
+
+function renderReport() {
+  var now = new Date();
+  if (_reportYear === null) { _reportYear = now.getFullYear(); _reportMonth = now.getMonth(); }
+  document.getElementById('report-month-lbl').textContent =
+    new Date(_reportYear, _reportMonth, 1).toLocaleDateString('en-IN', { month:'long', year:'numeric' });
+
+  var monthStr = _reportYear + '-' + String(_reportMonth+1).padStart(2,'0');
+  var monthAtt = DATA.attendance.filter(function(a){
+    return a.date && a.date.startsWith(monthStr) && a.status === 'present';
+  });
+  var monthComp = DATA.attendance.filter(function(a){
+    return a.date && a.date.startsWith(monthStr) && a.status === 'complementary';
+  });
+  var monthBody = DATA.body.filter(function(b){ return b.date && b.date.startsWith(monthStr); });
+  var weightChange = null;
+  if (monthBody.length >= 2) {
+    weightChange = (parseFloat(monthBody[0].weight) - parseFloat(monthBody[monthBody.length-1].weight)).toFixed(1);
+  } else if (monthBody.length === 1 && DATA.body.length > 1) {
+    var prev = DATA.body.find(function(b){ return !b.date.startsWith(monthStr); });
+    if (prev) weightChange = (parseFloat(monthBody[0].weight) - parseFloat(prev.weight)).toFixed(1);
+  }
+
+  var streakInMonth = 0, maxStreak = 0, cur = 0;
+  var days = monthAtt.map(function(a){ return a.date; }).sort();
+  for (var i = 0; i < days.length; i++) {
+    if (i === 0) { cur = 1; }
+    else {
+      var diff = Math.round((new Date(days[i]) - new Date(days[i-1])) / 86400000);
+      cur = diff === 1 ? cur + 1 : 1;
+    }
+    if (cur > maxStreak) maxStreak = cur;
+  }
+
+  document.getElementById('report-grid').innerHTML =
+    '<div class="report-stat"><div class="report-stat-val">' + monthAtt.length + '</div><div class="report-stat-lbl">Sessions</div></div>' +
+    '<div class="report-stat"><div class="report-stat-val">' + maxStreak + '</div><div class="report-stat-lbl">Best Streak</div></div>' +
+    (weightChange !== null ? '<div class="report-stat"><div class="report-stat-val" style="color:' + (parseFloat(weightChange)<0?'var(--success)':'var(--danger)') + '">' + (parseFloat(weightChange)<0?'↓':'↑') + Math.abs(weightChange) + '</div><div class="report-stat-lbl">kg change</div></div>' : '') +
+    '<div class="report-stat"><div class="report-stat-val">' + monthComp.length + '</div><div class="report-stat-lbl">Free Days</div></div>';
+
+  // Complementary day explainer (Feature 6)
+  var compEl = document.getElementById('report-comp-banner');
+  if (monthComp.length > 0) {
+    compEl.innerHTML =
+      '<div class="comp-banner">' +
+      '<h4>🎁 You used ' + monthComp.length + ' complementary day' + (monthComp.length>1?'s':'') + ' this month</h4>' +
+      '<div class="comp-item"><span>🥤</span><span>Free protein shake</span></div>' +
+      '<div class="comp-item"><span>💬</span><span>One-on-one counselling with your coach</span></div>' +
+      '<div class="comp-item"><span>⚖️</span><span>Free body composition checkup</span></div>' +
+      '<div class="comp-item"><span style="font-size:11px;color:var(--muted)">These are available on your first or gifted day — ask your coach if you haven\'t claimed them.</span></div>' +
+      '</div>';
+  } else { compEl.innerHTML = ''; }
+}
+
+function changeReportMonth(dir) {
+  _reportMonth += dir;
+  if (_reportMonth < 0)  { _reportMonth = 11; _reportYear--; }
+  if (_reportMonth > 11) { _reportMonth = 0;  _reportYear++; }
+  renderReport();
+}
+
+// ── REFERRAL TRACKER (Feature 7) ──
+async function renderReferral() {
+  var el = document.getElementById('referral-body');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Loading...</div>';
+  try {
+    var coupons = await req('GET', 'coupons', null, 'coach_id=eq.' + CUST.id + '&type=eq.earn&order=created_at.desc');
+    var invites = coupons.filter(function(c){ return c.reason === 'invite'; });
+    var packEarns = coupons.filter(function(c){ return c.reason === 'pack_taken'; });
+    var totalCoupons = coupons.reduce(function(s,c){ return s + (parseInt(c.quantity)||0); }, 0);
+    el.innerHTML =
+      '<div class="ref-card">' +
+      '<h3>🎟️ Your Referral Rewards</h3>' +
+      '<div class="ref-sub">Every friend you refer earns you coupons. Coupons can be used to extend your pack.</div>' +
+      '<div class="ref-stats">' +
+      '<div class="ref-stat"><div class="ref-stat-val">' + invites.length + '</div><div class="ref-stat-lbl">Friends Referred</div></div>' +
+      '<div class="ref-stat"><div class="ref-stat-val">' + packEarns.length + '</div><div class="ref-stat-lbl">Joined a Pack</div></div>' +
+      '<div class="ref-stat"><div class="ref-stat-val">' + totalCoupons + '</div><div class="ref-stat-lbl">Coupons Earned</div></div>' +
+      '</div></div>' +
+      (invites.length ? '<div class="tcard"><h3>People You Referred</h3>' +
+        invites.map(function(c){ return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">👤 ' + (c.referred_person||'—') + '</div>'; }).join('') +
+        '</div>' : '<div class="tcard"><div class="empty"><div class="ei">🤝</div>No referrals yet<div style="font-size:13px;margin-top:8px">Refer a friend and earn 1 coupon. If they join a pack, earn 3 more!</div></div></div>');
+  } catch(e) {
+    el.innerHTML = '<div class="tcard"><div class="empty"><div class="ei">🎟️</div>Referral data not available</div></div>';
+  }
+}
+
+// ── PROTEIN WISHLIST ──
+var PROTEIN_FOODS_SI = [
+  { cat:'🐟 Fish & Seafood', items:[
+    {name:'Tuna',protein:29,note:'High protein, easy to cook'},
+    {name:'Sardines (Mathi)',protein:21,note:'Cheap, high omega-3'},
+    {name:'Rohu / Catla',protein:18,note:'Common freshwater fish'},
+    {name:'Mackerel (Bangda)',protein:19,note:'Coastal favourite'},
+    {name:'Pomfret',protein:18,note:'Premium fish'},
+    {name:'Prawn / Shrimp',protein:24,note:'Great with rice'},
+    {name:'Anchovy (Nethili)',protein:20,note:'Very cheap, high protein'},
+    {name:'Tilapia',protein:26,note:'Farm-raised, affordable'},
+    {name:'Crab',protein:18,note:'Coastal AP & Tamil Nadu'},
+    {name:'Squid',protein:16,note:'Coastal areas'}
+  ]},
+  { cat:'🍗 Poultry & Meat', items:[
+    {name:'Chicken Breast',protein:31,note:'Most popular protein source'},
+    {name:'Chicken Legs / Thighs',protein:26,note:'Cheaper than breast'},
+    {name:'Whole Egg',protein:13,note:'Best value complete protein'},
+    {name:'Egg White',protein:11,note:'Low fat, high protein'},
+    {name:'Mutton / Goat Meat',protein:25,note:'Common in South Indian diet'},
+    {name:'Nattu Kozhi (Country Chicken)',protein:28,note:'More protein than broiler'},
+    {name:'Quail (Kaada)',protein:25,note:'Available in AP/Telangana'},
+    {name:'Duck',protein:19,note:'Kerala & coastal areas'}
+  ]},
+  { cat:'🥛 Dairy', items:[
+    {name:'Paneer',protein:18,note:'Vegetarian favourite'},
+    {name:'Curd / Dahi',protein:4,note:'South Indian staple'},
+    {name:'Greek Yogurt',protein:10,note:'Available in cities'},
+    {name:'Milk (Skim)',protein:3,note:'Daily staple'}
+  ]},
+  { cat:'🌱 Legumes & Pulses', items:[
+    {name:'Soy Chunks',protein:52,note:'Cheapest high-protein food'},
+    {name:'Chana Dal',protein:13,note:'Cooked'},
+    {name:'Urad Dal',protein:11,note:'Used in idli/dosa batter'},
+    {name:'Toor Dal',protein:7,note:'Most common dal'},
+    {name:'Rajma (Kidney Beans)',protein:9,note:'Cooked'},
+    {name:'Black Chana',protein:9,note:'Cooked'},
+    {name:'Chickpeas',protein:9,note:'Great for sundal'},
+    {name:'Moong Dal',protein:7,note:'Easy to digest'},
+    {name:'Green Peas',protein:5,note:'Cooked'}
+  ]},
+  { cat:'🥜 Nuts & Seeds', items:[
+    {name:'Peanuts / Groundnuts',protein:26,note:'Cheap South Indian staple'},
+    {name:'Peanut Butter',protein:25,note:'Easy to make at home'},
+    {name:'Cashews',protein:18,note:'Grown in Kerala/AP'},
+    {name:'Sesame Seeds (Til)',protein:17,note:'Used in chutney & ladoo'},
+    {name:'Sunflower Seeds',protein:21,note:'Affordable'},
+    {name:'Almonds',protein:21,note:'Great snack'},
+    {name:'Pumpkin Seeds',protein:19,note:'Available in supermarkets'},
+    {name:'Flaxseeds',protein:18,note:'Health stores'}
+  ]},
+  { cat:'🥦 Vegetables', items:[
+    {name:'Drumstick Leaves (Moringa)',protein:9,note:'South Indian superfood'},
+    {name:'Edamame / Soybean',protein:11,note:'Cooked'},
+    {name:'Amaranth Leaves (Thotakura)',protein:3,note:'Very common in AP/Telangana'},
+    {name:'Tofu',protein:8,note:'Available in cities'},
+    {name:'Moong Sprouts',protein:3,note:'Easy to sprout at home'},
+    {name:'Chickpea Sprouts',protein:4,note:'Easy to sprout at home'}
+  ]},
+  { cat:'🍚 Traditional South Indian', items:[
+    {name:'Pesarattu (Moong Crepe)',protein:8,note:'High protein breakfast — AP/Telangana'},
+    {name:'Egg Dosa',protein:11,note:'Add 2 eggs to dosa batter'},
+    {name:'Sundal (Chickpea)',protein:7,note:'Tamil Nadu festival food'},
+    {name:'Ragi Mudde',protein:3,note:'Karnataka staple'},
+    {name:'Idli + Sambar',protein:7,note:'Classic South Indian breakfast'},
+    {name:'Sattu (Roasted Chana Flour)',protein:22,note:'Best value protein — ₹50/kg'}
+  ]}
+];
+
+var _wishlistSelected = {}; // { foodName: true/false }
+
+function loadWishlist() {
+  try {
+    var saved = localStorage.getItem('wishlist_' + CUST.id);
+    _wishlistSelected = saved ? JSON.parse(saved) : {};
+  } catch(e) { _wishlistSelected = {}; }
+}
+
+function saveWishlist() {
+  localStorage.setItem('wishlist_' + CUST.id, JSON.stringify(_wishlistSelected));
+  var count = Object.values(_wishlistSelected).filter(Boolean).length;
+  closeFoodPreferences();
+  showToast('Wishlist saved — ' + count + ' foods selected!', 'success');
+}
+
+function toggleWishlistItem(name, checked) {
+  _wishlistSelected[name] = checked;
+}
+
+function renderWishlist() {
+  var el = document.getElementById('wishlist-list'); if(!el) return;
+  var q = (document.getElementById('wishlist-search').value||'').toLowerCase();
+  var html = '';
+  PROTEIN_FOODS_SI.forEach(function(cat) {
+    var items = cat.items.filter(function(f){ return !q || f.name.toLowerCase().includes(q) || f.note.toLowerCase().includes(q); });
+    if(!items.length) return;
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#6b7280;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid #f3f4f6">'+cat.cat+'</div>';
+    items.forEach(function(f) {
+      var checked = !!_wishlistSelected[f.name];
+      html += '<label style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-radius:8px;cursor:pointer;'+(checked?'background:#f0fdf4':'')+'">'+
+        '<input type="checkbox" '+(checked?'checked':'')+' data-fname="'+f.name.replace(/"/g,'&quot;')+'" onchange="toggleWishlistItem(this.dataset.fname,this.checked);this.closest(\'label\').style.background=this.checked?\'#f0fdf4\':\'\'" style="width:16px;height:16px;accent-color:#16a34a;cursor:pointer;flex-shrink:0">'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:13px;font-weight:'+(checked?'600':'400')+';color:#111">'+f.name+'</div>'+
+          '<div style="font-size:11px;color:#6b7280">'+f.note+'</div>'+
+        '</div>'+
+        '<span style="font-size:11px;font-weight:700;color:#16a34a;white-space:nowrap">'+f.protein+'g protein</span>'+
+      '</label>';
+    });
+  });
+  if(!html) html = '<div style="text-align:center;padding:24px;color:#9ca3af;font-size:13px">No foods found</div>';
+  el.innerHTML = html;
+}
+
+// ── FOOD PREFERENCES ──
+var ALL_FOODS = [];
+var _foodPrefRestricted = []; // names currently restricted
+var _fpGoal = null; // 'weight_loss' | 'weight_gain' | null
+
+function getClientGoal() {
+  if (CUST && CUST.diet_plan) {
+    try {
+      var g = (JSON.parse(CUST.diet_plan).goal || '').toLowerCase();
+      if (/loss|lose|reduc|slim/.test(g))             return 'weight_loss';
+      if (/gain|bulk|muscle|mass|increase/.test(g))   return 'weight_gain';
+    } catch(e){}
+  }
+  return null;
+}
+
+// High-protein food keywords — warn if too few remain
+var HIGH_PROTEIN_KEYWORDS = ['chicken','egg','fish','paneer','dal','rajma','chana','soya','tofu','protein','mutton','beef','prawn'];
+
+function openWishlistDirect() {
+  document.getElementById('food-pref-modal').style.display = 'block';
+  switchFoodPrefTab('wishlist');
+}
+
+async function openFoodPreferences() {
+  if(!ALL_FOODS.length){
+    try { ALL_FOODS = await req('GET','foods',null,'order=name.asc') || []; } catch(e){ ALL_FOODS=[]; }
+  }
+  _foodPrefRestricted = CUST.food_restrict
+    ? CUST.food_restrict.split(',').map(function(f){return f.trim().toLowerCase();}).filter(Boolean)
+    : [];
+  _fpGoal = getClientGoal();
+  document.getElementById('food-pref-tab-list').style.display='block';
+  document.getElementById('food-pref-tab-add').style.display='none';
+  document.getElementById('fp-tab-list').style.fontWeight='700';
+  document.getElementById('fp-tab-add').style.fontWeight='400';
+  renderFoodPrefList();
+  renderProteinWarning();
+  document.getElementById('food-pref-modal').style.display = 'block';
+}
+
+function closeFoodPreferences() {
+  document.getElementById('food-pref-modal').style.display = 'none';
+}
+
+function switchFoodPrefTab(tab) {
+  document.getElementById('food-pref-tab-list').style.display     = tab==='list'?'block':'none';
+  document.getElementById('food-pref-tab-add').style.display      = tab==='add'?'block':'none';
+  document.getElementById('food-pref-tab-wishlist').style.display = tab==='wishlist'?'block':'none';
+  document.getElementById('food-pref-tab-custom').style.display   = tab==='custom'?'block':'none';
+  var green = '#16a34a', gray = '#6b7280', greenBorder = '2px solid #16a34a', none = '2px solid transparent';
+  ['list','add','wishlist','custom'].forEach(function(t){
+    var el = document.getElementById('fp-tab-'+t); if(!el) return;
+    el.style.fontWeight = tab===t?'700':'400';
+    el.style.color = tab===t?green:gray;
+    el.style.borderBottom = tab===t?greenBorder:none;
+    el.style.marginBottom = '-2px';
+  });
+  if (tab === 'add') { renderFpGoalBanner(); renderGoalFoods(); }
+  if (tab === 'wishlist') { loadWishlist(); renderWishlist(); }
+}
+
+function setFpGoal(goal) {
+  _fpGoal = goal;
+  renderFpGoalBanner();
+  renderGoalFoods();
+}
+
+function renderFpGoalBanner() {
+  var el = document.getElementById('fp-goal-banner'); if(!el) return;
+  if (_fpGoal === 'weight_loss') {
+    el.innerHTML =
+      '<div style="background:#dcfce7;border:1px solid #86efac;border-radius:10px;padding:10px 14px;font-size:13px;color:#166534;display:flex;align-items:center;justify-content:space-between;gap:8px">'+
+      '<div><strong>🥦 Weight Loss Foods</strong> — low calorie, high fiber, high protein</div>'+
+      '<button onclick="setFpGoal(\'weight_gain\')" style="padding:5px 10px;background:rgba(255,255,255,.7);border:1px solid #86efac;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;color:#166534;white-space:nowrap">Switch to Gain →</button>'+
+      '</div>';
+  } else if (_fpGoal === 'weight_gain') {
+    el.innerHTML =
+      '<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 14px;font-size:13px;color:#92400e;display:flex;align-items:center;justify-content:space-between;gap:8px">'+
+      '<div><strong>💪 Weight Gain Foods</strong> — calorie-dense, high protein</div>'+
+      '<button onclick="setFpGoal(\'weight_loss\')" style="padding:5px 10px;background:rgba(255,255,255,.7);border:1px solid #fcd34d;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;color:#92400e;white-space:nowrap">Switch to Loss →</button>'+
+      '</div>';
+  } else {
+    el.innerHTML =
+      '<div style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px">'+
+      '<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px">What is your goal?</div>'+
+      '<div style="display:flex;gap:8px">'+
+        '<button onclick="setFpGoal(\'weight_loss\')" style="flex:1;padding:10px;background:#dcfce7;color:#166534;border:1.5px solid #86efac;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">🥦 Weight Loss</button>'+
+        '<button onclick="setFpGoal(\'weight_gain\')" style="flex:1;padding:10px;background:#fef3c7;color:#92400e;border:1.5px solid #fcd34d;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">💪 Weight Gain</button>'+
+      '</div></div>';
+  }
+}
+
+function renderGoalFoods() {
+  var el = document.getElementById('fp-goal-foods'); if(!el) return;
+  if (!_fpGoal) { el.innerHTML=''; return; }
+  var q = ((document.getElementById('fp-goal-search')||{}).value||'').toLowerCase();
+
+  // Show goal-specific foods + "both" foods
+  var filtered = ALL_FOODS.filter(function(f){
+    var fg = f.goal || 'both';
+    if (fg !== _fpGoal && fg !== 'both') return false;
+    if (q && !(f.name||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (!filtered.length) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:#9ca3af;font-size:13px">No foods found for this goal.<br>Ask your coach to add more foods.</div>';
+    return;
+  }
+
+  // Separate goal-specific from "both"
+  var specific = filtered.filter(function(f){ return (f.goal||'both') === _fpGoal; });
+  var both     = filtered.filter(function(f){ return (f.goal||'both') === 'both'; });
+
+  function foodRow(f) {
+    var isRestricted = _foodPrefRestricted.includes((f.name||'').toLowerCase());
+    var isProtein    = HIGH_PROTEIN_KEYWORDS.some(function(k){ return (f.name||'').toLowerCase().includes(k); }) || f.protein >= 10;
+    return '<label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;'+
+      'background:'+(isRestricted?'#fef2f2':'#f9fafb')+';margin-bottom:5px;'+
+      'border:1px solid '+(isRestricted?'#fca5a5':'transparent')+'">' +
+      '<input type="checkbox" '+(isRestricted?'':'checked')+
+        ' onchange="toggleFoodPref(\''+f.name.replace(/'/g,"\\'")+'\',this)"'+
+        ' style="width:16px;height:16px;accent-color:#16a34a;cursor:pointer;margin-top:3px;flex-shrink:0">'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;font-weight:600;color:'+(isRestricted?'#991b1b':'#111827')+';line-height:1.3">'+
+          f.name+
+          (isProtein&&!isRestricted?' <span style="font-size:9px;background:#dcfce7;color:#166534;padding:1px 5px;border-radius:4px">protein</span>':'')+
+          (isRestricted?' <span style="font-size:9px;background:#fee2e2;color:#991b1b;padding:1px 5px;border-radius:4px">not available</span>':'')+
+        '</div>'+
+        '<div style="font-size:11px;color:#6b7280;margin-top:3px">'+
+          '<span style="color:'+(isRestricted?'#ef4444':'#16a34a')+';font-weight:700">'+Number(f.calories||0).toFixed(0)+' kcal</span>'+
+          ' &nbsp;·&nbsp; <span style="font-weight:600">'+Number(f.protein||0).toFixed(1)+'g protein</span>'+
+          ' &nbsp;·&nbsp; '+Number(f.carbs||0).toFixed(1)+'g carbs'+
+          ' &nbsp;·&nbsp; '+Number(f.fat||0).toFixed(1)+'g fat'+
+          ' <span style="color:#9ca3af">per 100g</span>'+
+        '</div>'+
+      '</div>'+
+    '</label>';
+  }
+
+  var html = '';
+  if (specific.length) {
+    var lbl = _fpGoal==='weight_loss'
+      ? '<span style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.5px;display:block;margin:8px 0 6px">🥦 Best for Weight Loss</span>'
+      : '<span style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.5px;display:block;margin:8px 0 6px">💪 Best for Weight Gain</span>';
+    html += lbl + specific.map(foodRow).join('');
+  }
+  if (both.length) {
+    html += '<span style="font-size:11px;font-weight:700;color:#3730a3;text-transform:uppercase;letter-spacing:.5px;display:block;margin:12px 0 6px">⚖️ Good for Both Goals</span>';
+    html += both.map(foodRow).join('');
+  }
+  el.innerHTML = html;
+}
+
+function countAvailableProteinSources() {
+  return ALL_FOODS.filter(function(f){
+    if(_foodPrefRestricted.includes(f.name.toLowerCase())) return false;
+    return HIGH_PROTEIN_KEYWORDS.some(function(k){ return f.name.toLowerCase().includes(k); }) || f.protein >= 10;
+  }).length;
+}
+
+function renderProteinWarning() {
+  var el = document.getElementById('protein-warning'); if(!el) return;
+  var count = countAvailableProteinSources();
+  if(count < 3){
+    el.style.display='block';
+    el.innerHTML='⚠️ Only <strong>'+count+' protein source'+(count===1?'':'s')+'</strong> available. Your diet plan may not meet your protein target. Please enable more protein-rich foods.';
+  } else {
+    el.style.display='none';
+  }
+}
+
+function renderFoodPrefList() {
+  var search = (document.getElementById('food-pref-search').value||'').toLowerCase();
+  var el = document.getElementById('food-pref-list'); if(!el) return;
+  var filtered = ALL_FOODS.filter(function(f){ return !search || f.name.toLowerCase().includes(search); });
+  if(!filtered.length){ el.innerHTML='<div style="text-align:center;color:#9ca3af;padding:20px;font-size:13px">No foods found</div>'; return; }
+
+  var groups = {veg:[], 'non-veg':[], both:[]};
+  filtered.forEach(function(f){ (groups[f.category]||groups.veg).push(f); });
+  var catLabels = {veg:'🥦 Vegetarian', 'non-veg':'🍗 Non-Vegetarian', both:'🥚 Both'};
+
+  var html = '';
+  ['veg','non-veg','both'].forEach(function(cat){
+    if(!groups[cat].length) return;
+    html += '<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px">'+catLabels[cat]+'</div>';
+    groups[cat].forEach(function(f){
+      var isRestricted = _foodPrefRestricted.includes(f.name.toLowerCase());
+      var isProtein = HIGH_PROTEIN_KEYWORDS.some(function(k){return f.name.toLowerCase().includes(k);})||f.protein>=10;
+      html += '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;background:'+(isRestricted?'#fef2f2':'#f9fafb')+';margin-bottom:4px">'+
+        '<input type="checkbox" '+(isRestricted?'':'checked')+' onchange="toggleFoodPref(\''+f.name.replace(/'/g,"\\'")+'\',this)" style="width:16px;height:16px;accent-color:#16a34a;cursor:pointer">'+
+        '<div style="flex:1">'+
+          '<div style="font-size:13px;font-weight:500;color:'+(isRestricted?'#991b1b':'#111827')+'">'+
+            f.name+
+            (isProtein&&!isRestricted?' <span style="font-size:9px;background:#dcfce7;color:#166534;padding:1px 5px;border-radius:4px">protein</span>':'')+
+            (isRestricted?' <span style="font-size:9px;background:#fee2e2;color:#991b1b;padding:1px 5px;border-radius:4px">not available</span>':'')+
+          '</div>'+
+          '<div style="font-size:11px;color:#6b7280">'+f.calories+' kcal · '+f.protein+'g protein per 100g</div>'+
+        '</div>'+
+      '</label>';
+    });
+  });
+  el.innerHTML = html;
+}
+
+function toggleFoodPref(foodName, checkbox) {
+  var key = foodName.toLowerCase();
+  var isProtein = HIGH_PROTEIN_KEYWORDS.some(function(k){return key.includes(k);});
+  var idx = _foodPrefRestricted.indexOf(key);
+
+  if(idx>=0){
+    // Re-enabling food
+    _foodPrefRestricted.splice(idx,1);
+  } else {
+    // Disabling food — check protein warning
+    _foodPrefRestricted.push(key);
+    var remaining = countAvailableProteinSources();
+    if(isProtein && remaining < 3){
+      showToast('⚠️ Low protein sources! Only '+remaining+' left. Your diet plan may not hit your protein target.','error');
+    }
+  }
+  renderFoodPrefList();
+  renderProteinWarning();
+}
+
+async function saveFoodPreferences() {
+  var count = countAvailableProteinSources();
+  if(count < 3){
+    if(!confirm('You only have '+count+' protein source(s) available. This may make it hard to hit your protein target. Save anyway?')) return;
+  }
+  var restrictStr = _foodPrefRestricted.join(', ');
+  try {
+    await req('PATCH','customers',{food_restrict: restrictStr||null},'id=eq.'+CUST.id);
+    CUST.food_restrict = restrictStr||null;
+    closeFoodPreferences();
+    showToast('Saved! Ask your coach to regenerate your diet plan.','success');
+  } catch(e){
+    showToast('Error: '+e.message,'error');
+  }
+}
+
+// ── FOOD NUTRITION LOOKUP (standard values per 100g) ──
+var FOOD_NUTRITION_LOOKUP = {
+  // Grains
+  'ragi':          {cal:336,pro:7.3,carbs:72,fat:1.9},
+  'finger millet': {cal:336,pro:7.3,carbs:72,fat:1.9},
+  'jowar':         {cal:329,pro:10.4,carbs:67,fat:3.4},
+  'sorghum':       {cal:329,pro:10.4,carbs:67,fat:3.4},
+  'brown rice':    {cal:111,pro:2.6,carbs:23,fat:0.9},
+  'oats':          {cal:389,pro:17,carbs:66,fat:7},
+  'wheat atta':    {cal:340,pro:12,carbs:71,fat:1.9},
+  'wheat':         {cal:340,pro:12,carbs:71,fat:1.9},
+  'barley':        {cal:354,pro:12.5,carbs:73,fat:2.3},
+  'jav':           {cal:354,pro:12.5,carbs:73,fat:2.3},
+  'white rice':    {cal:130,pro:2.7,carbs:28,fat:0.3},
+  'sweet potato':  {cal:86,pro:1.6,carbs:20,fat:0.1},
+  'banana':        {cal:89,pro:1.1,carbs:23,fat:0.3},
+  'bread':         {cal:247,pro:9,carbs:48,fat:3.4},
+  'mango':         {cal:60,pro:0.8,carbs:15,fat:0.4},
+  'ragi malt':     {cal:350,pro:7,carbs:75,fat:2},
+  // Proteins
+  'egg':           {cal:155,pro:13,carbs:1.1,fat:11},
+  'chicken breast':{cal:165,pro:31,carbs:0,fat:3.6},
+  'chicken thigh': {cal:209,pro:26,carbs:0,fat:11},
+  'chicken':       {cal:165,pro:31,carbs:0,fat:3.6},
+  'rohu':          {cal:97,pro:18,carbs:0,fat:2.4},
+  'catla':         {cal:111,pro:20,carbs:0,fat:3},
+  'fish':          {cal:97,pro:18,carbs:0,fat:2.4},
+  'mutton':        {cal:258,pro:26,carbs:0,fat:17},
+  'toor dal':      {cal:343,pro:22,carbs:63,fat:1.9},
+  'moong dal':     {cal:347,pro:24,carbs:63,fat:1.2},
+  'moong':         {cal:347,pro:24,carbs:63,fat:1.2},
+  'chana dal':     {cal:364,pro:20,carbs:65,fat:5.3},
+  'rajma':         {cal:333,pro:24,carbs:60,fat:1.5},
+  'kidney bean':   {cal:333,pro:24,carbs:60,fat:1.5},
+  'paneer':        {cal:265,pro:18,carbs:1.2,fat:21},
+  'curd':          {cal:61,pro:3.5,carbs:4.7,fat:3.3},
+  'yogurt':        {cal:61,pro:3.5,carbs:4.7,fat:3.3},
+  'groundnut':     {cal:567,pro:26,carbs:16,fat:49},
+  'peanut':        {cal:567,pro:26,carbs:16,fat:49},
+  'milk':          {cal:61,pro:3.2,carbs:4.8,fat:3.3},
+  'peanut butter': {cal:588,pro:25,carbs:20,fat:50},
+  'chikki':        {cal:450,pro:12,carbs:55,fat:22},
+  'mixed nuts':    {cal:607,pro:18,carbs:21,fat:54},
+  'almonds':       {cal:579,pro:21,carbs:22,fat:50},
+  'cashews':       {cal:553,pro:18,carbs:30,fat:44},
+  'walnuts':       {cal:654,pro:15,carbs:14,fat:65},
+  // Vegetables
+  'drumstick':     {cal:37,pro:2.1,carbs:8.5,fat:0.2},
+  'munagakaya':    {cal:37,pro:2.1,carbs:8.5,fat:0.2},
+  'bitter gourd':  {cal:17,pro:1,carbs:3.7,fat:0.2},
+  'kakarakaya':    {cal:17,pro:1,carbs:3.7,fat:0.2},
+  'ridge gourd':   {cal:17,pro:0.7,carbs:4,fat:0.1},
+  'beerakaya':     {cal:17,pro:0.7,carbs:4,fat:0.1},
+  'snake gourd':   {cal:18,pro:0.5,carbs:3.3,fat:0.5},
+  'potlakaya':     {cal:18,pro:0.5,carbs:3.3,fat:0.5},
+  'brinjal':       {cal:25,pro:1,carbs:5.9,fat:0.2},
+  'eggplant':      {cal:25,pro:1,carbs:5.9,fat:0.2},
+  'tomato':        {cal:18,pro:0.9,carbs:3.9,fat:0.2},
+  'spinach':       {cal:23,pro:2.9,carbs:3.6,fat:0.4},
+  'palakura':      {cal:23,pro:2.9,carbs:3.6,fat:0.4},
+  'fenugreek':     {cal:49,pro:4.4,carbs:6,fat:0.9},
+  'menthi':        {cal:49,pro:4.4,carbs:6,fat:0.9},
+  'cluster bean':  {cal:16,pro:3.2,carbs:0,fat:0.4},
+  'goru chikkudu': {cal:16,pro:3.2,carbs:0,fat:0.4},
+  'bottle gourd':  {cal:14,pro:0.6,carbs:3.4,fat:0.1},
+  'sorakaya':      {cal:14,pro:0.6,carbs:3.4,fat:0.1},
+  'papaya':        {cal:43,pro:0.5,carbs:11,fat:0.3},
+  'onion':         {cal:40,pro:1.1,carbs:9.3,fat:0.1},
+  'capsicum':      {cal:31,pro:1,carbs:6,fat:0.3},
+  'bell pepper':   {cal:31,pro:1,carbs:6,fat:0.3},
+  'cabbage':       {cal:25,pro:1.3,carbs:5.8,fat:0.1},
+  'carrot':        {cal:41,pro:0.9,carbs:9.6,fat:0.2},
+  'beetroot':      {cal:43,pro:1.6,carbs:9.6,fat:0.2},
+  // Fruits
+  'guava':         {cal:68,pro:2.6,carbs:14,fat:1},
+  'watermelon':    {cal:30,pro:0.6,carbs:7.6,fat:0.2},
+  'pomegranate':   {cal:83,pro:1.7,carbs:19,fat:1.2},
+  'amla':          {cal:44,pro:0.9,carbs:10,fat:0.6},
+  'gooseberry':    {cal:44,pro:0.9,carbs:10,fat:0.6},
+  'lemon':         {cal:29,pro:1.1,carbs:9.3,fat:0.3},
+  'lime':          {cal:29,pro:1.1,carbs:9.3,fat:0.3},
+  'orange':        {cal:47,pro:0.9,carbs:12,fat:0.1},
+  'mosambi':       {cal:43,pro:0.8,carbs:10,fat:0.1},
+  'sweet lime':    {cal:43,pro:0.8,carbs:10,fat:0.1},
+  // Fats
+  'groundnut oil': {cal:884,pro:0,carbs:0,fat:100},
+  'coconut oil':   {cal:862,pro:0,carbs:0,fat:100},
+  'coconut':       {cal:354,pro:3.3,carbs:15,fat:33},
+  'flaxseed':      {cal:534,pro:18,carbs:29,fat:42},
+  'avise ginjalu': {cal:534,pro:18,carbs:29,fat:42},
+  'sesame':        {cal:573,pro:17,carbs:23,fat:50},
+  'nuvvulu':       {cal:573,pro:17,carbs:23,fat:50},
+  // Beverages
+  'buttermilk':    {cal:40,pro:3.5,carbs:4.9,fat:1},
+  'majjiga':       {cal:40,pro:3.5,carbs:4.9,fat:1},
+  'coconut water': {cal:19,pro:0.7,carbs:3.7,fat:0.2},
+  'jeera water':   {cal:5,pro:0.2,carbs:0.9,fat:0.1},
+  'lassi':         {cal:70,pro:3.5,carbs:8,fat:2.5}
+};
+
+async function suggestNutrition() {
+  var name = (document.getElementById('cf-name').value||'').trim();
+  if(!name){ showToast('Enter food name first','error'); return; }
+  var statusEl = document.getElementById('ai-suggest-status');
+  var btn = document.getElementById('ai-suggest-btn');
+
+  // 1. Local lookup (case-insensitive, partial match)
+  var nameLower = name.toLowerCase();
+  var matched = null;
+  var matchedKey = '';
+  // Prefer longer (more specific) keys first
+  var keys = Object.keys(FOOD_NUTRITION_LOOKUP).sort(function(a,b){ return b.length - a.length; });
+  for(var i=0; i<keys.length; i++){
+    if(nameLower.includes(keys[i]) || keys[i].includes(nameLower)){
+      matched = FOOD_NUTRITION_LOOKUP[keys[i]];
+      matchedKey = keys[i];
+      break;
+    }
+  }
+  if(matched){
+    document.getElementById('cf-calories').value = matched.cal;
+    document.getElementById('cf-protein').value  = matched.pro;
+    document.getElementById('cf-carbs').value    = matched.carbs;
+    document.getElementById('cf-fat').value      = matched.fat;
+    statusEl.style.color = '#16a34a';
+    statusEl.textContent = '✓ Standard values filled (per 100g) — adjust if your preparation differs';
+    return;
+  }
+
+  // 2. Groq fallback for unknown foods
+  var groqKey = localStorage.getItem('groqKey');
+  if(!groqKey){
+    statusEl.style.color = '#6b7280';
+    statusEl.textContent = 'Food not in database. Enter values manually (per 100g).';
+    return;
+  }
+  btn.disabled = true; btn.textContent = '⏳';
+  statusEl.style.color = '#6b7280';
+  statusEl.textContent = 'Asking AI...';
+  try {
+    var r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+groqKey,'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'llama-3.1-8b-instant',
+        messages:[{role:'user',content:'Nutritional values per 100g for "'+name+'" (Indian food). Reply ONLY with JSON: {"calories":number,"protein":number,"carbs":number,"fat":number}. No explanation, no markdown.'}],
+        max_tokens:80, temperature:0.1
+      })
+    });
+    if(!r.ok) throw new Error('Groq error');
+    var d = await r.json();
+    var j = JSON.parse(d.choices[0].message.content.replace(/```[a-z]*/g,'').trim());
+    document.getElementById('cf-calories').value = j.calories||'';
+    document.getElementById('cf-protein').value  = j.protein||'';
+    document.getElementById('cf-carbs').value    = j.carbs||'';
+    document.getElementById('cf-fat').value      = j.fat||'';
+    statusEl.style.color = '#f59e0b';
+    statusEl.textContent = '🤖 AI estimated values — verify before saving';
+  } catch(e){
+    statusEl.style.color = '#ef4444';
+    statusEl.textContent = 'Could not estimate. Enter values manually (per 100g).';
+  }
+  btn.disabled = false; btn.textContent = '🤖 Suggest';
+}
+
+async function submitCustomFood() {
+  var name     = (document.getElementById('cf-name').value||'').trim();
+  var category = document.getElementById('cf-category').value;
+  var calories = parseFloat(document.getElementById('cf-calories').value)||0;
+  var protein  = parseFloat(document.getElementById('cf-protein').value)||0;
+  var carbs    = parseFloat(document.getElementById('cf-carbs').value)||0;
+  var fat      = parseFloat(document.getElementById('cf-fat').value)||0;
+  var mealTime = document.getElementById('cf-meal').value;
+  if(!name){ showToast('Food name is required','error'); return; }
+  if(!calories){ showToast('Calories is required','error'); return; }
+  try {
+    var inserted = await req('POST','foods',{name:name,category:category,calories:calories,protein:protein,carbs:carbs,fat:fat,fiber:0,meal_time:mealTime,added_by:CUST.id});
+    // Clear form
+    ['cf-name','cf-calories','cf-protein','cf-carbs','cf-fat'].forEach(function(id){ document.getElementById(id).value=''; });
+    // Reload foods list
+    ALL_FOODS = await req('GET','foods',null,'order=name.asc') || [];
+    renderFoodPrefList();
+    switchFoodPrefTab('list');
+    showToast(name+' added to food database!','success');
+  } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
+// ── MEAL LOGS ──
+async function loadMealLogs() {
+  if(!CUST) return;
+  var today = new Date().toISOString().split('T')[0];
+  try {
+    var res = await req('GET','meal_logs',null,'customer_id=eq.'+CUST.id+'&date=eq.'+today+'&select=meal_type,completed');
+    MEAL_LOGS[today] = {};
+    if(Array.isArray(res)) res.forEach(function(r){ MEAL_LOGS[today][r.meal_type] = r.completed; });
+  } catch(e) { MEAL_LOGS[today] = {}; }
+}
+
+async function toggleMealDone(mealType) {
+  var today = new Date().toISOString().split('T')[0];
+  if (!MEAL_LOGS[today]) MEAL_LOGS[today] = {};
+  var newVal = !MEAL_LOGS[today][mealType];
+  MEAL_LOGS[today][mealType] = newVal;
+  renderDietPlan();
+  try {
+    await upsert('meal_logs', {
+      customer_id: CUST.id, date: today, meal_type: mealType,
+      completed: newVal, completed_at: newVal ? new Date().toISOString() : null
+    });
+  } catch(e) { console.error('meal log save failed', e); }
+}
+
+// ── DIET PLAN ──
+var _dietDay = null; // currently viewed day key
+
+function renderDietPlan() {
+  var el = document.getElementById('diet-body'); if(!el) return;
+  if(!CUST.diet_plan){ el.innerHTML='<div class="empty"><div class="ei">🥗</div><p>Your coach hasn\'t generated your diet plan yet.<br>Ask them to set it up from the dashboard.</p></div>'; return; }
+  var plan;
+  try { plan = JSON.parse(CUST.diet_plan); } catch(e){ el.innerHTML='<div class="empty"><p>Diet plan data error. Ask your coach to regenerate.</p></div>'; return; }
+
+  // Support both old single-day format and new 7-day format
+  var is7Day = plan.days && typeof plan.days === 'object';
+  var dayKeys = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  var dayLabels = {monday:'Mon',tuesday:'Tue',wednesday:'Wed',thursday:'Thu',friday:'Fri',saturday:'Sat',sunday:'Sun'};
+  var todayKey = dayKeys[new Date().getDay() === 0 ? 6 : new Date().getDay()-1];
+  if(!_dietDay || (is7Day && !plan.days[_dietDay])) _dietDay = todayKey;
+
+  var meals = is7Day ? (plan.days[_dietDay] || {}) : (plan.meals || {});
+  var isToday = (_dietDay === todayKey);
+  var todayStr = new Date().toISOString().split('T')[0];
+  var todayLogs = MEAL_LOGS[todayStr] || {};
+  var shakeTwice = !!plan.shake_twice;
+
+  var slots = [
+    { key:'breakfast', icon:'🌅', iconBg:'#d97706', title:'Breakfast', fixed:'shake' },
+    { key:'mid_morning', icon:'🍎', iconBg:'#16a34a', title:'Mid-Morning Snack' },
+    { key:'lunch', icon:'☀️', iconBg:'#2563eb', title:'Lunch' },
+    { key:'evening', icon:'🌆', iconBg:'#db2777', title:'Evening Snack', skip: shakeTwice },
+    { key:'post_workout', icon:'💪', iconBg:'#059669', title:'Post-Workout Shake', fixed:'shake', skip: !shakeTwice },
+    { key:'dinner', icon:'🌙', iconBg:'#7c3aed', title:'Dinner' }
+  ];
+
+  var dayTotalCal = is7Day ? (meals.total_calories||0) : (plan.total_calories||0);
+  var dayTotalPro = is7Day ? (meals.total_protein||0) : (plan.total_protein||0);
+
+  var html = '<div class="diet-header">'+
+    '<h2>Your 7-Day Diet Plan</h2>'+
+    '<p>Goal: '+plan.goal+' &nbsp;|&nbsp; Generated: '+(plan.generated||'')+'</p>'+
+    '<div class="diet-macros">'+
+    '<div class="diet-macro"><div class="diet-macro-val">'+plan.target_calories+'</div><div class="diet-macro-lbl">Target kcal</div></div>'+
+    '<div class="diet-macro"><div class="diet-macro-val">'+(plan.target_protein||dayTotalPro)+'g</div><div class="diet-macro-lbl">Target Protein</div></div>'+
+    '<div class="diet-macro"><div class="diet-macro-val">'+dayTotalCal+'</div><div class="diet-macro-lbl">Today kcal</div></div>'+
+    '<div class="diet-macro"><div class="diet-macro-val">'+dayTotalPro+'g</div><div class="diet-macro-lbl">Today Protein</div></div>'+
+    '<div class="diet-macro"><div class="diet-macro-val">'+Math.round(plan.rmr)+'</div><div class="diet-macro-lbl">Your RMR</div></div>'+
+    '</div></div>';
+
+  // Day tabs (only for 7-day plans)
+  if(is7Day){
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';
+    dayKeys.forEach(function(dk){
+      var isActive = dk === _dietDay;
+      var isToday = dk === todayKey;
+      html += '<button onclick="switchDietDay(\''+dk+'\')" style="'+
+        'padding:6px 12px;border-radius:20px;border:2px solid '+(isActive?'#16a34a':'#e2e8f0')+';'+
+        'background:'+(isActive?'#16a34a':'#fff')+';color:'+(isActive?'#fff':'#374151')+';'+
+        'font-family:inherit;font-size:12px;font-weight:'+(isToday?'700':'500')+';cursor:pointer">'+
+        dayLabels[dk]+(isToday?' ★':'')+
+        '</button>';
+    });
+    html += '</div>';
+  }
+
+  if(plan.note){ html += '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:#166534"><strong>Coach Note:</strong> '+plan.note+'</div>'; }
+
+  slots.forEach(function(slot) {
+    if(slot.skip) return;
+    var items = slot.fixed ? null : meals[slot.key];
+    var slotCal = 0, slotProtein = 0;
+    var itemsHtml = '';
+    var isDone = isToday && !!todayLogs[slot.key];
+
+    if(slot.fixed === 'shake') {
+      slotCal = 0; slotProtein = 0; // hidden from client
+      itemsHtml = '<div class="meal-item">'+
+        '<div><div class="meal-item-name">Herbalife Protein Shake</div>'+
+        '<div class="meal-item-detail">'+(slot.key==='post_workout'?'Post-workout shake':'Morning shake — mixed with 250ml low-fat milk')+'</div></div>'+
+        '</div>';
+    } else if(!items){ return; }
+    else if(Array.isArray(items)) {
+      items.forEach(function(it){
+        slotCal += Number(it.calories||0); slotProtein += Number(it.protein||0);
+        itemsHtml += '<div class="meal-item">'+
+          '<div><div class="meal-item-name">'+it.name+'</div><div class="meal-item-detail">'+it.grams+'g &nbsp;·&nbsp; '+Number(it.calories).toFixed(0)+' kcal</div></div>'+
+          '<div class="meal-item-badge">'+Number(it.protein).toFixed(1)+'g protein</div></div>';
+      });
+    } else {
+      var it = items;
+      slotCal = Number(it.calories||0); slotProtein = Number(it.protein||0);
+      itemsHtml = '<div class="meal-item">'+
+        '<div><div class="meal-item-name">'+it.name+'</div><div class="meal-item-detail">'+it.grams+'g &nbsp;·&nbsp; '+Number(it.calories).toFixed(0)+' kcal</div></div>'+
+        '<div class="meal-item-badge">'+Number(it.protein).toFixed(1)+'g protein</div></div>';
+    }
+
+    var doneBtn = isToday
+      ? '<button onclick="toggleMealDone(\''+slot.key+'\')" style="margin-top:10px;width:100%;padding:9px;border-radius:8px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:'+(isDone?'#16a34a':'#f0fdf4')+';color:'+(isDone?'#fff':'#16a34a')+';border:1.5px solid #16a34a">'+
+        (isDone ? '✓ Done!' : 'Mark as Done')+'</button>'
+      : '';
+
+    html += '<div class="meal-slot" style="'+(isDone?'opacity:0.75;':'')+'">'+
+      '<div class="meal-slot-header">'+
+        '<div class="meal-slot-icon" style="background:'+slot.iconBg+'">'+slot.icon+'</div>'+
+        '<div style="flex:1"><div class="meal-slot-title">'+slot.title+(isDone?' <span style="color:#16a34a;font-size:12px">✓</span>':'')+'</div>'+
+        (slotCal>0?'<div class="meal-slot-cal">~'+Math.round(slotCal)+' kcal &nbsp;·&nbsp; '+Number(slotProtein).toFixed(1)+'g protein</div>':'')+
+        '</div>'+
+      '</div>'+itemsHtml+doneBtn+'</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+function switchDietDay(dayKey) {
+  _dietDay = dayKey;
+  renderDietPlan();
+}
+
+// ── FOOD LOG ──
+var FL_FOODS    = [];   // all foods from DB (shared with food preferences)
+var FL_SELECTED = null; // food object currently picked
+var FL_ENTRIES  = [];   // today's food_log_entries rows
+
+async function loadFoodLog() {
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('fl-date-label').textContent =
+    new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+
+  // Reuse ALL_FOODS if already loaded from food preferences
+  if (!FL_FOODS.length) {
+    try { FL_FOODS = await req('GET','foods',null,'order=name.asc') || []; }
+    catch(e) { FL_FOODS = []; }
+  }
+
+  try {
+    FL_ENTRIES = await req('GET','food_log_entries',null,
+      'customer_id=eq.'+CUST.id+'&date=eq.'+today+'&order=created_at.asc') || [];
+  } catch(e) { FL_ENTRIES = []; }
+
+  renderFoodLogTotals();
+  renderFoodLogEntries();
+}
+
+function flSearch() {
+  var q = (document.getElementById('fl-search').value||'').toLowerCase().trim();
+  var dd = document.getElementById('fl-dropdown');
+  if (!q) { dd.style.display='none'; return; }
+  var matches = FL_FOODS.filter(function(f){
+    return (f.name||'').toLowerCase().includes(q);
+  }).slice(0,12);
+  if (!matches.length) {
+    dd.innerHTML = '<div style="padding:12px;font-size:13px;color:var(--muted)">No foods found — ask your coach to add it</div>';
+    dd.style.display = 'block'; return;
+  }
+  var goalBadge = {weight_loss:'<span style="font-size:9px;background:#dcfce7;color:#166534;padding:1px 5px;border-radius:4px;margin-left:4px">loss</span>',
+    weight_gain:'<span style="font-size:9px;background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:4px;margin-left:4px">gain</span>',
+    both:'<span style="font-size:9px;background:#e0e7ff;color:#3730a3;padding:1px 5px;border-radius:4px;margin-left:4px">both</span>'};
+  dd.innerHTML = matches.map(function(f){
+    return '<div onclick="flSelectFood(\''+f.id+'\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f3f4f6;transition:background .1s" onmouseover="this.style.background=\'#f9fafb\'" onmouseout="this.style.background=\'\'">'+
+      '<div style="font-size:13px;font-weight:600">'+f.name+(goalBadge[f.goal]||'')+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:1px">'+Number(f.calories||0).toFixed(0)+' kcal &nbsp;·&nbsp; '+Number(f.protein||0).toFixed(1)+'g protein &nbsp;·&nbsp; per 100g</div>'+
+    '</div>';
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function flSelectFood(id) {
+  FL_SELECTED = FL_FOODS.find(function(f){ return f.id===id; });
+  if (!FL_SELECTED) return;
+  document.getElementById('fl-search').value = FL_SELECTED.name;
+  document.getElementById('fl-dropdown').style.display = 'none';
+  document.getElementById('fl-selected-info').innerHTML =
+    '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:9px 12px;font-size:12px;color:#166534">'+
+    '<strong>'+FL_SELECTED.name+'</strong> — per 100g: '+
+    Number(FL_SELECTED.calories||0).toFixed(0)+' kcal · '+
+    Number(FL_SELECTED.protein||0).toFixed(1)+'g protein · '+
+    Number(FL_SELECTED.carbs||0).toFixed(1)+'g carbs · '+
+    Number(FL_SELECTED.fat||0).toFixed(1)+'g fat</div>';
+  flUpdatePreview();
+}
+
+function flUpdatePreview() {
+  var grams = parseFloat(document.getElementById('fl-grams').value)||0;
+  var el = document.getElementById('fl-preview');
+  if (!FL_SELECTED || !grams) { el.innerHTML=''; return; }
+  var cal   = ((FL_SELECTED.calories||0) * grams / 100).toFixed(0);
+  var pro   = ((FL_SELECTED.protein||0)  * grams / 100).toFixed(1);
+  var carbs = ((FL_SELECTED.carbs||0)    * grams / 100).toFixed(1);
+  var fat   = ((FL_SELECTED.fat||0)      * grams / 100).toFixed(1);
+  el.innerHTML =
+    '<div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;gap:16px;flex-wrap:wrap">'+
+    '<div style="text-align:center"><div style="font-family:\'DM Serif Display\',serif;font-size:22px;color:var(--primary)">'+cal+'</div><div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase">kcal</div></div>'+
+    '<div style="text-align:center"><div style="font-family:\'DM Serif Display\',serif;font-size:22px;color:var(--success)">'+pro+'g</div><div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase">protein</div></div>'+
+    '<div style="text-align:center"><div style="font-family:\'DM Serif Display\',serif;font-size:22px;color:#2563eb">'+carbs+'g</div><div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase">carbs</div></div>'+
+    '<div style="text-align:center"><div style="font-family:\'DM Serif Display\',serif;font-size:22px;color:#b45309">'+fat+'g</div><div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase">fat</div></div>'+
+    '<div style="font-size:11px;color:var(--muted);align-self:center">for '+grams+'g of '+FL_SELECTED.name+'</div>'+
+    '</div>';
+}
+
+async function flAddEntry() {
+  if (!FL_SELECTED) { showToast('Select a food first','error'); return; }
+  var grams = parseFloat(document.getElementById('fl-grams').value)||0;
+  if (!grams || grams<=0) { showToast('Enter how many grams you ate','error'); return; }
+  var entry = {
+    customer_id : CUST.id,
+    date        : new Date().toISOString().split('T')[0],
+    food_id     : FL_SELECTED.id,
+    food_name   : FL_SELECTED.name,
+    grams       : grams,
+    calories    : +((FL_SELECTED.calories||0) * grams / 100).toFixed(1),
+    protein     : +((FL_SELECTED.protein||0)  * grams / 100).toFixed(1),
+    carbs       : +((FL_SELECTED.carbs||0)    * grams / 100).toFixed(1),
+    fat         : +((FL_SELECTED.fat||0)      * grams / 100).toFixed(1)
+  };
+  try {
+    var inserted = await req('POST','food_log_entries',entry);
+    if (Array.isArray(inserted) && inserted[0]) FL_ENTRIES.push(inserted[0]);
+    else FL_ENTRIES.push(entry);
+    // Reset form
+    FL_SELECTED = null;
+    document.getElementById('fl-search').value = '';
+    document.getElementById('fl-selected-info').innerHTML = '';
+    document.getElementById('fl-grams').value = '';
+    document.getElementById('fl-preview').innerHTML = '';
+    renderFoodLogTotals();
+    renderFoodLogEntries();
+    showToast('Added to your food log!','success');
+  } catch(e) { showToast('Error saving: '+e.message,'error'); }
+}
+
+async function flDeleteEntry(id) {
+  if (!confirm('Remove this entry?')) return;
+  try {
+    await req('DELETE','food_log_entries',null,'id=eq.'+id);
+    FL_ENTRIES = FL_ENTRIES.filter(function(e){ return e.id !== id; });
+    renderFoodLogTotals();
+    renderFoodLogEntries();
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+function renderFoodLogTotals() {
+  var el = document.getElementById('fl-totals');
+  var totalCal  = FL_ENTRIES.reduce(function(s,e){ return s+Number(e.calories||0); }, 0);
+  var totalPro  = FL_ENTRIES.reduce(function(s,e){ return s+Number(e.protein||0);  }, 0);
+  var totalCarbs= FL_ENTRIES.reduce(function(s,e){ return s+Number(e.carbs||0);    }, 0);
+  var totalFat  = FL_ENTRIES.reduce(function(s,e){ return s+Number(e.fat||0);      }, 0);
+
+  var targetCal = 0; var targetPro = 0;
+  if (CUST.diet_plan) {
+    try {
+      var plan = JSON.parse(CUST.diet_plan);
+      targetCal = Number(plan.target_calories)||0;
+      targetPro = Number(plan.target_protein)||0;
+    } catch(e){}
+  }
+
+  function bar(eaten, target, unit, color) {
+    var pct = target>0 ? Math.min(100, Math.round(eaten/target*100)) : 0;
+    var left = target>0 ? Math.max(0,(target-eaten)).toFixed(unit==='g'?1:0) : '—';
+    var overColor = pct>=100 ? 'var(--danger)' : color;
+    return '<div style="margin-bottom:4px;display:flex;justify-content:space-between;font-size:12px;font-weight:600">'+
+      '<span style="color:'+overColor+'">'+eaten.toFixed(unit==='g'?1:0)+unit+'</span>'+
+      (target>0?'<span style="color:var(--muted)">'+left+unit+' left of '+target+unit+'</span>':'<span style="color:var(--muted)">No target set</span>')+
+      '</div>'+
+      '<div style="background:var(--surface2);border-radius:20px;height:10px;overflow:hidden;margin-bottom:10px">'+
+      '<div style="height:100%;border-radius:20px;background:'+overColor+';width:'+pct+'%;transition:width .4s ease"></div>'+
+      '</div>';
+  }
+
+  el.innerHTML =
+    '<div class="tcard" style="margin-bottom:16px">'+
+    '<div style="font-weight:700;font-size:15px;margin-bottom:14px">📊 Today\'s Nutrition</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px">'+
+    '<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center">'+
+      '<div style="font-family:\'DM Serif Display\',serif;font-size:26px;color:var(--primary)">'+totalCal.toFixed(0)+'</div>'+
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">kcal eaten</div></div>'+
+    '<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center">'+
+      '<div style="font-family:\'DM Serif Display\',serif;font-size:26px;color:var(--success)">'+totalPro.toFixed(1)+'g</div>'+
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">protein</div></div>'+
+    '<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center">'+
+      '<div style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2563eb">'+totalCarbs.toFixed(1)+'g</div>'+
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">carbs</div></div>'+
+    '<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center">'+
+      '<div style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#b45309">'+totalFat.toFixed(1)+'g</div>'+
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">fat</div></div>'+
+    '</div>'+
+    (targetCal||targetPro ?
+      '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Progress vs Diet Plan</div>'+
+      (targetCal ? '<div style="font-size:12px;color:var(--muted);margin-bottom:2px">Calories</div>'+bar(totalCal,targetCal,'','var(--primary)') : '')+
+      (targetPro ? '<div style="font-size:12px;color:var(--muted);margin-bottom:2px">Protein</div>'+bar(totalPro,targetPro,'g','#16a34a') : '')
+    : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:4px 0">Ask your coach to generate a diet plan to see progress vs target.</div>')+
+    '</div>';
+}
+
+function renderFoodLogEntries() {
+  var el = document.getElementById('fl-entries');
+  if (!FL_ENTRIES.length) {
+    el.innerHTML = '<div class="empty" style="padding:30px 0"><div class="ei">🍽️</div><p style="font-size:13px">Nothing logged yet today.<br>Search a food above and add it!</p></div>';
+    return;
+  }
+  el.innerHTML =
+    '<div style="overflow-x:auto">'+
+    '<table style="width:100%;border-collapse:collapse;font-size:13px">'+
+    '<thead><tr style="border-bottom:2px solid var(--border)">'+
+    '<th style="text-align:left;padding:8px 10px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Food</th>'+
+    '<th style="text-align:right;padding:8px 6px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Grams</th>'+
+    '<th style="text-align:right;padding:8px 6px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">kcal</th>'+
+    '<th style="text-align:right;padding:8px 6px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Protein</th>'+
+    '<th style="padding:8px 6px"></th>'+
+    '</tr></thead><tbody>'+
+    FL_ENTRIES.map(function(e){
+      return '<tr style="border-bottom:1px solid var(--surface2)">'+
+        '<td style="padding:10px 10px;font-weight:600">'+e.food_name+'</td>'+
+        '<td style="text-align:right;padding:10px 6px;color:var(--muted)">'+e.grams+'g</td>'+
+        '<td style="text-align:right;padding:10px 6px;color:var(--primary);font-weight:600">'+Number(e.calories).toFixed(0)+'</td>'+
+        '<td style="text-align:right;padding:10px 6px;color:var(--success);font-weight:600">'+Number(e.protein).toFixed(1)+'g</td>'+
+        '<td style="text-align:right;padding:10px 6px">'+
+          (e.id ? '<button onclick="flDeleteEntry(\''+e.id+'\')" style="background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:2px 4px" title="Remove">×</button>' : '')+
+        '</td>'+
+      '</tr>';
+    }).join('')+
+    '</tbody></table></div>';
+}
+
+// Close food dropdown when clicking outside
+document.addEventListener('click', function(evt) {
+  var dd = document.getElementById('fl-dropdown');
+  var inp = document.getElementById('fl-search');
+  if (dd && inp && !dd.contains(evt.target) && evt.target !== inp) {
+    dd.style.display = 'none';
+  }
+});
+
+// ── LOGOUT ──
+function logout() {
+  CUST = null;
+  DATA = { attendance:[], body:[], packs:[], coach:null, payment:null };
+  MEAL_LOGS = {};
+  _attYear = null; _attMonth = null;
+  _reportYear = null; _reportMonth = null;
+  _dietDay = null;
+  FL_FOODS = []; FL_SELECTED = null; FL_ENTRIES = [];
+  ALL_FOODS = []; _foodPrefRestricted = []; _fpGoal = null;
+  if (_bodyChart) { _bodyChart.destroy(); _bodyChart = null; }
+  localStorage.removeItem('clientCustId');
+  location.reload();
+}
+
+// ── BOOT ──
+window.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('login-screen').style.display = 'flex';
+  resolveCenterParam();
+});
+</script>
+</body>
+</html>
