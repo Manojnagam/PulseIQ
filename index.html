@@ -3595,7 +3595,7 @@ async function loadCenters() {
   D.centers = await dbGet('wellness_centers');
   // Build in-memory PIN map from DB (single source of truth — works across all devices)
   _DB_PINS = {};
-  D.centers.forEach(function(c){ if(c.pin) _DB_PINS[c.id] = c.pin; });
+  D.centers.forEach(function(c){ var p = c.pin || c.center_pin; if(p) _DB_PINS[c.id] = p; });
   // Load supervisor PIN from app_settings
   try {
     var settings = await dbGet('app_settings', 'key', 'key=eq.supervisor_pin');
@@ -3889,9 +3889,8 @@ function onCompDayToggle() {
 
 // ── NAVIGATION ──
 function isSupervisor() {
-  // If no center PINs exist at all, you're always supervisor
-  var cp = JSON.parse(localStorage.getItem('centerPins') || '{}');
-  if(Object.keys(cp).length === 0) return true;
+  // If no PINs configured in DB at all, you're always supervisor
+  if(!_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0) return true;
   return !_centerAuth.type || _centerAuth.type === 'master';
 }
 
