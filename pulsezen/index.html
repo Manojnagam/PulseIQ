@@ -328,6 +328,52 @@
       section, .problem, .features, .how, .preview,
       .pricing, .faq, .exclusivity { padding: 52px 16px; }
     }
+
+    /* ── REGISTER SECTION FORM ── */
+    .reg-wrap { max-width: 600px; margin: 0 auto; background: var(--white); border-radius: 20px; padding: 40px 36px; box-shadow: 0 4px 32px rgba(0,0,0,.08); text-align: left; }
+    .reg-wrap h2 { font-size: clamp(22px,3vw,30px); color: var(--primary); margin-bottom: 8px; }
+    .reg-wrap .reg-sub { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 28px; }
+    .reg-label { font-size: 11px; font-weight: 700; color: var(--primary-light); letter-spacing: .6px; text-transform: uppercase; margin: 24px 0 12px; }
+    .reg-group { margin-bottom: 14px; }
+    .reg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .reg-wrap label { font-size: 13px; font-weight: 600; color: #1a1a1a; display: block; margin-bottom: 6px; }
+    .reg-wrap input, .reg-wrap textarea { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color .2s; }
+    .reg-wrap input:focus, .reg-wrap textarea:focus { border-color: var(--primary-light); }
+    #availBadge { display: none; padding: 14px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; line-height: 1.6; margin-bottom: 4px; }
+    .plans { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+    .plan-option { display: none; }
+    .plan-label { display: flex; align-items: flex-start; gap: 12px; border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: border-color .2s, background .2s; }
+    .plan-option:checked + .plan-label { border-color: var(--primary); background: #f0f7f3; }
+    .plan-option:disabled + .plan-label { opacity: .45; cursor: not-allowed; }
+    .plan-radio { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 50%; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: border-color .2s; }
+    .plan-option:checked + .plan-label .plan-radio { border-color: var(--primary); background: var(--primary); }
+    .plan-option:checked + .plan-label .plan-radio::after { content: ''; width: 6px; height: 6px; background: #fff; border-radius: 50%; display: block; }
+    .plan-info { flex: 1; }
+    .plan-name { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+    .plan-desc { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+    .plan-price { font-size: 15px; font-weight: 700; color: var(--primary); white-space: nowrap; margin-top: 2px; }
+    .plan-features { list-style: none; margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .plan-features li { font-size: 12px; color: #374151; }
+    .plan-features li::before { content: '✅ '; }
+    .plan-features li.no::before { content: '❌ '; }
+    .plan-features li.no { color: var(--muted); }
+    .plan-badge { font-size: 10px; font-weight: 700; background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 20px; margin-left: 6px; }
+    .reg-checkbox { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .reg-checkbox input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; cursor: pointer; accent-color: var(--primary); }
+    .reg-checkbox label { font-size: 13px; color: #1a1a1a; line-height: 1.6; font-weight: 500; cursor: pointer; }
+    #nonExclusiveWarn { display: none; background: #fefce8; border: 1.5px solid #fde68a; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #92400e; margin-top: 8px; line-height: 1.6; }
+    #nonExclusiveWarn .upgrade-btn { display: inline-block; margin-top: 8px; background: #1a3a28; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    #regErrMsg { display: none; background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 10px; padding: 12px 16px; font-size: 13px; margin-bottom: 12px; }
+    .reg-submit { width: 100%; padding: 16px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity .2s; margin-top: 4px; }
+    .reg-submit:hover { opacity: .88; }
+    .reg-submit:disabled { opacity: .5; cursor: not-allowed; }
+    #regSuccess { display: none; text-align: center; padding: 32px 16px; }
+    .reg-success-icon { font-size: 56px; margin-bottom: 16px; }
+    .reg-success-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--success); margin-bottom: 8px; }
+    .reg-success-sub { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .reg-success-next { background: #f0f7f3; border-radius: 12px; padding: 16px; margin-top: 20px; text-align: left; font-size: 13px; color: #1a1a1a; line-height: 1.8; }
+    .upi-box { background: #1a3a28; color: #fff; border-radius: 10px; padding: 14px 18px; margin: 12px 0; font-size: 17px; font-weight: 700; letter-spacing: .5px; text-align: center; }
+    @media(max-width: 520px) { .reg-wrap { padding: 28px 20px; } .reg-row { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -343,7 +389,7 @@
   </a>
   <div class="nav-right">
     <a class="nav-demo" href="dharanis.html" target="_blank">See Demo Page →</a>
-    <a class="btn-wa" href="register.html">
+    <a class="btn-wa" href="#register">
       💬 Register Free
     </a>
   </div>
@@ -361,7 +407,7 @@
       🔴 Limited spots — only 1 center per area gets exclusivity
     </div>
     <div class="hero-btns">
-      <a class="btn-primary" href="register.html">
+      <a class="btn-primary" href="#register">
         💬 Register Your Center Free
       </a>
       <a class="btn-outline" href="dharanis.html" target="_blank">
@@ -572,7 +618,7 @@
           <li style="color:#dc2626">❌ No subdomain</li>
           <li style="color:#dc2626">❌ No area lock</li>
         </ul>
-        <a class="price-cta solid" href="register.html">Register Now</a>
+        <a class="price-cta solid" href="#register">Register Now</a>
       </div>
       <div class="price-card featured">
         <div class="price-popular">Best Value</div>
@@ -588,7 +634,7 @@
           <li>Results & testimonials section</li>
           <li>Updates anytime</li>
         </ul>
-        <a class="price-cta outline" href="register.html">Register Now</a>
+        <a class="price-cta outline" href="#register">Register Now</a>
       </div>
       <div class="price-card">
         <div class="price-name">Elite</div>
@@ -610,7 +656,7 @@
           <li>Monthly performance report on WhatsApp</li>
           <li>Direct WhatsApp support from owner</li>
         </ul>
-        <a class="price-cta solid" href="register.html">Register Now</a>
+        <a class="price-cta solid" href="#register">Register Now</a>
       </div>
     </div>
     <p class="price-note">🔒 Early bird centers lock their price forever. Price increases after first 50 centers.</p>
@@ -657,17 +703,169 @@
   </div>
 </section>
 
-<!-- REGISTRATION REDIRECT -->
+<!-- REGISTRATION FORM -->
 <section id="register" style="padding:72px 24px;background:var(--surface);text-align:center">
   <div class="container">
-    <div class="section-header center">
+    <div class="section-header center" style="margin-bottom:40px">
       <span class="section-tag">Register Your Center</span>
       <h2 class="section-title">Get Your Center Online in 24 Hours</h2>
       <p class="section-sub">Fill in your details and choose your plan. We'll build your page and send you the link within 24 hours.</p>
     </div>
-    <a href="register.html" style="display:inline-block;background:#1a3a28;color:#fff;padding:16px 40px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;text-decoration:none;margin-top:8px">
-      📋 Register Your Center →
-    </a>
+
+    <div class="reg-wrap">
+
+      <!-- SUCCESS STATE -->
+      <div id="regSuccess">
+        <div class="reg-success-icon">🎉</div>
+        <div class="reg-success-title">Registration Received!</div>
+        <p class="reg-success-sub">Your center details are saved. Complete payment below to lock your spot — your PulseZen page will go live within 24 hours.</p>
+        <div class="reg-success-next">
+          <strong>Pay now to activate your plan:</strong><br><br>
+          Open PhonePe, GPay or Paytm → Send to UPI ID:<br>
+          <div class="upi-box">7981614593-2@ybl</div>
+          Use your center name as the payment note.<br><br>
+          <strong>After payment:</strong><br>
+          1. Screenshot your payment confirmation<br>
+          2. Send it on WhatsApp → <a href="https://wa.me/917981614593" style="color:var(--primary);font-weight:600;">+91 79816 14593</a><br>
+          3. Your PulseZen page goes live within 24 hours
+        </div>
+      </div>
+
+      <!-- FORM STATE -->
+      <div id="regFormState">
+        <h2>Register Your Wellness Center</h2>
+        <p class="reg-sub">Get your own PulseZen page and start attracting new members in your area. We'll build your page and send you the link within 24 hours.</p>
+
+        <div class="reg-label">Center Details</div>
+        <div class="reg-group">
+          <label>Center Name *</label>
+          <input id="r-center" type="text" placeholder="e.g. Dharani's Wellness Center">
+        </div>
+        <div class="reg-group">
+          <label>Owner Name *</label>
+          <input id="r-owner" type="text" placeholder="Your full name">
+        </div>
+        <div class="reg-group">
+          <label>WhatsApp Number *</label>
+          <input id="r-phone" type="tel" placeholder="e.g. 9876543210">
+        </div>
+        <div class="reg-row">
+          <div>
+            <label>City *</label>
+            <input id="r-city" type="text" placeholder="e.g. Nandyal">
+          </div>
+          <div>
+            <label>Pincode *</label>
+            <input id="r-pincode" type="text" placeholder="e.g. 518501" maxlength="6">
+          </div>
+        </div>
+        <div class="reg-group">
+          <label>Locality / Area *</label>
+          <input id="r-locality" type="text" placeholder="e.g. Padmavathi Nagar">
+        </div>
+        <div class="reg-group">
+          <label>Nearby Landmark</label>
+          <input id="r-landmark" type="text" placeholder="e.g. Near Pramod Hospital">
+        </div>
+        <div class="reg-group">
+          <label>Center Timings</label>
+          <input id="r-timings" type="text" placeholder="e.g. 7am–10am, 5pm–8pm">
+        </div>
+        <div class="reg-group">
+          <label>Google Maps Link <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+          <input id="r-maps" type="url" placeholder="https://maps.app.goo.gl/...">
+        </div>
+
+        <div id="availBadge"></div>
+
+        <div class="reg-label">Choose Your Plan</div>
+        <div class="plans">
+          <input type="radio" name="plan" id="p1" value="Exclusive ₹999/month" class="plan-option">
+          <label class="plan-label" for="p1">
+            <div class="plan-radio"></div>
+            <div class="plan-info">
+              <div class="plan-name">Exclusive — First in Your Area <span class="plan-badge">BEST VALUE</span></div>
+              <ul class="plan-features">
+                <li>Professional PulseZen page</li>
+                <li>Your own subdomain — centername.pulsezen.in</li>
+                <li>Area locked — no competitor ever in your locality</li>
+                <li>WhatsApp booking button</li>
+                <li>Google Maps integration</li>
+                <li>Results &amp; testimonials section</li>
+              </ul>
+            </div>
+            <div class="plan-price">₹999<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
+          </label>
+
+          <input type="radio" name="plan" id="p3" value="Non-exclusive ₹299/month" class="plan-option">
+          <label class="plan-label" for="p3">
+            <div class="plan-radio"></div>
+            <div class="plan-info">
+              <div class="plan-name">Non-Exclusive — Area Already Taken</div>
+              <ul class="plan-features">
+                <li>Professional PulseZen page</li>
+                <li>WhatsApp booking button</li>
+                <li>Google Maps integration</li>
+                <li>Results &amp; testimonials section</li>
+                <li class="no">No subdomain — listed under pulsezen.in/yourname</li>
+                <li class="no">No area lock — competitors can join your locality</li>
+              </ul>
+            </div>
+            <div class="plan-price">₹299<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
+          </label>
+
+          <input type="radio" name="plan" id="p4" value="Elite ₹1999/month" class="plan-option">
+          <label class="plan-label" for="p4">
+            <div class="plan-radio"></div>
+            <div class="plan-info">
+              <div class="plan-name">Elite</div>
+              <ul class="plan-features">
+                <li>Your own public website on pulsezen.in</li>
+                <li>Your own subdomain — centername.pulsezen.in</li>
+                <li>Area locked — no competitor in your locality</li>
+                <li>Real results &amp; testimonials section</li>
+                <li>WhatsApp enquiry button for your customers</li>
+                <li>PulseIQ Dashboard access (app.pulsezen.in)</li>
+                <li>Manage members, attendance &amp; body composition</li>
+                <li>Finance, coupons &amp; payment tracking</li>
+                <li>Coach Portal &amp; Client Portal</li>
+                <li>AI body analysis &amp; smart agents</li>
+                <li>AI churn risk &amp; member alerts</li>
+                <li>Pack expiry &amp; renewal reminders</li>
+                <li>Monthly performance report on WhatsApp</li>
+                <li>Direct WhatsApp support from owner</li>
+              </ul>
+            </div>
+            <div class="plan-price">₹1999<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
+          </label>
+        </div>
+
+        <div id="nonExclusiveWarn">
+          ⚠️ <strong>Your area is still available for exclusivity.</strong> Another center owner could lock your locality at ₹999 before you. Once that happens, you can never get exclusivity in your area.<br>
+          <button class="upgrade-btn" onclick="upgradeToExclusive()">Upgrade to Exclusive — ₹999/month</button>
+        </div>
+
+        <div class="reg-label">Terms &amp; Agreement</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Please read our <a href="terms.html" target="_blank" style="color:var(--primary);font-weight:600;">Terms &amp; Conditions →</a> before agreeing below.</p>
+        <div class="reg-checkbox">
+          <input type="checkbox" id="r-consent">
+          <label for="r-consent">I confirm that I have obtained (or will obtain before publishing) written consent from all members whose photos or testimonials appear on my PulseZen page. I take full responsibility for member data.</label>
+        </div>
+        <div class="reg-checkbox">
+          <input type="checkbox" id="r-agree">
+          <label for="r-agree">I have read and agree to the <a href="terms.html" target="_blank" style="color:var(--primary);font-weight:600;">PulseZen Terms &amp; Conditions</a>.</label>
+        </div>
+
+        <div id="regErrMsg"></div>
+        <button class="reg-submit" id="submitBtn" onclick="submitReg()">Submit Registration →</button>
+
+        <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:20px;line-height:1.6;">
+          PulseZen is an independent wellness platform. Not affiliated with any nutrition brand.<br>
+          Questions? WhatsApp us at <a href="https://wa.me/917981614593" style="color:var(--primary)">+91 79816 14593</a>
+        </p>
+      </div>
+
+    </div>
   </div>
 </section>
 
@@ -676,7 +874,7 @@
   <h2>Your Area Is Available — For Now</h2>
   <p>Register today and lock your locality before another center in your area does. First to register wins the spot permanently.</p>
   <div class="final-btns">
-    <a class="btn-primary" href="register.html">
+    <a class="btn-primary" href="#register">
       📋 Register Your Center
     </a>
     <a class="btn-outline" href="dharanis.html" target="_blank">
@@ -687,46 +885,71 @@
 
 <script>
 (function(){
-  // registration moved to register.html
-  if(!document.getElementById('regForm')) return;
   var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
 
-  document.getElementById('regForm').addEventListener('submit', async function(e){
-    e.preventDefault();
-    var btn = document.getElementById('regBtn');
-    var msg = document.getElementById('regMsg');
+  // ── PLAN CHANGE WARNING ──
+  document.querySelectorAll('input[name="plan"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      var warn = document.getElementById('nonExclusiveWarn');
+      warn.style.display = (this.value === 'Non-exclusive ₹299/month') ? 'block' : 'none';
+    });
+  });
 
-    if(!document.getElementById('r-consent').checked) {
-      msg.style.display = 'block';
-      msg.style.background = '#fef2f2';
-      msg.style.color = '#dc2626';
-      msg.style.border = '1.5px solid #fecaca';
-      msg.textContent = '❌ Please confirm member consent responsibility.';
-      return;
+  window.upgradeToExclusive = function() {
+    document.getElementById('p1').checked = true;
+    document.getElementById('nonExclusiveWarn').style.display = 'none';
+  };
+
+  // ── SUBMIT ──
+  window.submitReg = async function() {
+    var center   = document.getElementById('r-center').value.trim();
+    var owner    = document.getElementById('r-owner').value.trim();
+    var phone    = document.getElementById('r-phone').value.trim();
+    var city     = document.getElementById('r-city').value.trim();
+    var pincode  = document.getElementById('r-pincode').value.trim();
+    var locality = document.getElementById('r-locality').value.trim();
+    var landmark = document.getElementById('r-landmark').value.trim();
+    var timings  = document.getElementById('r-timings').value.trim();
+    var maps     = document.getElementById('r-maps').value.trim();
+    var planEl   = document.querySelector('input[name="plan"]:checked');
+    var consent  = document.getElementById('r-consent').checked;
+    var agree    = document.getElementById('r-agree').checked;
+    var err      = document.getElementById('regErrMsg');
+
+    err.style.display = 'none';
+
+    if (!center || !owner || !phone || !city || !pincode || !locality) {
+      err.style.display = 'block'; err.textContent = '❌ Please fill all required fields.'; return;
     }
-    if(!document.getElementById('r-agree').checked) {
-      msg.style.display = 'block';
-      msg.style.background = '#fef2f2';
-      msg.style.color = '#dc2626';
-      msg.style.border = '1.5px solid #fecaca';
-      msg.textContent = '❌ Please agree to the Terms & Conditions.';
-      return;
+    if (!/^\d{6}$/.test(pincode)) {
+      err.style.display = 'block'; err.textContent = '❌ Please enter a valid 6-digit pincode.'; return;
+    }
+    if (!planEl) {
+      err.style.display = 'block'; err.textContent = '❌ Please select a plan.'; return;
+    }
+    if (!consent) {
+      err.style.display = 'block'; err.textContent = '❌ Please confirm member consent responsibility.'; return;
+    }
+    if (!agree) {
+      err.style.display = 'block'; err.textContent = '❌ Please agree to the Terms & Conditions.'; return;
     }
 
+    var btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.textContent = 'Submitting...';
 
     var data = {
-      center_name: document.getElementById('r-name').value.trim(),
-      owner_name:  document.getElementById('r-owner').value.trim(),
-      whatsapp:    document.getElementById('r-phone').value.trim(),
-      city:        document.getElementById('r-city').value.trim(),
-      locality:    document.getElementById('r-locality').value.trim(),
-      landmark:    document.getElementById('r-landmark').value.trim(),
-      timings:     document.getElementById('r-timings').value.trim(),
-      maps_link:   document.getElementById('r-maps').value.trim(),
-      tier:        document.getElementById('r-tier').value,
+      center_name: center,
+      owner_name:  owner,
+      whatsapp:    phone,
+      city:        city,
+      pincode:     pincode,
+      locality:    locality,
+      landmark:    landmark,
+      timings:     timings,
+      maps_link:   maps,
+      tier:        planEl.value,
       status:      'pending'
     };
 
@@ -742,76 +965,58 @@
         body: JSON.stringify(data)
       });
 
-      if(res.ok){
-        msg.style.display = 'block';
-        msg.style.background = '#f0fdf4';
-        msg.style.color = '#16a34a';
-        msg.style.border = '1.5px solid #bbf7d0';
-        msg.textContent = '✅ Registration submitted! We will check your area availability and contact you on WhatsApp within 24 hours with payment details to lock your spot.';
-        btn.style.display = 'none';
+      if (res.ok) {
+        document.getElementById('regFormState').style.display = 'none';
+        document.getElementById('regSuccess').style.display = 'block';
 
-        // Notify owner on WhatsApp
-        // Pre-filled approval message to send to center owner
-        var approveMsg = 'Hi ' + data.owner_name + '! Great news — '
-          + data.locality + ', ' + data.city + ' is available on PulseZen. '
-          + 'To lock your exclusive spot, please pay ' + data.tier.split(' ')[1] + ' to this UPI: [your UPI ID]. '
-          + 'Once payment is done, your center page will be live within 24 hours!';
-
-        // Notification to you with approve link included
-        var phone91 = '91' + data.whatsapp.replace(/\D/g,'').slice(-10);
-        var approveLink = 'https://wa.me/' + phone91 + '?text=' + encodeURIComponent(approveMsg);
-
-        // Get the inserted center's ID for the admin approve link
+        // Notify admin on WhatsApp
         var insertedRes = await fetch(SB_URL + '/rest/v1/pulsezen_centers'
-          + '?whatsapp=eq.' + encodeURIComponent(data.whatsapp)
+          + '?whatsapp=eq.' + encodeURIComponent(phone)
           + '&status=eq.pending&order=created_at.desc&limit=1&select=id', {
           headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
         });
         var inserted = await insertedRes.json();
         var centerId = inserted.length ? inserted[0].id : '';
-        var adminLink = 'https://pulsezen.pages.dev/admin.html?approve=' + centerId;
+        var adminLink = 'https://pulsezen.in/admin.html?approve=' + centerId;
 
         var waText = '🆕 New PulseZen Registration!%0A%0A'
-          + 'Center: ' + encodeURIComponent(data.center_name) + '%0A'
-          + 'Owner: ' + encodeURIComponent(data.owner_name) + '%0A'
-          + 'WhatsApp: ' + encodeURIComponent(data.whatsapp) + '%0A'
-          + 'City: ' + encodeURIComponent(data.city) + '%0A'
-          + 'Locality: ' + encodeURIComponent(data.locality) + '%0A'
-          + 'Landmark: ' + encodeURIComponent(data.landmark) + '%0A'
-          + 'Timings: ' + encodeURIComponent(data.timings) + '%0A'
-          + 'Plan: ' + encodeURIComponent(data.tier) + '%0A%0A'
-          + '👉 Approve in one click:%0A'
-          + encodeURIComponent(adminLink) + '%0A%0A'
-          + '(Opens admin panel — login then click Approve)';
+          + 'Center: ' + encodeURIComponent(center) + '%0A'
+          + 'Owner: ' + encodeURIComponent(owner) + '%0A'
+          + 'WhatsApp: ' + encodeURIComponent(phone) + '%0A'
+          + 'City: ' + encodeURIComponent(city) + '%0A'
+          + 'Pincode: ' + encodeURIComponent(pincode) + '%0A'
+          + 'Locality: ' + encodeURIComponent(locality) + '%0A'
+          + 'Landmark: ' + encodeURIComponent(landmark) + '%0A'
+          + 'Timings: ' + encodeURIComponent(timings) + '%0A'
+          + 'Plan: ' + encodeURIComponent(planEl.value) + '%0A%0A'
+          + '👉 Approve:%0A'
+          + encodeURIComponent(adminLink);
 
-        setTimeout(function(){
+        setTimeout(function() {
           window.open('https://wa.me/917981614593?text=' + waText, '_blank');
         }, 1500);
       } else {
-        throw new Error('Failed');
+        throw new Error('failed');
       }
-    } catch(err){
-      msg.style.display = 'block';
-      msg.style.background = '#fef2f2';
-      msg.style.color = '#dc2626';
-      msg.style.border = '1.5px solid #fecaca';
-      msg.textContent = '❌ Something went wrong. Please message us directly on WhatsApp.';
+    } catch(e) {
+      err.style.display = 'block';
+      err.textContent = '❌ Something went wrong. Please WhatsApp us directly at +91 79816 14593.';
       btn.disabled = false;
-      btn.textContent = '💬 Submit & Register Center';
+      btn.textContent = 'Submit Registration →';
     }
-  });
+  };
 
   // ── LIVE AVAILABILITY CHECKER ──
   var _checkTimer = null;
 
   function checkAvailability() {
     var city     = document.getElementById('r-city').value.trim();
+    var pincode  = document.getElementById('r-pincode').value.trim();
     var locality = document.getElementById('r-locality').value.trim();
     var badge    = document.getElementById('availBadge');
-    var tier     = document.getElementById('r-tier');
-    var exclusive= document.getElementById('tierExclusive');
+    var p1       = document.getElementById('p1');
 
-    if(city.length < 2 || locality.length < 2) {
+    if (locality.length < 2 || pincode.length < 6) {
       badge.style.display = 'none';
       return;
     }
@@ -820,50 +1025,43 @@
     badge.style.background = '#f9fafb';
     badge.style.border = '1.5px solid #e5e7eb';
     badge.style.color = '#6b7280';
-    badge.textContent = '🔍 Checking availability for ' + locality + ', ' + city + '...';
+    badge.textContent = '🔍 Checking availability for ' + locality + ', ' + pincode + '...';
 
     clearTimeout(_checkTimer);
     _checkTimer = setTimeout(async function() {
       try {
-        var url = SB_URL + '/rest/v1/pulsezen_centers'
-          + '?city=ilike.' + encodeURIComponent(city)
+        var res = await fetch(SB_URL + '/rest/v1/pulsezen_centers'
+          + '?pincode=eq.' + encodeURIComponent(pincode)
           + '&locality=ilike.' + encodeURIComponent(locality)
-          + '&tier=like.Exclusive*'
+          + '&tier=not.like.Non-exclusive*'
           + '&status=in.(active,pending)'
-          + '&select=id,status';
-
-        var res = await fetch(url, {
+          + '&select=id,status', {
           headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
         });
         var data = await res.json();
 
-        if(data.length === 0) {
-          // Available
+        if (data.length === 0) {
           badge.style.background = '#f0fdf4';
           badge.style.border = '1.5px solid #86efac';
           badge.style.color = '#15803d';
-          badge.innerHTML = '✅ <strong>' + locality + ', ' + city + '</strong> is available! You can get exclusivity — no competitor will be listed in your area.';
-          exclusive.disabled = false;
-          exclusive.textContent = 'Exclusive ₹999/month — First in my area ✅';
-          tier.value = 'Exclusive ₹999/month';
-        } else if(data[0].status === 'pending') {
-          // Pending — someone already registered, awaiting approval
+          badge.innerHTML = '✅ <strong>' + locality + ' — ' + pincode + '</strong> is available! You can lock this area — no competitor will be listed here.';
+          p1.disabled = false;
+          document.getElementById('p1').checked = true;
+          document.getElementById('nonExclusiveWarn').style.display = 'none';
+        } else if (data[0].status === 'pending') {
           badge.style.background = '#fefce8';
           badge.style.border = '1.5px solid #fde68a';
           badge.style.color = '#92400e';
-          badge.innerHTML = '⏳ <strong>' + locality + ', ' + city + '</strong> has a pending registration. This area may not be available. You can still register as <strong>Non-Exclusive at ₹299/month</strong>.';
-          exclusive.disabled = true;
-          exclusive.textContent = 'Exclusive ₹999/month — Pending in your area';
-          tier.value = 'Non-exclusive ₹299/month';
+          badge.innerHTML = '⏳ <strong>' + locality + ' — ' + pincode + '</strong> has a pending registration. This area may not be available — you can still join as Non-Exclusive at ₹299/month.';
+          p1.disabled = true;
+          document.getElementById('p3').checked = true;
         } else {
-          // Taken
           badge.style.background = '#fef2f2';
           badge.style.border = '1.5px solid #fca5a5';
           badge.style.color = '#dc2626';
-          badge.innerHTML = '❌ <strong>' + locality + ', ' + city + '</strong> is already taken by another center. You can still join as <strong>Non-Exclusive at ₹299/month</strong> — your page will go live without area lock.';
-          exclusive.disabled = true;
-          exclusive.textContent = 'Exclusive ₹999/month — Not available in your area';
-          tier.value = 'Non-exclusive ₹299/month';
+          badge.innerHTML = '❌ <strong>' + locality + ' — ' + pincode + '</strong> is already taken. You can still join as Non-Exclusive at ₹299/month.';
+          p1.disabled = true;
+          document.getElementById('p3').checked = true;
         }
       } catch(e) {
         badge.style.background = '#fefce8';
@@ -875,13 +1073,14 @@
   }
 
   document.getElementById('r-city').addEventListener('input', checkAvailability);
+  document.getElementById('r-pincode').addEventListener('input', checkAvailability);
   document.getElementById('r-locality').addEventListener('input', checkAvailability);
 
 })();
 </script>
 
 <!-- FLOATING WA -->
-<a class="wa-float" href="register.html" title="Register on WhatsApp">💬</a>
+<a class="wa-float" href="#register" title="Register on WhatsApp">💬</a>
 
 <!-- FOOTER -->
 <footer>
