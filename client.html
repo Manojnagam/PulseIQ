@@ -266,8 +266,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div id="login-screen" style="display:none">
   <div class="login-box">
     <div class="login-logo">
-      <h1>🌿 Dharani's</h1>
-      <p>Client Dashboard — Enter your details to continue</p>
+      <h1 id="login-center-name">🌿 Client Portal</h1>
+      <p id="login-center-sub">Client Dashboard — Enter your details to continue</p>
     </div>
     <div class="login-field">
       <label>Mobile Number</label>
@@ -616,6 +616,7 @@ var COUNTRY_CODE = '91';
 
 var CUST = null;
 var DATA = { attendance:[], body:[], packs:[], coach:null, payment:null, centerName:'' };
+var CENTER_ID = '';   // resolved from ?center= URL param
 var MEAL_LOGS = {}; // { "2026-04-19": { breakfast: true, mid_morning: false, ... } }
 var _attYear = null, _attMonth = null, _bodyChart = null;
 
@@ -714,6 +715,25 @@ function initials(name) {
   return (name || '?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
 }
 
+// ── CENTER PARAM ──
+async function resolveCenterParam() {
+  var param = new URLSearchParams(window.location.search).get('center');
+  if (!param) return;
+  try {
+    var centers = await req('GET', 'wellness_centers', null, 'network_id=eq.' + encodeURIComponent(param));
+    if (!centers.length) centers = await req('GET', 'wellness_centers', null, 'id=eq.' + encodeURIComponent(param));
+    if (centers.length) {
+      CENTER_ID = centers[0].id;
+      document.getElementById('login-center-name').textContent = '🌿 ' + centers[0].name;
+      document.getElementById('login-center-sub').textContent = (centers[0].network_id || '') + ' · Client Dashboard';
+    } else {
+      document.getElementById('login-center-sub').textContent = 'Center not found — contact your coach';
+    }
+  } catch(e) {
+    // silently skip — show default
+  }
+}
+
 // ── LOGIN ──
 async function doLogin() {
   var mobile = document.getElementById('login-mobile').value.trim();
@@ -722,9 +742,10 @@ async function doLogin() {
   errEl.textContent = '';
   if (mobile.length < 10) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
   try {
-    var results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent(mobile));
+    var centerFilter = CENTER_ID ? '&wellness_center_id=eq.' + encodeURIComponent(CENTER_ID) : '';
+    var results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent(mobile) + centerFilter);
     if (!results.length) {
-      results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent('91' + mobile));
+      results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent('91' + mobile) + centerFilter);
     }
     if (!results.length) { errEl.textContent = 'No client found with this number. Contact your coach.'; return; }
 
@@ -2454,6 +2475,7 @@ function logout() {
 // ── BOOT ──
 window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('login-screen').style.display = 'flex';
+  resolveCenterParam();
 });
 </script>
 </body>

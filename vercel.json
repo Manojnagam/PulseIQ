@@ -4,6 +4,7 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/coach.html", "dest": "/coach.html" },
+    { "src": "/client.html", "dest": "/client.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "headers": [
