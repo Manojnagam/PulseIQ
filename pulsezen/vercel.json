@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/router.js": {
+      "includeFiles": "*.html"
+    }
+  },
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "^/$", "dest": "/api/router" },
