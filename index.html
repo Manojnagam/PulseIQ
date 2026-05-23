@@ -2863,38 +2863,15 @@ function toggleLang() {
   applyLang();
 }
 
-var _centerAuth = (function() {
-  var auth = JSON.parse(sessionStorage.getItem('centerAuth') || '{}');
-  var cp = JSON.parse(localStorage.getItem('centerPins') || '{}');
+// PINs loaded from Supabase — single source of truth, works across all devices
+var _DB_PINS = {};           // { centerId: pin } — built from wellness_centers.pin
+var _DB_SUPERVISOR_PIN = ''; // from app_settings key='supervisor_pin'
 
-  // No center PINs at all → always supervisor, clear any stuck state
-  if(Object.keys(cp).length === 0) {
-    auth = { type: 'master' };
-    sessionStorage.setItem('centerAuth', JSON.stringify(auth));
-    return auth;
-  }
-
-  // If auth says 'center' but that center's PIN no longer exists, upgrade
-  if(auth.type === 'center' && auth.centerId && !cp[auth.centerId]) {
-    auth = { type: 'master' };
-    sessionStorage.setItem('centerAuth', JSON.stringify(auth));
-  }
-  return auth;
-})();
-// One-time reset: clear ALL old center PINs + stale auth from old confusing system
-// This runs once — after this, only downline/branch centers will get PINs via the new clean system
-if(!localStorage.getItem('_pinSystemV2')) {
-  localStorage.removeItem('centerPins');
-  sessionStorage.removeItem('centerAuth');
-  localStorage.setItem('_pinSystemV2', '1');
-}
+var _centerAuth = JSON.parse(sessionStorage.getItem('centerAuth') || '{}');
 var _pendingSwitchCenter = '';
 
 function switchActiveCenter(centerId) {
-  // Check if PIN protection is needed
-  var pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
-  var masterPin = (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin;
-  var hasPins = masterPin || Object.keys(pins).length > 0;
+  var hasPins = _DB_SUPERVISOR_PIN || Object.keys(_DB_PINS).length > 0;
 
   if(!hasPins) {
     // No PINs set anywhere — free access (first-time setup)
@@ -3050,51 +3027,22 @@ function getCenterName() {
 var OWNER_PROFILE = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
 
 function checkStartupAuth() {
-  var masterPin = (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin;
-  var pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
+  var hasCenterPins = Object.keys(_DB_PINS).length > 0;
 
-  // Remove your own center's PIN if it matches master PIN (you don't need one)
-  if(masterPin) {
-    var changed = false;
-    for(var cid in pins) {
-      if(pins[cid] === masterPin) { delete pins[cid]; changed = true; }
-    }
-    if(changed) localStorage.setItem('centerPins', JSON.stringify(pins));
-  }
-
-  var hasCenterPins = Object.keys(pins).length > 0;
-
-  // No PINs at all — full access (first-time setup)
-  if(!hasCenterPins && !masterPin) {
+  // No PINs configured in DB at all — full supervisor access
+  if(!hasCenterPins && !_DB_SUPERVISOR_PIN) {
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     updateCenterSwitcher();
     return;
   }
 
-  // If center PINs now exist (loaded from DB) but session was auto-granted master
-  // before data loaded (empty localStorage on fresh device) — reset and prompt
-  var sessionRaw = sessionStorage.getItem('centerAuth');
-  var sessionWasAutoGranted = !sessionRaw || sessionRaw === '{"type":"master"}';
-  if(hasCenterPins && sessionWasAutoGranted && !masterPin) {
-    _centerAuth = {};
-    sessionStorage.removeItem('centerAuth');
-  }
-
-  // If session was 'center' but that center's PIN was just cleaned up, upgrade to master
-  if(_centerAuth.type === 'center' && _centerAuth.centerId && !pins[_centerAuth.centerId]) {
-    _centerAuth = { type: 'master' };
-    sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
+  // Valid session already exists — restore it
+  if(_centerAuth.type === 'master') {
     updateCenterSwitcher();
     return;
   }
-
-  // If session auth exists and was explicitly set (not auto-granted), apply it
-  if(_centerAuth.type === 'master' && masterPin) {
-    updateCenterSwitcher();
-    return;
-  }
-  if(_centerAuth.type === 'center' && _centerAuth.centerId) {
+  if(_centerAuth.type === 'center' && _centerAuth.centerId && _DB_PINS[_centerAuth.centerId]) {
     ACTIVE_CENTER = _centerAuth.centerId;
     localStorage.setItem('activeCenter', _centerAuth.centerId);
     _applySwitch(_centerAuth.centerId);
@@ -3113,21 +3061,18 @@ function checkStartupAuth() {
 }
 
 function _matchPinToCenter(entered) {
-  var pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
-  for(var cid in pins) { if(pins[cid] === entered) return cid; }
+  for(var cid in _DB_PINS) { if(_DB_PINS[cid] === entered) return cid; }
   return null;
 }
 
-// Single unified PIN verify — master PIN ALWAYS checked first
+// Single unified PIN verify — supervisor PIN always checked first
 verifyPinPrompt = function() {
   var entered = (document.getElementById('pin-prompt-input').value||'').trim();
   if(!entered) return;
-  var masterPin = (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin;
-  var pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
   var targetCenter = _pendingSwitchCenter;
 
-  // 1. ALWAYS check master PIN first — grants full access
-  if(masterPin && entered === masterPin) {
+  // 1. Supervisor PIN — grants full access
+  if(_DB_SUPERVISOR_PIN && entered === _DB_SUPERVISOR_PIN) {
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     closeModal('pin-prompt');
@@ -3138,7 +3083,7 @@ verifyPinPrompt = function() {
   }
 
   // 2. Check center-specific PIN
-  if(targetCenter && pins[targetCenter] && entered === pins[targetCenter]) {
+  if(targetCenter && _DB_PINS[targetCenter] && entered === _DB_PINS[targetCenter]) {
     _centerAuth = { type: 'center', centerId: targetCenter };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     closeModal('pin-prompt');
@@ -3649,10 +3594,14 @@ async function loadAll() {
 }
 async function loadCenters() {
   D.centers = await dbGet('wellness_centers');
-  // Rebuild centerPins from DB so all devices share the same PINs
-  var pins = {};
-  D.centers.forEach(function(c){ if(c.center_pin) pins[c.id] = c.center_pin; });
-  localStorage.setItem('centerPins', JSON.stringify(pins));
+  // Build in-memory PIN map from DB (single source of truth — works across all devices)
+  _DB_PINS = {};
+  D.centers.forEach(function(c){ if(c.pin) _DB_PINS[c.id] = c.pin; });
+  // Load supervisor PIN from app_settings
+  try {
+    var settings = await dbGet('app_settings', 'key', 'key=eq.supervisor_pin');
+    _DB_SUPERVISOR_PIN = (settings && settings.length) ? settings[0].value : '';
+  } catch(e) { _DB_SUPERVISOR_PIN = ''; }
   renderCenters(); updateCenterSelects(); updateCenterSwitcher(); updateSidebarLogo();
 }
 function updateSidebarLogo() {
