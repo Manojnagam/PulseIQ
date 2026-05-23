@@ -3,6 +3,7 @@
   "public": false,
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/coach.html", "dest": "/coach.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "headers": [
