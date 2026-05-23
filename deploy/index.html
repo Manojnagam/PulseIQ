@@ -1604,12 +1604,12 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
     <div class="sec" id="sec-sql">
       <div class="ph"><div><div class="pt" data-t="pt_sql">SQL Setup Guide &amp; AI Config</div><div class="ps" data-t="ps_sql">Configure APIs and Database Schemas</div></div></div>
       <div class="tcard" style="padding:26px;margin-bottom:20px;border-top:4px solid var(--primary)">
-        <h3 style="margin:0 0 10px 0;font-size:16px;">🤖 Groq API Configuration</h3>
-        <p style="color:var(--muted);font-size:13px;margin-bottom:15px;">Enter your free Groq API Key to enable AI Weekly Summaries, Finance Insights and Body Composition analysis.</p>
-        <div class="fr" style="grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:14px">
-          <input type="password" id="cfg-groq-key" placeholder="gsk_..." style="margin-bottom:0">
-          <button class="btn-p" onclick="saveGroqKey()">Save Key</button>
+        <h3 style="margin:0 0 10px 0;font-size:16px;">🤖 Groq AI Configuration</h3>
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#166534">
+          🔒 <strong>Groq API key is managed server-side</strong> (Vercel environment variable). It is never sent to the browser.
         </div>
+        <button class="btn-s" onclick="testGroqKey()" id="btn-test-groq" style="margin-bottom:8px">🔍 Test Server Connection</button>
+        <div id="groq-test-result" style="display:none;margin-bottom:10px;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.6"></div>
         <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">🧠 AI Model Quality</label>
         <div class="fr" style="grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:4px">
           <select id="cfg-groq-model" style="padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px" onchange="saveGroqModel()">
@@ -2863,38 +2863,15 @@ function toggleLang() {
   applyLang();
 }
 
-var _centerAuth = (function() {
-  var auth = JSON.parse(sessionStorage.getItem('centerAuth') || '{}');
-  var cp = JSON.parse(localStorage.getItem('centerPins') || '{}');
+// PINs loaded from Supabase — single source of truth, works across all devices
+var _DB_PINS = {};           // { centerId: pin } — built from wellness_centers.pin
+var _DB_SUPERVISOR_PIN = ''; // from app_settings key='supervisor_pin'
 
-  // No center PINs at all → always supervisor, clear any stuck state
-  if(Object.keys(cp).length === 0) {
-    auth = { type: 'master' };
-    sessionStorage.setItem('centerAuth', JSON.stringify(auth));
-    return auth;
-  }
-
-  // If auth says 'center' but that center's PIN no longer exists, upgrade
-  if(auth.type === 'center' && auth.centerId && !cp[auth.centerId]) {
-    auth = { type: 'master' };
-    sessionStorage.setItem('centerAuth', JSON.stringify(auth));
-  }
-  return auth;
-})();
-// One-time reset: clear ALL old center PINs + stale auth from old confusing system
-// This runs once — after this, only downline/branch centers will get PINs via the new clean system
-if(!localStorage.getItem('_pinSystemV2')) {
-  localStorage.removeItem('centerPins');
-  sessionStorage.removeItem('centerAuth');
-  localStorage.setItem('_pinSystemV2', '1');
-}
+var _centerAuth = JSON.parse(sessionStorage.getItem('centerAuth') || '{}');
 var _pendingSwitchCenter = '';
 
 function switchActiveCenter(centerId) {
-  // Check if PIN protection is needed
-  var pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
-  var masterPin = (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin;
-  var hasPins = masterPin || Object.keys(pins).length > 0;
+  var hasPins = _DB_SUPERVISOR_PIN || Object.keys(_DB_PINS).length > 0;
 
   if(!hasPins) {
     // No PINs set anywhere — free access (first-time setup)
@@ -2930,12 +2907,11 @@ function switchActiveCenter(centerId) {
 function verifyPinPrompt() {
   var entered = (document.getElementById('pin-prompt-input').value||'').trim();
   if(!entered) return;
-  var masterPin = (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin;
-  var pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
   var targetCenter = _pendingSwitchCenter;
 
-  // Check master PIN first
-  if(masterPin && entered === masterPin) {
+  // Check supervisor PIN — DB first, localStorage fallback
+  var supervisorPin = _DB_SUPERVISOR_PIN || (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin || '';
+  if(supervisorPin && entered === supervisorPin) {
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     closeModal('pin-prompt');
@@ -2945,12 +2921,12 @@ function verifyPinPrompt() {
     return;
   }
 
-  // Check center-specific PIN — if targetCenter known, check directly; else search all pins (welcome prompt)
+  // Check center-specific PIN — use DB pins (works on all devices)
   var matchedCenter = null;
-  if(targetCenter && pins[targetCenter] && entered === pins[targetCenter]) {
+  if(targetCenter && _DB_PINS[targetCenter] && entered === _DB_PINS[targetCenter]) {
     matchedCenter = targetCenter;
   } else if(!targetCenter) {
-    for(var cid in pins) { if(pins[cid] && entered === pins[cid]) { matchedCenter = cid; break; } }
+    for(var cid in _DB_PINS) { if(_DB_PINS[cid] && entered === _DB_PINS[cid]) { matchedCenter = cid; break; } }
   }
   if(matchedCenter) {
     _centerAuth = { type: 'center', centerId: matchedCenter };
@@ -2997,7 +2973,7 @@ function updateCenterSwitcher() {
   var sel = document.getElementById('center-switcher'); if(!sel) return;
   var prev = sel.value || ACTIVE_CENTER;
   var isMaster = _centerAuth.type === 'master';
-  var noPins = !((JSON.parse(localStorage.getItem('ownerProfile')||'{}')).master_pin) && Object.keys(JSON.parse(localStorage.getItem('centerPins')||'{}')).length===0;
+  var noPins = !_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0;
   // Build options: non-master users only see their authenticated center
   var opts = '';
   if(isMaster || noPins) {
@@ -3030,10 +3006,10 @@ function filterByCenterViaCustomer(arr) {
 }
 
 // Helper: filter finance by wellness_center_id (requires finance to have the column)
-// Records with null wellness_center_id are treated as belonging to the active center (legacy/unassigned records)
+// Only show records explicitly assigned to the active center; null records visible to supervisor only
 function filterFinanceByCenter(arr) {
   if(!ACTIVE_CENTER) return arr;
-  return arr.filter(function(f){ return !f.wellness_center_id || f.wellness_center_id === ACTIVE_CENTER; });
+  return arr.filter(function(f){ return f.wellness_center_id === ACTIVE_CENTER; });
 }
 
 // Helper: get the active center's display name
@@ -3050,51 +3026,22 @@ function getCenterName() {
 var OWNER_PROFILE = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
 
 function checkStartupAuth() {
-  var masterPin = (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin;
-  var pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
+  var hasCenterPins = Object.keys(_DB_PINS).length > 0;
 
-  // Remove your own center's PIN if it matches master PIN (you don't need one)
-  if(masterPin) {
-    var changed = false;
-    for(var cid in pins) {
-      if(pins[cid] === masterPin) { delete pins[cid]; changed = true; }
-    }
-    if(changed) localStorage.setItem('centerPins', JSON.stringify(pins));
-  }
-
-  var hasCenterPins = Object.keys(pins).length > 0;
-
-  // No PINs at all — full access (first-time setup)
-  if(!hasCenterPins && !masterPin) {
+  // No PINs configured in DB at all — full supervisor access
+  if(!hasCenterPins && !_DB_SUPERVISOR_PIN) {
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     updateCenterSwitcher();
     return;
   }
 
-  // If center PINs now exist (loaded from DB) but session was auto-granted master
-  // before data loaded (empty localStorage on fresh device) — reset and prompt
-  var sessionRaw = sessionStorage.getItem('centerAuth');
-  var sessionWasAutoGranted = !sessionRaw || sessionRaw === '{"type":"master"}';
-  if(hasCenterPins && sessionWasAutoGranted && !masterPin) {
-    _centerAuth = {};
-    sessionStorage.removeItem('centerAuth');
-  }
-
-  // If session was 'center' but that center's PIN was just cleaned up, upgrade to master
-  if(_centerAuth.type === 'center' && _centerAuth.centerId && !pins[_centerAuth.centerId]) {
-    _centerAuth = { type: 'master' };
-    sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
+  // Valid session already exists — restore it
+  if(_centerAuth.type === 'master') {
     updateCenterSwitcher();
     return;
   }
-
-  // If session auth exists and was explicitly set (not auto-granted), apply it
-  if(_centerAuth.type === 'master' && masterPin) {
-    updateCenterSwitcher();
-    return;
-  }
-  if(_centerAuth.type === 'center' && _centerAuth.centerId) {
+  if(_centerAuth.type === 'center' && _centerAuth.centerId && _DB_PINS[_centerAuth.centerId]) {
     ACTIVE_CENTER = _centerAuth.centerId;
     localStorage.setItem('activeCenter', _centerAuth.centerId);
     _applySwitch(_centerAuth.centerId);
@@ -3113,21 +3060,18 @@ function checkStartupAuth() {
 }
 
 function _matchPinToCenter(entered) {
-  var pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
-  for(var cid in pins) { if(pins[cid] === entered) return cid; }
+  for(var cid in _DB_PINS) { if(_DB_PINS[cid] === entered) return cid; }
   return null;
 }
 
-// Single unified PIN verify — master PIN ALWAYS checked first
+// Single unified PIN verify — supervisor PIN always checked first
 verifyPinPrompt = function() {
   var entered = (document.getElementById('pin-prompt-input').value||'').trim();
   if(!entered) return;
-  var masterPin = (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin;
-  var pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
   var targetCenter = _pendingSwitchCenter;
 
-  // 1. ALWAYS check master PIN first — grants full access
-  if(masterPin && entered === masterPin) {
+  // 1. Supervisor PIN — grants full access
+  if(_DB_SUPERVISOR_PIN && entered === _DB_SUPERVISOR_PIN) {
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     closeModal('pin-prompt');
@@ -3138,7 +3082,7 @@ verifyPinPrompt = function() {
   }
 
   // 2. Check center-specific PIN
-  if(targetCenter && pins[targetCenter] && entered === pins[targetCenter]) {
+  if(targetCenter && _DB_PINS[targetCenter] && entered === _DB_PINS[targetCenter]) {
     _centerAuth = { type: 'center', centerId: targetCenter };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     closeModal('pin-prompt');
@@ -3513,6 +3457,57 @@ function saveGroqKey() {
   localStorage.setItem('groqKey', key);
   showToast('Groq API Key saved successfully!', 'success');
 }
+async function testGroqKey() {
+  var resultEl = document.getElementById('groq-test-result');
+  var btn = document.getElementById('btn-test-groq');
+  btn.textContent = 'Testing…';
+  btn.disabled = true;
+  resultEl.style.display = 'none';
+  try {
+    var res = await fetch('/api/groq-models');
+    var data = await res.json();
+    if (!res.ok) {
+      resultEl.style.background = '#fde8e8';
+      resultEl.style.color = '#a10000';
+      resultEl.innerHTML = '❌ <strong>Server key invalid</strong> — ' + (data.error || 'HTTP ' + res.status);
+    } else {
+      var models = (data.data || []).map(function(m){ return m.id; }).sort();
+      resultEl.style.background = '#e6f9f0';
+      resultEl.style.color = '#065f46';
+      resultEl.innerHTML = '✅ <strong>Server Groq key is valid!</strong> ' + models.length + ' models available:<br>'
+        + models.map(function(m){ return '• ' + m; }).join('<br>');
+    }
+  } catch(e) {
+    resultEl.style.background = '#fde8e8';
+    resultEl.style.color = '#a10000';
+    resultEl.innerHTML = '❌ Network error — ' + e.message;
+  }
+  resultEl.style.display = 'block';
+  btn.textContent = 'Test Key';
+  btn.disabled = false;
+}
+// ── CENTRALIZED GROQ PIPELINE ──
+// All AI calls go through callGroq() — routes through /api/groq on Vercel.
+// The GROQ_API_KEY lives in Vercel env vars, never in the browser.
+var GROQ_URL = '/api/groq';
+async function callGroq(systemPrompt, userPrompt, opts) {
+  opts = opts || {};
+  var res = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemPrompt: systemPrompt || null,
+      userPrompt: userPrompt,
+      model: opts.model || GROQ_MODEL,
+      maxTokens: opts.maxTokens || 500,
+      temperature: opts.temperature !== undefined ? opts.temperature : 0.85
+    })
+  });
+  var data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Groq API error ' + res.status);
+  if (data.error) throw new Error(data.error);
+  return data.text;
+}
 function saveGroqModel() {
   var sel = document.getElementById('cfg-groq-model');
   if (!sel) return;
@@ -3598,10 +3593,14 @@ async function loadAll() {
 }
 async function loadCenters() {
   D.centers = await dbGet('wellness_centers');
-  // Rebuild centerPins from DB so all devices share the same PINs
-  var pins = {};
-  D.centers.forEach(function(c){ if(c.center_pin) pins[c.id] = c.center_pin; });
-  localStorage.setItem('centerPins', JSON.stringify(pins));
+  // Build in-memory PIN map from DB (single source of truth — works across all devices)
+  _DB_PINS = {};
+  D.centers.forEach(function(c){ var p = c.pin || c.center_pin; if(p) _DB_PINS[c.id] = p; });
+  // Load supervisor PIN from app_settings
+  try {
+    var settings = await dbGet('app_settings', 'key', 'key=eq.supervisor_pin');
+    _DB_SUPERVISOR_PIN = (settings && settings.length) ? settings[0].value : '';
+  } catch(e) { _DB_SUPERVISOR_PIN = ''; }
   renderCenters(); updateCenterSelects(); updateCenterSwitcher(); updateSidebarLogo();
 }
 function updateSidebarLogo() {
@@ -3890,9 +3889,8 @@ function onCompDayToggle() {
 
 // ── NAVIGATION ──
 function isSupervisor() {
-  // If no center PINs exist at all, you're always supervisor
-  var cp = JSON.parse(localStorage.getItem('centerPins') || '{}');
-  if(Object.keys(cp).length === 0) return true;
+  // If no PINs configured in DB at all, you're always supervisor
+  if(!_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0) return true;
   return !_centerAuth.type || _centerAuth.type === 'master';
 }
 
@@ -4123,45 +4121,29 @@ function getChurnRisk(custId) {
 
 // ── AI INSIGHTS ──
 async function generateWeeklySummary() {
-  var apiKey = getGroqKey();
-  if(!apiKey) { showToast('Please setup Groq API Key in Config tab', 'error'); return; }
   var btn = document.getElementById('ai-overview-btn');
   var div = document.getElementById('ai-overview-summary');
   btn.disabled = true; btn.textContent = 'Generating...';
   div.style.display = 'block'; div.innerHTML = '<div style="color:var(--muted)">Analyzing business data with Groq AI...</div>';
-  
+
   var today = new Date();
   var lastWeek = new Date(today); lastWeek.setDate(today.getDate()-7);
   var lastWeekStr = lastWeek.toISOString().split('T')[0];
-  
+
   var totalCusts = D.customers.length;
   var weekAtt = D.attendance.filter(function(a){return a.date >= lastWeekStr && a.status === 'present';}).length;
   var weekInc = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance).filter(function(f){return f.date >= lastWeekStr && f.type === 'income';}).reduce(function(s,f){return s+Number(f.amount)},0);
   var newCusts = D.customers.filter(function(c){return (c.join_date||c.pack_start_date) >= lastWeekStr;}).length;
   var inactiveCount = D.customers.filter(function(c){return isInactive(c.id);}).length;
-  
+
   var statsMsg = "Total Customers: " + totalCusts + "\nThis Week Attendance: " + weekAtt + "\nThis Week Income: ₹" + weekInc + "\nNew Customers This Week: " + newCusts + "\nInactive Customers (7+ days): " + inactiveCount;
-  
+
   try {
-    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: 'system', content: 'You are a business advisor for a wellness center. Give a friendly 4-5 sentence weekly summary with 2 specific action items for the owner.' },
-          { role: 'user', content: 'Here are the stats:\n' + statsMsg }
-        ],
-        max_tokens: 500
-      })
-    });
-    if (!res.ok) throw new Error('Groq API error ' + res.status);
-    var data = await res.json();
-    if(data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    var aiText = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : 'No response from AI.';
+    var aiText = await callGroq(
+      'You are a business advisor for a wellness center. Give a friendly 4-5 sentence weekly summary with 2 specific action items for the owner.',
+      'Here are the stats:\n' + statsMsg,
+      { maxTokens: 500 }
+    );
     div.innerHTML = '<div style="font-size:16px; margin-bottom:10px;"><strong>🤖 AI Business Summary:</strong></div><div style="color:var(--text)">' + aiText.replace(/\n/g, '<br/>') + '</div>';
   } catch(e) {
     div.innerHTML = '<div style="color:var(--danger)">Error generating summary: ' + e.message + '</div>';
@@ -4177,8 +4159,7 @@ var _renewalResults = [];
 var _expiringItems  = [];
 
 async function runRenewalAgent() {
-  var apiKey = getGroqKey();
-  if (!apiKey) { showToast('Please set your Groq API Key in Config tab first', 'error'); return; }
+  if (!getGroqKey()) { showToast('Please set your Groq API Key in Config tab first', 'error'); return; }
 
   // Find customers expiring in 0–5 days (within active center filter)
   var _custs = filterByCenter(D.customers);
@@ -4218,22 +4199,11 @@ async function runRenewalAgent() {
         'Sessions attended: ' + item.sessions + ' out of ' + item.total + '\n' +
         'Goal: ' + (c.goal || 'general wellness') + '\n' +
         (c.pack_price ? 'Pack price: ₹' + c.pack_price + '\n' : '');
-      var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages: [
-            { role: 'system', content: "You write WhatsApp renewal reminders for a wellness center called " + _cn + ". Write warm, personal, motivating messages under 80 words. No markdown, no asterisks. Address customer by first name. Mention days left and gently ask them to renew. End with '" + _cn + "'. " + langInstruction },
-            { role: 'user', content: context }
-          ],
-          max_tokens: 280,
-          temperature: 0.85
-        })
-      });
-      if (!res.ok) throw new Error('Groq error ' + res.status);
-      var data = await res.json();
-      var msg = data.choices[0].message.content.trim();
+      var msg = await callGroq(
+        "You write WhatsApp renewal reminders for a wellness center called " + _cn + ". Write warm, personal, motivating messages under 80 words. No markdown, no asterisks. Address customer by first name. Mention days left and gently ask them to renew. End with '" + _cn + "'. " + langInstruction,
+        context,
+        { maxTokens: 280, temperature: 0.85 }
+      );
       _renewalResults.push({ c: c, msg: msg, days: item.days, sessions: item.sessions, total: item.total, lang: lang });
     } catch(e) {
       _renewalResults.push({ c: c, msg: null, days: item.days, error: e.message });
@@ -4283,8 +4253,6 @@ function sendAgentWA(i) {
 }
 
 async function regenRenewalMsg(i) {
-  var apiKey = getGroqKey();
-  if (!apiKey) { showToast('No Groq API key', 'error'); return; }
   var r = _renewalResults[i];
   var item = _expiringItems[i];
   var ta = document.getElementById('ra-msg-'+i);
@@ -4292,22 +4260,11 @@ async function regenRenewalMsg(i) {
   try {
     var c = r.c;
     var context = 'Customer name: ' + c.name + '\nPack: ' + (c.pack_type||'unknown') + '\nDays remaining: ' + r.days + '\nSessions attended: ' + r.sessions + ' out of ' + r.total + '\nGoal: ' + (c.goal||'general wellness');
-    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: 'system', content: "Write a DIFFERENT WhatsApp renewal reminder for " + getCenterName() + ". Under 80 words, warm, personal. No markdown. Use a different tone or opening line than before. " + (r.lang === 'Telugu' ? 'Write entirely in Telugu script (తెలుగు).' : r.lang === 'Hindi' ? 'Write entirely in Hindi script (हिंदी).' : 'Write in English.') },
-          { role: 'user', content: context }
-        ],
-        max_tokens: 220,
-        temperature: 1.0
-      })
-    });
-    if (!res.ok) throw new Error('Groq error ' + res.status);
-    var data = await res.json();
-    var newMsg = data.choices[0].message.content.trim();
+    var newMsg = await callGroq(
+      "Write a DIFFERENT WhatsApp renewal reminder for " + getCenterName() + ". Under 80 words, warm, personal. No markdown. Use a different tone or opening line than before. " + (r.lang === 'Telugu' ? 'Write entirely in Telugu script (తెలుగు).' : r.lang === 'Hindi' ? 'Write entirely in Hindi script (हिंदी).' : 'Write in English.'),
+      context,
+      { maxTokens: 220, temperature: 1.0 }
+    );
     _renewalResults[i].msg = newMsg;
     if (ta) { ta.value = newMsg; ta.style.color = ''; }
   } catch(e) {
@@ -4323,8 +4280,7 @@ var _agentResults = [];
 var _agentCfg     = null;
 
 async function runGenericAgent(cfg) {
-  var apiKey = getGroqKey();
-  if (!apiKey) { showToast('Set your Groq API Key in Config tab first', 'error'); return; }
+  if (!getGroqKey()) { showToast('Set your Groq API Key in Config tab first', 'error'); return; }
   if (!cfg.items || !cfg.items.length) { showToast(cfg.emptyMsg || 'Nothing found matching this agent\'s criteria.', 'success'); return; }
   _agentCfg     = cfg;
   _agentResults = [];
@@ -4344,21 +4300,12 @@ async function runGenericAgent(cfg) {
       : lang === 'Hindi'  ? "Write entirely in Hindi script (हिंदी). Keep only '" + _cnAI + "' in English."
       : 'Write in friendly English.';
     try {
-      var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages: [
-            { role: 'system', content: cfg.systemPrompt + ' ' + langLine },
-            { role: 'user',   content: cfg.contextFn(item) }
-          ],
-          max_tokens: 300, temperature: 0.85
-        })
-      });
-      if (!res.ok) throw new Error('Groq ' + res.status);
-      var data = await res.json();
-      _agentResults.push({ item:item, msg:data.choices[0].message.content.trim(), lang:lang, phone:phone });
+      var msg = await callGroq(
+        cfg.systemPrompt + ' ' + langLine,
+        cfg.contextFn(item),
+        { maxTokens: 300, temperature: 0.85 }
+      );
+      _agentResults.push({ item:item, msg:msg, lang:lang, phone:phone });
     } catch(e) {
       _agentResults.push({ item:item, msg:null, error:e.message, lang:lang, phone:phone });
       showToast('Agent failed for ' + cfg.labelFn(item) + ': ' + e.message, 'error');
@@ -4405,28 +4352,17 @@ function sendAgentMsg(i) {
 }
 
 async function regenAgentMsg(i) {
-  var apiKey = getGroqKey(); if (!apiKey) return;
   var r  = _agentResults[i];
   var ta = document.getElementById('ag-msg-'+i);
   if (ta) { ta.value = 'Regenerating...'; ta.style.color = 'var(--muted)'; }
   var langLine = r.lang === 'Telugu' ? 'Write entirely in Telugu (తెలుగు).'
     : r.lang === 'Hindi' ? 'Write entirely in Hindi (हिंदी).' : 'Write in English.';
   try {
-    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: 'system', content: _agentCfg.systemPrompt + ' Write a DIFFERENT message with a different opening line. ' + langLine },
-          { role: 'user',   content: _agentCfg.contextFn(r.item) }
-        ],
-        max_tokens: 300, temperature: 1.0
-      })
-    });
-    if (!res.ok) throw new Error('Groq ' + res.status);
-    var data = await res.json();
-    _agentResults[i].msg = data.choices[0].message.content.trim();
+    _agentResults[i].msg = await callGroq(
+      _agentCfg.systemPrompt + ' Write a DIFFERENT message with a different opening line. ' + langLine,
+      _agentCfg.contextFn(r.item),
+      { maxTokens: 300, temperature: 1.0 }
+    );
     if (ta) { ta.value = _agentResults[i].msg; ta.style.color = ''; }
   } catch(e) {
     if (ta) { ta.value = r.msg||''; ta.style.color = ''; }
@@ -4655,8 +4591,7 @@ function runWelcomeAgent() {
 //  AGENT 8 — 💹 Finance Analyst
 // ══════════════════════════════════════════
 async function runFinanceAnalystAgent() {
-  var apiKey = getGroqKey();
-  if (!apiKey) { showToast('Set Groq API Key in Config tab first', 'error'); return; }
+  if (!getGroqKey()) { showToast('Set Groq API Key in Config tab first', 'error'); return; }
 
   var today       = new Date();
   var curMon      = today.toISOString().substring(0,7);
@@ -4712,21 +4647,12 @@ async function runFinanceAnalystAgent() {
   container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted)"><div style="font-size:40px;margin-bottom:14px">💹</div><div style="font-size:14px">Analysing your financial data...<br><small>Reading income, expenses, trends and giving recommendations</small></div></div>';
 
   try {
-    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages:[
-          { role:'system', content:'You are a financial advisor for a small wellness center business in India. Analyze the data and structure your response with EXACTLY these four section headers on their own line:\n\nFINANCIAL HEALTH\nPROFIT ALLOCATION\nACTION ITEMS\nRED FLAG\n\nFor FINANCIAL HEALTH: 2-3 sentence summary with specific rupee numbers and trends.\nFor PROFIT ALLOCATION: Recommend exact % and rupee amount of net profit for each of: Emergency Reserve, SIP/Mutual Fund, Inventory Restock, Marketing, Business Growth. If net profit is negative say so and advise on cost cutting instead.\nFor ACTION ITEMS: 3 specific, numbered, actionable steps for this month.\nFor RED FLAG: One biggest risk or warning. If none, say "No major red flags this month."\nBe specific with numbers. Total under 350 words.' },
-          { role:'user', content:context }
-        ],
-        max_tokens:650, temperature:0.7
-      })
-    });
-    if (!res.ok) throw new Error('Groq API error '+res.status);
-    var d = await res.json();
-    _renderFinanceReport(d.choices[0].message.content.trim(), netProfit, curInc, curExp, pending, growth, expCat);
+    var aiText = await callGroq(
+      'You are a financial advisor for a small wellness center business in India. Analyze the data and structure your response with EXACTLY these four section headers on their own line:\n\nFINANCIAL HEALTH\nPROFIT ALLOCATION\nACTION ITEMS\nRED FLAG\n\nFor FINANCIAL HEALTH: 2-3 sentence summary with specific rupee numbers and trends.\nFor PROFIT ALLOCATION: Recommend exact % and rupee amount of net profit for each of: Emergency Reserve, SIP/Mutual Fund, Inventory Restock, Marketing, Business Growth. If net profit is negative say so and advise on cost cutting instead.\nFor ACTION ITEMS: 3 specific, numbered, actionable steps for this month.\nFor RED FLAG: One biggest risk or warning. If none, say "No major red flags this month."\nBe specific with numbers. Total under 350 words.',
+      context,
+      { maxTokens: 650, temperature: 0.7 }
+    );
+    _renderFinanceReport(aiText, netProfit, curInc, curExp, pending, growth, expCat);
   } catch(e) {
     container.innerHTML = '<div style="color:var(--danger);padding:20px;text-align:center">Error: '+e.message+'<br><br><button class="btn-c" onclick="runFinanceAnalystAgent()">Try Again</button></div>';
   }
@@ -4797,8 +4723,7 @@ function _copyFinanceReport() {
 
 // ── FINANCE AI INSIGHTS ──
 async function generateFinanceInsights() {
-  var apiKey = getGroqKey();
-  if (!apiKey) { showToast('Please setup Groq API Key in SQL/Config section', 'error'); return; }
+  if (!getGroqKey()) { showToast('Please setup Groq API Key in SQL/Config section', 'error'); return; }
   var btn = document.getElementById('fin-ai-btn');
   var outEl = document.getElementById('fin-ai-output');
   btn.disabled = true; btn.textContent = 'Analyzing...';
@@ -4877,23 +4802,7 @@ async function generateFinanceInsights() {
   ].join('\n');
 
   try {
-    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: dataMsg }
-        ],
-        max_tokens: 800,
-        temperature: 0.4
-      })
-    });
-    if (!res.ok) throw new Error('Groq API error ' + res.status);
-    var data = await res.json();
-    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    var aiText = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : 'No response.';
+    var aiText = await callGroq(systemPrompt, dataMsg, { maxTokens: 800, temperature: 0.4 });
     // Render with nice formatting
     var html = aiText
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -4917,8 +4826,7 @@ async function generateFinanceInsights() {
 
 var _aiInFlight = {};
 async function askBodyAI(cid, rid) {
-  var apiKey = getGroqKey();
-  if(!apiKey) { showToast('Please setup Groq API Key in Config tab', 'error'); return; }
+  if(!getGroqKey()) { showToast('Please setup Groq API Key in Config tab', 'error'); return; }
   var row = document.getElementById('ai-row-'+rid);
   var content = document.getElementById('ai-content-'+rid);
   if(row.style.display==='table-row') { row.style.display='none'; return; }
@@ -4946,25 +4854,11 @@ async function askBodyAI(cid, rid) {
   });
 
   try {
-    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: 'system', content: "You are an expert wellness coach at a nutrition wellness center in India. Analyze this customer's body composition history from their Karada body scanner readings. Explain in simple, friendly language: 1) What changed and whether it is good or bad based on their goal, 2) Why this change likely happened (diet consistency, shake timing, hydration, attendance), 3) Two specific actionable recommendations for the wellness center owner to tell this customer. Keep response under 150 words. Be encouraging but honest. Use Indian context." },
-          { role: 'user', content: statsMsg }
-        ],
-        max_tokens: 500
-      })
-    });
-    if (!res.ok) throw new Error('Groq API error ' + res.status);
-    var data = await res.json();
-    if(data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    var aiText = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : 'No response from AI.';
+    var aiText = await callGroq(
+      "You are an expert wellness coach at a nutrition wellness center in India. Analyze this customer's body composition history from their Karada body scanner readings. Explain in simple, friendly language: 1) What changed and whether it is good or bad based on their goal, 2) Why this change likely happened (diet consistency, shake timing, hydration, attendance), 3) Two specific actionable recommendations for the wellness center owner to tell this customer. Keep response under 150 words. Be encouraging but honest. Use Indian context.",
+      statsMsg,
+      { maxTokens: 500 }
+    );
     content.innerHTML = '<strong>🤖 AI Analysis:</strong><div style="margin-top:8px">'+aiText.replace(/\n/g,'<br/>')+'</div>';
   } catch(e) {
     content.innerHTML = '<div style="color:var(--danger)">AI Error: '+e.message+'</div>';
@@ -4975,37 +4869,16 @@ async function askBodyAI(cid, rid) {
 }
 
 async function doGroqReport(cid, systemPrompt, userPrompt, title) {
-  var apiKey = getGroqKey();
-  if (!apiKey) { showToast('Please setup Groq API Key in Config tab', 'error'); return; }
-  
   var c = D.customers.find(function(x){return x.id === cid});
   var name = c ? (c.name||'Customer') : 'Customer';
-  
+
   document.getElementById('wai-title').textContent = name + ' - ' + title;
   document.getElementById('wai-content').innerHTML = '<div style="color:var(--muted)">Analyzing progress with Groq AI...</div>';
   document.getElementById('wai-wa-btn').style.display = 'none';
   openModal('weekly-ai');
-  
+
   try {
-    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        max_tokens: 500
-      })
-    });
-    if (!res.ok) throw new Error('Groq API error ' + res.status);
-    var data = await res.json();
-    if(data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    var aiText = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : 'No response from AI.';
+    var aiText = await callGroq(systemPrompt, userPrompt, { maxTokens: 500 });
     document.getElementById('wai-content').innerHTML = aiText.replace(/\n/g, '<br/>');
     
     var waBtn = document.getElementById('wai-wa-btn');
@@ -9674,8 +9547,7 @@ function renderSvDietPlan() {
 
 async function generateSvDietPlan() {
   if (_svDietInFlight) return;
-  var groqKey = getGroqKey();
-  if (!groqKey) { showToast('Set Groq API key in SQL/Config section first', 'error'); return; }
+  if (!getGroqKey()) { showToast('Set Groq API key in SQL/Config section first', 'error'); return; }
   if (!D_FOODS.length) { showToast('Add foods to the Food Database first', 'error'); return; }
   var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
   var svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
@@ -9721,13 +9593,7 @@ async function generateSvDietPlan() {
   btn.textContent = '⏳ Generating...'; btn.disabled = true;
   _svDietInFlight = true;
   try {
-    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST', headers:{'Authorization':'Bearer '+groqKey,'Content-Type':'application/json'},
-      body: JSON.stringify({ model: GROQ_MODEL, messages:[{role:'user',content:prompt}], temperature:0.3 })
-    });
-    if (!res.ok) throw new Error('Groq error: '+res.status);
-    var data = await res.json();
-    var raw = data.choices[0].message.content.trim();
+    var raw = await callGroq(null, prompt, { temperature: 0.3 });
     var jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('AI did not return valid JSON');
     var plan = JSON.parse(jsonMatch[0]);
@@ -10379,8 +10245,7 @@ function renderBizAnalyst() {
 var _bizAiInFlight = false;
 async function generateBizAIReport() {
   if(_bizAiInFlight) return;
-  var groqKey = getGroqKey();
-  if(!groqKey) { showToast('Add your Groq API key in SQL/Config to use AI Report','error'); return; }
+  if(!getGroqKey()) { showToast('Add your Groq API key in SQL/Config to use AI Report','error'); return; }
   var month = (document.getElementById('biz-month')||{}).value || new Date().toISOString().substring(0,7);
   _bizAiInFlight = true;
   var btn = document.querySelector('[onclick="generateBizAIReport()"]');
@@ -10417,14 +10282,7 @@ async function generateBizAIReport() {
     +'Give a 150-word business analysis covering: 1) Overall health of the business, 2) Top 2 strengths, 3) Top 2 urgent issues to fix, 4) One specific action to take this week to grow VP. Be direct, practical, and encouraging. Use Indian business context.';
 
   try {
-    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
-      body: JSON.stringify({ model:GROQ_MODEL, messages:[{role:'user',content:prompt}], max_tokens:300 })
-    });
-    if(!res.ok) throw new Error('Groq API error: '+res.status);
-    var data = await res.json();
-    var text = (data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'No response.';
+    var text = await callGroq(null, prompt, { maxTokens: 300 });
     resultEl.innerHTML = '<div style="font-weight:600;margin-bottom:8px;font-size:14px">✨ AI Business Report — '+month+'</div><div style="font-size:13px;line-height:1.8">'+text.replace(/\n/g,'<br>')+'</div>';
   } catch(e) {
     resultEl.innerHTML = '<div style="color:var(--danger)">Error: '+e.message+'</div>';
@@ -12224,8 +12082,7 @@ async function generateDietPlan(custId, silent) {
   if(!latestWeight || !height || !age){ if(!silent) showToast('Client needs weight (body record), height, and age to generate plan','error'); return; }
   if(!D_FOODS.length){ if(!silent) showToast('Add foods to the Food Database first','error'); return; }
 
-  var groqKey = getGroqKey();
-  if(!groqKey){ if(!silent) showToast('Set your Groq API key in SQL/Config section first','error'); return; }
+  if(!getGroqKey()){ if(!silent) showToast('Set your Groq API key in SQL/Config section first','error'); return; }
 
   // Calculate RMR (Mifflin-St Jeor)
   var rmr = (10 * latestWeight) + (6.25 * height) - (5 * age) + (gender==='female' ? -161 : 5);
@@ -12326,14 +12183,7 @@ async function generateDietPlan(custId, silent) {
     '"thursday":'+dayTemplate+',"friday":'+dayTemplate+',"saturday":'+dayTemplate+',"sunday":'+dayTemplate+'}}';
 
   try {
-    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+groqKey,'Content-Type':'application/json'},
-      body: JSON.stringify({ model: GROQ_MODEL, messages:[{role:'user',content:prompt}], temperature:0.3 })
-    });
-    if(!res.ok) throw new Error('Groq error: '+res.status);
-    var data = await res.json();
-    var raw = data.choices[0].message.content.trim();
+    var raw = await callGroq(null, prompt, { temperature: 0.3 });
     // Extract JSON from response
     var jsonMatch = raw.match(/\{[\s\S]*\}/);
     if(!jsonMatch) throw new Error('AI did not return valid JSON');
@@ -12481,7 +12331,6 @@ async function bulkGenerateDietPlans() {
 }
 
 async function _doBulkGenerate() {
-  var groqKey = getGroqKey();
   var pending = D.customers.filter(function(c){
     if(c.diet_plan) return false;
     var bodyRecs = D.body.filter(function(b){return b.customer_id===c.id;});
@@ -12492,100 +12341,45 @@ async function _doBulkGenerate() {
   });
   if(!pending.length){ showToast('All eligible customers already have a diet plan!','success'); return; }
 
+  getCredentials();
+  if(!SB_URL){ showToast('Supabase not connected','error'); return; }
+
   var btn = document.getElementById('bulk-diet-btn');
   if(btn){ btn.disabled=true; btn.textContent='⏳ Generating...'; }
   _dietInFlight = true;
-  showToast('Generating diet plans for '+pending.length+' customers...','success');
+  showToast('Sending '+pending.length+' customers to edge function...','success');
 
-  var done=0, failed=0;
-  for(var i=0; i<pending.length; i++){
-    var c = pending[i];
-    try {
-      var bodyRecs = D.body.filter(function(b){return b.customer_id===c.id;}).sort(function(a,b){return b.date>a.date?1:-1;});
-      var latestWeight = parseFloat(bodyRecs[0].weight);
-      var height = parseFloat(c.height);
-      var age = c.age ? parseInt(c.age) : Math.floor((new Date()-new Date(c.dob))/(365.25*24*3600*1000));
-      var gender = (c.gender||'').toLowerCase();
-      var goal = c.goal || 'Weight Loss';
-      var dietType = c.diet_type || 'veg';
-      var activity = c.activity_level || 'light';
-      var trainingType = c.training_type || 'dumbbell';
-      var proteinRatio = parseFloat(c.protein_ratio) || 2.0;
+  try {
+    var edgeUrl = SB_URL.replace(/\/$/, '') + '/functions/v1/bulk-diet';
+    var res = await fetch(edgeUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + SB_KEY
+      },
+      body: JSON.stringify({
+        customerIds: pending.map(function(c){ return c.id; }),
+        foodsDb: D_FOODS
+      })
+    });
 
-      var rmr = (10*latestWeight)+(6.25*height)-(5*age)+(gender==='female'?-161:5);
-      var actMult = {sedentary:1.2,light:1.375,moderate:1.55,active:1.725}[activity]||1.375;
-      var tdee = Math.round(rmr*actMult);
-      var isWL = goal.toLowerCase().includes('loss');
-      var targetCal = isWL ? Math.round(tdee-400) : Math.round(tdee+400);
-      var targetProtein = Math.round(latestWeight * proteinRatio);
-      var trainingDesc = {
-        'dumbbell':'Dumbbell weight training','bodyweight':'Bodyweight/fitness exercises',
-        'walking':'Walking (10,000 steps/day)','dumbbell+walking':'Dumbbell training + 10,000 steps/day',
-        'bodyweight+walking':'Bodyweight exercises + 10,000 steps/day'
-      }[trainingType]||trainingType;
+    var data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Edge function error ' + res.status);
 
-      var bCenter = c.wellness_center_id ? D.centers.find(function(x){return x.id===c.wellness_center_id;}) : null;
-      var bCenterUnavail = bCenter && bCenter.unavailable_foods ? bCenter.unavailable_foods.split(',').map(function(f){return f.trim().toLowerCase();}).filter(Boolean) : [];
-      var bCustOverride  = c.food_override  ? c.food_override.split(',').map(function(f){return f.trim().toLowerCase();}).filter(Boolean) : [];
-      var bCustRestrict  = c.food_restrict  ? c.food_restrict.split(',').map(function(f){return f.trim().toLowerCase();}).filter(Boolean) : [];
-      var bFinalUnavail  = bCenterUnavail.filter(function(f){return !bCustOverride.includes(f);}).concat(bCustRestrict);
-      var foods = D_FOODS.filter(function(f){
-        if(dietType==='veg' && f.category==='non-veg') return false;
-        if(bFinalUnavail.some(function(u){return f.name.toLowerCase().includes(u);})) return false;
-        return true;
-      });
-      var foodList = foods.map(function(f){
-        return f.name+' (Cal:'+f.calories+' Protein:'+f.protein+'g Carbs:'+f.carbs+'g Fiber:'+f.fiber+'g Fat:'+f.fat+'g per 100g, best for: '+f.meal_time+')';
-      }).join('\n');
+    // Reload customers so diet_plan fields reflect what the edge function saved
+    var fresh = await dbGet('customers', '*');
+    if(fresh) D.customers = fresh;
 
-      var dayTpl = '{"mid_morning":{"name":"","grams":0,"calories":0,"protein":0},"lunch":[{"name":"","grams":0,"calories":0,"protein":0}],"evening":{"name":"","grams":0,"calories":0,"protein":0},"dinner":[{"name":"","grams":0,"calories":0,"protein":0}],"total_calories":0,"total_protein":0}';
-      var prompt = 'You are a sports nutritionist at a nutrition wellness center in India. Create a 7-day meal plan (Monday to Sunday) for this client.\n\n'+
-        'Client: '+c.name+'\nPrimary Goal: '+(isWL?'Weight Loss (fat loss while preserving muscle)':'Weight Gain (lean muscle mass)')+'\n'+
-        'Secondary Goal: MUSCLE GAIN — applies to ALL clients\nDiet: '+(dietType==='veg'?'Vegetarian':'Non-Vegetarian')+'\n'+
-        'Training: '+trainingDesc+'\nRMR: '+Math.round(rmr)+' kcal | TDEE: '+tdee+' kcal\n'+
-        'Target Calories: '+targetCal+' kcal/day | Target Protein: '+targetProtein+'g/day ('+proteinRatio+'g/kg)\n'+
-        'Weight: '+latestWeight+'kg | Height: '+height+'cm | Age: '+age+'\n\n'+
-        'RULES:\n- Breakfast is ALWAYS Protein Shake — do NOT include in JSON\n'+
-        '- Pick ONLY from the food list below\n- Specify exact grams\n'+
-        '- Each day: Mid-Morning Snack (1 item), Lunch (2-3 items), Evening Snack (1 item), Dinner (2-3 items)\n'+
-        '- Vary meals across days — no same lunch or dinner two days in a row\n'+
-        '- MUST hit protein target of '+targetProtein+'g/day\n'+
-        '- Keep calories within 50 kcal of '+targetCal+'\n\nAVAILABLE FOODS:\n'+foodList+'\n\n'+
-        'Return ONLY valid JSON:\n'+
-        '{"target_calories":'+targetCal+',"target_protein":'+targetProtein+',"rmr":'+Math.round(rmr)+',"tdee":'+tdee+',"goal":"'+goal+'","protein_ratio":'+proteinRatio+',"note":"",'+
-        '"days":{"monday":'+dayTpl+',"tuesday":'+dayTpl+',"wednesday":'+dayTpl+','+
-        '"thursday":'+dayTpl+',"friday":'+dayTpl+',"saturday":'+dayTpl+',"sunday":'+dayTpl+'}}';
-
-      var res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+groqKey,'Content-Type':'application/json'},
-        body: JSON.stringify({model:GROQ_MODEL,messages:[{role:'user',content:prompt}],temperature:0.3})
-      });
-      if(!res.ok) throw new Error('Groq '+res.status);
-      var data = await res.json();
-      var raw = data.choices[0].message.content.trim();
-      var jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if(!jsonMatch) throw new Error('No JSON');
-      var plan = JSON.parse(jsonMatch[0]);
-      plan.generated = new Date().toISOString().split('T')[0];
-      plan.client_name = c.name;
-      await dbUpdate('customers', c.id, {diet_plan: JSON.stringify(plan)});
-      var idx = D.customers.findIndex(function(x){return x.id===c.id;});
-      if(idx>=0) D.customers[idx].diet_plan = JSON.stringify(plan);
-      done++;
-      if(btn) btn.textContent='⏳ '+done+'/'+pending.length+' done...';
-      // Small delay to avoid rate limiting
-      await new Promise(function(r){setTimeout(r,800);});
-    } catch(e) {
-      failed++;
-      console.warn('Diet plan failed for '+c.name+': '+e.message);
-    }
+    renderCustomers();
+    showToast('Done! '+data.done+' plans generated'+(data.failed?' | '+data.failed+' failed':''),'success');
+    if(data.errors && data.errors.length) console.warn('Bulk diet errors:', data.errors);
+  } catch(e) {
+    showToast('Bulk generate failed: '+e.message,'error');
+    console.error(e);
   }
 
   _dietInFlight = false;
   if(btn){ btn.disabled=false; btn.textContent='🥗 Bulk Diet Plans'; }
-  renderCustomers();
-  showToast('Done! '+done+' plans generated'+(failed?' | '+failed+' failed (missing data)':''),'success');
 }
 
 // ── FOOD DATABASE ──
