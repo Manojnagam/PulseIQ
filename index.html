@@ -12394,93 +12394,45 @@ async function _doBulkGenerate() {
   });
   if(!pending.length){ showToast('All eligible customers already have a diet plan!','success'); return; }
 
+  getCredentials();
+  if(!SB_URL){ showToast('Supabase not connected','error'); return; }
+
   var btn = document.getElementById('bulk-diet-btn');
   if(btn){ btn.disabled=true; btn.textContent='⏳ Generating...'; }
   _dietInFlight = true;
-  showToast('Generating diet plans for '+pending.length+' customers...','success');
+  showToast('Sending '+pending.length+' customers to edge function...','success');
 
-  var done=0, failed=0;
-  for(var i=0; i<pending.length; i++){
-    var c = pending[i];
-    try {
-      var bodyRecs = D.body.filter(function(b){return b.customer_id===c.id;}).sort(function(a,b){return b.date>a.date?1:-1;});
-      var latestWeight = parseFloat(bodyRecs[0].weight);
-      var height = parseFloat(c.height);
-      var age = c.age ? parseInt(c.age) : Math.floor((new Date()-new Date(c.dob))/(365.25*24*3600*1000));
-      var gender = (c.gender||'').toLowerCase();
-      var goal = c.goal || 'Weight Loss';
-      var dietType = c.diet_type || 'veg';
-      var activity = c.activity_level || 'light';
-      var trainingType = c.training_type || 'dumbbell';
-      var proteinRatio = parseFloat(c.protein_ratio) || 2.0;
+  try {
+    var edgeUrl = SB_URL.replace(/\/$/, '') + '/functions/v1/bulk-diet';
+    var res = await fetch(edgeUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + SB_KEY
+      },
+      body: JSON.stringify({
+        customerIds: pending.map(function(c){ return c.id; }),
+        foodsDb: D_FOODS
+      })
+    });
 
-      var rmr = (10*latestWeight)+(6.25*height)-(5*age)+(gender==='female'?-161:5);
-      var actMult = {sedentary:1.2,light:1.375,moderate:1.55,active:1.725}[activity]||1.375;
-      var tdee = Math.round(rmr*actMult);
-      var isWL = goal.toLowerCase().includes('loss');
-      var targetCal = isWL ? Math.round(tdee-400) : Math.round(tdee+400);
-      var targetProtein = Math.round(latestWeight * proteinRatio);
-      var trainingDesc = {
-        'dumbbell':'Dumbbell weight training','bodyweight':'Bodyweight/fitness exercises',
-        'walking':'Walking (10,000 steps/day)','dumbbell+walking':'Dumbbell training + 10,000 steps/day',
-        'bodyweight+walking':'Bodyweight exercises + 10,000 steps/day'
-      }[trainingType]||trainingType;
+    var data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Edge function error ' + res.status);
 
-      var bCenter = c.wellness_center_id ? D.centers.find(function(x){return x.id===c.wellness_center_id;}) : null;
-      var bCenterUnavail = bCenter && bCenter.unavailable_foods ? bCenter.unavailable_foods.split(',').map(function(f){return f.trim().toLowerCase();}).filter(Boolean) : [];
-      var bCustOverride  = c.food_override  ? c.food_override.split(',').map(function(f){return f.trim().toLowerCase();}).filter(Boolean) : [];
-      var bCustRestrict  = c.food_restrict  ? c.food_restrict.split(',').map(function(f){return f.trim().toLowerCase();}).filter(Boolean) : [];
-      var bFinalUnavail  = bCenterUnavail.filter(function(f){return !bCustOverride.includes(f);}).concat(bCustRestrict);
-      var foods = D_FOODS.filter(function(f){
-        if(dietType==='veg' && f.category==='non-veg') return false;
-        if(bFinalUnavail.some(function(u){return f.name.toLowerCase().includes(u);})) return false;
-        return true;
-      });
-      var foodList = foods.map(function(f){
-        return f.name+' (Cal:'+f.calories+' Protein:'+f.protein+'g Carbs:'+f.carbs+'g Fiber:'+f.fiber+'g Fat:'+f.fat+'g per 100g, best for: '+f.meal_time+')';
-      }).join('\n');
+    // Reload customers so diet_plan fields reflect what the edge function saved
+    var fresh = await dbGet('customers', '*');
+    if(fresh) D.customers = fresh;
 
-      var dayTpl = '{"mid_morning":{"name":"","grams":0,"calories":0,"protein":0},"lunch":[{"name":"","grams":0,"calories":0,"protein":0}],"evening":{"name":"","grams":0,"calories":0,"protein":0},"dinner":[{"name":"","grams":0,"calories":0,"protein":0}],"total_calories":0,"total_protein":0}';
-      var prompt = 'You are a sports nutritionist at a nutrition wellness center in India. Create a 7-day meal plan (Monday to Sunday) for this client.\n\n'+
-        'Client: '+c.name+'\nPrimary Goal: '+(isWL?'Weight Loss (fat loss while preserving muscle)':'Weight Gain (lean muscle mass)')+'\n'+
-        'Secondary Goal: MUSCLE GAIN — applies to ALL clients\nDiet: '+(dietType==='veg'?'Vegetarian':'Non-Vegetarian')+'\n'+
-        'Training: '+trainingDesc+'\nRMR: '+Math.round(rmr)+' kcal | TDEE: '+tdee+' kcal\n'+
-        'Target Calories: '+targetCal+' kcal/day | Target Protein: '+targetProtein+'g/day ('+proteinRatio+'g/kg)\n'+
-        'Weight: '+latestWeight+'kg | Height: '+height+'cm | Age: '+age+'\n\n'+
-        'RULES:\n- Breakfast is ALWAYS Protein Shake — do NOT include in JSON\n'+
-        '- Pick ONLY from the food list below\n- Specify exact grams\n'+
-        '- Each day: Mid-Morning Snack (1 item), Lunch (2-3 items), Evening Snack (1 item), Dinner (2-3 items)\n'+
-        '- Vary meals across days — no same lunch or dinner two days in a row\n'+
-        '- MUST hit protein target of '+targetProtein+'g/day\n'+
-        '- Keep calories within 50 kcal of '+targetCal+'\n\nAVAILABLE FOODS:\n'+foodList+'\n\n'+
-        'Return ONLY valid JSON:\n'+
-        '{"target_calories":'+targetCal+',"target_protein":'+targetProtein+',"rmr":'+Math.round(rmr)+',"tdee":'+tdee+',"goal":"'+goal+'","protein_ratio":'+proteinRatio+',"note":"",'+
-        '"days":{"monday":'+dayTpl+',"tuesday":'+dayTpl+',"wednesday":'+dayTpl+','+
-        '"thursday":'+dayTpl+',"friday":'+dayTpl+',"saturday":'+dayTpl+',"sunday":'+dayTpl+'}}';
-
-      var raw = await callGroq(null, prompt, { temperature: 0.3 });
-      var jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if(!jsonMatch) throw new Error('No JSON');
-      var plan = JSON.parse(jsonMatch[0]);
-      plan.generated = new Date().toISOString().split('T')[0];
-      plan.client_name = c.name;
-      await dbUpdate('customers', c.id, {diet_plan: JSON.stringify(plan)});
-      var idx = D.customers.findIndex(function(x){return x.id===c.id;});
-      if(idx>=0) D.customers[idx].diet_plan = JSON.stringify(plan);
-      done++;
-      if(btn) btn.textContent='⏳ '+done+'/'+pending.length+' done...';
-      // Small delay to avoid rate limiting
-      await new Promise(function(r){setTimeout(r,800);});
-    } catch(e) {
-      failed++;
-      console.warn('Diet plan failed for '+c.name+': '+e.message);
-    }
+    renderCustomers();
+    showToast('Done! '+data.done+' plans generated'+(data.failed?' | '+data.failed+' failed':''),'success');
+    if(data.errors && data.errors.length) console.warn('Bulk diet errors:', data.errors);
+  } catch(e) {
+    showToast('Bulk generate failed: '+e.message,'error');
+    console.error(e);
   }
 
   _dietInFlight = false;
   if(btn){ btn.disabled=false; btn.textContent='🥗 Bulk Diet Plans'; }
-  renderCustomers();
-  showToast('Done! '+done+' plans generated'+(failed?' | '+failed+' failed (missing data)':''),'success');
 }
 
 // ── FOOD DATABASE ──
