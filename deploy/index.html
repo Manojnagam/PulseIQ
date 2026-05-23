@@ -711,14 +711,14 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
     <div class="sec" id="sec-centers">
       <div class="ph">
         <div><div class="pt" data-t="pt_centers">Wellness Centers</div><div class="ps" data-t="ps_centers">Manage all centers in your network</div></div>
-        <button class="btn-p" onclick="updateCenterOwnerSelect();openModal(&#39;center&#39;)">+ Add Center</button>
+        <button class="btn-p" onclick="openAddCenter()">+ Add Center</button>
         <button class="btn-p" onclick="openModal('onboard-customer')" style="background:linear-gradient(135deg,#7c3aed,#a855f7);margin-left:8px">+ Onboard ₹1999 Customer</button>
       </div>
       <div class="stats" id="centers-stats"><div class="stat"><div class="stat-l">Total Centers</div><div class="stat-v">1</div></div><div class="stat"><div class="stat-l">Downline</div><div class="stat-v">0</div></div><div class="stat"><div class="stat-l">Branches</div><div class="stat-v">0</div></div></div>
       <div class="tcard">
         <div class="ttoolbar"><input class="search" id="centers-search" placeholder="🔍 Search centers..." oninput="renderCenters()"></div>
         <div class="twrap"><table>
-          <thead><tr><th>Center Name</th><th>Owner</th><th>Location</th><th>Contact</th><th>Type</th><th>PIN</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Center Name</th><th>Network ID</th><th>Owner</th><th>Location</th><th>Contact</th><th>Type</th><th>PIN</th><th>Actions</th></tr></thead>
           <tbody id="centers-body"><tr><td><strong>Dharani's wellness center</strong></td><td>Nandyal</td><td>7981614593</td><td><span class="badge bg">main</span></td><td><div class="acts"><button class="btn-e" onclick="editCenter(&#39;c1fb6027-fbda-4640-b97e-bd1f086479e8&#39;)">Edit</button><button class="btn-d" onclick="delRecord(&#39;wellness_centers&#39;,&#39;c1fb6027-fbda-4640-b97e-bd1f086479e8&#39;,&#39;centers&#39;)">Delete</button></div></td></tr></tbody>
         </table></div>
       </div>
@@ -1970,6 +1970,15 @@ alter table lead_followups enable row level security;
 create policy "allow all" on lead_followups for all using (true);
 
 -- ==========================================
+-- 🪪 PULSEZEN NETWORK ID + DISTRIBUTOR ID (Run once)
+-- ==========================================
+ALTER TABLE wellness_centers
+ADD COLUMN IF NOT EXISTS network_id text,
+ADD COLUMN IF NOT EXISTS distributor_id text;
+-- network_id: auto-generated PulseZen identity (e.g. PZ-DH-0001) — set by app on center creation
+-- distributor_id: optional self-entered distributor ID — for center owner's own reference only
+
+-- ==========================================
 -- 🏢 MULTI-CENTER FINANCE TRACKING (Run if you have 2+ centers)
 -- ==========================================
 ALTER TABLE finance
@@ -2248,6 +2257,10 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <div class="fr">
         <div class="fg"><label>Location</label><input type="text" id="center-location" placeholder="City, Area"></div>
         <div class="fg"><label>Contact</label><input type="text" id="center-contact" placeholder="Phone number"></div>
+      </div>
+      <div class="fr">
+        <div class="fg" id="center-network-id-row" style="display:none"><label>PulseZen Network ID</label><input type="text" id="center-network-id" readonly style="background:var(--surface2);color:var(--muted);font-family:monospace;font-size:13px;letter-spacing:1px"><div style="font-size:11px;color:var(--muted);margin-top:4px">Auto-generated. Your unique identity on PulseZen.</div></div>
+        <div class="fg"><label>Distributor ID <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input type="text" id="center-herbalife-id" placeholder="e.g. IN1234567"><div style="font-size:11px;color:var(--muted);margin-top:4px">For your own records only — not shared or used by PulseZen.</div></div>
       </div>
       <div class="fg"><label>Center Owner (Coach)</label><select id="center-owner"><option value="">— No owner assigned —</option></select></div>
       <div class="fg"><label>🚫 Unavailable Foods in this Area</label><input type="text" id="center-unavailable-foods" placeholder="e.g. Fish, Tofu, Rajma (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:4px">AI will avoid these foods for ALL customers in this center when generating diet plans.</div></div>
@@ -3280,7 +3293,7 @@ function saveOwnerProfile() {
     name: document.getElementById('prof-name').value.trim(),
     gender: document.getElementById('prof-gender').value,
     contact: document.getElementById('prof-contact').value.trim(),
-    herbalife_id: document.getElementById('prof-hlid').value.trim(),
+    distributor_id: document.getElementById('prof-hlid').value.trim(),
     center_name: document.getElementById('prof-center-name').value.trim(),
     center_location: document.getElementById('prof-center-location').value.trim(),
     current_pin: document.getElementById('prof-current-pin').value,
@@ -3344,7 +3357,7 @@ function renderProfileCard() {
   if (card) { card.style.display='flex'; card.style.alignItems='center'; card.style.gap='20px'; }
   var el = function(id){return document.getElementById(id);};
   if(el('prof-display-name')) el('prof-display-name').textContent = p.name;
-  if(el('prof-display-hlid')) el('prof-display-hlid').textContent = p.herbalife_id ? 'ID: '+p.herbalife_id : (p.center_name||'');
+  if(el('prof-display-hlid')) el('prof-display-hlid').textContent = p.distributor_id ? 'ID: '+p.distributor_id : (p.center_name||'');
   if(el('prof-pin-badge')) el('prof-pin-badge').textContent = p.current_pin || '';
   if(el('prof-next-pin-badge')) el('prof-next-pin-badge').textContent = p.next_pin ? 'Goal: '+p.next_pin : '';
   if(el('prof-card-photo') && p.photo) el('prof-card-photo').innerHTML='<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">';
@@ -3352,7 +3365,7 @@ function renderProfileCard() {
   if(el('prof-name')) el('prof-name').value = p.name||'';
   if(el('prof-gender')) el('prof-gender').value = p.gender||'male';
   if(el('prof-contact')) el('prof-contact').value = p.contact||'';
-  if(el('prof-hlid')) el('prof-hlid').value = p.herbalife_id||'';
+  if(el('prof-hlid')) el('prof-hlid').value = p.distributor_id||'';
   if(el('prof-center-name')) el('prof-center-name').value = p.center_name||'';
   if(el('prof-center-location')) el('prof-center-location').value = p.center_location||'';
   if(el('prof-master-pin')) el('prof-master-pin').value = p.master_pin||'';
@@ -3473,7 +3486,7 @@ function doDisconnect() {
   document.getElementById('app').style.display = 'none';
 }
 var GROQ_MODEL = localStorage.getItem('groqModel') || 'llama-3.3-70b-versatile';
-var DEFAULT_GROQ_KEY = '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';
+var DEFAULT_GROQ_KEY = ''; // set in deploy/index.html — not stored in repo
 function getGroqKey() { return localStorage.getItem('groqKey') || DEFAULT_GROQ_KEY; }
 
 // ── HERBALIFE SHAKE NUTRITION (hidden from clients) ──
@@ -3628,7 +3641,8 @@ async function loadBody() {
 
 async function loadFinance() { D.finance = await dbGet('finance','date', _cFilter()); renderFinance(); }
 async function loadCoaches() {
-  D.coaches = await dbGet('coaches', 'created_at', _cFilter());
+  var _coachFilter = ACTIVE_CENTER ? 'wellness_center_id=eq.' + ACTIVE_CENTER : '';
+  D.coaches = await dbGet('coaches', 'created_at', _coachFilter);
   renderCoaches();
   updateCoachSelects();
   updateCouponCoachSelects();
@@ -6262,7 +6276,7 @@ function renderCenters() {
   var rows = D.centers.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.location||'').toLowerCase().includes(q); });
   var tb = document.getElementById('centers-body');
   var _pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
-  if (!rows.length) { tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">🏢</div><p>No centers found. Add your first one!</p></div></td></tr>'; }
+  if (!rows.length) { tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="ei">🏢</div><p>No centers found. Add your first one!</p></div></td></tr>'; }
   else tb.innerHTML = rows.map(function(c){
     var ownerName = '—';
     var _pcOwner = JSON.parse(localStorage.getItem('profileCenterOwner') || '{}');
@@ -6274,7 +6288,8 @@ function renderCenters() {
     var pinHtml = pinVal
       ? '<span id="pin-show-'+c.id+'" style="font-family:monospace;font-size:14px;letter-spacing:3px;background:var(--surface2);padding:2px 8px;border-radius:6px;cursor:pointer" onclick="this.textContent=this.textContent===\'••••\'?\''+pinVal+'\':\'••••\'" title="Click to show/hide">••••</span>'
       : '<span style="color:var(--muted);font-size:11px">Not set</span>';
-    return '<tr><td><strong>'+c.name+'</strong></td><td>'+(ownerName)+'</td><td>'+(c.location||'—')+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(c.type==='main'?'bg':c.type==='downline'?'by':'bb')+'">'+c.type+'</span></td><td>'+pinHtml+'</td><td><div class="acts"><button class="btn-e" onclick="editCenter(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'wellness_centers\',\''+c.id+'\',\'centers\')">Delete</button></div></td></tr>';
+    var nidHtml = c.network_id ? '<span style="font-family:monospace;font-size:12px;background:var(--surface2);padding:2px 7px;border-radius:5px;color:var(--primary)">'+c.network_id+'</span>' : '<span style="color:var(--muted);font-size:11px">—</span>';
+    return '<tr><td><strong>'+c.name+'</strong></td><td>'+nidHtml+'</td><td>'+(ownerName)+'</td><td>'+(c.location||'—')+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(c.type==='main'?'bg':c.type==='downline'?'by':'bb')+'">'+c.type+'</span></td><td>'+pinHtml+'</td><td><div class="acts"><button class="btn-e" onclick="editCenter(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'wellness_centers\',\''+c.id+'\',\'centers\')">Delete</button></div></td></tr>';
   }).join('');
   document.getElementById('centers-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Centers</div><div class="stat-v">'+D.centers.length+'</div></div><div class="stat"><div class="stat-l">Downline</div><div class="stat-v">'+D.centers.filter(function(c){return c.type==='downline';}).length+'</div></div><div class="stat"><div class="stat-l">Branches</div><div class="stat-v">'+D.centers.filter(function(c){return c.type==='branch';}).length+'</div></div>';
 }
@@ -7161,6 +7176,11 @@ async function saveOnboardCustomer() {
   }
 }
 
+function generateNetworkId(centerName) {
+  var prefix = (centerName || '').replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase() || 'PZ';
+  var num = String(D.centers.length + 1).padStart(4, '0');
+  return 'PZ-' + prefix + '-' + num;
+}
 async function saveCenter() {
   getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('center-id').value;
@@ -7168,7 +7188,9 @@ async function saveCenter() {
   var ownerId = (ownerRaw && ownerRaw !== 'owner-profile') ? ownerRaw : null;
   var pinVal = (document.getElementById('center-pin').value||'').trim();
   if(pinVal && !/^\d{4}$/.test(pinVal)) { showToast('PIN must be exactly 4 digits','error'); return; }
-  var payload = { name:document.getElementById('center-name').value.trim(), location:document.getElementById('center-location').value.trim(), contact:document.getElementById('center-contact').value.trim(), type:document.getElementById('center-type').value, owner_id:ownerId, center_pin: pinVal || null, unavailable_foods: document.getElementById('center-unavailable-foods').value.trim()||null };
+  var centerName = document.getElementById('center-name').value.trim();
+  var networkId = id ? (document.getElementById('center-network-id').value || null) : generateNetworkId(centerName);
+  var payload = { name:centerName, location:document.getElementById('center-location').value.trim(), contact:document.getElementById('center-contact').value.trim(), type:document.getElementById('center-type').value, owner_id:ownerId, center_pin: pinVal || null, unavailable_foods: document.getElementById('center-unavailable-foods').value.trim()||null, network_id: networkId, distributor_id: document.getElementById('center-herbalife-id').value.trim()||null };
   // Track profile-owner mapping locally (owner_id is uuid-only in DB)
   var profileCenters = JSON.parse(localStorage.getItem('profileCenterOwner') || '{}');
   if(ownerRaw === 'owner-profile') profileCenters[payload.name] = true;
@@ -7200,7 +7222,36 @@ async function saveCenter() {
 function editCenter(id) {
   var c = D.centers.find(function(x){return x.id===id;});
   updateCenterOwnerSelect();
-  document.getElementById('center-id').value=c.id; document.getElementById('center-name').value=c.name; document.getElementById('center-location').value=c.location||''; document.getElementById('center-contact').value=c.contact||''; document.getElementById('center-type').value=c.type||'branch'; document.getElementById('center-owner').value=c.owner_id||''; document.getElementById('center-pin').value=c.center_pin||''; document.getElementById('center-unavailable-foods').value=c.unavailable_foods||''; document.getElementById('center-modal-title').textContent='Edit Wellness Center';
+  document.getElementById('center-id').value=c.id;
+  document.getElementById('center-name').value=c.name;
+  document.getElementById('center-location').value=c.location||'';
+  document.getElementById('center-contact').value=c.contact||'';
+  document.getElementById('center-type').value=c.type||'branch';
+  document.getElementById('center-owner').value=c.owner_id||'';
+  document.getElementById('center-pin').value=c.center_pin||'';
+  document.getElementById('center-unavailable-foods').value=c.unavailable_foods||'';
+  document.getElementById('center-herbalife-id').value=c.distributor_id||'';
+  var nid = c.network_id||'';
+  document.getElementById('center-network-id').value=nid;
+  document.getElementById('center-network-id-row').style.display = nid ? 'block' : 'none';
+  document.getElementById('center-modal-title').textContent='Edit Wellness Center';
+  onCenterTypeChange();
+  openModal('center');
+}
+function openAddCenter() {
+  updateCenterOwnerSelect();
+  document.getElementById('center-id').value='';
+  document.getElementById('center-name').value='';
+  document.getElementById('center-location').value='';
+  document.getElementById('center-contact').value='';
+  document.getElementById('center-type').value='branch';
+  document.getElementById('center-owner').value='';
+  document.getElementById('center-pin').value='';
+  document.getElementById('center-unavailable-foods').value='';
+  document.getElementById('center-herbalife-id').value='';
+  document.getElementById('center-network-id').value='';
+  document.getElementById('center-network-id-row').style.display='none';
+  document.getElementById('center-modal-title').textContent='Add Wellness Center';
   onCenterTypeChange();
   openModal('center');
 }
@@ -7982,7 +8033,7 @@ async function saveCoach() {
   var payload = {
     name:document.getElementById('coach-name').value.trim(),
     contact:document.getElementById('coach-contact').value.trim(),
-    wellness_center_id:document.getElementById('coach-center').value||null,
+    wellness_center_id:document.getElementById('coach-center').value||ACTIVE_CENTER||null,
     join_date:document.getElementById('coach-date').value||null,
     status:document.getElementById('coach-status').value||'Active',
     upline_id:uplineSel?uplineSel.value||null:null,
