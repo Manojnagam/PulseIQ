@@ -2040,7 +2040,7 @@ async function saveCustomer() {
     notes: document.getElementById('cust-notes').value.trim() || null,
     preferred_language: document.getElementById('cust-lang').value || null,
     referred_by_id: safeUUID(COACH_ID),
-    referred_by: COACH_NAME
+    referred_by: safeUUID(COACH_ID)
   };
   try {
     if (id) {
