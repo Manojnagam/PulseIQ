@@ -444,8 +444,8 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
   <div class="login-box">
     <div class="login-logo">
       <div style="font-size:36px;margin-bottom:8px">🌿</div>
-      <h1>Dharani's</h1>
-      <p>Coach Dashboard</p>
+      <h1 id="login-center-name">Coach Portal</h1>
+      <p id="login-center-sub">Loading...</p>
     </div>
 
     <!-- Coach Login -->
@@ -1284,9 +1284,40 @@ function dbDelete(table, id) { return req(table + '?id=eq.' + id, 'DELETE'); }
 //  AUTH
 // ══════════════════════════════════════════
 async function init() {
+  await resolveCenterParam();
   await loadCoachList();
   if (COACH_ID && COACH_NAME) {
     startApp();
+  }
+}
+
+// Read ?center= param from URL (Network ID like PZ-DH-0001 or a raw UUID)
+var URL_CENTER_PARAM = (new URLSearchParams(window.location.search)).get('center') || '';
+var CENTER_UUID = ''; // resolved UUID after lookup
+
+async function resolveCenterParam() {
+  if (!URL_CENTER_PARAM) {
+    document.getElementById('login-center-name').textContent = 'Coach Portal';
+    document.getElementById('login-center-sub').textContent = 'Select your name to continue';
+    return;
+  }
+  try {
+    var isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(URL_CENTER_PARAM);
+    var qs = isUUID
+      ? 'wellness_centers?id=eq.' + URL_CENTER_PARAM + '&select=id,name,network_id'
+      : 'wellness_centers?network_id=eq.' + URL_CENTER_PARAM + '&select=id,name,network_id';
+    var centers = await req(qs);
+    if (centers && centers.length) {
+      CENTER_UUID = centers[0].id;
+      document.getElementById('login-center-name').textContent = centers[0].name;
+      document.getElementById('login-center-sub').textContent = (centers[0].network_id || '') + ' · Coach Dashboard';
+    } else {
+      document.getElementById('login-center-name').textContent = 'Coach Portal';
+      document.getElementById('login-center-sub').textContent = 'Center not found — contact your supervisor';
+    }
+  } catch(e) {
+    document.getElementById('login-center-name').textContent = 'Coach Portal';
+    document.getElementById('login-center-sub').textContent = 'Coach Dashboard';
   }
 }
 
@@ -1294,7 +1325,10 @@ async function loadCoachList() {
   var errEl = document.getElementById('login-err');
   errEl.textContent = '';
   try {
-    var coaches = await req('coaches?order=name.asc');
+    var qs = CENTER_UUID
+      ? 'coaches?wellness_center_id=eq.' + CENTER_UUID + '&order=name.asc'
+      : 'coaches?order=name.asc';
+    var coaches = await req(qs);
     var sel = document.getElementById('login-coach-sel');
     if (!coaches || coaches.length === 0) {
       sel.innerHTML = '<option value="">No coaches found</option>';
@@ -1323,6 +1357,10 @@ async function doLogin() {
   if (pin !== storedPin) { err.textContent = 'Incorrect PIN. Try again.'; return; }
   COACH_ID   = opt.value;
   COACH_NAME = opt.text;
+  // Guard: if somehow ID is not a UUID, reject login
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(COACH_ID)) {
+    err.textContent = 'Login error: invalid coach ID. Please contact your supervisor.'; return;
+  }
   var dbGender = (opt.getAttribute('data-gender') || '').toLowerCase();
   if (dbGender === 'male' || dbGender === 'female') {
     localStorage.setItem('coachGender_' + COACH_ID, dbGender);
@@ -1996,7 +2034,7 @@ async function saveCustomer() {
     goal: document.getElementById('cust-goal').value.trim() || null,
     notes: document.getElementById('cust-notes').value.trim() || null,
     preferred_language: document.getElementById('cust-lang').value || null,
-    referred_by_id: COACH_ID,
+    referred_by_id: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(COACH_ID) ? COACH_ID : null,
     referred_by: COACH_NAME
   };
   try {
