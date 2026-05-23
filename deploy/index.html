@@ -2375,6 +2375,12 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div class="fg"><label>Wellness Center</label><select id="customer-center"><option value="">Select center</option><option value="c1fb6027-fbda-4640-b97e-bd1f086479e8">Dharani's wellness center</option></select></div>
         <div class="fg"><label>Referred By</label><div id="ref-search-wrap"><input type="text" id="ref-search-input" placeholder="Type to search referrer..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><input type="hidden" id="customer-coach"></div></div>
       </div>
+      <div class="fg">
+        <label>Assign to Coach <span style="font-weight:400;color:var(--muted);font-size:11px">— customer will appear in this coach's portal</span></label>
+        <select id="customer-assigned-coach" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="">— Not assigned —</option>
+        </select>
+      </div>
       <div class="fr" id="other-ref-row" style="display:none; background:rgba(0,0,0,0.03); padding:12px; border-radius:8px; margin-top:0px;">
         <div class="fg"><label>Referrer Name</label><input type="text" id="customer-ref-name" placeholder="John Doe"></div>
         <div class="fg"><label>Referrer Phone</label><input type="text" id="customer-ref-phone" placeholder="Phone number"></div>
@@ -4008,6 +4014,8 @@ function updateCustSelects() {
   });
   var cCoach = document.getElementById('customer-coach');
   if(cCoach) cCoach.innerHTML = '<option value="">Select coach</option>' + D.coaches.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
+  var assignSel = document.getElementById('customer-assigned-coach');
+  if(assignSel) assignSel.innerHTML = '<option value="">— Not assigned —</option>' + filterByCenter(D.coaches).map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
 }
 
 // ── NEW LOGIC HELPERS ──
@@ -7419,6 +7427,7 @@ async function saveCustomer() {
   payload.referred_by_id            = refId   || null;
   payload.external_referrer_name   = refName  || null;
   payload.external_referrer_phone  = refPhone || null;
+  payload.coach_id                 = document.getElementById('customer-assigned-coach').value || null;
   if (!payload.name) { showToast('Customer name is required','error'); return; }
   try {
     var savedRecords;
@@ -7558,6 +7567,9 @@ function editCustomer(id) {
   updatePackOwnerSelect();
   document.getElementById('customer-pack-owner').value = c.pack_owner_id||'';
   onPackOwnerChange();
+  // Assign to coach
+  var assignSel = document.getElementById('customer-assigned-coach');
+  if(assignSel) assignSel.value = c.coach_id||'';
   openModal('customer');
 }
 

@@ -1502,7 +1502,7 @@ async function loadAll() {
   if (!COACH_ID || !isUUID(COACH_ID)) { showToast('Session error — please log out and log in again', 'error'); return; }
   try {
     var [custs, att, body, leads, fus, centers, coachRec] = await Promise.all([
-      dbGet('customers', 'name', 'referred_by_id=eq.' + COACH_ID),
+      req('customers?or=(referred_by_id.eq.' + COACH_ID + ',coach_id.eq.' + COACH_ID + ')&order=name.asc'),
       dbGet('attendance', 'date'),
       dbGet('body_composition', 'date'),
       dbGet('leads', 'id', 'coach_id=eq.' + COACH_ID),
