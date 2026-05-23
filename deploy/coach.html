@@ -1478,7 +1478,7 @@ function getDaysLeft(c) {
 //  DATA LOADING
 // ══════════════════════════════════════════
 async function loadAll() {
-  if (!COACH_ID) return;
+  if (!COACH_ID || !isUUID(COACH_ID)) { showToast('Session error — please log out and log in again', 'error'); return; }
   try {
     var [custs, att, body, leads, fus, centers, coachRec] = await Promise.all([
       dbGet('customers', 'name', 'referred_by_id=eq.' + COACH_ID),
@@ -2016,11 +2016,16 @@ function previewCoachCustPhoto() {
   reader.readAsDataURL(file);
 }
 
+var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUUID(v) { return UUID_RE.test(v); }
+function safeUUID(v) { return isUUID(v) ? v : null; }
+
 async function saveCustomer() {
   var name = document.getElementById('cust-name').value.trim();
   if (!name) { showToast('Name is required', 'error'); return; }
   var dob = document.getElementById('cust-dob').value;
   if (!dob) { showToast('Date of Birth is required — customer needs it to log in to their dashboard', 'error'); return; }
+  if (!isUUID(COACH_ID)) { showToast('Session error — please log out and log in again', 'error'); return; }
   var id = document.getElementById('cust-id').value;
   var packPrice = Number(document.getElementById('cust-pack-price').value) || 0;
   var payload = {
@@ -2034,7 +2039,7 @@ async function saveCustomer() {
     goal: document.getElementById('cust-goal').value.trim() || null,
     notes: document.getElementById('cust-notes').value.trim() || null,
     preferred_language: document.getElementById('cust-lang').value || null,
-    referred_by_id: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(COACH_ID) ? COACH_ID : null,
+    referred_by_id: safeUUID(COACH_ID),
     referred_by: COACH_NAME
   };
   try {
