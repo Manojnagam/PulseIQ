@@ -3007,10 +3007,10 @@ function filterByCenterViaCustomer(arr) {
 }
 
 // Helper: filter finance by wellness_center_id (requires finance to have the column)
-// Records with null wellness_center_id are treated as belonging to the active center (legacy/unassigned records)
+// Only show records explicitly assigned to the active center; null records visible to supervisor only
 function filterFinanceByCenter(arr) {
   if(!ACTIVE_CENTER) return arr;
-  return arr.filter(function(f){ return !f.wellness_center_id || f.wellness_center_id === ACTIVE_CENTER; });
+  return arr.filter(function(f){ return f.wellness_center_id === ACTIVE_CENTER; });
 }
 
 // Helper: get the active center's display name
