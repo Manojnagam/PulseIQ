@@ -6289,7 +6289,10 @@ function renderCenters() {
       ? '<span id="pin-show-'+c.id+'" style="font-family:monospace;font-size:14px;letter-spacing:3px;background:var(--surface2);padding:2px 8px;border-radius:6px;cursor:pointer" onclick="this.textContent=this.textContent===\'••••\'?\''+pinVal+'\':\'••••\'" title="Click to show/hide">••••</span>'
       : '<span style="color:var(--muted);font-size:11px">Not set</span>';
     var nidHtml = c.network_id ? '<span style="font-family:monospace;font-size:12px;background:var(--surface2);padding:2px 7px;border-radius:5px;color:var(--primary)">'+c.network_id+'</span>' : '<span style="color:var(--muted);font-size:11px">—</span>';
-    return '<tr><td><strong>'+c.name+'</strong></td><td>'+nidHtml+'</td><td>'+(ownerName)+'</td><td>'+(c.location||'—')+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(c.type==='main'?'bg':c.type==='downline'?'by':'bb')+'">'+c.type+'</span></td><td>'+pinHtml+'</td><td><div class="acts"><button class="btn-e" onclick="editCenter(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'wellness_centers\',\''+c.id+'\',\'centers\')">Delete</button></div></td></tr>';
+    var copyBtn = c.network_id
+      ? '<button class="btn-e" onclick="copyCoachLink(\''+c.network_id+'\')" title="Copy coach portal link" style="background:#e8f5e9;color:#2d5a3d;border-color:#a5d6a7">🔗 Coach Link</button>'
+      : '';
+    return '<tr><td><strong>'+c.name+'</strong></td><td>'+nidHtml+'</td><td>'+(ownerName)+'</td><td>'+(c.location||'—')+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(c.type==='main'?'bg':c.type==='downline'?'by':'bb')+'">'+c.type+'</span></td><td>'+pinHtml+'</td><td><div class="acts">'+copyBtn+'<button class="btn-e" onclick="editCenter(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'wellness_centers\',\''+c.id+'\',\'centers\')">Delete</button></div></td></tr>';
   }).join('');
   document.getElementById('centers-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Centers</div><div class="stat-v">'+D.centers.length+'</div></div><div class="stat"><div class="stat-l">Downline</div><div class="stat-v">'+D.centers.filter(function(c){return c.type==='downline';}).length+'</div></div><div class="stat"><div class="stat-l">Branches</div><div class="stat-v">'+D.centers.filter(function(c){return c.type==='branch';}).length+'</div></div>';
 }
@@ -7176,6 +7179,14 @@ async function saveOnboardCustomer() {
   }
 }
 
+function copyCoachLink(networkId) {
+  var link = 'https://app.pulsezen.in/coach.html?center=' + networkId;
+  navigator.clipboard.writeText(link).then(function() {
+    showToast('Coach portal link copied! Share it with your coaches.', 'success');
+  }).catch(function() {
+    prompt('Copy this link and share with your coaches:', link);
+  });
+}
 function generateNetworkId(centerName) {
   var prefix = (centerName || '').replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase() || 'PZ';
   var num = String(D.centers.length + 1).padStart(4, '0');
