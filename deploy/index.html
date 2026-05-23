@@ -7179,6 +7179,28 @@ async function saveOnboardCustomer() {
   }
 }
 
+async function convertToCoach(custId) {
+  var c = D.customers.find(function(x){ return x.id === custId; });
+  if (!c) return;
+  if (!confirm('Convert "' + c.name + '" from Customer to Coach?\n\nThis will create a coach record with their details. Their customer record will NOT be deleted — you can delete it manually after.')) return;
+  try {
+    var payload = {
+      name: c.name,
+      contact: c.contact || null,
+      dob: c.dob || null,
+      gender: c.gender || null,
+      goal: c.goal || null,
+      notes: c.notes || null,
+      wellness_center_id: c.wellness_center_id || ACTIVE_CENTER || null,
+      join_date: new Date().toISOString().split('T')[0],
+      status: 'Active'
+    };
+    await dbInsert('coaches', payload);
+    auditLog('Converted', 'Customer→Coach', c.name);
+    showToast(c.name + ' added as a Coach! You can now delete their customer record.', 'success');
+    await loadCoaches();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
 function updateCoachPortalNavLink() {
   var el = document.getElementById('nav-coach-portal-link');
   if (!el) return;
@@ -11027,6 +11049,7 @@ function renderCustomers() {
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#16a34a" onclick="generateDietPlan(\''+c.id+'\')" title="'+(c.diet_plan?'Regenerate Diet Plan':'Generate Diet Plan')+'">🥗'+(c.diet_plan?' ✓':'')+' Diet</button> '
         +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#0891b2" onclick="viewMealCompliance(\''+c.id+'\',\''+c.name+'\')" title="Meal Compliance">📋 Compliance</button> ':'')
         +'<button class="btn-e" onclick="editCustomer(\''+c.id+'\')">Edit</button>'
+        +'<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:#fef3c7;color:#92400e;border-color:#fcd34d" title="Convert to Coach">⭐ Make Coach</button>'
         +'<button class="btn-d" onclick="delRecord(\'customers\',\''+c.id+'\',\'customers\')">Delete</button>'
       +'</div></td></tr>';
   }).join('');
