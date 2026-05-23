@@ -16,7 +16,6 @@ portfolio/
 
 # Dead backend (pre-Supabase Node/Express/MongoDB phase)
 server.js
-package.json
 package-lock.json
 models/
 routes/
@@ -41,3 +40,11 @@ ideal_weights_Fat%.jpeg
 kimi.jpeg
 protein.jpeg
 shakemate.jpeg
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
+
+.vercel
