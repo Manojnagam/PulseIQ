@@ -505,6 +505,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
       <button class="nav-item" onclick="goTo('mybody',this)"><span class="ic">🧬</span><span>My Body Stats</span></button>
       <button class="nav-item" onclick="goTo('mydiet',this)"><span class="ic">🥗</span><span>My Diet Plan</span></button>
       <button class="nav-item" onclick="goTo('myfoodlog',this)"><span class="ic">📋</span><span>My Food Log</span></button>
+      <button class="nav-item" onclick="goTo('portals',this);renderPortalLink()"><span class="ic">🔗</span><span>Portals</span></button>
     </nav>
     <div class="sb-bottom">
       <div class="sb-bottom-row">
@@ -1396,6 +1397,26 @@ function updateGenderToggleUI() {
   if (btn) btn.textContent = COACH_GENDER === 'female' ? '♀ Female' : '♂ Male';
 }
 
+function getPortalLink() {
+  if (CENTER_UUID) return 'https://app.pulsezen.in/coach.html?center=' + (URL_CENTER_PARAM || CENTER_UUID);
+  return 'https://app.pulsezen.in/coach.html';
+}
+function renderPortalLink() {
+  var el = document.getElementById('portal-coach-link-box');
+  if (el) el.textContent = getPortalLink();
+}
+function copyPortalLink() {
+  var link = getPortalLink();
+  navigator.clipboard.writeText(link).then(function(){
+    showToast('Coach portal link copied! Share it with your coaches.', 'success');
+  }).catch(function(){ prompt('Copy this link:', link); });
+}
+function sharePortalOnWhatsApp() {
+  var link = getPortalLink();
+  var centerName = document.getElementById('login-center-name').textContent || 'our center';
+  var msg = 'Hi! 🌿 Join me on the Coach Portal for ' + centerName + '.\n\nClick here to log in:\n' + link + '\n\nUse your name + PIN to access. 💪';
+  window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
+}
 function logout() {
   if (!confirm('Log out?')) return;
   sessionStorage.clear();
@@ -4180,6 +4201,32 @@ function renderMyFLEntries() {
       <button class="btn-c" onclick="closeModal('mybody')">Cancel</button>
       <button class="btn-p" onclick="saveMyBody()">Save Stats</button>
     </div>
+
+    <!-- ══ PORTALS ══ -->
+    <div class="sec" id="sec-portals">
+      <div class="ph">
+        <div><div class="pt">🔗 Portals</div><div class="ps">Quick links to share with your team</div></div>
+      </div>
+      <div class="tcard" style="margin-bottom:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:6px">Coach Portal — Your Center</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Share this link with coaches in your center so they can log in directly.</div>
+        <div id="portal-coach-link-box" style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-family:monospace;font-size:12px;word-break:break-all;color:var(--primary);margin-bottom:12px">—</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-p" onclick="copyPortalLink()" style="flex:1">📋 Copy Link</button>
+          <button class="btn-p" onclick="sharePortalOnWhatsApp()" style="flex:1;background:#25D366;border-color:#25D366">💬 Share on WhatsApp</button>
+        </div>
+      </div>
+      <div class="tcard">
+        <div style="font-weight:700;font-size:14px;margin-bottom:6px">Customer Dashboard</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Share this link with customers so they can track their own progress.</div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-family:monospace;font-size:12px;word-break:break-all;color:var(--primary);margin-bottom:12px">https://app.pulsezen.in/customer.html</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-p" onclick="navigator.clipboard.writeText('https://app.pulsezen.in/customer.html').then(function(){showToast('Customer dashboard link copied!','success');})" style="flex:1">📋 Copy Link</button>
+          <button class="btn-p" onclick="window.open('https://api.whatsapp.com/send?text='+encodeURIComponent('Hi! 🌿 Track your wellness progress here:\nhttps://app.pulsezen.in/customer.html\n\nLogin with your mobile number and date of birth. 💪'),'_blank')" style="flex:1;background:#25D366;border-color:#25D366">💬 Share on WhatsApp</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
