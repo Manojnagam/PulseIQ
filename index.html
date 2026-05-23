@@ -2907,12 +2907,11 @@ function switchActiveCenter(centerId) {
 function verifyPinPrompt() {
   var entered = (document.getElementById('pin-prompt-input').value||'').trim();
   if(!entered) return;
-  var masterPin = (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin;
-  var pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
   var targetCenter = _pendingSwitchCenter;
 
-  // Check master PIN first
-  if(masterPin && entered === masterPin) {
+  // Check supervisor PIN — DB first, localStorage fallback
+  var supervisorPin = _DB_SUPERVISOR_PIN || (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin || '';
+  if(supervisorPin && entered === supervisorPin) {
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     closeModal('pin-prompt');
@@ -2922,12 +2921,12 @@ function verifyPinPrompt() {
     return;
   }
 
-  // Check center-specific PIN — if targetCenter known, check directly; else search all pins (welcome prompt)
+  // Check center-specific PIN — use DB pins (works on all devices)
   var matchedCenter = null;
-  if(targetCenter && pins[targetCenter] && entered === pins[targetCenter]) {
+  if(targetCenter && _DB_PINS[targetCenter] && entered === _DB_PINS[targetCenter]) {
     matchedCenter = targetCenter;
   } else if(!targetCenter) {
-    for(var cid in pins) { if(pins[cid] && entered === pins[cid]) { matchedCenter = cid; break; } }
+    for(var cid in _DB_PINS) { if(_DB_PINS[cid] && entered === _DB_PINS[cid]) { matchedCenter = cid; break; } }
   }
   if(matchedCenter) {
     _centerAuth = { type: 'center', centerId: matchedCenter };
@@ -2974,7 +2973,7 @@ function updateCenterSwitcher() {
   var sel = document.getElementById('center-switcher'); if(!sel) return;
   var prev = sel.value || ACTIVE_CENTER;
   var isMaster = _centerAuth.type === 'master';
-  var noPins = !((JSON.parse(localStorage.getItem('ownerProfile')||'{}')).master_pin) && Object.keys(JSON.parse(localStorage.getItem('centerPins')||'{}')).length===0;
+  var noPins = !_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0;
   // Build options: non-master users only see their authenticated center
   var opts = '';
   if(isMaster || noPins) {
