@@ -629,7 +629,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
       <button class="nav-item" onclick="goTo('agents',this)" style="border:1.5px solid #7c3aed;color:#7c3aed;margin-bottom:4px"><span class="ic">🤖</span><span>AI Agents</span></button>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-portals')"><span>Portals</span><span class="nav-arrow">▾</span></div>
       <div id="g-portals" style="display:none">
-        <a class="nav-item" href="coach.html" target="_blank" rel="noopener" style="text-decoration:none"><span class="ic">👨‍🏫</span><span>Coach Portal ↗</span></a>
+        <a class="nav-item" id="nav-coach-portal-link" href="coach.html" target="_blank" rel="noopener" style="text-decoration:none" onclick="updateCoachPortalNavLink()"><span class="ic">👨‍🏫</span><span>Coach Portal ↗</span></a>
         <a class="nav-item" href="client.html" target="_blank" rel="noopener" style="text-decoration:none"><span class="ic">👤</span><span>Client Portal ↗</span></a>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-analytics')"><span>Analytics & Reports</span><span class="nav-arrow">▾</span></div>
@@ -7179,6 +7179,13 @@ async function saveOnboardCustomer() {
   }
 }
 
+function updateCoachPortalNavLink() {
+  var el = document.getElementById('nav-coach-portal-link');
+  if (!el) return;
+  var center = ACTIVE_CENTER ? D.centers.find(function(c){ return c.id === ACTIVE_CENTER; }) : null;
+  var nid = center && center.network_id ? center.network_id : null;
+  el.href = nid ? 'coach.html?center=' + nid : 'coach.html';
+}
 function copyCoachLink(networkId) {
   var link = 'https://app.pulsezen.in/coach.html?center=' + networkId;
   navigator.clipboard.writeText(link).then(function() {
