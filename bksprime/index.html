@@ -9,10 +9,10 @@
   <meta property="og:description" content="Personalised nutrition programs with daily coach support. Real member results in Kurnool. Free first consultation — walk in or WhatsApp us.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://bksprime.pulsezen.in">
-  <title>BK's Prime Wellness Studio Kurnool — Weight Loss, Weight Gain, Nutrition & Wellness Programs</title>
+  <title>BK's Prime Wellness Studio Kurnool — Weight Loss, Weight Gain, Nutrition &amp; Wellness Programs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #1a3a28;
@@ -20,26 +20,34 @@
       --primary-light: #3d7a52;
       --accent: #e8a838;
       --accent-light: #fef3c7;
-      --text: #1a1a1a;
+      --text: #111827;
       --muted: #6b7280;
-      --surface: #f9fafb;
+      --surface: #f8faf9;
       --border: #e5e7eb;
       --white: #ffffff;
       --success: #16a34a;
       --wa: #25D366;
+      --shadow-sm: 0 1px 4px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 20px rgba(0,0,0,.09);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,.12);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
-    body { font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--white); }
+    body { font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--white); overflow-x: hidden; }
     h1, h2, h3 { font-family: 'DM Serif Display', serif; }
 
     /* ── NAVBAR ── */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
+      padding: 0 32px; height: 68px;
       display: flex; align-items: center; justify-content: space-between;
+      transition: all .3s;
+    }
+    nav.scrolled {
+      background: rgba(255,255,255,.97);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
     }
     .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .nav-logo-icon {
@@ -47,344 +55,400 @@
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
       display: flex; align-items: center; justify-content: center;
       color: #fff; font-family: 'DM Serif Display', serif; font-size: 18px;
+      box-shadow: 0 2px 8px rgba(26,58,40,.3);
     }
-    .nav-logo-text { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--primary); line-height: 1.2; }
-    .nav-logo-sub { font-size: 10px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-weight: 500; }
+    .nav-logo-name { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--primary); line-height: 1.2; }
+    nav:not(.scrolled) .nav-logo-name { color: #fff; }
+    .nav-logo-sub { font-size: 10px; color: var(--muted); }
+    nav:not(.scrolled) .nav-logo-sub { color: rgba(255,255,255,.45); }
+    .nav-right { display: flex; align-items: center; gap: 14px; }
+    .nav-link { font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; transition: opacity .2s; }
+    nav:not(.scrolled) .nav-link { color: rgba(255,255,255,.8); }
+    .nav-link:hover { opacity: .65; }
     .nav-cta {
-      background: var(--wa); color: #fff; border: none; border-radius: 8px;
-      padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 13px;
-      font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex;
-      align-items: center; gap: 6px; transition: opacity .2s;
+      background: var(--wa); color: #fff; border: none; border-radius: 9px;
+      padding: 10px 20px; font-family: 'DM Sans', sans-serif; font-size: 13px;
+      font-weight: 700; cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all .2s; box-shadow: 0 2px 8px rgba(37,211,102,.3);
     }
-    .nav-cta:hover { opacity: .88; }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(37,211,102,.45); }
+    .nav-ham {
+      display: none; flex-direction: column; gap: 5px; cursor: pointer;
+      background: none; border: none; padding: 4px;
+    }
+    .nav-ham span { width: 22px; height: 2px; background: var(--text); display: block; transition: all .3s; border-radius: 2px; }
+    nav:not(.scrolled) .nav-ham span { background: #fff; }
+    .nav-ham.open span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+    .nav-ham.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .nav-ham.open span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+    .nav-mobile {
+      display: none; position: fixed; top: 68px; left: 0; right: 0;
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 20px 24px; flex-direction: column; gap: 4px;
+      box-shadow: var(--shadow-md); z-index: 99;
+    }
+    .nav-mobile.open { display: flex; }
+    .nav-mobile a { font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .nav-mobile a:last-child { border: none; }
 
     /* ── HERO ── */
     .hero {
       min-height: 100vh;
-      background: linear-gradient(135deg, #0f2318 0%, #1a3a28 45%, #2d5a3d 80%, #3d7a52 100%);
+      background: linear-gradient(135deg, #05120b 0%, #0f2419 35%, #1a3a28 65%, #2d5a3d 100%);
       display: flex; align-items: center; justify-content: center;
       text-align: center; padding: 120px 24px 80px;
       position: relative; overflow: hidden;
     }
-    .hero::before {
-      content: ''; position: absolute; top: -60px; right: -60px;
-      width: 300px; height: 300px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(232,168,56,.15) 0%, transparent 70%);
+    .hero-orb1 {
+      position: absolute; top: -120px; right: -120px; width: 550px; height: 550px;
+      border-radius: 50%; background: radial-gradient(circle, rgba(232,168,56,.09) 0%, transparent 65%);
+      animation: orb-float 14s ease-in-out infinite alternate;
     }
-    .hero::after {
-      content: ''; position: absolute; bottom: -80px; left: -80px;
-      width: 400px; height: 400px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(61,122,82,.3) 0%, transparent 70%);
+    .hero-orb2 {
+      position: absolute; bottom: -150px; left: -150px; width: 650px; height: 650px;
+      border-radius: 50%; background: radial-gradient(circle, rgba(61,122,82,.14) 0%, transparent 65%);
+      animation: orb-float 18s ease-in-out infinite alternate-reverse;
     }
-    .hero-content { position: relative; z-index: 1; max-width: 680px; }
+    @keyframes orb-float { from{transform:translate(0,0)} to{transform:translate(28px,18px)} }
+    .hero-content { position: relative; z-index: 1; max-width: 700px; }
     .hero-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
-      color: #fff; font-size: 12px; font-weight: 600; padding: 6px 14px;
-      border-radius: 20px; margin-bottom: 24px; letter-spacing: .5px;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+      color: rgba(255,255,255,.9); font-size: 12px; font-weight: 600; padding: 7px 18px;
+      border-radius: 40px; margin-bottom: 24px; letter-spacing: .5px;
+      backdrop-filter: blur(8px);
     }
+    .badge-dot { width: 6px; height: 6px; background: var(--wa); border-radius: 50%; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
     .hero h1 {
-      font-size: clamp(32px, 6vw, 56px); color: #fff; line-height: 1.2;
-      margin-bottom: 20px;
+      font-size: clamp(34px, 6.5vw, 62px); color: #fff; line-height: 1.1;
+      margin-bottom: 20px; letter-spacing: -.5px;
     }
-    .hero h1 span { color: var(--accent); }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, #f0c060, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
     .hero-sub {
-      font-size: clamp(15px, 2.5vw, 18px); color: rgba(255,255,255,.8);
-      line-height: 1.7; margin-bottom: 36px; max-width: 520px; margin-left: auto; margin-right: auto;
+      font-size: clamp(15px, 2.5vw, 18px); color: rgba(255,255,255,.7);
+      line-height: 1.8; margin-bottom: 36px; max-width: 540px;
+      margin-left: auto; margin-right: auto;
     }
-    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 52px; }
     .btn-primary {
-      background: var(--wa); color: #fff; border: none; border-radius: 10px;
-      padding: 14px 28px; font-family: 'DM Sans', sans-serif; font-size: 15px;
+      background: var(--wa); color: #fff; border: none; border-radius: 12px;
+      padding: 16px 32px; font-family: 'DM Sans', sans-serif; font-size: 15px;
       font-weight: 700; cursor: pointer; text-decoration: none;
       display: inline-flex; align-items: center; gap: 8px;
-      transition: transform .2s, opacity .2s; box-shadow: 0 4px 20px rgba(37,211,102,.3);
+      transition: all .25s; box-shadow: 0 6px 24px rgba(37,211,102,.4);
     }
-    .btn-primary:hover { transform: translateY(-2px); opacity: .92; }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(37,211,102,.55); }
     .btn-secondary {
-      background: rgba(255,255,255,.12); color: #fff;
-      border: 1.5px solid rgba(255,255,255,.3); border-radius: 10px;
-      padding: 14px 28px; font-family: 'DM Sans', sans-serif; font-size: 15px;
+      background: rgba(255,255,255,.08); color: #fff;
+      border: 1.5px solid rgba(255,255,255,.22); border-radius: 12px;
+      padding: 16px 32px; font-family: 'DM Sans', sans-serif; font-size: 15px;
       font-weight: 600; cursor: pointer; text-decoration: none;
       display: inline-flex; align-items: center; gap: 8px;
-      transition: background .2s;
+      transition: all .25s; backdrop-filter: blur(8px);
     }
-    .btn-secondary:hover { background: rgba(255,255,255,.2); }
+    .btn-secondary:hover { background: rgba(255,255,255,.16); }
+    .hero-stats {
+      display: flex; justify-content: center;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 18px; backdrop-filter: blur(16px);
+      overflow: hidden; max-width: 480px; margin: 0 auto;
+    }
+    .hero-stat { flex: 1; padding: 18px 14px; text-align: center; border-right: 1px solid rgba(255,255,255,.08); }
+    .hero-stat:last-child { border-right: none; }
+    .hero-stat-num { font-family: 'DM Serif Display', serif; font-size: 26px; color: #fff; display: block; line-height: 1; }
+    .hero-stat-num em { color: var(--accent); font-style: normal; }
+    .hero-stat-label { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 4px; display: block; line-height: 1.4; }
 
-    /* ── STATS BAR ── */
-    .stats-bar {
-      background: var(--primary); padding: 28px 24px;
-      display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
-    }
-    .stat-item {
-      text-align: center; padding: 12px 32px;
-      border-right: 1px solid rgba(255,255,255,.15);
-    }
-    .stat-item:last-child { border-right: none; }
-    .stat-num { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--accent); }
-    .stat-lbl { font-size: 12px; color: rgba(255,255,255,.7); font-weight: 500; margin-top: 2px; }
-
-    /* ── SECTIONS ── */
-    section { padding: 72px 24px; }
+    /* ── SECTION COMMONS ── */
     .container { max-width: 1100px; margin: 0 auto; }
     .section-tag {
       display: inline-block; background: var(--accent-light); color: #92400e;
-      font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px;
-      letter-spacing: .8px; text-transform: uppercase; margin-bottom: 12px;
+      font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 40px;
+      letter-spacing: .8px; text-transform: uppercase; margin-bottom: 14px;
     }
-    .section-title { font-size: clamp(26px, 4vw, 38px); color: var(--primary); margin-bottom: 12px; }
-    .section-sub { font-size: 15px; color: var(--muted); line-height: 1.7; max-width: 560px; }
+    .section-title { font-size: clamp(26px, 4vw, 40px); color: var(--primary); margin-bottom: 14px; line-height: 1.2; }
+    .section-sub { font-size: 15px; color: var(--muted); line-height: 1.8; max-width: 560px; }
     .section-header { margin-bottom: 48px; }
     .section-header.center { text-align: center; }
     .section-header.center .section-sub { margin: 0 auto; }
+    section { padding: 80px 24px; }
+    .fade-in { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
 
     /* ── ABOUT ── */
-    .about-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
-    }
+    .about { background: var(--white); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 52px; align-items: center; }
     .about-img {
-      border-radius: 20px; overflow: hidden; position: relative;
+      border-radius: 22px; overflow: hidden; position: relative;
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
       min-height: 380px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 12px 40px rgba(26,58,40,.2);
     }
-    .about-img-placeholder {
-      text-align: center; color: rgba(255,255,255,.7); padding: 40px;
-    }
-    .about-img-placeholder .icon { font-size: 64px; margin-bottom: 12px; }
+    .about-img-placeholder { text-align: center; color: rgba(255,255,255,.65); padding: 40px; }
+    .about-img-placeholder .icon { font-size: 64px; margin-bottom: 14px; display: block; }
     .about-img-placeholder p { font-size: 13px; line-height: 1.6; }
-    .about-points { display: flex; flex-direction: column; gap: 16px; margin-top: 28px; }
-    .about-point { display: flex; gap: 12px; align-items: flex-start; }
+    .about-points { display: flex; flex-direction: column; gap: 18px; margin-top: 28px; }
+    .about-point { display: flex; gap: 14px; align-items: flex-start; }
     .about-point-icon {
-      width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      display: flex; align-items: center; justify-content: center; font-size: 16px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px;
+      box-shadow: 0 3px 10px rgba(26,58,40,.18);
     }
-    .about-point-text h4 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
-    .about-point-text p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .about-point-text h4 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .about-point-text p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .about-location-note {
+      margin-top: 14px; font-size: 13px; color: var(--muted); line-height: 1.7;
+      background: var(--surface); border-radius: 10px; padding: 12px 16px;
+      border: 1px solid var(--border);
+    }
 
     /* ── FOUNDER STORY ── */
     .founder-story { background: var(--surface); }
     .founder-story-inner {
-      background: linear-gradient(135deg, #0f2318, #1a3a28, #2d5a3d);
-      border-radius: 24px; padding: 48px 40px;
-      border: 1.5px solid rgba(255,255,255,.08);
+      background: linear-gradient(135deg, #05120b, #0f2419, #1a3a28, #2d5a3d);
+      border-radius: 24px; padding: 48px 44px;
+      border: 1px solid rgba(255,255,255,.07);
       display: grid; grid-template-columns: auto 1fr; gap: 48px; align-items: start;
+      box-shadow: 0 16px 48px rgba(0,0,0,.2);
     }
-    .founder-photos { display: flex; flex-direction: column; gap: 10px; align-items: center; flex-shrink: 0; }
+    .founder-photos { display: flex; flex-direction: column; gap: 12px; align-items: center; flex-shrink: 0; }
     .founder-photo-wrap { display: flex; flex-direction: column; align-items: center; }
-    .founder-photo-wrap img { height: 240px; width: auto; border-radius: 12px; display: block; }
-    .founder-photo-label { margin-top: 7px; font-size: 11px; font-weight: 700; padding: 4px 16px; border-radius: 6px; letter-spacing: .4px; color: #fff; }
+    .founder-photo-wrap img { height: 240px; width: auto; border-radius: 14px; display: block; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+    .founder-photo-label { margin-top: 8px; font-size: 11px; font-weight: 700; padding: 4px 16px; border-radius: 6px; letter-spacing: .4px; color: #fff; }
     .founder-photo-label.before { background: #dc2626; }
     .founder-photo-label.after { background: #16a34a; }
     .founder-content { color: #fff; }
-    .founder-tag { display: inline-block; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; letter-spacing: .8px; text-transform: uppercase; }
-    .founder-content h2 { font-size: clamp(22px, 3vw, 30px); color: #fff; margin-bottom: 18px; line-height: 1.3; }
-    .founder-content h2 span { color: var(--accent); }
-    .founder-quote { font-size: 15px; color: rgba(255,255,255,.88); line-height: 1.8; font-style: italic; margin-bottom: 22px; border-left: 3px solid var(--accent); padding-left: 16px; }
-    .founder-mission { background: rgba(232,168,56,.1); border: 1px solid rgba(232,168,56,.25); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; }
-    .founder-mission p { font-size: 14px; color: rgba(255,255,255,.85); line-height: 1.7; }
+    .founder-tag { display: inline-block; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 5px 14px; border-radius: 40px; margin-bottom: 18px; letter-spacing: .8px; text-transform: uppercase; }
+    .founder-content h2 { font-size: clamp(22px, 3vw, 32px); color: #fff; margin-bottom: 18px; line-height: 1.25; }
+    .founder-content h2 em { color: var(--accent); font-style: normal; }
+    .founder-quote { font-size: 15px; color: rgba(255,255,255,.85); line-height: 1.8; font-style: italic; margin-bottom: 22px; border-left: 3px solid var(--accent); padding-left: 18px; }
+    .founder-mission { background: rgba(232,168,56,.08); border: 1px solid rgba(232,168,56,.22); border-radius: 14px; padding: 18px 22px; margin-bottom: 22px; }
+    .founder-mission p { font-size: 14px; color: rgba(255,255,255,.82); line-height: 1.75; }
     .founder-mission strong { color: var(--accent); }
+    .founder-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+    .founder-stat-box { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 12px 16px; text-align: center; }
+    .founder-stat-num { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--accent); display: block; }
+    .founder-stat-label { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 2px; display: block; }
     .founder-sig { display: flex; align-items: center; gap: 12px; }
     .founder-sig-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 17px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .founder-sig-name { font-size: 14px; font-weight: 700; color: #fff; }
-    .founder-sig-role { font-size: 12px; color: rgba(255,255,255,.5); }
-    .founder-disclaimer { font-size: 10px; color: rgba(255,255,255,.3); margin-top: 18px; line-height: 1.5; }
-    @media (max-width: 768px) {
-      .founder-story-inner { grid-template-columns: 1fr; }
-      .founder-photos { flex-direction: row; justify-content: center; }
-      .founder-photo-wrap img { height: 160px; }
-      .founder-story-inner { padding: 28px 20px; }
-    }
+    .founder-sig-role { font-size: 12px; color: rgba(255,255,255,.45); }
+    .founder-disclaimer { font-size: 10px; color: rgba(255,255,255,.28); margin-top: 18px; line-height: 1.5; }
 
     /* ── PROGRAMS ── */
-    .programs { background: var(--surface); }
+    .programs { background: var(--white); }
     .programs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
     .program-card {
-      background: var(--white); border-radius: 16px; padding: 28px;
-      border: 1.5px solid var(--border); transition: all .2s;
-      box-shadow: 0 2px 8px rgba(0,0,0,.04);
+      background: var(--white); border-radius: 20px; padding: 32px 28px;
+      border: 1.5px solid var(--border); transition: all .25s;
+      box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
     }
-    .program-card:hover { border-color: var(--primary-light); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(26,58,40,.1); }
+    .program-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      transform: scaleX(0); transform-origin: left; transition: transform .25s;
+    }
+    .program-card:hover { border-color: var(--primary-light); box-shadow: 0 8px 32px rgba(26,58,40,.1); transform: translateY(-3px); }
+    .program-card:hover::after { transform: scaleX(1); }
     .program-card.featured {
-      background: linear-gradient(135deg, var(--primary), var(--primary-mid));
+      background: linear-gradient(160deg, #05120b, var(--primary) 60%, var(--primary-mid));
       border-color: transparent; color: #fff;
+      box-shadow: 0 16px 48px rgba(26,58,40,.28);
     }
-    .program-icon { font-size: 36px; margin-bottom: 16px; }
-    .program-badge {
-      display: inline-block; background: var(--accent); color: #fff;
-      font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
-      margin-bottom: 12px; letter-spacing: .5px;
-    }
-    .program-card h3 { font-size: 20px; margin-bottom: 8px; }
+    .program-card.featured:hover { transform: translateY(-4px); }
+    .program-card.featured::after { display: none; }
+    .program-icon { font-size: 36px; margin-bottom: 16px; display: block; }
+    .program-badge { display: inline-block; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 12px; border-radius: 40px; margin-bottom: 12px; letter-spacing: .5px; }
+    .program-card h3 { font-size: 21px; margin-bottom: 10px; color: var(--primary); }
     .program-card.featured h3 { color: #fff; }
-    .program-card p { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
-    .program-card.featured p { color: rgba(255,255,255,.75); }
-    .program-features { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-    .program-features li { font-size: 13px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
-    .program-card.featured .program-features li { color: rgba(255,255,255,.8); }
-    .program-features li::before { content: '✓'; font-weight: 700; color: var(--success); font-size: 12px; }
+    .program-card p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 18px; }
+    .program-card.featured p { color: rgba(255,255,255,.68); }
+    .program-features { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .program-features li { font-size: 13px; display: flex; align-items: center; gap: 9px; color: var(--muted); }
+    .program-card.featured .program-features li { color: rgba(255,255,255,.75); }
+    .program-features li::before { content: '✓'; font-weight: 800; color: var(--success); font-size: 12px; flex-shrink: 0; }
     .program-card.featured .program-features li::before { color: var(--accent); }
 
     /* ── HOW IT WORKS ── */
-    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
-    .step-card { text-align: center; padding: 32px 20px; }
-    .step-num {
-      width: 52px; height: 52px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      color: #fff; font-family: 'DM Serif Display', serif; font-size: 22px;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 16px;
-    }
-    .step-icon { font-size: 32px; margin-bottom: 12px; }
-    .step-card h3 { font-size: 18px; color: var(--primary); margin-bottom: 8px; }
-    .step-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .how-it-works { background: var(--surface); }
+    .steps-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; position: relative; max-width: 800px; margin: 0 auto; }
+    .steps-row::before { content: ''; position: absolute; top: 27px; left: 16%; right: 16%; height: 2px; background: linear-gradient(90deg, var(--primary-light), var(--primary)); z-index: 0; }
+    .step-card { text-align: center; padding: 0 20px 24px; position: relative; }
+    .step-num { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; font-family: 'DM Serif Display', serif; font-size: 22px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; position: relative; z-index: 1; box-shadow: 0 4px 16px rgba(26,58,40,.3); }
+    .step-icon { font-size: 30px; margin-bottom: 12px; }
+    .step-card h3 { font-size: 17px; color: var(--primary); margin-bottom: 8px; }
+    .step-card p { font-size: 13px; color: var(--muted); line-height: 1.65; }
 
     /* ── RESULTS ── */
-    .results { background: var(--surface); }
-    .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-    .result-card {
-      background: var(--white); border-radius: 16px; overflow: hidden;
-      border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.04);
-    }
+    .results { background: var(--white); }
+    .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+    .result-card { background: var(--white); border-radius: 18px; overflow: hidden; border: 1.5px solid var(--border); box-shadow: var(--shadow-sm); transition: all .25s; }
+    .result-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
     .result-photos { display: grid; grid-template-columns: 1fr 1fr; }
-    .result-photo {
-      height: 180px; display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 600; text-align: center; padding: 12px;
-    }
+    .result-photo { height: 180px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-align: center; padding: 14px; position: relative; }
     .result-photo.before { background: #fef2f2; color: #dc2626; }
     .result-photo.after { background: #f0fdf4; color: var(--success); }
-    .result-photo-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .5px; margin-bottom: 4px; opacity: .6; text-transform: uppercase; }
-    .result-body { padding: 16px; }
+    .result-photo-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .5px; margin-bottom: 4px; opacity: .65; text-transform: uppercase; }
+    .result-body { padding: 18px; }
     .result-name { font-size: 14px; font-weight: 700; color: var(--text); }
-    .result-tag { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .result-highlight {
-      display: inline-block; margin-top: 8px; background: var(--accent-light);
-      color: #92400e; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
-    }
-    .results-disclaimer {
-      text-align: center; font-size: 11px; color: var(--muted);
-      margin-top: 24px; font-style: italic;
-    }
+    .result-tag { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .result-highlight { display: inline-block; margin-top: 10px; background: var(--accent-light); color: #92400e; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 40px; }
+    .results-disclaimer { text-align: center; font-size: 11px; color: var(--muted); margin-top: 24px; font-style: italic; }
 
-    /* ── TESTIMONIALS ── */
-    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-    .testimonial-card {
-      background: var(--white); border-radius: 16px; padding: 24px;
-      border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.04);
-    }
-    .testimonial-stars { color: var(--accent); font-size: 14px; margin-bottom: 12px; }
-    .testimonial-text { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
-    .testimonial-author { display: flex; align-items: center; gap: 10px; }
-    .testimonial-avatar {
-      width: 38px; height: 38px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      color: #fff; font-weight: 700; font-size: 15px;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .testimonial-name { font-size: 13px; font-weight: 700; color: var(--text); }
-    .testimonial-meta { font-size: 11px; color: var(--muted); }
+    /* ── CONDITIONS ── */
+    .conditions { background: var(--surface); }
+    .conditions-pills { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .condition-pill { background: var(--white); border: 1.5px solid var(--border); border-radius: 40px; padding: 11px 22px; font-size: 14px; font-weight: 600; color: var(--primary); transition: all .2s; cursor: default; }
+    .condition-pill:hover { border-color: var(--primary-light); background: #f0f7f3; box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+    .conditions-note { text-align: center; font-size: 12px; color: var(--muted); margin-top: 24px; line-height: 1.6; }
+
+    /* ── FEATURED TESTIMONIAL ── */
+    .featured-testi { background: linear-gradient(135deg, #05120b, #0f2419, #1a3a28, #2d5a3d); border-radius: 22px; padding: 36px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 12px 40px rgba(0,0,0,.18); }
+    .featured-testi-header { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+    .featured-testi-badge { background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 4px 14px; border-radius: 40px; letter-spacing: .6px; text-transform: uppercase; }
+    .featured-testi-stars { color: var(--accent); font-size: 15px; }
+    .featured-testi-photos { display: flex; justify-content: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; align-items: flex-start; }
+    .testi-photo-wrap { display: flex; flex-direction: column; align-items: center; }
+    .testi-photo-wrap img { height: 300px; width: auto; border-radius: 14px; display: block; box-shadow: 0 6px 24px rgba(0,0,0,.3); }
+    .testi-photo-label { margin-top: 8px; font-size: 11px; font-weight: 700; padding: 4px 16px; border-radius: 6px; color: #fff; letter-spacing: .4px; }
+    .testi-photo-label.before { background: #dc2626; }
+    .testi-photo-label.after { background: #16a34a; }
+    .featured-testi-text { font-size: 15px; color: rgba(255,255,255,.88); line-height: 1.85; font-style: italic; margin-bottom: 22px; }
+    .featured-testi-person { display: flex; align-items: center; gap: 12px; }
+    .featured-testi-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 17px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .featured-testi-name { font-size: 14px; font-weight: 700; color: #fff; }
+    .featured-testi-meta { font-size: 12px; color: rgba(255,255,255,.45); }
+    .featured-testi-disclaimer { font-size: 10px; color: rgba(255,255,255,.25); margin-top: 16px; line-height: 1.5; }
+
+    /* ── REGULAR TESTIMONIALS ── */
+    .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .testi-card { background: var(--surface); border-radius: 18px; padding: 28px 24px; border: 1.5px solid var(--border); box-shadow: var(--shadow-sm); transition: all .25s; }
+    .testi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: #d1d5db; }
+    .testi-stars { color: #f59e0b; font-size: 15px; letter-spacing: 2px; margin-bottom: 12px; }
+    .testi-text { font-size: 14px; color: var(--text); line-height: 1.75; font-style: italic; margin-bottom: 16px; }
+    .testi-author { display: flex; align-items: center; gap: 10px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .testi-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .testi-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .testi-meta { font-size: 11px; color: var(--muted); }
 
     /* ── LOCATION ── */
     .location { background: var(--primary); color: #fff; }
     .location .section-title { color: #fff; }
-    .location .section-sub { color: rgba(255,255,255,.7); }
-    .location-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
-    .location-map {
-      border-radius: 16px; overflow: hidden; height: 320px;
-      border: 2px solid rgba(255,255,255,.15);
-    }
+    .location .section-sub { color: rgba(255,255,255,.62); }
+    .location .section-tag { background: rgba(255,255,255,.1); color: rgba(255,255,255,.7); }
+    .location-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: start; }
+    .location-map { border-radius: 18px; overflow: hidden; height: 340px; border: 1.5px solid rgba(255,255,255,.12); box-shadow: 0 8px 32px rgba(0,0,0,.25); }
     .location-map iframe { width: 100%; height: 100%; border: none; }
-    .location-details { display: flex; flex-direction: column; gap: 20px; }
-    .location-item { display: flex; gap: 14px; align-items: flex-start; }
-    .location-item-icon {
-      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-      background: rgba(255,255,255,.1); display: flex; align-items: center;
-      justify-content: center; font-size: 18px;
-    }
-    .location-item-label { font-size: 11px; color: rgba(255,255,255,.5); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
-    .location-item-val { font-size: 14px; color: #fff; line-height: 1.5; }
+    .location-details { display: flex; flex-direction: column; gap: 22px; }
+    .location-item { display: flex; gap: 16px; align-items: flex-start; }
+    .location-item-icon { width: 42px; height: 42px; border-radius: 11px; flex-shrink: 0; background: rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid rgba(255,255,255,.1); }
+    .location-item-label { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+    .location-item-val { font-size: 14px; color: #fff; line-height: 1.6; }
     .location-item-val a { color: var(--accent); text-decoration: none; }
     .timings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
     .timing-row { font-size: 13px; color: rgba(255,255,255,.8); }
-    .timing-row span { color: rgba(255,255,255,.5); font-size: 11px; }
+    .timing-row span { color: rgba(255,255,255,.45); font-size: 11px; }
 
-    /* ── CTA SECTION ── */
-    .cta-section {
-      background: linear-gradient(135deg, #0f2318, #1a3a28, #2d5a3d);
-      text-align: center; padding: 80px 24px;
-    }
-    .cta-section h2 { font-size: clamp(28px, 4vw, 42px); color: #fff; margin-bottom: 14px; }
-    .cta-section p { font-size: 16px; color: rgba(255,255,255,.75); margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; }
-    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    /* ── FINAL CTA ── */
+    .cta-section { background: linear-gradient(135deg, #05120b 0%, #0f2419 40%, #1a3a28 100%); text-align: center; padding: 100px 24px; position: relative; overflow: hidden; }
+    .cta-section::before { content: ''; position: absolute; top: -100px; right: -100px; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(232,168,56,.06) 0%, transparent 70%); }
+    .cta-section h2 { font-size: clamp(28px, 4.5vw, 48px); color: #fff; margin-bottom: 16px; position: relative; }
+    .cta-section p { font-size: 16px; color: rgba(255,255,255,.65); margin-bottom: 40px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.8; position: relative; }
+    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; }
 
-    /* ── FLOATING WA BUTTON ── */
-    .wa-float {
-      position: fixed; bottom: 24px; right: 24px; z-index: 200;
-      width: 56px; height: 56px; border-radius: 50%;
-      background: var(--wa); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 26px; text-decoration: none;
-      box-shadow: 0 4px 20px rgba(37,211,102,.5);
-      transition: transform .2s; animation: pulse-wa 2s infinite;
-    }
-    .wa-float:hover { transform: scale(1.1); }
-    @keyframes pulse-wa {
-      0%, 100% { box-shadow: 0 4px 20px rgba(37,211,102,.5); }
-      50% { box-shadow: 0 4px 32px rgba(37,211,102,.8); }
-    }
+    /* ── FLOATING WA ── */
+    .wa-float { position: fixed; bottom: 28px; right: 28px; z-index: 200; width: 58px; height: 58px; border-radius: 50%; background: var(--wa); color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 4px 20px rgba(37,211,102,.55); animation: wa-pulse 2.5s infinite; transition: transform .2s; }
+    .wa-float:hover { transform: scale(1.12); }
+    @keyframes wa-pulse { 0%,100% { box-shadow: 0 4px 20px rgba(37,211,102,.5); } 50% { box-shadow: 0 4px 36px rgba(37,211,102,.9), 0 0 0 8px rgba(37,211,102,.08); } }
 
     /* ── FOOTER ── */
-    footer {
-      background: #0a1f12; padding: 28px 24px; text-align: center;
-    }
-    .footer-logo { font-family: 'DM Serif Display', serif; font-size: 20px; color: #fff; margin-bottom: 6px; }
-    .footer-powered {
-      font-size: 11px; color: rgba(255,255,255,.4); margin-bottom: 14px;
-    }
-    .footer-powered a { color: rgba(255,255,255,.6); text-decoration: none; }
-    .footer-links { display: flex; gap: 20px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
-    .footer-links a { font-size: 12px; color: rgba(255,255,255,.5); text-decoration: none; }
-    .footer-links a:hover { color: rgba(255,255,255,.8); }
-    .footer-copy { font-size: 11px; color: rgba(255,255,255,.3); line-height: 1.6; }
-    .footer-disclaimer {
-      font-size: 10px; color: rgba(255,255,255,.25); margin-top: 8px;
-      max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5;
-    }
+    footer { background: #030a05; padding: 44px 24px; text-align: center; }
+    .footer-inner { max-width: 700px; margin: 0 auto; }
+    .footer-brand { font-family: 'DM Serif Display', serif; font-size: 22px; color: #fff; margin-bottom: 4px; }
+    .footer-powered { font-size: 11px; color: rgba(255,255,255,.28); margin-bottom: 20px; }
+    .footer-powered a { color: rgba(255,255,255,.45); text-decoration: none; }
+    .footer-links { display: flex; gap: 22px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+    .footer-links a { font-size: 13px; color: rgba(255,255,255,.38); text-decoration: none; transition: color .2s; }
+    .footer-links a:hover { color: rgba(255,255,255,.7); }
+    .footer-divider { height: 1px; background: rgba(255,255,255,.06); margin-bottom: 18px; }
+    .footer-copy { font-size: 11px; color: rgba(255,255,255,.2); line-height: 1.6; }
+    .footer-disclaimer { font-size: 10px; color: rgba(255,255,255,.14); margin-top: 8px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5; }
 
     /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .steps-row { grid-template-columns: 1fr; }
+      .steps-row::before { display: none; }
+    }
     @media (max-width: 768px) {
+      nav { padding: 0 20px; height: 60px; }
+      .nav-link { display: none; }
+      .nav-ham { display: flex; }
       .about-grid { grid-template-columns: 1fr; }
+      .founder-story-inner { grid-template-columns: 1fr; padding: 28px 22px; }
+      .founder-photos { flex-direction: row; justify-content: center; }
+      .founder-photo-wrap img { height: 160px; }
       .location-grid { grid-template-columns: 1fr; }
-      .stat-item { padding: 12px 20px; border-right: none; border-bottom: 1px solid rgba(255,255,255,.1); }
-      .stat-item:last-child { border-bottom: none; }
-      .stats-bar { flex-direction: column; align-items: center; }
-      nav { padding: 12px 16px; }
-      .nav-logo-text { font-size: 14px; }
-      section { padding: 52px 16px; }
+      .testi-photo-wrap img { height: 200px; }
+      .hero-stats { max-width: 100%; }
+      section { padding: 56px 16px; }
+    }
+    @media (max-width: 520px) {
+      .hero-stat { padding: 14px 10px; }
+      .hero-stat-label { font-size: 10px; }
     }
   </style>
 </head>
 <body>
 
 <!-- NAVBAR -->
-<nav>
+<nav id="mainNav">
   <a class="nav-logo" href="#">
     <div class="nav-logo-icon">B</div>
     <div>
-      <div class="nav-logo-text">BK's Prime Wellness</div>
+      <div class="nav-logo-name">BK's Prime Wellness</div>
       <div class="nav-logo-sub">Nutrition &amp; Health Studio · Kurnool</div>
     </div>
   </a>
-  <a class="nav-cta" href="https://wa.me/917382240537?text=Hi%2C%20I%27d%20like%20to%20book%20a%20free%20consultation%20at%20BK%27s%20Prime%20Wellness%20Studio" target="_blank">
-    💬 Book Free Consultation
-  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="#programs">Programs</a>
+    <a class="nav-link" href="#results">Results</a>
+    <a class="nav-link" href="#location">Location</a>
+    <a class="nav-cta" href="https://wa.me/917382240537?text=Hi%2C%20I%27d%20like%20to%20book%20a%20free%20consultation%20at%20BK%27s%20Prime%20Wellness%20Studio" target="_blank">
+      💬 Book Free Consultation
+    </a>
+    <button class="nav-ham" id="navHam" onclick="toggleMobileNav()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
 </nav>
+
+<!-- MOBILE NAV -->
+<div class="nav-mobile" id="navMobile">
+  <a href="#about" onclick="closeMobileNav()">About</a>
+  <a href="#story" onclick="closeMobileNav()">Our Story</a>
+  <a href="#programs" onclick="closeMobileNav()">Programs</a>
+  <a href="#results" onclick="closeMobileNav()">Results</a>
+  <a href="#location" onclick="closeMobileNav()">Location</a>
+  <a href="https://wa.me/917382240537?text=Hi%2C%20I%27d%20like%20to%20book%20a%20free%20consultation%20at%20BK%27s%20Prime%20Wellness%20Studio" target="_blank" style="color:var(--success)">💬 Book Free Consultation</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
+  <div class="hero-orb1"></div>
+  <div class="hero-orb2"></div>
   <div class="hero-content">
-    <div class="hero-badge">🌿 Kurnool's Premier Wellness Studio</div>
-    <h1>Your Health Journey<br><span>Starts Right Here</span></h1>
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Kurnool's Premier Wellness Studio
+    </div>
+    <h1>Your Health Journey<br><em>Starts Right Here</em></h1>
     <p class="hero-sub">Personalized nutrition programs for weight loss, weight gain and healthy living — guided by expert coaches every step of the way in Kurnool.</p>
     <div class="hero-btns">
       <a class="btn-primary" href="https://wa.me/917382240537?text=Hi%2C%20I%27d%20like%20to%20book%20a%20free%20consultation%20at%20BK%27s%20Prime%20Wellness%20Studio" target="_blank">
@@ -392,33 +456,45 @@
       </a>
       <a class="btn-secondary" href="#programs">View Programs ↓</a>
     </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-num"><em>150</em>+</span>
+        <span class="hero-stat-label">Happy Members</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num"><em>6</em>+</span>
+        <span class="hero-stat-label">Years Experience</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num"><em>95</em>%</span>
+        <span class="hero-stat-label">Success Rate</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num" style="color:var(--accent);font-family:'DM Serif Display',serif;font-size:26px;display:block;line-height:1">Free</span>
+        <span class="hero-stat-label">First Consultation</span>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- STATS BAR -->
-<div class="stats-bar">
-  <div class="stat-item"><div class="stat-num">150+</div><div class="stat-lbl">Happy Members</div></div>
-  <div class="stat-item"><div class="stat-num">2+</div><div class="stat-lbl">Years of Excellence</div></div>
-  <div class="stat-item"><div class="stat-num">95%</div><div class="stat-lbl">Success Rate</div></div>
-  <div class="stat-item"><div class="stat-num">Free</div><div class="stat-lbl">First Consultation</div></div>
-</div>
-
 <!-- ABOUT -->
-<section id="about">
+<section class="about" id="about">
   <div class="container">
     <div class="about-grid">
-      <div class="about-img">
+      <div class="about-img fade-in">
         <div class="about-img-placeholder">
-          <div class="icon">💪</div>
-          <p>Center photo<br>coming soon</p>
+          <span class="icon">💪</span>
+          <p>Studio photo<br>coming soon</p>
         </div>
       </div>
-      <div>
+      <div class="fade-in">
         <div class="section-header">
           <span class="section-tag">About Us</span>
-          <h2 class="section-title">We Care About Your Real Results</h2>
+          <h2 class="section-title">Real Transformation Starts Here</h2>
           <p class="section-sub">At BK's Prime Wellness Studio, we believe that real transformation comes from the right nutrition, the right guidance and daily consistency. Our coaches work with you personally to build a program that fits your body and your goals.</p>
-          <p class="section-sub" style="margin-top:10px;font-size:13px">📍 BK's Prime Wellness Studio is located in Revenue Colony, Kurnool — opposite Ravindra High School, near Nandyal Check Post — serving customers across Kurnool and surrounding areas of Kurnool district.</p>
+        </div>
+        <div class="about-location-note">
+          📍 Located in <strong>Revenue Colony Road No.5, Kurnool</strong> — opposite Ravindra High School, near Nandyal Check Post — serving customers across Kurnool and surrounding areas of Kurnool district.
         </div>
         <div class="about-points">
           <div class="about-point">
@@ -451,50 +527,48 @@
 <!-- FOUNDER STORY -->
 <section class="founder-story" id="story">
   <div class="container">
-    <div class="section-header center" style="margin-bottom:32px">
+    <div class="section-header center fade-in" style="margin-bottom:36px">
       <span class="section-tag">Our Story</span>
       <h2 class="section-title">Why BK's Prime Exists</h2>
       <p class="section-sub">Online wellness coaching since 2020, now serving Kurnool in person — this is the family story behind BK's Prime.</p>
     </div>
-    <div class="founder-story-inner">
-      <!-- Photos -->
+    <div class="founder-story-inner fade-in">
       <div class="founder-photos">
         <div class="founder-photo-wrap">
-          <img src="centers/dharanis/images/testimonial-mom-before.jpeg" alt="Lakshmidevi before wellness journey">
+          <img src="centers/dharanis/images/testimonial-mom-before.jpeg" alt="Lakshmidevi before">
           <div class="founder-photo-label before">MOM · 77 kg</div>
         </div>
         <div class="founder-photo-wrap">
-          <img src="centers/dharanis/images/testimonial-mom-after.jpeg" alt="Lakshmidevi after wellness journey">
+          <img src="centers/dharanis/images/testimonial-mom-after.jpeg" alt="Lakshmidevi after">
           <div class="founder-photo-label after">MOM · 63 kg</div>
         </div>
       </div>
-      <!-- Content -->
       <div class="founder-content">
         <span class="founder-tag">Founder's Story</span>
-        <h2>A Mother's Transformation.<br><span>A Son's Mission.</span></h2>
+        <h2>A Mother's Transformation.<br><em>A Son's Mission.</em></h2>
         <p class="founder-quote">
           "I watched my mother Lakshmidevi suffer for 18 years — fits, back pain, sciatica, knee pain, low BP, poor sleep — while raising our family. In 2020, the right nutrition changed everything for her. I was there for every step of that transformation. That's when I knew this was my path too."
         </p>
-        <p style="font-size:14px;color:rgba(255,255,255,.8);line-height:1.8;margin-bottom:16px">
-          From 2020, <strong style="color:var(--accent)">Bharath Nagam</strong> worked alongside his mother at <strong style="color:rgba(255,255,255,.9)">Dharani's Wellness Center, Nandyal</strong> — helping customers, learning body composition analysis, nutrition coaching, and every detail of running a wellness center. He also started coaching clients online, reaching people beyond Nandyal.
+        <p style="font-size:14px;color:rgba(255,255,255,.78);line-height:1.85;margin-bottom:20px">
+          From 2020, <strong style="color:var(--accent)">Bharath Nagam</strong> worked alongside his mother at <strong style="color:rgba(255,255,255,.9)">Dharani's Wellness Center, Nandyal</strong> — helping customers, learning body composition analysis, nutrition coaching, and every detail of running a wellness center. He also coached clients online, reaching people beyond Nandyal.
         </p>
         <div class="founder-mission">
           <p>
             On <strong>May 11th, 2026</strong>, Bharath brought that same mission to Kurnool — opening <strong>BK's Prime Wellness Studio</strong>. The same family values, the same proven approach, now available in person for the people of Kurnool.
           </p>
         </div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
-          <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 16px;text-align:center">
-            <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent)">6+</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">Years of Experience</div>
+        <div class="founder-stats">
+          <div class="founder-stat-box">
+            <span class="founder-stat-num">6+</span>
+            <span class="founder-stat-label">Years Experience</span>
           </div>
-          <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 16px;text-align:center">
-            <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent)">2020</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">Online Coaching Since</div>
+          <div class="founder-stat-box">
+            <span class="founder-stat-num">2020</span>
+            <span class="founder-stat-label">Online Coaching Since</span>
           </div>
-          <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 16px;text-align:center">
-            <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent)">2026</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">Kurnool Studio Opened</div>
+          <div class="founder-stat-box">
+            <span class="founder-stat-num">2026</span>
+            <span class="founder-stat-label">Kurnool Studio Opened</span>
           </div>
         </div>
         <div class="founder-sig">
@@ -513,14 +587,14 @@
 <!-- PROGRAMS -->
 <section class="programs" id="programs">
   <div class="container">
-    <div class="section-header center">
+    <div class="section-header center fade-in">
       <span class="section-tag">Our Programs</span>
       <h2 class="section-title">Choose Your Wellness Journey</h2>
       <p class="section-sub">Every program is guided by a personal coach and powered by scientifically formulated nutrition products.</p>
     </div>
     <div class="programs-grid">
-      <div class="program-card">
-        <div class="program-icon">🔥</div>
+      <div class="program-card fade-in">
+        <span class="program-icon">🔥</span>
         <h3>Weight Loss</h3>
         <p>Lose weight sustainably with a structured nutrition plan, daily shakes and regular body scans to track progress.</p>
         <ul class="program-features">
@@ -531,8 +605,8 @@
           <li>Coach WhatsApp support</li>
         </ul>
       </div>
-      <div class="program-card featured">
-        <div class="program-icon">⭐</div>
+      <div class="program-card featured fade-in">
+        <span class="program-icon">⭐</span>
         <div class="program-badge">Most Popular</div>
         <h3>Complete Wellness</h3>
         <p>A full-body transformation program combining weight management, energy boost and long-term habit building.</p>
@@ -544,8 +618,8 @@
           <li>Priority coach support</li>
         </ul>
       </div>
-      <div class="program-card">
-        <div class="program-icon">💪</div>
+      <div class="program-card fade-in">
+        <span class="program-icon">💪</span>
         <h3>Weight Gain &amp; Muscle</h3>
         <p>Build lean muscle and healthy weight with high-protein nutrition plans designed for your body type and activity level.</p>
         <ul class="program-features">
@@ -561,14 +635,14 @@
 </section>
 
 <!-- HOW IT WORKS -->
-<section id="how">
+<section class="how-it-works" id="how">
   <div class="container">
-    <div class="section-header center">
+    <div class="section-header center fade-in">
       <span class="section-tag">How It Works</span>
       <h2 class="section-title">Your Journey in 3 Simple Steps</h2>
       <p class="section-sub">Getting started is free. No commitment. Just walk in or book via WhatsApp.</p>
     </div>
-    <div class="steps-grid">
+    <div class="steps-row fade-in">
       <div class="step-card">
         <div class="step-num">1</div>
         <div class="step-icon">💬</div>
@@ -594,38 +668,44 @@
 <!-- RESULTS -->
 <section class="results" id="results">
   <div class="container">
-    <div class="section-header center">
+    <div class="section-header center fade-in">
       <span class="section-tag">Real Results</span>
       <h2 class="section-title">Our Members' Transformations</h2>
       <p class="section-sub">Real people, real journeys. Every result is backed by body scan data tracked by our coaches.</p>
     </div>
-    <div class="results-grid">
+    <div class="results-grid fade-in">
       <div class="result-card">
         <div class="result-photos">
           <div class="result-photo before" style="padding:0;background:#111;position:relative;height:260px">
-            <img src="centers/dharanis/images/testimonial-J_Ramkumar-before.jpeg" alt="J Ramkumar before" style="width:100%;height:100%;object-fit:cover;object-position:top;opacity:.92;display:block">
+            <img src="centers/bks-prime/images/testimonial-manoj-before.jpeg" alt="Manoj before" style="width:100%;height:100%;object-fit:cover;object-position:top;opacity:.92;display:block">
             <span style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(220,38,38,.85);color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:20px;text-transform:uppercase">Before</span>
           </div>
           <div class="result-photo after" style="padding:0;background:#111;position:relative;height:260px">
-            <img src="centers/dharanis/images/testimonial-J_Ramkumar-after.jpg" alt="J Ramkumar after" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block">
+            <img src="centers/bks-prime/images/testimonial-manoj-after.jpeg" alt="Manoj after" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block">
             <span style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(22,163,74,.85);color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:20px;text-transform:uppercase">After</span>
           </div>
         </div>
         <div class="result-body">
-          <div class="result-name">J Ramkumar</div>
-          <div class="result-tag">Weight Loss + Skin Health · 5+ months</div>
-          <div class="result-highlight">Lost 4.5 kg · Gas trouble resolved · Improved skin glow</div>
+          <div class="result-name">Manoj</div>
+          <div class="result-tag">Recovery + Weight Gain · 30 days</div>
+          <div class="result-highlight">43 kg → 59 kg · Brain injury recovery</div>
         </div>
       </div>
       <div class="result-card">
         <div class="result-photos">
-          <div class="result-photo before"><div><span class="result-photo-label">Before</span>Photo<br>Coming Soon</div></div>
-          <div class="result-photo after"><div><span class="result-photo-label">After</span>Photo<br>Coming Soon</div></div>
+          <div class="result-photo before" style="padding:0;background:#111;position:relative;height:260px">
+            <img src="centers/bks-prime/images/testimonial-bharath-before.jpeg" alt="Bharath before" style="width:100%;height:100%;object-fit:cover;object-position:top;opacity:.92;display:block">
+            <span style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(220,38,38,.85);color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:20px;text-transform:uppercase">Before</span>
+          </div>
+          <div class="result-photo after" style="padding:0;background:#111;position:relative;height:260px">
+            <img src="centers/bks-prime/images/testimonial-bharath-after.png" alt="Bharath after" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block">
+            <span style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(22,163,74,.85);color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:20px;text-transform:uppercase">After</span>
+          </div>
         </div>
         <div class="result-body">
-          <div class="result-name">Member B</div>
-          <div class="result-tag">Muscle Gain · Coming Soon</div>
-          <div class="result-highlight">Results coming soon</div>
+          <div class="result-name">Bharath</div>
+          <div class="result-tag">Muscle Gain + Wellness · 5 months</div>
+          <div class="result-highlight">60 kg → 72 kg · Sleep &amp; skin improved</div>
         </div>
       </div>
       <div class="result-card">
@@ -645,140 +725,140 @@
 </section>
 
 <!-- CONDITIONS WE HELP -->
-<section style="background:var(--surface);padding:52px 24px">
+<section class="conditions">
   <div class="container">
-    <div class="section-header center">
+    <div class="section-header center fade-in">
       <span class="section-tag">Health Conditions</span>
       <h2 class="section-title">Problems Our Members Overcame</h2>
       <p class="section-sub">Our members have seen real improvement in many health conditions through consistent nutrition and wellness programs.</p>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:32px">
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">⚖️ Weight Loss</span>
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">💪 Weight Gain &amp; Muscle</span>
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">🦴 Back Pain</span>
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">😴 Sleep Problems</span>
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">🌿 Digestive Issues</span>
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">✨ Skin &amp; Acne Problems</span>
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">🦵 Knee &amp; Joint Pain</span>
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">🧠 Post-Illness Recovery</span>
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">⚡ Low Energy &amp; Fatigue</span>
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">🩸 Low Blood Pressure</span>
-      <span style="background:#fff;border:1.5px solid var(--border);border-radius:30px;padding:10px 20px;font-size:14px;font-weight:600;color:var(--primary)">🦷 Sciatica</span>
+    <div class="conditions-pills fade-in">
+      <span class="condition-pill">⚖️ Weight Loss</span>
+      <span class="condition-pill">💪 Weight Gain &amp; Muscle</span>
+      <span class="condition-pill">🦴 Back Pain</span>
+      <span class="condition-pill">😴 Sleep Problems</span>
+      <span class="condition-pill">🌿 Digestive Issues</span>
+      <span class="condition-pill">✨ Skin &amp; Acne Problems</span>
+      <span class="condition-pill">🦵 Knee &amp; Joint Pain</span>
+      <span class="condition-pill">🧠 Post-Illness Recovery</span>
+      <span class="condition-pill">⚡ Low Energy &amp; Fatigue</span>
+      <span class="condition-pill">🩸 Low Blood Pressure</span>
+      <span class="condition-pill">🦷 Sciatica</span>
     </div>
-    <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:24px;line-height:1.6">* Nutrition support complements but does not replace medical treatment. Always consult your doctor for medical conditions.</p>
+    <p class="conditions-note">* Nutrition support complements but does not replace medical treatment. Always consult your doctor for medical conditions.</p>
   </div>
 </section>
 
 <!-- TESTIMONIALS -->
-<section id="testimonials">
+<section id="testimonials" style="background:var(--white)">
   <div class="container">
-    <div class="section-header center">
+    <div class="section-header center fade-in">
       <span class="section-tag">Testimonials</span>
       <h2 class="section-title">What Our Members Say</h2>
+      <p class="section-sub">Real stories from people who transformed their health at BK's Prime Wellness Studio.</p>
     </div>
-    <!-- FEATURED TESTIMONIAL -->
-    <div style="background:linear-gradient(135deg,#0f2318,#1a3a28,#2d5a3d);border-radius:20px;padding:32px;margin-bottom:24px;border:1.5px solid rgba(255,255,255,.1)">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-        <span style="background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px">FEATURED STORY</span>
-        <span style="color:var(--accent);font-size:14px">★★★★★</span>
+
+    <!-- MANOJ FEATURED -->
+    <div class="featured-testi fade-in">
+      <div class="featured-testi-header">
+        <span class="featured-testi-badge">Featured Story</span>
+        <span class="featured-testi-stars">★★★★★</span>
       </div>
-      <!-- Before / After Photos -->
-      <div style="display:flex;justify-content:center;gap:16px;margin-bottom:24px;flex-wrap:wrap;align-items:flex-start">
-        <div style="display:flex;flex-direction:column;align-items:center">
-          <img src="centers/bks-prime/images/testimonial-manoj-before.jpeg" alt="Before" style="height:300px;width:auto;border-radius:10px;display:block">
-          <div style="margin-top:8px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:6px">BEFORE · 43 kg</div>
+      <div class="featured-testi-photos">
+        <div class="testi-photo-wrap">
+          <img src="centers/bks-prime/images/testimonial-manoj-before.jpeg" alt="Manoj before">
+          <div class="testi-photo-label before">BEFORE · 43 kg</div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:center">
-          <img src="centers/bks-prime/images/testimonial-manoj-after.jpeg" alt="After" style="height:300px;width:auto;border-radius:10px;display:block">
-          <div style="margin-top:8px;background:#16a34a;color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:6px">AFTER · 59 kg</div>
+        <div class="testi-photo-wrap">
+          <img src="centers/bks-prime/images/testimonial-manoj-after.jpeg" alt="Manoj after">
+          <div class="testi-photo-label after">AFTER · 59 kg</div>
         </div>
       </div>
-      <p style="font-size:15px;color:rgba(255,255,255,.9);line-height:1.8;font-style:italic;margin-bottom:20px">
+      <p class="featured-testi-text">
         "In 2023, I met with a road accident on the highway near Shantiram Hospital. My head hit the road — doctors found blood clots in 5 areas of my brain. My chances of survival were 25%. I was in a coma for 5 days. The doctors told my parents it would take 6 months to fully recover my memory and recognise people around me.
         <br><br>
         What happened next surprised everyone — including the doctors. With 15 days of consistent nutrition guidance and wellness products, I was discharged from hospital in just 15 days. Only 15 more days later, I was back in college — studying for my 6th semester exams. I passed every subject.
         <br><br>
         During my hospital stay I dropped to 43 kg. After consistent wellness guidance, I reached 59 kg — gaining 16 kg from my lowest point and 10 kg above my pre-accident weight. My recovery was not just survival. It was a full comeback — and I owe a big part of it to the right nutrition at the right time."
       </p>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0">M</div>
+      <div class="featured-testi-person">
+        <div class="featured-testi-avatar">M</div>
         <div>
-          <div style="font-size:14px;font-weight:700;color:#fff">Manoj</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.5)">Recovery Member · Kurnool</div>
+          <div class="featured-testi-name">Manoj</div>
+          <div class="featured-testi-meta">Recovery Member · Kurnool</div>
         </div>
       </div>
-      <p style="font-size:10px;color:rgba(255,255,255,.3);margin-top:16px;line-height:1.5">* This is a personal experience. Results may vary. Nutrition support is not a substitute for medical treatment. Always follow your doctor's advice during recovery.</p>
+      <p class="featured-testi-disclaimer">* This is a personal experience. Results may vary. Nutrition support is not a substitute for medical treatment. Always follow your doctor's advice during recovery.</p>
     </div>
 
-    <!-- FEATURED TESTIMONIAL 2 — BHARATH -->
-    <div style="background:linear-gradient(135deg,#0f2318,#1a3a28,#2d5a3d);border-radius:20px;padding:32px;margin-bottom:24px;border:1.5px solid rgba(255,255,255,.1)">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-        <span style="background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px">FEATURED STORY</span>
-        <span style="color:var(--accent);font-size:14px">★★★★★</span>
+    <!-- BHARATH FEATURED -->
+    <div class="featured-testi fade-in">
+      <div class="featured-testi-header">
+        <span class="featured-testi-badge">Featured Story</span>
+        <span class="featured-testi-stars">★★★★★</span>
       </div>
-      <!-- Before / After Photos -->
-      <div style="display:flex;justify-content:center;gap:16px;margin-bottom:24px;flex-wrap:wrap;align-items:flex-start">
-        <div style="display:flex;flex-direction:column;align-items:center">
-          <img src="centers/bks-prime/images/testimonial-bharath-before.jpeg" alt="Bharath Before" style="height:300px;width:auto;border-radius:10px;display:block">
-          <div style="margin-top:8px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:6px">BEFORE · 60 kg</div>
+      <div class="featured-testi-photos">
+        <div class="testi-photo-wrap">
+          <img src="centers/bks-prime/images/testimonial-bharath-before.jpeg" alt="Bharath before">
+          <div class="testi-photo-label before">BEFORE · 60 kg</div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:center">
-          <img src="centers/bks-prime/images/testimonial-bharath-after.png" alt="Bharath After" style="height:300px;width:auto;border-radius:10px;display:block">
-          <div style="margin-top:8px;background:#16a34a;color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:6px">AFTER · 72 kg</div>
+        <div class="testi-photo-wrap">
+          <img src="centers/bks-prime/images/testimonial-bharath-after.png" alt="Bharath after">
+          <div class="testi-photo-label after">AFTER · 72 kg</div>
         </div>
       </div>
-      <p style="font-size:15px;color:rgba(255,255,255,.9);line-height:1.8;font-style:italic;margin-bottom:20px">
+      <p class="featured-testi-text">
         "For 4.5 years I suffered from serious sleeping problems — it was affecting every part of my life. On top of that, I had persistent back pain, digestive issues, and stubborn pimples on my face that no treatment seemed to fix. I was also underweight at 60 kg, feeling weak and low on energy most of the time.
         <br><br>
         I started my wellness journey in 2021 and the changes were gradual but real. My sleep improved dramatically — that alone changed everything. The back pain went away, my digestive problems resolved, and the pimples on my face cleared up completely.
         <br><br>
         But the most visible change was my weight and strength. I went from 60 kg to 72 kg — gaining 12 kg of muscle and healthy weight. I never imagined one consistent wellness routine could fix so many things at once. It took patience, but the results speak for themselves."
       </p>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0">B</div>
+      <div class="featured-testi-person">
+        <div class="featured-testi-avatar">B</div>
         <div>
-          <div style="font-size:14px;font-weight:700;color:#fff">Bharath</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.5)">Wellness Member · Since 2021 · Kurnool</div>
+          <div class="featured-testi-name">Bharath</div>
+          <div class="featured-testi-meta">Wellness Member · Since 2021 · Kurnool</div>
         </div>
       </div>
-      <p style="font-size:10px;color:rgba(255,255,255,.3);margin-top:16px;line-height:1.5">* This is a personal experience. Results may vary. Individual results depend on consistency and lifestyle factors.</p>
+      <p class="featured-testi-disclaimer">* This is a personal experience. Results may vary. Individual results depend on consistency and lifestyle factors.</p>
     </div>
 
-    <div class="testimonials-grid">
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"I had tried many diets before but nothing worked long-term. At BK's Prime the coach explained everything clearly and the daily shake routine made it easy to stay consistent. I lost 6kg in my first month!"</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">S</div>
+    <!-- REGULAR TESTIMONIALS -->
+    <div class="testi-grid fade-in">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"I had tried many diets before but nothing worked long-term. At BK's Prime the coach explained everything clearly and the daily shake routine made it easy to stay consistent. I lost 6 kg in my first month!"</p>
+        <div class="testi-author">
+          <div class="testi-avatar">S</div>
           <div>
-            <div class="testimonial-name">Sravani T.</div>
-            <div class="testimonial-meta">Weight Loss Member · 2 months</div>
+            <div class="testi-name">Sravani T.</div>
+            <div class="testi-meta">Weight Loss Member · 2 months</div>
           </div>
         </div>
       </div>
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"The body scan every week showed me real data — not just the weighing scale. My fat percentage dropped significantly in 45 days. The coach WhatsApp support is what makes this different from everything else."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">V</div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"The body scan every week showed me real data — not just the weighing scale. My fat percentage dropped significantly in 45 days. The coach WhatsApp support is what makes this different from everything else."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">V</div>
           <div>
-            <div class="testimonial-name">Venkat R.</div>
-            <div class="testimonial-meta">Complete Wellness Member · 6 weeks</div>
+            <div class="testi-name">Venkat R.</div>
+            <div class="testi-meta">Complete Wellness Member · 6 weeks</div>
           </div>
         </div>
       </div>
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"I was underweight and wanted to build muscle. The personalized meal plan and protein shake program helped me gain healthy weight in 2 months. Coach is very motivating and always available on WhatsApp."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">K</div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"I was underweight and wanted to build muscle. The personalized meal plan and protein shake program helped me gain healthy weight in 2 months. Coach is very motivating and always available on WhatsApp."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">K</div>
           <div>
-            <div class="testimonial-name">Kiran M.</div>
-            <div class="testimonial-meta">Muscle Gain Member · 2 months</div>
+            <div class="testi-name">Kiran M.</div>
+            <div class="testi-meta">Muscle Gain Member · 2 months</div>
           </div>
         </div>
       </div>
-    </div>
     </div>
   </div>
 </section>
@@ -786,12 +866,12 @@
 <!-- LOCATION -->
 <section class="location" id="location">
   <div class="container">
-    <div class="section-header">
-      <span class="section-tag" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)">Find Us</span>
+    <div class="section-header fade-in">
+      <span class="section-tag">Find Us</span>
       <h2 class="section-title">Visit Our Studio</h2>
       <p class="section-sub">Walk in anytime during studio hours — no appointment needed for your first free consultation.</p>
     </div>
-    <div class="location-grid">
+    <div class="location-grid fade-in">
       <div class="location-map">
         <iframe
           src="https://maps.google.com/maps?q=BK%27s+Prime+Wellness+Studio,+Revenue+Colony+Road+No.5,+Kurnool&output=embed"
@@ -806,7 +886,7 @@
             <div class="location-item-val">
               BK's Prime Wellness Studio<br>
               Revenue Colony Road No.5, Kurnool — 518002<br>
-              <span style="font-size:12px;color:rgba(255,255,255,.5)">Opp. Ravindra High School · Near Nandyal Check Post</span><br>
+              <span style="font-size:12px;color:rgba(255,255,255,.42)">Opp. Ravindra High School · Near Nandyal Check Post</span><br>
               <a href="https://maps.app.goo.gl/aK8y1decz7b1ybaD7" target="_blank">View on Google Maps →</a>
             </div>
           </div>
@@ -846,7 +926,7 @@
   </div>
 </section>
 
-<!-- CTA -->
+<!-- FINAL CTA -->
 <section class="cta-section">
   <h2>Ready to Start Your Journey?</h2>
   <p>Your first consultation and body scan is completely free. Walk in or book via WhatsApp — takes just 2 minutes.</p>
@@ -860,36 +940,61 @@
   </div>
 </section>
 
-<!-- FLOATING WA BUTTON -->
+<!-- FLOATING WA -->
 <a class="wa-float" href="https://wa.me/917382240537?text=Hi%2C%20I%27d%20like%20to%20book%20a%20free%20consultation%20at%20BK%27s%20Prime%20Wellness%20Studio" target="_blank" title="Chat on WhatsApp">💬</a>
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">BK's Prime Wellness Studio</div>
-  <div class="footer-powered">
-    Built with <a href="#" target="_blank">PulseZen</a> · Powered by <a href="#" target="_blank">PulseIQ</a>
-  </div>
-  <div class="footer-links">
-    <a href="#about">About</a>
-    <a href="#programs">Programs</a>
-    <a href="#results">Results</a>
-    <a href="#location">Location</a>
-    <a href="https://wa.me/917382240537" target="_blank">Contact</a>
-  </div>
-  <div class="footer-copy">© 2026 BK's Prime Wellness Studio. All rights reserved.</div>
-  <div class="footer-disclaimer">
-    PulseZen is an independent wellness platform. Not affiliated with any nutrition brand.<br>
-    Results may vary. These programs support wellness goals and are not a substitute for medical advice.
-  </div>
-  <div style="margin-top:16px">
-    <a id="consentBtn" href="#" onclick="sendConsent(event)"
-      style="font-size:11px;color:rgba(255,255,255,.3);text-decoration:underline;cursor:pointer">
-      📋 Send Photo Consent Request to Member
-    </a>
+  <div class="footer-inner">
+    <div class="footer-brand">BK's Prime Wellness Studio</div>
+    <div class="footer-powered">
+      Built with <a href="https://pulsezen.in" target="_blank">PulseZen</a> · Powered by <a href="https://app.pulsezen.in" target="_blank">PulseIQ</a>
+    </div>
+    <div class="footer-links">
+      <a href="#about">About</a>
+      <a href="#story">Our Story</a>
+      <a href="#programs">Programs</a>
+      <a href="#results">Results</a>
+      <a href="#location">Location</a>
+      <a href="https://wa.me/917382240537" target="_blank">Contact</a>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-copy">© 2026 BK's Prime Wellness Studio. All rights reserved.</div>
+    <div class="footer-disclaimer">
+      PulseZen is an independent wellness platform. Not affiliated with any nutrition brand.<br>
+      Results may vary. These programs support wellness goals and are not a substitute for medical advice.
+    </div>
+    <div style="margin-top:16px">
+      <a id="consentBtn" href="#" onclick="sendConsent(event)" style="font-size:11px;color:rgba(255,255,255,.28);text-decoration:underline;cursor:pointer">
+        📋 Send Photo Consent Request to Member
+      </a>
+    </div>
   </div>
 </footer>
 
 <script>
+(function(){
+  var nav = document.getElementById('mainNav');
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 40) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  });
+  window.toggleMobileNav = function() {
+    document.getElementById('navHam').classList.toggle('open');
+    document.getElementById('navMobile').classList.toggle('open');
+  };
+  window.closeMobileNav = function() {
+    document.getElementById('navHam').classList.remove('open');
+    document.getElementById('navMobile').classList.remove('open');
+  };
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(function(el) { observer.observe(el); });
+})();
+
 function sendConsent(e) {
   e.preventDefault();
   var name = prompt('Enter member name:');
@@ -899,7 +1004,7 @@ function sendConsent(e) {
   if (lang) {
     msg = 'హాయ్ ' + name + ' 🙏\n\nమీ transformation journey ని మా wellness center website లో చూపించాలని అనుకుంటున్నాం — మీలాంటి వారికి inspire అవ్వడానికి.\n\nఇందులో ఉంటుంది:\n📸 మీ before & after photos\n💬 మీ results మరియు experience\n\nమీ పేరు మీకు నచ్చిన విధంగా చూపిస్తాం — full name, first name లేదా initials.\n\nదయచేసి reply చేయండి:\n✅ అవును — నా consent ఉంది\n❌ వద్దు — వద్దు అనిపిస్తోంది\n\nమీ photos మా website కి మాత్రమే వాడతాం. మీ privacy మాకు చాలా important.\n\nధన్యవాదాలు! 🌿 — BK\'s Prime Wellness Studio';
   } else {
-    msg = 'Hi ' + name + ' 🙏\n\nWe would like to feature your transformation journey on our wellness center\'s website to inspire others in our community.\n\nThis includes:\n📸 Your before & after photos\n💬 Your results and experience (weight loss, health improvements etc.)\n\nYour name will be shown as you prefer — full name, first name only, or initials.\n\nPlease reply with one of the following:\n✅ YES — I give my consent\n❌ NO — I prefer not to be featured\n\nYour privacy is important to us. Photos will only be used on our website and nowhere else without your permission.\n\nThank you! 🌿 — BK\'s Prime Wellness Studio';
+    msg = 'Hi ' + name + ' 🙏\n\nWe would like to feature your transformation journey on our wellness studio\'s website to inspire others in our community.\n\nThis includes:\n📸 Your before & after photos\n💬 Your results and experience (weight loss, health improvements etc.)\n\nYour name will be shown as you prefer — full name, first name only, or initials.\n\nPlease reply with one of the following:\n✅ YES — I give my consent\n❌ NO — I prefer not to be featured\n\nYour privacy is important to us. Photos will only be used on our website and nowhere else without your permission.\n\nThank you! 🌿 — BK\'s Prime Wellness Studio';
   }
   window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 }
