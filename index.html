@@ -6446,7 +6446,8 @@ function renderAttendance() {
   
   var activeCusts = filterByCenter(D.customers).filter(function(c){
     var packActive = getDaysLeft(c).active;
-    if (!packActive) return false; // always hide expired-pack customers
+    var presentToday = D.attendance.some(function(a){ return a.customer_id===c.id && a.date===todayStr && a.status==='present'; });
+    if (!packActive && !presentToday) return false; // hide expired-pack customers unless present today
     if (isInactive(c) && !ATT_SHOW_INACTIVE) return false; // hide inactive unless toggled
     return (c.name||'').toLowerCase().includes(q);
   });
