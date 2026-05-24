@@ -892,64 +892,50 @@
     <div class="section-header center fade-in">
       <span class="section-tag">Pricing</span>
       <h2 class="section-title">Simple, Honest Pricing</h2>
-      <p class="section-sub">Start free. Upgrade when you're ready. No hidden charges.</p>
+      <p class="section-sub">Website + dashboard together. One price, no hidden charges.</p>
     </div>
-    <div class="pricing-grid">
+    <div class="pricing-grid" style="max-width:780px;margin:0 auto;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
       <div class="price-card fade-in">
-        <div class="price-name">Non-Exclusive</div>
-        <div class="price-amount">₹299</div>
+        <div class="price-name">Basic</div>
+        <div class="price-amount">₹499</div>
         <div class="price-per">per month</div>
         <ul class="price-features">
-          <li>Professional PulseZen page</li>
+          <li>PulseZen public website</li>
+          <li>Your own subdomain (centername.pulsezen.in)</li>
           <li>WhatsApp booking button</li>
           <li>Google Maps integration</li>
           <li>Results &amp; testimonials section</li>
-          <li>Updates anytime</li>
-          <li class="no">No subdomain</li>
-          <li class="no">No area lock</li>
+          <li>PulseIQ dashboard (app.pulsezen.in)</li>
+          <li>Member &amp; attendance tracking</li>
+          <li>Finance &amp; expense tracking</li>
+          <li>Pack expiry &amp; renewal reminders</li>
+          <li class="no">Area lock</li>
+          <li class="no">Leads &amp; follow-up tracker</li>
+          <li class="no">AI body analysis</li>
         </ul>
-        <a class="price-cta solid" href="#register">Register Now</a>
+        <a class="price-cta solid" href="#register">Get Started</a>
       </div>
       <div class="price-card featured fade-in">
-        <div class="price-popular">Best Value</div>
-        <div class="price-name">Exclusive</div>
+        <div class="price-popular">Most Popular</div>
+        <div class="price-name">Pro</div>
         <div class="price-amount">₹999</div>
         <div class="price-per">per month</div>
         <ul class="price-features">
-          <li>Professional PulseZen page</li>
-          <li>Your own subdomain (centername.pulsezen.in)</li>
-          <li>Area locked — no competitor ever</li>
-          <li>WhatsApp booking button</li>
-          <li>Google Maps integration</li>
-          <li>Results &amp; testimonials section</li>
-          <li>Updates anytime</li>
-        </ul>
-        <a class="price-cta outline" href="#register">Register Now</a>
-      </div>
-      <div class="price-card fade-in">
-        <div class="price-name">Elite</div>
-        <div class="price-amount">₹1999</div>
-        <div class="price-per">per month</div>
-        <ul class="price-features">
-          <li>Your own public website on pulsezen.in</li>
-          <li>Your own subdomain — centername.pulsezen.in</li>
+          <li>Everything in Basic</li>
           <li>Area locked — no competitor in your locality</li>
-          <li>Results &amp; testimonials section</li>
-          <li>WhatsApp booking button &amp; Google Maps</li>
-          <li>PulseIQ Dashboard (app.pulsezen.in)</li>
-          <li>Manage members, attendance &amp; body composition</li>
-          <li>Finance, coupons &amp; payment tracking</li>
-          <li>Coach Portal &amp; Client Portal</li>
-          <li>AI body analysis &amp; smart agents</li>
+          <li>Leads &amp; follow-up tracker</li>
+          <li>AI body analysis &amp; health insights</li>
           <li>AI churn risk &amp; member alerts</li>
-          <li>Pack expiry &amp; renewal reminders</li>
+          <li>Coupon &amp; referral system</li>
+          <li>Coach &amp; client portals</li>
+          <li>Quick expense entry (expense.pulsezen.in)</li>
           <li>Monthly performance report on WhatsApp</li>
-          <li>Direct WhatsApp support from owner</li>
+          <li>Direct WhatsApp support</li>
         </ul>
-        <a class="price-cta solid" href="#register">Register Now</a>
+        <a class="price-cta outline" href="#register">Get Started</a>
       </div>
     </div>
-    <p class="price-note">🔒 Early bird centers lock their price forever. Price increases after first 50 centers.</p>
+    <p class="price-note">🔒 Early centers lock this price forever — no increases, ever.</p>
   </div>
 </section>
 
@@ -1089,63 +1075,38 @@
 
         <div class="reg-label">Choose Your Plan</div>
         <div class="plans">
-          <input type="radio" name="plan" id="p1" value="Exclusive ₹999/month" class="plan-option">
+          <input type="radio" name="plan" id="p1" value="Basic ₹499/month" class="plan-option">
           <label class="plan-label" for="p1">
             <div class="plan-radio"></div>
             <div class="plan-info">
-              <div class="plan-name">Exclusive — First in Your Area <span class="plan-badge">BEST VALUE</span></div>
+              <div class="plan-name">Basic</div>
               <ul class="plan-features">
-                <li>Professional PulseZen page</li>
-                <li>Your own subdomain — centername.pulsezen.in</li>
-                <li>Area locked — no competitor ever in your locality</li>
-                <li>WhatsApp booking button</li>
-                <li>Google Maps integration</li>
-                <li>Results &amp; testimonials section</li>
+                <li>PulseZen public website + subdomain</li>
+                <li>WhatsApp booking &amp; Google Maps</li>
+                <li>PulseIQ dashboard (app.pulsezen.in)</li>
+                <li>Member, attendance &amp; finance tracking</li>
+                <li>Pack expiry &amp; renewal reminders</li>
+              </ul>
+            </div>
+            <div class="plan-price">₹499<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
+          </label>
+
+          <input type="radio" name="plan" id="p2" value="Pro ₹999/month" class="plan-option">
+          <label class="plan-label" for="p2">
+            <div class="plan-radio"></div>
+            <div class="plan-info">
+              <div class="plan-name">Pro <span class="plan-badge">MOST POPULAR</span></div>
+              <ul class="plan-features">
+                <li>Everything in Basic</li>
+                <li>Area locked — no competitor in your locality</li>
+                <li>Leads &amp; follow-up tracker</li>
+                <li>AI body analysis &amp; health insights</li>
+                <li>Coupon &amp; referral system</li>
+                <li>Quick expense entry page</li>
+                <li>Direct WhatsApp support</li>
               </ul>
             </div>
             <div class="plan-price">₹999<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
-          </label>
-
-          <input type="radio" name="plan" id="p3" value="Non-exclusive ₹299/month" class="plan-option">
-          <label class="plan-label" for="p3">
-            <div class="plan-radio"></div>
-            <div class="plan-info">
-              <div class="plan-name">Non-Exclusive — Area Already Taken</div>
-              <ul class="plan-features">
-                <li>Professional PulseZen page</li>
-                <li>WhatsApp booking button</li>
-                <li>Google Maps integration</li>
-                <li>Results &amp; testimonials section</li>
-                <li class="no">No subdomain — listed under pulsezen.in/yourname</li>
-                <li class="no">No area lock — competitors can join your locality</li>
-              </ul>
-            </div>
-            <div class="plan-price">₹299<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
-          </label>
-
-          <input type="radio" name="plan" id="p4" value="Elite ₹1999/month" class="plan-option">
-          <label class="plan-label" for="p4">
-            <div class="plan-radio"></div>
-            <div class="plan-info">
-              <div class="plan-name">Elite</div>
-              <ul class="plan-features">
-                <li>Your own public website on pulsezen.in</li>
-                <li>Your own subdomain — centername.pulsezen.in</li>
-                <li>Area locked — no competitor in your locality</li>
-                <li>Real results &amp; testimonials section</li>
-                <li>WhatsApp enquiry button for your customers</li>
-                <li>PulseIQ Dashboard access (app.pulsezen.in)</li>
-                <li>Manage members, attendance &amp; body composition</li>
-                <li>Finance, coupons &amp; payment tracking</li>
-                <li>Coach Portal &amp; Client Portal</li>
-                <li>AI body analysis &amp; smart agents</li>
-                <li>AI churn risk &amp; member alerts</li>
-                <li>Pack expiry &amp; renewal reminders</li>
-                <li>Monthly performance report on WhatsApp</li>
-                <li>Direct WhatsApp support from owner</li>
-              </ul>
-            </div>
-            <div class="plan-price">₹1999<br><span style="font-size:10px;font-weight:400;color:var(--muted)">/month</span></div>
           </label>
         </div>
 
