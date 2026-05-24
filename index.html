@@ -6985,9 +6985,12 @@ async function saveOnboardCustomer() {
 async function convertToCoach(custId) {
   var c = D.customers.find(function(x){ return x.id === custId; });
   if (!c) return;
-  if (!confirm('Convert "' + c.name + '" from Customer to Coach?\n\nThis will create a coach record with their details. Their customer record will NOT be deleted — you can delete it manually after.')) return;
+  if (c.pack_owner_id) { showToast(c.name + ' is already linked to a coach pack.', 'error'); return; }
+  var packInfo = c.pack_type ? ' Their ' + c.pack_type + ' pack & attendance history will carry over.' : '';
+  if (!confirm('Convert "' + c.name + '" to a Coach?\n' + packInfo + '\n\nTheir customer record stays (history preserved). They will be hidden from the customer attendance list.')) return;
   try {
-    var payload = {
+    // 1. Create coach with same details + pack
+    var coachPayload = {
       name: c.name,
       contact: c.contact || null,
       dob: c.dob || null,
@@ -6996,12 +6999,21 @@ async function convertToCoach(custId) {
       notes: c.notes || null,
       wellness_center_id: c.wellness_center_id || ACTIVE_CENTER || null,
       join_date: new Date().toISOString().split('T')[0],
-      status: 'Active'
+      status: 'Active',
+      pack_type: c.pack_type || null,
+      pack_start_date: c.pack_start_date || null
     };
-    await dbInsert('coaches', payload);
+    var result = await dbInsert('coaches', coachPayload);
+    var newCoachId = Array.isArray(result) && result[0] ? result[0].id : null;
+    // 2. Link old customer record to new coach (preserves attendance history)
+    if (newCoachId) {
+      await dbUpdate('customers', custId, { pack_owner_id: newCoachId });
+    }
     auditLog('Converted', 'Customer→Coach', c.name);
-    showToast(c.name + ' added as a Coach! You can now delete their customer record.', 'success');
-    await loadCoaches();
+    showToast(c.name + ' is now a Coach! Attendance history carried over. Mark attendance under Coach tab.', 'success');
+    _daysLeftCache = {};
+    await Promise.all([loadCustomers(), loadCoaches()]);
+    await loadAttendance();
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
 }
 function updateCoachPortalNavLink() {
