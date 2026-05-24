@@ -11429,16 +11429,14 @@ function convertLeadToCustomer(leadId) {
 // ══════════════════════════════════════════
 // ── Expense DB helpers ──
 function expFromDB(r) {
-  return { id: r.id, cat: r.cat, amount: r.amount, desc: r.description, date: r.date, notes: r.notes||'', centerId: r.center_id||'', centerName: r.center_name||'' };
-}
-function expToDB(e) {
-  return { id: e.id, cat: e.cat, amount: e.amount, description: e.desc, date: e.date, notes: e.notes, center_id: e.centerId, center_name: e.centerName };
+  var center = D.centers.find(function(c){ return c.id === r.wellness_center_id; });
+  return { id: r.id, cat: r.category||'Other', amount: Number(r.amount)||0, desc: r.description||'', date: r.date||'', notes: '', centerId: r.wellness_center_id||'', centerName: center ? center.name : '' };
 }
 function getExpenses() { return D.expenses; }
 async function loadExpenses() {
-  var rows = await dbGet('expenses', 'date', _cFilter('center_id'));
+  var filter = 'type=eq.expense' + (ACTIVE_CENTER ? '&wellness_center_id=eq.' + ACTIVE_CENTER : '');
+  var rows = await dbGet('finance', 'date', filter);
   D.expenses = rows.map(expFromDB);
-  await migrateExpensesFromLocalStorage();
 }
 async function migrateExpensesFromLocalStorage() {
   var local = JSON.parse(localStorage.getItem('supervisorExpenses') || '[]');
@@ -11510,14 +11508,14 @@ async function saveExpense() {
   var centerId = document.getElementById('exp-center').value;
   var centerName = '';
   if (centerId) { var cc = D.centers.find(function(c){ return c.id === centerId; }); centerName = cc ? cc.name : ''; }
-  var expense = { id: id || Date.now().toString(), cat: cat, amount: amount, desc: desc, date: date, notes: document.getElementById('exp-notes').value.trim(), centerId: centerId, centerName: centerName };
   if (cat === 'Water Cans') {
     if (desc.indexOf('Home') !== -1) localStorage.setItem('waterCansHomeAmt', amount);
     else localStorage.setItem('waterCansCenterAmt', amount);
   }
+  var financeData = { type: 'expense', category: cat, amount: amount, description: desc, date: date, wellness_center_id: centerId || null };
   try {
-    if (id) { await dbUpdate('expenses', id, expToDB(expense)); }
-    else    { await dbInsert('expenses', expToDB(expense)); }
+    if (id) { await dbUpdate('finance', id, financeData); }
+    else    { await dbInsert('finance', financeData); }
     closeModal('expense');
     await loadExpenses();
     renderExpenses();
@@ -11527,7 +11525,7 @@ async function saveExpense() {
 async function delExpense(id) {
   if (!confirm('Delete this expense?')) return;
   try {
-    await dbDelete('expenses', id);
+    await dbDelete('finance', id);
     await loadExpenses();
     renderExpenses();
     showToast('Deleted', 'info');
