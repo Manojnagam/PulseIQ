@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Add Expense — PulseIQ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0fdf4;
+    min-height: 100vh;
+    padding: 20px 16px 40px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #166534;
+    letter-spacing: -0.5px;
+  }
+  .header p { font-size: 13px; color: #6b7280; margin-top: 4px; }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    margin-bottom: 16px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  /* Center selector */
+  select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #d1fae5;
+    border-radius: 12px;
+    font-size: 16px;
+    color: #111827;
+    background: #f0fdf4;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  select:focus { outline: none; border-color: #16a34a; }
+
+  /* Amount input */
+  .amount-wrap {
+    display: flex;
+    align-items: center;
+    border: 2px solid #d1fae5;
+    border-radius: 12px;
+    background: #f0fdf4;
+    overflow: hidden;
+  }
+  .amount-wrap:focus-within { border-color: #16a34a; }
+  .rupee {
+    font-size: 26px;
+    font-weight: 700;
+    color: #16a34a;
+    padding: 0 4px 0 16px;
+  }
+  #amount {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 32px;
+    font-weight: 700;
+    color: #111827;
+    padding: 12px 16px 12px 4px;
+    outline: none;
+    width: 100%;
+  }
+  #amount::placeholder { color: #d1d5db; }
+
+  /* Category chips */
+  .cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .cat-btn {
+    padding: 10px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cat-btn:active { transform: scale(0.96); }
+  .cat-btn.selected {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #fff;
+  }
+
+  /* Other text input */
+  #other-wrap {
+    display: none;
+    margin-top: 12px;
+  }
+  #other-wrap.show { display: block; }
+  #other-desc {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #d1fae5;
+    border-radius: 12px;
+    font-size: 16px;
+    color: #111827;
+    background: #f0fdf4;
+    outline: none;
+  }
+  #other-desc:focus { border-color: #16a34a; }
+
+  /* Save button */
+  #save-btn {
+    width: 100%;
+    padding: 18px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #save-btn:active { background: #15803d; transform: scale(0.98); }
+  #save-btn:disabled { background: #9ca3af; cursor: not-allowed; transform: none; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #111827;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: transform 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.green { background: #16a34a; }
+  #toast.red { background: #dc2626; }
+
+  /* Recent entries */
+  .recent-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .entry:last-child { border-bottom: none; }
+  .entry-left .entry-cat { font-size: 14px; font-weight: 600; color: #111827; }
+  .entry-left .entry-time { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+  .entry-amt { font-size: 16px; font-weight: 700; color: #dc2626; }
+  .no-entries { text-align: center; color: #9ca3af; font-size: 13px; padding: 16px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💸 Add Expense</h1>
+  <p>Tap, enter, save — done!</p>
+</div>
+
+<!-- Center -->
+<div class="card">
+  <label>Center</label>
+  <select id="center-sel" onchange="saveCenter()">
+    <option value="2c1c3a6e-35b4-4e30-bbae-a0cf02d8dd7a">BK's Prime Wellness Studio</option>
+    <option value="c1fb6027-fbda-4640-b97e-bd1f086479e8">Dharani's</option>
+    <option value="aed49ac5-5d89-4b16-a03d-eb57b18882d5">Hanvee's</option>
+    <option value="93a87c01-7cdb-4dd1-899f-d99600f63e6d">Vyshnavi's</option>
+  </select>
+</div>
+
+<!-- Amount -->
+<div class="card">
+  <label>Amount</label>
+  <div class="amount-wrap">
+    <span class="rupee">₹</span>
+    <input type="number" id="amount" inputmode="decimal" placeholder="0" min="1">
+  </div>
+</div>
+
+<!-- Category -->
+<div class="card">
+  <label>For What?</label>
+  <div class="cats" id="cats">
+    <button class="cat-btn" onclick="pickCat(this, 'Water Can')">🪣 Water Can</button>
+    <button class="cat-btn" onclick="pickCat(this, 'Snacks')">🍪 Snacks</button>
+    <button class="cat-btn" onclick="pickCat(this, 'Electricity')">⚡ Electricity</button>
+    <button class="cat-btn" onclick="pickCat(this, 'Cleaning')">🧹 Cleaning</button>
+    <button class="cat-btn" onclick="pickCat(this, 'Rent')">🏠 Rent</button>
+    <button class="cat-btn" onclick="pickCat(this, 'Maintenance')">🔧 Maintenance</button>
+    <button class="cat-btn" onclick="pickCat(this, 'Staff Food')">🍱 Staff Food</button>
+    <button class="cat-btn" onclick="pickCat(this, 'Transport')">🚗 Transport</button>
+    <button class="cat-btn other-cat" onclick="pickCat(this, 'Other')">✏️ Other</button>
+  </div>
+  <div id="other-wrap">
+    <input type="text" id="other-desc" placeholder="Type what it's for..." maxlength="100">
+  </div>
+</div>
+
+<!-- Save -->
+<button id="save-btn" onclick="saveExpense()">Save Expense</button>
+
+<!-- Recent -->
+<div class="card" style="margin-top:20px">
+  <div class="recent-title">Today's Expenses</div>
+  <div id="recent-list"><div class="no-entries">No expenses yet today</div></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+
+var selectedCat = '';
+var todayEntries = [];
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function fmtTime(isoStr) {
+  if (!isoStr) return '';
+  var d = new Date(isoStr);
+  return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + (type || '');
+  setTimeout(function() { el.className = ''; }, 2500);
+}
+
+function saveCenter() {
+  localStorage.setItem('expCenterId', document.getElementById('center-sel').value);
+  loadToday();
+}
+
+function pickCat(btn, cat) {
+  document.querySelectorAll('.cat-btn').forEach(function(b) { b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  selectedCat = cat;
+  var wrap = document.getElementById('other-wrap');
+  if (cat === 'Other') {
+    wrap.classList.add('show');
+    document.getElementById('other-desc').focus();
+  } else {
+    wrap.classList.remove('show');
+    document.getElementById('other-desc').value = '';
+  }
+}
+
+async function saveExpense() {
+  var amount = parseFloat(document.getElementById('amount').value);
+  if (!amount || amount <= 0) { toast('Enter an amount', 'red'); return; }
+  if (!selectedCat) { toast('Pick a category', 'red'); return; }
+
+  var description = selectedCat;
+  if (selectedCat === 'Other') {
+    description = document.getElementById('other-desc').value.trim();
+    if (!description) { toast('Type what it\'s for', 'red'); return; }
+  }
+
+  var centerId = document.getElementById('center-sel').value;
+  var btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    var res = await fetch(SB_URL + '/rest/v1/finance', {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        type: 'expense',
+        description: description,
+        amount: amount,
+        category: selectedCat === 'Other' ? 'Other' : selectedCat,
+        date: today(),
+        wellness_center_id: centerId
+      })
+    });
+
+    if (!res.ok) {
+      var err = await res.text();
+      throw new Error(err);
+    }
+
+    var saved = await res.json();
+    if (Array.isArray(saved) && saved[0]) todayEntries.unshift(saved[0]);
+
+    // Reset form
+    document.getElementById('amount').value = '';
+    document.querySelectorAll('.cat-btn').forEach(function(b) { b.classList.remove('selected'); });
+    selectedCat = '';
+    document.getElementById('other-wrap').classList.remove('show');
+    document.getElementById('other-desc').value = '';
+
+    toast('Saved ₹' + amount.toLocaleString('en-IN') + ' — ' + description, 'green');
+    renderRecent();
+  } catch(e) {
+    if (e.message === 'Failed to fetch') {
+      toast('No internet — check connection and try again', 'red');
+    } else {
+      toast('Error: ' + e.message, 'red');
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save Expense';
+}
+
+async function loadToday() {
+  var centerId = document.getElementById('center-sel').value;
+  try {
+    var res = await fetch(
+      SB_URL + '/rest/v1/finance?type=eq.expense&date=eq.' + today() +
+      '&wellness_center_id=eq.' + centerId +
+      '&order=created_at.desc&limit=10',
+      {
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY
+        }
+      }
+    );
+    if (res.ok) {
+      todayEntries = await res.json();
+      renderRecent();
+    }
+  } catch(e) { /* silent — recent is optional */ }
+}
+
+function renderRecent() {
+  var el = document.getElementById('recent-list');
+  if (!todayEntries.length) {
+    el.innerHTML = '<div class="no-entries">No expenses yet today</div>';
+    return;
+  }
+  el.innerHTML = todayEntries.slice(0, 7).map(function(e) {
+    return '<div class="entry">' +
+      '<div class="entry-left">' +
+        '<div class="entry-cat">' + (e.description || e.category) + '</div>' +
+        '<div class="entry-time">' + fmtTime(e.created_at) + '</div>' +
+      '</div>' +
+      '<div class="entry-amt">−₹' + Number(e.amount).toLocaleString('en-IN') + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// Init
+(function init() {
+  var saved = localStorage.getItem('expCenterId');
+  if (saved) {
+    var sel = document.getElementById('center-sel');
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === saved) { sel.selectedIndex = i; break; }
+    }
+  }
+  loadToday();
+})();
+</script>
+</body>
+</html>
