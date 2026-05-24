@@ -3280,7 +3280,7 @@ function saveOwnerProfile() {
 async function saveSupervisorPinToDB(pinValue) {
   try {
     getCredentials();
-    if (!SB_URL || !SB_KEY) return;
+    if (!getActiveSbUrl() || !getActiveSbKey()) return;
     // Check if row exists
     var existing = await dbGet('app_settings', 'key', 'key=eq.supervisor_pin');
     if (existing && existing.length) {
@@ -5384,7 +5384,7 @@ function renderCoaches() {
 }
 
 async function loadInventory() {
-  getCredentials(); if (!SB_URL || !SB_KEY) return;
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) return;
   try {
     var [sin, sout, usage, balRes] = await Promise.all([
       dbGet('inventory_stock_in','date'),
@@ -5725,7 +5725,7 @@ function quickStockIn(pid, pname, unit) {
 }
 
 async function saveStockIn() {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected','error'); return; }
   var editId = document.getElementById('inv-in-id').value;
   var date = document.getElementById('inv-in-date').value;
   var notes = document.getElementById('inv-in-notes').value.trim()||null;
@@ -5868,7 +5868,7 @@ function shareReorderWhatsApp() {
 
 // ── SAVE STOCK OUT ──
 async function saveStockOut() {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected','error'); return; }
   var id = document.getElementById('inv-out-id').value;
   var pid = document.getElementById('inv-out-pid').value;
   var pname = document.getElementById('inv-out-search').value.trim();
@@ -5910,7 +5910,7 @@ async function delStockOut(id) {
 
 // ── SAVE DAILY SUMMARY ──
 async function saveDailySummary() {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected','error'); return; }
   var id = document.getElementById('inv-sum-id').value;
   var date = document.getElementById('inv-sum-date').value;
   if (!date) { showToast('Date is required','error'); return; }
@@ -6014,7 +6014,7 @@ async function delInvSum(id) {
 
 // ── SAVE PRODUCT USAGE ──
 async function saveProductUsage() {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected','error'); return; }
   var id = document.getElementById('inv-usage-id').value;
   var pid = document.getElementById('inv-usage-pid').value;
   var pname = document.getElementById('inv-usage-search').value.trim();
@@ -6111,7 +6111,7 @@ function selectUsageProduct(rid, pid, pname, unit) {
 }
 async function saveAllUsage() {
   getCredentials();
-  if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected','error'); return; }
   var date = document.getElementById('inv-sum-date').value;
   if (!date) { showToast('Date is required','error'); return; }
   var sumId = document.getElementById('inv-sum-id').value;
@@ -6227,7 +6227,7 @@ function switchAttTab(tab) {
 }
 var _attResetTimer = null;
 async function toggleAtt(cid, cname, date, currentStatus) {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   var existing = D.attendance.find(function(a){return a.customer_id===cid && a.date===date;});
   try {
     if(existing && existing.status==='present') {
@@ -6248,7 +6248,7 @@ async function toggleAtt(cid, cname, date, currentStatus) {
   } catch(e) { showToast('Error: '+e.message,'error'); }
 }
 async function resetAtt(cid, cname, date) {
-  getCredentials(); if (!SB_URL || !SB_KEY) return;
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) return;
   var existing = D.attendance.find(function(a){return a.customer_id===cid && a.date===date;});
   if(!existing || existing.status!=='present') return;
   try {
@@ -7125,7 +7125,7 @@ function generateNetworkId(centerName) {
   return 'PZ-' + prefix + '-' + num;
 }
 async function saveCenter() {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('center-id').value;
   var ownerRaw = document.getElementById('center-owner').value || '';
   var ownerId = (ownerRaw && ownerRaw !== 'owner-profile') ? ownerRaw : null;
@@ -7264,7 +7264,7 @@ function previewCustPhoto(type) {
 }
 
 async function saveCustomer() {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('customer-id').value;
   var refId = document.getElementById('customer-coach').value||null;
   var refName = null, refPhone = null;
@@ -7540,7 +7540,7 @@ async function confirmBackfill() {
   var cid = document.getElementById('bf-customer').value;
   var status = document.getElementById('bf-status').value;
   var custName = (D.customers.find(function(c){return c.id===cid;})||{}).name||'';
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   confirmBtn.disabled = true; confirmBtn.textContent = 'Saving...';
   try {
     // Insert in batches of 20 to avoid large payloads
@@ -7562,7 +7562,7 @@ async function confirmBackfill() {
 }
 
 async function saveAttendance() {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('att-id').value;
   var custId = document.getElementById('att-customer').value;
   var cust = D.customers.find(function(c){return c.id===custId;}) || {};
@@ -7621,9 +7621,9 @@ function editAttendance(id) {
 // ── SAVE BODY ──
 document.getElementById('body-customer').addEventListener('change', async function() {
   const custId = this.value;
-  if (!custId || !SB_URL || !SB_KEY) return;
-  const res = await fetch(SB_URL + '/rest/v1/customers?id=eq.' + custId, {
-    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+  if (!custId || !getActiveSbUrl() || !getActiveSbKey()) return;
+  const res = await fetch(getActiveSbUrl() + '/rest/v1/customers?id=eq.' + custId, {
+    headers: { 'apikey': getActiveSbKey(), 'Authorization': 'Bearer ' + getActiveSbKey() }
   });
   const data = await res.json();
   if (data && data[0]) {
@@ -7901,7 +7901,7 @@ async function saveBody() {
   if (!dateVal) { showToast('Date is required','error'); return; }
 
   if (custId === '__sv__') {
-    getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+    getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
     var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
     if (!op.sv_body_id) {
       op.sv_body_id = (crypto.randomUUID ? crypto.randomUUID() : 'sv-' + Date.now() + '-' + Math.random().toString(36).slice(2));
@@ -7932,7 +7932,7 @@ async function saveBody() {
     return;
   }
 
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   var custName = (D.customers.find(function(c){return c.id===custId;})||{}).name||'';
   var payload = {
     customer_id:custId||null, customer_name:custName, date:dateVal,
@@ -7972,7 +7972,7 @@ function editBody(id) {
 
 // ── SAVE COACHES ──
 async function saveCoach() {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('coach-id').value;
   var uplineSel = document.getElementById('coach-upline-sel');
   var role = document.getElementById('coach-role') ? document.getElementById('coach-role').value : 'coach';
@@ -8070,7 +8070,7 @@ function editCoach(id) {
 
 // ── SAVE FINANCE ──
 async function saveFinance() {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('fin-id').value;
   var finCenEl = document.getElementById('fin-center');
   var payload = { type:document.getElementById('fin-type').value, description:document.getElementById('fin-desc').value.trim(), amount:document.getElementById('fin-amount').value, category:document.getElementById('fin-cat').value, date:document.getElementById('fin-date').value, wellness_center_id: (finCenEl && finCenEl.value) || null };
@@ -8103,7 +8103,7 @@ function editFinance(id) {
 
 // ── DELETE ──
 async function delRecord(table, id, section) {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected to Supabase', 'error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   if (!confirm('Delete this record?')) return;
   // Grab name for audit before deleting
   var entityName = section.charAt(0).toUpperCase()+section.slice(1);
@@ -9482,7 +9482,7 @@ function renderSvBody() {
 async function migrateSvBodyToSupabase() {
   var old = JSON.parse(localStorage.getItem('sv_body_records')||'[]');
   if (!old.length) return;
-  getCredentials(); if (!SB_URL || !SB_KEY) return;
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) return;
   var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
   if (!op.sv_body_id) {
     op.sv_body_id = (crypto.randomUUID ? crypto.randomUUID() : 'sv-' + Date.now() + '-' + Math.random().toString(36).slice(2));
@@ -9872,7 +9872,7 @@ function openRefundModal(cid) {
   openModal('refund-pack');
 }
 async function saveRefund() {
-  getCredentials(); if (!SB_URL || !SB_KEY) { showToast('Not connected','error'); return; }
+  getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected','error'); return; }
   var cid    = document.getElementById('refund-cust-id').value;
   var amount = parseFloat(document.getElementById('refund-amount').value) || 0;
   var date   = document.getElementById('refund-date').value;
