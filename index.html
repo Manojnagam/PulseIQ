@@ -59,12 +59,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .stat-l{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
 .stat-v{font-family:'DM Serif Display',serif;font-size:28px;color:var(--primary);margin-top:3px}
 /* ── VISION CARD ── */
-.vision-card{border-radius:var(--radius);padding:20px 22px;margin-bottom:0;background:linear-gradient(135deg,#0f2318 0%,#1a3a28 50%,#2d5a3d 100%);box-shadow:0 6px 24px rgba(0,0,0,.25);position:relative;overflow:hidden}
-.vision-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(232,168,56,.15) 0%,transparent 70%);pointer-events:none}
-.vision-greeting{font-size:12px;color:rgba(255,255,255,.55);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
-.vision-text{font-size:19px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:10px}
-.vision-text em{color:#e8a838;font-style:normal}
-.vision-sub{font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.3px;font-style:italic}
 
 /* OVERVIEW DASHBOARD */
 .ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
@@ -679,7 +673,6 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
         <div><div class="pt" data-t="pt_overview">Overview Dashboard</div><div class="ps" data-t="ps_overview">Your wellness center at a glance</div></div>
         <button class="btn-p" id="ai-overview-btn" onclick="generateWeeklySummary()">✨ AI Summary</button>
       </div>
-      <div id="supervisor-vision-card" style="margin-bottom:16px"></div>
       <div id="birthday-banner" style="display:none;background:linear-gradient(135deg,#fff8e1,#fffde7);border:1px solid #f9c74f;border-radius:var(--radius);padding:12px 18px;margin-bottom:14px;font-size:13px;color:#b07800;line-height:1.8"></div>
       <div id="ai-overview-summary" class="tcard" style="display:none; padding:20px; line-height:1.6; margin-bottom:20px;"></div>
       <!-- Quick Actions -->
@@ -2844,7 +2837,6 @@ function applyLang() {
   var btn = document.getElementById('lang-toggle-btn');
   if (btn) btn.textContent = t('btn_lang');
   // always re-render dynamic content so language change takes effect immediately
-  if (typeof renderSupervisorVisionCard === 'function') renderSupervisorVisionCard();
   var gv = document.getElementById('sec-goals');
   if (gv && gv.classList.contains('active') && typeof renderGoals === 'function') renderGoals();
   // update All Centers option
@@ -3259,7 +3251,6 @@ function saveOwnerProfile() {
   }
   updateCoachSelects();
   renderProfileCard();
-  renderSupervisorVisionCard();
   // Save master PIN to Supabase app_settings so it works on ALL devices
   saveSupervisorPinToDB(p.master_pin || '');
   showToast('Profile saved!', 'success');
@@ -4942,38 +4933,6 @@ async function generateFullProgressReport(cid) {
   doGroqReport(cid, sys, prompt, 'Full Journey Summary');
 }
 
-// ── VISION CARD (SUPERVISOR) ──
-function renderSupervisorVisionCard() {
-  var el = document.getElementById('supervisor-vision-card');
-  if (!el) return;
-  var name = (OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE.name.split(' ')[0] : 'Supervisor';
-  var curPin = (OWNER_PROFILE && OWNER_PROFILE.current_pin) || 'Associate';
-  var nextPin = (OWNER_PROFILE && OWNER_PROFILE.next_pin) || PIN_NEXT[curPin] || null;
-  var targetPin = nextPin || curPin;
-  var PIN_ICONS_MAP = {'Preferred Customer':'🌱','Associate':'⭐','Qualified Producer (QP)':'🥉','Success Builder':'🥈','Supervisor':'🥇','World Team':'💎','Active World Team':'💎','GET Team':'👑','2500 GET Team':'👑','Millionaire Team':'🏆','7500 Millionaire Team':'🏆',"President's Team":'🌟'};
-  var targetIcon = PIN_ICONS_MAP[targetPin] || '⭐';
-  var h = new Date().getHours();
-  var greeting, visionText, visionSub;
-  if (LANG === 'te') {
-    var greetTe = h < 12 ? 'శుభోదయం' : h < 17 ? 'శుభ మధ్యాహ్నం' : 'శుభ సాయంత్రం';
-    greeting = greetTe + ', ' + name + '! 👋';
-    var gender = (OWNER_PROFILE && OWNER_PROFILE.gender) || 'male';
-    var mw = gender === 'female' ? 'సభ్యురాలిని' : 'సభ్యుడిని';
-    visionText = '"నేను ధరణి\'స్‌లో <em>' + targetIcon + ' ' + targetPin + '</em> ' + mw + '."';
-    visionSub = 'నమ్మండి. పని చేయండి. సాధించండి. 💪';
-  } else {
-    var greetEn = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
-    greeting = greetEn + ', ' + name + '! 👋';
-    visionText = '"I am a <em>' + targetIcon + ' ' + targetPin + '</em> member at Dharani\'s."';
-    visionSub = 'Believe it. Work for it. Own it. 💪';
-  }
-  el.innerHTML =
-    '<div class="vision-card">' +
-      '<div class="vision-greeting">' + greeting + '</div>' +
-      '<div class="vision-text">' + visionText + '</div>' +
-      '<div class="vision-sub">' + visionSub + '</div>' +
-    '</div>';
-}
 
 
 // ── RENDER OVERVIEW ──
@@ -5021,7 +4980,6 @@ function computeBodyAlerts() {
 }
 
 function renderOverview() {
-  renderSupervisorVisionCard();
   var todayStr = new Date().toISOString().split('T')[0];
   var today = new Date(); today.setHours(0,0,0,0);
   var currentMonth = todayStr.substring(0,7);
