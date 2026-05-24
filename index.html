@@ -2284,6 +2284,11 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <button class="btn-c" onclick="closeModal('pin-prompt')">Cancel</button>
         <button class="btn-p" onclick="verifyPinPrompt()">Unlock</button>
       </div>
+      <div style="margin-top:18px;padding:10px 14px;background:#f0fdf4;border-radius:10px;font-size:12px;color:#2d5a3d;line-height:1.8;text-align:left">
+        <strong>Not a supervisor?</strong><br>
+        👤 Clients → <a href="client.html" target="_blank" style="color:#2d5a3d;font-weight:600">Open Client Portal</a><br>
+        👨‍🏫 Coaches → <a href="coach.html" target="_blank" style="color:#2d5a3d;font-weight:600">Open Coach Portal</a>
+      </div>
     </div>
   </div>
 </div>
@@ -3267,7 +3272,24 @@ function saveOwnerProfile() {
   renderProfileCard();
   renderSupervisorVisionCard();
   renderSupervisorWaterCard();
+  // Save master PIN to Supabase app_settings so it works on ALL devices
+  saveSupervisorPinToDB(p.master_pin || '');
   showToast('Profile saved!', 'success');
+}
+
+async function saveSupervisorPinToDB(pinValue) {
+  try {
+    getCredentials();
+    if (!SB_URL || !SB_KEY) return;
+    // Check if row exists
+    var existing = await dbGet('app_settings', 'key', 'key=eq.supervisor_pin');
+    if (existing && existing.length) {
+      await req('PATCH', 'app_settings', { value: pinValue }, '?key=eq.supervisor_pin');
+    } else {
+      await req('POST', 'app_settings', { key: 'supervisor_pin', value: pinValue });
+    }
+    _DB_SUPERVISOR_PIN = pinValue;
+  } catch(e) { console.warn('Could not save supervisor PIN to DB:', e); }
 }
 function loadProfilePhoto(event) {
   var file = event.target.files[0];
