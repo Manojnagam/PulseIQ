@@ -202,10 +202,7 @@
 <div class="card">
   <label>Center</label>
   <select id="center-sel" onchange="saveCenter()">
-    <option value="2c1c3a6e-35b4-4e30-bbae-a0cf02d8dd7a">BK's Prime Wellness Studio</option>
-    <option value="c1fb6027-fbda-4640-b97e-bd1f086479e8">Dharani's</option>
-    <option value="aed49ac5-5d89-4b16-a03d-eb57b18882d5">Hanvee's</option>
-    <option value="93a87c01-7cdb-4dd1-899f-d99600f63e6d">Vyshnavi's</option>
+    <option value="">Loading centers...</option>
   </select>
 </div>
 
@@ -393,16 +390,27 @@ function renderRecent() {
   }).join('');
 }
 
+async function loadCenters() {
+  try {
+    var res = await fetch(SB_URL + '/rest/v1/wellness_centers?select=id,name&order=name', {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    if (!res.ok) throw new Error();
+    var centers = await res.json();
+    var saved = localStorage.getItem('expCenterId');
+    var sel = document.getElementById('center-sel');
+    sel.innerHTML = centers.map(function(c) {
+      return '<option value="' + c.id + '"' + (c.id === saved ? ' selected' : '') + '>' + c.name + '</option>';
+    }).join('');
+    loadToday();
+  } catch(e) {
+    document.getElementById('center-sel').innerHTML = '<option value="">Could not load centers</option>';
+  }
+}
+
 // Init
 (function init() {
-  var saved = localStorage.getItem('expCenterId');
-  if (saved) {
-    var sel = document.getElementById('center-sel');
-    for (var i = 0; i < sel.options.length; i++) {
-      if (sel.options[i].value === saved) { sel.selectedIndex = i; break; }
-    }
-  }
-  loadToday();
+  loadCenters();
 })();
 </script>
 </body>
