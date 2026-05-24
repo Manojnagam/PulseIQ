@@ -199,11 +199,12 @@
 </div>
 
 <!-- Center -->
-<div class="card">
+<div class="card" id="center-card">
   <label>Center</label>
   <select id="center-sel" onchange="saveCenter()">
     <option value="">Loading centers...</option>
   </select>
+  <div id="center-locked" style="display:none;font-size:16px;font-weight:600;color:#111827;padding:14px 16px;background:#f0fdf4;border:2px solid #d1fae5;border-radius:12px"></div>
 </div>
 
 <!-- Amount -->
@@ -391,12 +392,34 @@ function renderRecent() {
 }
 
 async function loadCenters() {
+  var slug = new URLSearchParams(window.location.search).get('center') || '';
   try {
     var res = await fetch(SB_URL + '/rest/v1/wellness_centers?select=id,name&order=name', {
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
     });
     if (!res.ok) throw new Error();
     var centers = await res.json();
+
+    if (slug) {
+      // Lock to the center matching the slug (e.g. "dharanis" matches "Dharani's")
+      var matched = centers.find(function(c) {
+        return c.name.toLowerCase().replace(/[^a-z0-9]/g, '') === slug.toLowerCase().replace(/[^a-z0-9]/g, '');
+      });
+      if (matched) {
+        // Hide dropdown, show locked label
+        document.getElementById('center-sel').style.display = 'none';
+        var locked = document.getElementById('center-locked');
+        locked.style.display = 'block';
+        locked.textContent = matched.name;
+        // Inject a hidden select option so saveCenter/loadToday still work
+        document.getElementById('center-sel').innerHTML = '<option value="' + matched.id + '" selected>' + matched.name + '</option>';
+        localStorage.setItem('expCenterId', matched.id);
+        loadToday();
+        return;
+      }
+    }
+
+    // No slug — show full dropdown (supervisor)
     var saved = localStorage.getItem('expCenterId');
     var sel = document.getElementById('center-sel');
     sel.innerHTML = centers.map(function(c) {
