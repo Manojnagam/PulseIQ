@@ -2716,8 +2716,8 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 // ── STATE ──
 var SB_URL = null; var SB_KEY = null;
 // Center owners (₹1999) use a separate Supabase project — keeps their data isolated from supervisor's data
-var CENTER_SB_URL = 'https://jvnhcwqtdxbpwvxbnzok.supabase.co';
-var CENTER_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2bmhjd3F0ZHhicHd2eGJuem9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzQ0NDYsImV4cCI6MjA5NDk1MDQ0Nn0.5zVOEAe7NR_Uz1Zz5sx6CSLWd6o29KL5R8l29HJZ7j0';
+var CENTER_SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
+var CENTER_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
 function isCenterSession() { return _centerAuth && _centerAuth.type === 'center'; }
 // Use main Supabase if credentials exist, otherwise fall back to center Supabase (for paying customers)
 function getActiveSbUrl() { return SB_URL || CENTER_SB_URL; }
