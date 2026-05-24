@@ -3655,9 +3655,9 @@ async function loadBody() {
   D.body = [];
   try {
     var custF = _custIdsFilter();
-    var bodyUrl = SB_URL + '/rest/v1/body_composition?order=date.desc&limit=500' + (custF ? '&' + custF : '');
+    var bodyUrl = getActiveSbUrl() + '/rest/v1/body_composition?order=date.desc&limit=500' + (custF ? '&' + custF : '');
     const res = await fetch(bodyUrl, {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      headers: { 'apikey': getActiveSbKey(), 'Authorization': 'Bearer ' + getActiveSbKey() }
     });
     D.body = await res.json();
     if (!Array.isArray(D.body)) D.body = [];
