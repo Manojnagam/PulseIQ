@@ -8438,7 +8438,7 @@ function renderAnalytics() {
   (function() {
     var el = document.getElementById('analytics-funnel'); if (!el) return;
 
-    var allLeads   = ACTIVE_CENTER ? (D.leads||[]).filter(function(l){ return l.wellness_center_id === ACTIVE_CENTER; }) : (D.leads||[]);
+    var allLeads   = ACTIVE_CENTER ? (D.leads||[]).filter(function(l){ return l.center_id === ACTIVE_CENTER; }) : (D.leads||[]);
     var allCusts   = ACTIVE_CENTER ? D.customers.filter(function(c){ return c.wellness_center_id === ACTIVE_CENTER; }) : D.customers;
     var allHistory = D.packHistory || [];
 
@@ -11094,7 +11094,7 @@ function toggleGuideCard(idx) {
 // ══════════════════════════════════════════════
 
 async function loadLeads() {
-  D.leads = await dbGet('leads', 'id', _cFilter());
+  D.leads = await dbGet('leads', 'id', _cFilter('center_id'));
   D.leadFollowups = await dbGet('lead_followups', 'called_at');
   renderLeadsStats();
   renderLeads();
@@ -11301,7 +11301,13 @@ async function saveLead() {
     renderLeadsStats();
     renderLeads();
     showToast(id ? 'Lead updated' : 'Lead added');
-  } catch(e) { showToast('Error: '+e.message, 'error'); }
+  } catch(e) {
+    if (e.message === 'Failed to fetch') {
+      showToast('Connection issue — check internet and try again.', 'error');
+    } else {
+      showToast('Error: '+e.message, 'error');
+    }
+  }
 }
 
 async function delLead(id) {
