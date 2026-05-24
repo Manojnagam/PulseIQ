@@ -215,7 +215,7 @@
       background: linear-gradient(135deg, #05120b, #0f2419, #1a3a28, #2d5a3d);
       border-radius: 24px; padding: 48px 44px;
       border: 1px solid rgba(255,255,255,.07);
-      display: grid; grid-template-columns: auto 1fr; gap: 48px; align-items: start;
+      display: flex; flex-direction: column; align-items: center; gap: 32px;
       box-shadow: 0 16px 48px rgba(0,0,0,.2);
     }
     .founder-photos { display: flex; flex-direction: column; gap: 12px; align-items: center; flex-shrink: 0; }
@@ -224,7 +224,7 @@
     .founder-photo-label { margin-top: 8px; font-size: 11px; font-weight: 700; padding: 4px 16px; border-radius: 6px; letter-spacing: .4px; color: #fff; }
     .founder-photo-label.before { background: #dc2626; }
     .founder-photo-label.after { background: #16a34a; }
-    .founder-content { color: #fff; }
+    .founder-content { color: #fff; width: 100%; text-align: center; }
     .founder-tag { display: inline-block; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 5px 14px; border-radius: 40px; margin-bottom: 18px; letter-spacing: .8px; text-transform: uppercase; }
     .founder-content h2 { font-size: clamp(22px, 3vw, 32px); color: #fff; margin-bottom: 18px; line-height: 1.25; }
     .founder-content h2 em { color: var(--accent); font-style: normal; }
@@ -533,15 +533,9 @@
       <p class="section-sub">Online wellness coaching since 2020, now serving Kurnool in person — this is the family story behind BK's Prime.</p>
     </div>
     <div class="founder-story-inner fade-in">
-      <div class="founder-photos">
-        <div class="founder-photo-wrap">
-          <img src="centers/dharanis/images/testimonial-mom-before.jpeg" alt="Lakshmidevi before">
-          <div class="founder-photo-label before">MOM · 77 kg</div>
-        </div>
-        <div class="founder-photo-wrap">
-          <img src="centers/dharanis/images/testimonial-mom-after.jpeg" alt="Lakshmidevi after">
-          <div class="founder-photo-label after">MOM · 63 kg</div>
-        </div>
+      <div class="founder-photos" style="display:block;text-align:center">
+        <img src="centers/dharanis/images/testimonial-mom-before-after.jpg" alt="Lakshmidevi before and after" style="width:100%;max-width:360px;border-radius:12px;display:block;margin:0 auto">
+        <div style="text-align:center;margin-top:10px"><span style="display:inline-block;background:#2d5a3d;color:#fff;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:5px 18px;border-radius:20px">Before → After</span></div>
       </div>
       <div class="founder-content">
         <span class="founder-tag">Founder's Story</span>
@@ -764,15 +758,9 @@
         <span class="featured-testi-badge">Featured Story</span>
         <span class="featured-testi-stars">★★★★★</span>
       </div>
-      <div class="featured-testi-photos">
-        <div class="testi-photo-wrap">
-          <img src="centers/bks-prime/images/testimonial-manoj-before.jpeg" alt="Manoj before">
-          <div class="testi-photo-label before">BEFORE · 43 kg</div>
-        </div>
-        <div class="testi-photo-wrap">
-          <img src="centers/bks-prime/images/testimonial-manoj-after.jpeg" alt="Manoj after">
-          <div class="testi-photo-label after">AFTER · 59 kg</div>
-        </div>
+      <div class="featured-testi-photos" style="display:block">
+        <img src="centers/bks-prime/images/testimonial-manoj-before-after.jpeg" alt="Manoj before and after" style="width:100%;max-width:360px;border-radius:12px;display:block;margin:0 auto">
+        <div style="text-align:center;margin-top:10px"><span style="display:inline-block;background:#2d5a3d;color:#fff;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:5px 18px;border-radius:20px">Before → After</span></div>
       </div>
       <p class="featured-testi-text">
         "In 2023, I met with a road accident on the highway near Shantiram Hospital. My head hit the road — doctors found blood clots in 5 areas of my brain. My chances of survival were 25%. I was in a coma for 5 days. The doctors told my parents it would take 6 months to fully recover my memory and recognise people around me.
@@ -797,15 +785,9 @@
         <span class="featured-testi-badge">Featured Story</span>
         <span class="featured-testi-stars">★★★★★</span>
       </div>
-      <div class="featured-testi-photos">
-        <div class="testi-photo-wrap">
-          <img src="centers/bks-prime/images/testimonial-bharath-before.jpeg" alt="Bharath before">
-          <div class="testi-photo-label before">BEFORE · 60 kg</div>
-        </div>
-        <div class="testi-photo-wrap">
-          <img src="centers/bks-prime/images/testimonial-bharath-after.png" alt="Bharath after">
-          <div class="testi-photo-label after">AFTER · 72 kg</div>
-        </div>
+      <div class="featured-testi-photos" style="display:block">
+        <img src="centers/bks-prime/images/testimonial-bharath-before-after.jpg" alt="Bharath before and after" style="width:100%;max-width:360px;border-radius:12px;display:block;margin:0 auto">
+        <div style="text-align:center;margin-top:10px"><span style="display:inline-block;background:#2d5a3d;color:#fff;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:5px 18px;border-radius:20px">Before → After</span></div>
       </div>
       <p class="featured-testi-text">
         "For 4.5 years I suffered from serious sleeping problems — it was affecting every part of my life. On top of that, I had persistent back pain, digestive issues, and stubborn pimples on my face that no treatment seemed to fix. I was also underweight at 60 kg, feeling weak and low on energy most of the time.
