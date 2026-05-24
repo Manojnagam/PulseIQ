@@ -215,7 +215,7 @@
       background: linear-gradient(135deg, #05120b, #0f2419, #1a3a28, #2d5a3d);
       border-radius: 24px; padding: 48px 44px;
       border: 1px solid rgba(255,255,255,.07);
-      display: grid; grid-template-columns: auto 1fr; gap: 48px; align-items: start;
+      display: flex; flex-direction: column; align-items: center; gap: 32px;
       box-shadow: 0 16px 48px rgba(0,0,0,.2);
     }
     .founder-photos { display: flex; flex-direction: column; gap: 12px; align-items: center; flex-shrink: 0; }
@@ -227,7 +227,7 @@
     }
     .founder-photo-label.before { background: #dc2626; }
     .founder-photo-label.after { background: #16a34a; }
-    .founder-content { color: #fff; }
+    .founder-content { color: #fff; width: 100%; text-align: center; }
     .founder-tag {
       display: inline-block; background: var(--accent); color: #fff;
       font-size: 10px; font-weight: 700; padding: 5px 14px;
