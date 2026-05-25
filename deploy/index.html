@@ -11275,6 +11275,8 @@ function openLeadModal(id) {
 }
 
 async function saveLead() {
+  getCredentials();
+  if (!SB_URL) { showToast('Not connected — please set up your Supabase credentials first', 'error'); return; }
   var id = document.getElementById('lead-id').value;
   var name = document.getElementById('lead-name').value.trim();
   var mobile = document.getElementById('lead-mobile').value.trim();
