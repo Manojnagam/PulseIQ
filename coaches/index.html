@@ -452,11 +452,11 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
     <div id="step-login">
       <div class="login-field">
         <label>Your Name</label>
-        <select id="login-coach-sel">
+        <select id="login-coach-sel" onchange="onCoachSelect(this)">
           <option value="">Loading coaches...</option>
         </select>
       </div>
-      <div class="login-field">
+      <div class="login-field" id="pin-field" style="display:none">
         <label>PIN</label>
         <input type="password" id="login-pin" placeholder="Enter your PIN" maxlength="10" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
@@ -1155,8 +1155,8 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
 // ══════════════════════════════════════════
 var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
-var COACH_ID   = sessionStorage.getItem('coachId')   || '';
-var COACH_NAME = sessionStorage.getItem('coachName') || '';
+var COACH_ID   = localStorage.getItem('coachId')   || '';
+var COACH_NAME = localStorage.getItem('coachName') || '';
 var COACH_GENDER = COACH_ID ? (localStorage.getItem('coachGender_' + COACH_ID) || 'male') : 'male';
 var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
 var _leadTab = 'all';
@@ -1346,6 +1346,20 @@ async function loadCoachList() {
 }
 
 
+function onCoachSelect(sel) {
+  var opt = sel.options[sel.selectedIndex];
+  var hasPin = opt && opt.getAttribute('data-pin');
+  var pinField = document.getElementById('pin-field');
+  var pinInput = document.getElementById('login-pin');
+  if (hasPin) {
+    pinField.style.display = 'block';
+    pinInput.focus();
+  } else {
+    pinField.style.display = 'none';
+    pinInput.value = '';
+  }
+}
+
 async function doLogin() {
   var sel = document.getElementById('login-coach-sel');
   var pin = document.getElementById('login-pin').value.trim();
@@ -1354,8 +1368,8 @@ async function doLogin() {
   var opt = sel.options[sel.selectedIndex];
   if (!opt || !opt.value) { err.textContent = 'Please select your name.'; return; }
   var storedPin = opt.getAttribute('data-pin') || '';
-  if (!storedPin) { err.textContent = 'No PIN set for this coach. Ask supervisor to set your PIN.'; return; }
-  if (pin !== storedPin) { err.textContent = 'Incorrect PIN. Try again.'; return; }
+  // PIN is optional — only check if the coach has one set
+  if (storedPin && pin !== storedPin) { err.textContent = 'Incorrect PIN. Try again.'; return; }
   COACH_ID   = opt.value;
   COACH_NAME = opt.text;
   // Guard: if somehow ID is not a UUID, reject login
@@ -1366,8 +1380,8 @@ async function doLogin() {
   if (dbGender === 'male' || dbGender === 'female') {
     localStorage.setItem('coachGender_' + COACH_ID, dbGender);
   }
-  sessionStorage.setItem('coachId',   COACH_ID);
-  sessionStorage.setItem('coachName', COACH_NAME);
+  localStorage.setItem('coachId',   COACH_ID);
+  localStorage.setItem('coachName', COACH_NAME);
   startApp();
 }
 
@@ -1419,7 +1433,8 @@ function sharePortalOnWhatsApp() {
 }
 function logout() {
   if (!confirm('Log out?')) return;
-  sessionStorage.clear();
+  localStorage.removeItem('coachId');
+  localStorage.removeItem('coachName');
   COACH_ID = ''; COACH_NAME = '';
   location.reload();
 }
