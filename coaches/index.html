@@ -1348,15 +1348,18 @@ async function loadCoachList() {
 
 function onCoachSelect(sel) {
   var opt = sel.options[sel.selectedIndex];
-  var hasPin = opt && opt.getAttribute('data-pin');
   var pinField = document.getElementById('pin-field');
   var pinInput = document.getElementById('login-pin');
-  if (hasPin) {
-    pinField.style.display = 'block';
-    pinInput.focus();
-  } else {
-    pinField.style.display = 'none';
+  var err = document.getElementById('login-err');
+  err.textContent = '';
+  if (!opt || !opt.value) { pinField.style.display = 'none'; return; }
+  var hasPin = opt.getAttribute('data-pin');
+  pinField.style.display = 'block';
+  if (!hasPin) {
+    err.textContent = 'No PIN set. Ask your supervisor to set your PIN first.';
     pinInput.value = '';
+  } else {
+    pinInput.focus();
   }
 }
 
@@ -1368,8 +1371,8 @@ async function doLogin() {
   var opt = sel.options[sel.selectedIndex];
   if (!opt || !opt.value) { err.textContent = 'Please select your name.'; return; }
   var storedPin = opt.getAttribute('data-pin') || '';
-  // PIN is optional — only check if the coach has one set
-  if (storedPin && pin !== storedPin) { err.textContent = 'Incorrect PIN. Try again.'; return; }
+  if (!storedPin) { err.textContent = 'No PIN set. Ask your supervisor to set your PIN first.'; return; }
+  if (pin !== storedPin) { err.textContent = 'Incorrect PIN. Try again.'; return; }
   COACH_ID   = opt.value;
   COACH_NAME = opt.text;
   // Guard: if somehow ID is not a UUID, reject login
