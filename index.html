@@ -11294,6 +11294,16 @@ async function saveLead() {
       var idx = D.leads.findIndex(function(l){ return l.id === id; });
       if (idx !== -1) D.leads[idx] = Object.assign(D.leads[idx], data);
     } else {
+      // Duplicate check — match by mobile (if given) or exact name
+      var duplicate = D.leads.find(function(l) {
+        if (mobile && l.mobile && l.mobile.trim() === mobile) return true;
+        if (!mobile && l.name.trim().toLowerCase() === name.toLowerCase()) return true;
+        return false;
+      });
+      if (duplicate) {
+        showToast('Lead already exists: ' + duplicate.name + (duplicate.mobile ? ' (' + duplicate.mobile + ')' : ''), 'error');
+        return;
+      }
       var res = await dbInsert('leads', data);
       if (Array.isArray(res) && res[0]) D.leads.unshift(res[0]);
     }
