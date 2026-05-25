@@ -9711,7 +9711,7 @@ function openRenewForCoach(coachId){
   openModal('renew-pack');
 }
 async function saveRenewal(){
-  getCredentials();if(!SB_URL||!SB_KEY){showToast('Not connected','error');return;}
+  getCredentials();if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
   var cid       = document.getElementById('renew-cust-id').value;
   var isCoach   = document.getElementById('renew-type').value === 'coach';
   var packType  = document.getElementById('renew-pack-type').value;
