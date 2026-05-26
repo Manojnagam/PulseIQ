@@ -585,12 +585,13 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
 window.onerror = function(msg, src, line, col, err) {
   var ld = document.getElementById('app-loading');
   if (ld) {
+    ld.style.background = '#1a3a28';
     ld.style.display = 'flex';
     ld.innerHTML = '<div style="padding:24px;max-width:360px;text-align:center">'
       + '<div style="font-size:40px;margin-bottom:12px">⚠️</div>'
-      + '<div style="font-size:15px;font-weight:700;color:#1a3a28;margin-bottom:8px">App Error</div>'
-      + '<div style="font-size:12px;color:#666;background:#fff;padding:10px;border-radius:8px;word-break:break-all;margin-bottom:16px">' + msg + '<br><span style="color:#999">Line ' + line + '</span></div>'
-      + '<button onclick="location.reload()" style="background:#1a3a28;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🔄 Reload</button>'
+      + '<div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px">App Error</div>'
+      + '<div style="font-size:12px;color:#a8d5b8;background:rgba(255,255,255,.1);padding:10px;border-radius:8px;word-break:break-all;margin-bottom:16px">' + msg + '<br><span style="color:#a8d5b8">Line ' + line + '</span></div>'
+      + '<button onclick="location.reload()" style="background:#fff;color:#1a3a28;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🔄 Reload</button>'
       + '</div>';
   }
 };
@@ -644,10 +645,10 @@ window.onerror = function(msg, src, line, col, err) {
 </div>
 
 <!-- LOADING SPLASH -->
-<div id="app-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f7f3;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:18px">
+<div id="app-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#1a3a28;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:18px">
   <div style="font-size:56px;animation:spin 1.5s linear infinite">🌿</div>
-  <div style="font-size:18px;font-weight:700;color:#1a3a28;font-family:'DM Serif Display',serif">PulseIQ</div>
-  <div style="font-size:13px;color:#5a7a6a" id="app-loading-msg">Loading your center data…</div>
+  <div style="font-size:22px;font-weight:700;color:#fff;font-family:'DM Serif Display',serif">PulseIQ</div>
+  <div style="font-size:14px;color:#a8d5b8" id="app-loading-msg">Loading your center data…</div>
 </div>
 <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
 
@@ -3686,9 +3687,9 @@ setTimeout(function(){
       ld.style.display='flex';
       ld.innerHTML='<div style="padding:24px;max-width:360px;text-align:center">'
         +'<div style="font-size:40px;margin-bottom:12px">⏳</div>'
-        +'<div style="font-size:15px;font-weight:700;color:#1a3a28;margin-bottom:8px">Taking too long...</div>'
-        +'<div style="font-size:12px;color:#666;margin-bottom:16px">Check your internet connection and try reloading.</div>'
-        +'<button onclick="location.reload()" style="background:#1a3a28;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🔄 Reload</button>'
+        +'<div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px">Taking too long...</div>'
+        +'<div style="font-size:12px;color:#a8d5b8;margin-bottom:16px">Check your internet connection and try reloading.</div>'
+        +'<button onclick="location.reload()" style="background:#fff;color:#1a3a28;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🔄 Reload</button>'
         +'</div>';
     }
   }
