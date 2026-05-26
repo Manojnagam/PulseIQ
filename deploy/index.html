@@ -625,6 +625,14 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
   </div>
 </div>
 
+<!-- LOADING SPLASH -->
+<div id="app-loading" style="position:fixed;inset:0;background:#f0f7f3;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:18px">
+  <div style="font-size:56px;animation:spin 1.5s linear infinite">🌿</div>
+  <div style="font-size:18px;font-weight:700;color:#1a3a28;font-family:'DM Serif Display',serif">PulseIQ</div>
+  <div style="font-size:13px;color:#5a7a6a" id="app-loading-msg">Loading your center data…</div>
+</div>
+<style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+
 <!-- APP -->
 <div id="app" style="display: block;">
   <nav class="sidebar" id="sidebar">
@@ -3635,7 +3643,9 @@ async function loadAll() {
   D.coupons=[]; D.payments=[]; D.packHistory=[];
   try {
     // Phase 1: centers + customers + coaches first (attendance/body need customer IDs for center-scoped query)
+    var _ldMsg = document.getElementById('app-loading-msg'); if(_ldMsg) _ldMsg.textContent = 'Connecting to database…';
     await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
+    if(_ldMsg) _ldMsg.textContent = 'Loading attendance & finance…';
     // Phase 2: everything else — attendance/body/packHistory use customer IDs from phase 1
     await Promise.all([loadAttendance(), loadBody(), loadFinance(),
       loadCoupons(), loadPayments(), loadPackHistory(),
@@ -3646,11 +3656,14 @@ async function loadAll() {
     applyLang();          // apply saved language preference
     startAutoPing();
     migrateSvBodyToSupabase();
+    // Hide loading splash — data is ready
+    var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
     // On startup: if PINs exist but no session auth, prompt for PIN
     checkStartupAuth();
   } catch(e) {
     console.error('loadAll crash:', e);
-    // Show a friendly reload button instead of blank screen
+    // Hide loading splash and show error
+    var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
     var app = document.getElementById('app');
     if(app) app.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8faf8;padding:32px;text-align:center">'
       + '<div style="font-size:48px;margin-bottom:16px">⚠️</div>'
