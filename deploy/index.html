@@ -657,6 +657,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <button class="nav-item" onclick="goTo(&#39;coaches&#39;,this)"><span class="ic">👨‍🏫</span><span data-t="nav_coaches">Coaches</span></button>
         <button id="nav-customers" class="nav-item" onclick="goTo(&#39;customers&#39;,this)"><span class="ic">👤</span><span data-t="nav_customers">Customers</span></button>
         <button class="nav-item" onclick="goTo(&#39;leads&#39;,this)"><span class="ic">📞</span><span data-t="nav_leads">Leads</span></button>
+        <button class="nav-item" onclick="goTo(&#39;walkins&#39;,this)"><span class="ic">🚶</span><span>Walk-ins</span></button>
         <button class="nav-item" onclick="goTo(&#39;attendance&#39;,this)"><span class="ic">📅</span><span data-t="nav_attendance">Attendance</span></button>
         <button class="nav-item" onclick="goTo(&#39;body&#39;,this)"><span class="ic">⚖️</span><span data-t="nav_body">Body Composition</span></button>
         <button class="nav-item" onclick="goTo(&#39;contests&#39;,this)"><span class="ic">🏆</span><span>Contests</span></button>
@@ -1059,6 +1060,39 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
       </div>
       <input class="search" id="leads-search" placeholder="🔍 Search name or mobile..." oninput="renderLeads()" style="width:100%;max-width:100%;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:12px 16px;font-family:inherit;font-size:14px;margin-bottom:14px">
       <div id="leads-list"></div>
+    </div>
+
+    <!-- WALK-INS -->
+    <div class="sec" id="sec-walkins">
+      <div class="ph">
+        <div><div class="pt">Walk-ins</div><div class="ps">Visitors who came for checkup or one-time purchase</div></div>
+        <button class="btn-p" onclick="openWalkinModal()">+ Add Walk-in</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-ic">📅</div><div class="stat-l">Today</div><div class="stat-v" id="wi-stat-today">0</div></div>
+        <div class="stat"><div class="stat-ic">🔬</div><div class="stat-l">Checkups</div><div class="stat-v" id="wi-stat-checkup">0</div></div>
+        <div class="stat"><div class="stat-ic">📦</div><div class="stat-l">Trial Packs</div><div class="stat-v" id="wi-stat-trial">0</div></div>
+        <div class="stat"><div class="stat-ic">🛒</div><div class="stat-l">Product Sales</div><div class="stat-v" id="wi-stat-sale">0</div></div>
+        <div class="stat"><div class="stat-ic">✅</div><div class="stat-l">Converted</div><div class="stat-v" style="color:var(--success)" id="wi-stat-converted">0</div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <input class="search" id="walkins-search" placeholder="🔍 Search name or phone..." oninput="renderWalkins()" style="flex:1;min-width:160px;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:10px 14px;font-family:inherit;font-size:14px">
+        <select id="walkins-filter-outcome" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)">
+          <option value="">All Outcomes</option>
+          <option value="checkup">🔬 Checkup</option>
+          <option value="trial">📦 Trial Pack</option>
+          <option value="product_sale">🛒 Product Sale</option>
+          <option value="other">Other</option>
+        </select>
+        <input type="date" id="walkins-filter-date" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)" title="Filter by date">
+        <button class="btn-c" onclick="document.getElementById('walkins-filter-date').value='';document.getElementById('walkins-filter-outcome').value='';renderWalkins()">Clear</button>
+      </div>
+      <div class="tcard">
+        <div class="twrap"><table>
+          <thead><tr><th>Date</th><th>Name</th><th>Phone</th><th>Source / Referred By</th><th>Outcome</th><th>Amount</th><th>Notes</th><th>Actions</th></tr></thead>
+          <tbody id="walkins-body"></tbody>
+        </table></div>
+      </div>
     </div>
 
     <!-- ATTENDANCE -->
@@ -2994,7 +3028,7 @@ function _applySwitch(centerId) {
       if(_ldMsg) _ldMsg.textContent = 'Almost ready…';
       return Promise.all([loadAttendance(), loadBody(), loadFinance(),
         loadCoupons(), loadPayments(), loadPackHistory(),
-        loadLeads(), loadExpenses(), loadInventory()]);
+        loadLeads(), loadWalkins(), loadExpenses(), loadInventory()]);
     })
     .then(function(){
       _daysLeftCache = {};
@@ -3662,7 +3696,7 @@ async function loadAll() {
     // Phase 2: everything else — attendance/body/packHistory use customer IDs from phase 1
     await Promise.all([loadAttendance(), loadBody(), loadFinance(),
       loadCoupons(), loadPayments(), loadPackHistory(),
-      loadLeads(), loadExpenses(), loadFoods(), loadInventory(), loadContests()]);
+      loadLeads(), loadWalkins(), loadExpenses(), loadFoods(), loadInventory(), loadContests()]);
     _daysLeftCache = {};  // all data loaded — recalculate with full attendance
     try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
@@ -7408,6 +7442,9 @@ async function saveCustomer() {
       } catch(pe) { showToast('Photo upload failed: ' + pe.message, 'error'); }
     }
     closeModal('customer'); await loadCustomers(); renderOverview();
+    // ── Mark walk-in as converted if this customer came from a walk-in ──
+    var _savedCustIdForWalkin = id || (Array.isArray(savedRecords) && savedRecords[0] ? savedRecords[0].id : null);
+    if(window._convertingWalkinId && _savedCustIdForWalkin) _markWalkinConverted(_savedCustIdForWalkin);
     // ── Auto-generate diet plan in background ──
     var planCustId = id || (Array.isArray(savedRecords) && savedRecords[0] ? savedRecords[0].id : null);
     if(planCustId){
@@ -11188,6 +11225,180 @@ function toggleGuideCard(idx) {
 }
 
 // ══════════════════════════════════════════════
+// WALK-INS
+// ══════════════════════════════════════════════
+
+async function loadWalkins() {
+  var filter = ACTIVE_CENTER ? 'wellness_center_id=eq.'+ACTIVE_CENTER : '';
+  D.walkins = await dbGet('walkins', 'created_at', filter);
+  renderWalkins();
+}
+
+function renderWalkins() {
+  var q = ((document.getElementById('walkins-search')||{}).value||'').toLowerCase();
+  var filterOutcome = (document.getElementById('walkins-filter-outcome')||{}).value||'';
+  var filterDate = (document.getElementById('walkins-filter-date')||{}).value||'';
+  var all = D.walkins || [];
+  var today = new Date().toISOString().slice(0,10);
+
+  // Stats
+  var si = document.getElementById('wi-stat-today'); if(si) si.textContent = all.filter(function(w){return w.date===today;}).length;
+  si = document.getElementById('wi-stat-checkup'); if(si) si.textContent = all.filter(function(w){return w.outcome==='checkup';}).length;
+  si = document.getElementById('wi-stat-trial'); if(si) si.textContent = all.filter(function(w){return w.outcome==='trial';}).length;
+  si = document.getElementById('wi-stat-sale'); if(si) si.textContent = all.filter(function(w){return w.outcome==='product_sale';}).length;
+  si = document.getElementById('wi-stat-converted'); if(si) si.textContent = all.filter(function(w){return w.converted;}).length;
+
+  var rows = all.filter(function(w) {
+    if(filterOutcome && w.outcome !== filterOutcome) return false;
+    if(filterDate && w.date !== filterDate) return false;
+    return (w.name||'').toLowerCase().includes(q) || (w.phone||'').includes(q);
+  }).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+
+  var tb = document.getElementById('walkins-body');
+  if(!rows.length){
+    tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="ei">🚶</div><p>No walk-ins yet. Add your first visitor!</p></div></td></tr>';
+    return;
+  }
+  var SRC = {google:'🔍 Google',customer_referral:'👤 Customer',coach_referral:'👨‍🏫 Coach',owner:'🏢 Owner',other:'Other'};
+  var OUT = {checkup:'🔬 Checkup',trial:'📦 Trial Pack',product_sale:'🛒 Product Sale',other:'Other'};
+  var OUT_COL = {checkup:'#1d4ed8',trial:'#b07800',product_sale:'#16a34a',other:'var(--muted)'};
+  tb.innerHTML = rows.map(function(w) {
+    var refName = w.referred_by_name || (w.referred_by_id ? (findPerson&&findPerson(w.referred_by_id)||'') : '');
+    var srcLbl = (SRC[w.source]||w.source||'—') + (refName ? '<br><span style="font-size:11px;color:var(--muted)">'+refName+'</span>' : '');
+    var outLbl = '<span style="font-weight:600;color:'+(OUT_COL[w.outcome]||'var(--muted)')+'">'+( OUT[w.outcome]||w.outcome||'—')+'</span>'+(w.product_details?'<br><span style="font-size:11px;color:var(--muted)">'+w.product_details+'</span>':'');
+    var amt = (w.outcome==='checkup') ? '<span style="color:var(--success);font-size:11px;font-weight:600">Free</span>' : (w.amount_received ? '₹'+Number(w.amount_received).toLocaleString('en-IN') : '—');
+    var waBtn = w.phone ? '<a class="wa-btn" href="https://api.whatsapp.com/send?phone='+COUNTRY_CODE+w.phone.replace(/\D/g,'')+'&text=Hi+'+encodeURIComponent(w.name||'')+',+thank+you+for+visiting+our+wellness+center!+We+hope+to+see+you+again+soon+%F0%9F%8C%BF" target="_blank" rel="noopener" style="font-size:11px;padding:3px 7px;text-decoration:none">💬 WA</a>' : '';
+    var convertBtn = w.converted
+      ? '<span class="badge bg" style="font-size:10px">✅ Customer</span>'
+      : '<button class="btn-p" style="font-size:11px;padding:3px 7px;background:#8b5cf6" onclick="convertWalkinToCustomer(\''+w.id+'\')">👤 Convert</button>';
+    return '<tr>'
+      +'<td>'+( w.date||'—')+'</td>'
+      +'<td><strong>'+(w.name||'—')+'</strong>'+(w.pincode?'<br><span style="font-size:11px;color:var(--muted)">📍 '+w.pincode+'</span>':'')+'</td>'
+      +'<td>'+(w.phone||'—')+'</td>'
+      +'<td>'+srcLbl+'</td>'
+      +'<td>'+outLbl+'</td>'
+      +'<td>'+amt+'</td>'
+      +'<td style="max-width:140px;font-size:12px;color:var(--muted)">'+(w.notes||'—')+'</td>'
+      +'<td><div class="acts">'+waBtn+' '+convertBtn+' <button class="btn-e" onclick="openWalkinModal(\''+w.id+'\')">Edit</button> <button class="btn-e" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5" onclick="deleteWalkin(\''+w.id+'\')">🗑</button></div></td>'
+      +'</tr>';
+  }).join('');
+}
+
+function openWalkinModal(id) {
+  ['walkin-id','walkin-name','walkin-phone','walkin-pincode','walkin-notes','walkin-product'].forEach(function(f){
+    var el=document.getElementById(f); if(el) el.value='';
+  });
+  document.getElementById('walkin-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('walkin-source').value='';
+  document.getElementById('walkin-outcome').value='';
+  document.getElementById('walkin-amount').value='';
+  document.getElementById('walkin-referred-by-id').value='';
+  document.getElementById('sd-walkin-ref-input').value='';
+  document.getElementById('walkin-referred-wrap').style.display='none';
+  document.getElementById('walkin-amount-wrap').style.display='none';
+  document.getElementById('walkin-modal-title').textContent='🚶 Add Walk-in';
+  // Populate searchable referred-by dropdown
+  var allPersons = (D.customers||[]).map(function(c){return{id:c.id,label:c.name+' (Customer)'}; })
+    .concat((D.coaches||[]).map(function(c){return{id:c.id,label:c.name+' 👨‍🏫 (Coach)'};} ));
+  sdSetItems('walkin-ref', allPersons);
+  if(id) {
+    var w=(D.walkins||[]).find(function(x){return x.id===id;});
+    if(w){
+      document.getElementById('walkin-modal-title').textContent='✏️ Edit Walk-in';
+      document.getElementById('walkin-id').value=w.id;
+      document.getElementById('walkin-date').value=w.date||'';
+      document.getElementById('walkin-name').value=w.name||'';
+      document.getElementById('walkin-phone').value=w.phone||'';
+      document.getElementById('walkin-pincode').value=w.pincode||'';
+      document.getElementById('walkin-source').value=w.source||'';
+      document.getElementById('walkin-outcome').value=w.outcome||'';
+      document.getElementById('walkin-amount').value=w.amount_received||'';
+      document.getElementById('walkin-product').value=w.product_details||'';
+      document.getElementById('walkin-notes').value=w.notes||'';
+      if(w.referred_by_id){ document.getElementById('walkin-referred-by-id').value=w.referred_by_id; }
+      if(w.referred_by_name){ document.getElementById('sd-walkin-ref-input').value=w.referred_by_name; }
+      onWalkinSourceChange(); onWalkinOutcomeChange();
+    }
+  }
+  openModal('walkin');
+}
+
+function onWalkinSourceChange(){
+  var src=document.getElementById('walkin-source').value;
+  document.getElementById('walkin-referred-wrap').style.display=(src==='customer_referral'||src==='coach_referral')?'block':'none';
+}
+function onWalkinOutcomeChange(){
+  var out=document.getElementById('walkin-outcome').value;
+  document.getElementById('walkin-amount-wrap').style.display=(out==='trial'||out==='product_sale')?'block':'none';
+}
+
+async function saveWalkin(){
+  var name=(document.getElementById('walkin-name').value||'').trim();
+  if(!name){showToast('Name is required','error');return;}
+  var id=document.getElementById('walkin-id').value;
+  var src=document.getElementById('walkin-source').value;
+  var isRef=src==='customer_referral'||src==='coach_referral';
+  var refId=document.getElementById('walkin-referred-by-id').value;
+  var refName=document.getElementById('sd-walkin-ref-input').value.trim();
+  var data={
+    date:document.getElementById('walkin-date').value,
+    name:name,
+    phone:(document.getElementById('walkin-phone').value||'').trim(),
+    pincode:(document.getElementById('walkin-pincode').value||'').trim(),
+    source:src,
+    referred_by_id:isRef&&refId?refId:null,
+    referred_by_name:isRef&&refName?refName:null,
+    outcome:document.getElementById('walkin-outcome').value,
+    amount_received:Number(document.getElementById('walkin-amount').value)||0,
+    product_details:(document.getElementById('walkin-product').value||'').trim(),
+    notes:(document.getElementById('walkin-notes').value||'').trim(),
+    wellness_center_id:ACTIVE_CENTER||null
+  };
+  getCredentials(); if(!SB_URL||!SB_KEY){showToast('Supabase not configured','error');return;}
+  try{
+    if(id){await dbUpdate('walkins',id,data);showToast('Walk-in updated','success');}
+    else{await dbInsert('walkins',data);showToast('Walk-in saved ✅','success');}
+    closeModal('walkin');
+    await loadWalkins();
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+async function deleteWalkin(id){
+  if(!confirm('Delete this walk-in record?'))return;
+  getCredentials();
+  try{await dbDelete('walkins',id);showToast('Deleted','success');await loadWalkins();}
+  catch(e){showToast('Error: '+e.message,'error');}
+}
+
+function convertWalkinToCustomer(walkinId){
+  var w=(D.walkins||[]).find(function(x){return x.id===walkinId;});
+  if(!w)return;
+  // Store walkin id to mark converted after save
+  window._convertingWalkinId=walkinId;
+  // Reset and open customer modal pre-filled
+  var resetEvent = document.querySelector('[onclick*="openAddCustomerModal"]');
+  openAddCustomerModal();
+  setTimeout(function(){
+    document.getElementById('customer-name').value=w.name||'';
+    document.getElementById('customer-contact').value=w.phone||'';
+    document.getElementById('customer-modal-title').textContent='👤 Add Customer (from Walk-in)';
+    if(w.referred_by_id) sdSetSelected('ref',w.referred_by_id,w.referred_by_name||'');
+    showToast('Pre-filled from walk-in — complete pack details & save','success');
+  },100);
+}
+
+// Call this from saveCustomer after a successful save when _convertingWalkinId is set
+async function _markWalkinConverted(customerId){
+  var wid=window._convertingWalkinId;
+  if(!wid)return;
+  window._convertingWalkinId=null;
+  try{
+    await dbUpdate('walkins',wid,{converted:true,converted_customer_id:customerId});
+    await loadWalkins();
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════
 // LEADS
 // ══════════════════════════════════════════════
 
@@ -13445,6 +13656,59 @@ async function removeContestParticipant(pid) {
         <button class="btn-p" onclick="saveContestProgress()">Save Progress</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT WALK-IN -->
+<div class="overlay" id="modal-walkin" style="align-items:flex-start;overflow-y:auto;padding:40px 16px 16px">
+  <div class="modal" style="max-width:500px">
+    <div class="mh"><div class="mt" id="walkin-modal-title">🚶 Add Walk-in</div><button class="mc" onclick="closeModal('walkin')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="walkin-id">
+      <div class="fr">
+        <div class="fg"><label>Date</label><input type="date" id="walkin-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label>Full Name *</label><input type="text" id="walkin-name" placeholder="Visitor name" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Phone</label><input type="tel" id="walkin-phone" placeholder="Mobile number" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label>Pincode</label><input type="text" id="walkin-pincode" placeholder="Area pincode" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <div class="fg"><label>How did they find us?</label>
+        <select id="walkin-source" onchange="onWalkinSourceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="">Select source</option>
+          <option value="google">🔍 Google</option>
+          <option value="customer_referral">👤 Referred by Customer</option>
+          <option value="coach_referral">👨‍🏫 Referred by Coach</option>
+          <option value="owner">🏢 Center Owner</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="fg" id="walkin-referred-wrap" style="display:none">
+        <label>Referred By (who sent them?)</label>
+        <div class="sd-wrap" id="sd-walkin-ref" style="position:relative">
+          <input class="sd-input" id="sd-walkin-ref-input" placeholder="Search customer or coach..." autocomplete="off" oninput="sdRender('walkin-ref')" onfocus="sdRender('walkin-ref')" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box">
+          <div class="sd-list" id="sd-walkin-ref-list" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:0 0 8px 8px;max-height:160px;overflow-y:auto;z-index:50;display:none"></div>
+        </div>
+        <input type="hidden" id="walkin-referred-by-id">
+      </div>
+      <div class="fg"><label>Outcome</label>
+        <select id="walkin-outcome" onchange="onWalkinOutcomeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="">Select outcome</option>
+          <option value="checkup">🔬 Only Checkup (Free)</option>
+          <option value="trial">📦 3-Day Trial Pack</option>
+          <option value="product_sale">🛒 Product Sale</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div id="walkin-amount-wrap" style="display:none">
+        <div class="fr">
+          <div class="fg"><label>Amount Received (₹)</label><input type="number" id="walkin-amount" placeholder="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg" id="walkin-product-wrap"><label>Product / Details</label><input type="text" id="walkin-product" placeholder="What did they buy?" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        </div>
+      </div>
+      <div class="fg"><label>Notes</label><input type="text" id="walkin-notes" placeholder="Any additional notes..." style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+    </div>
+    <div class="mf"><button class="btn-c" onclick="closeModal('walkin')">Cancel</button><button class="btn-p" onclick="saveWalkin()">💾 Save Walk-in</button></div>
   </div>
 </div>
 
