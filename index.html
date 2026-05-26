@@ -2296,24 +2296,21 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
   </div>
 </div>
 
-<div class="overlay" id="modal-pin-prompt">
-  <div class="modal" style="max-width:340px">
+<div class="overlay" id="modal-pin-prompt" style="align-items:flex-start;padding-top:60px">
+  <div class="modal" style="max-width:340px;width:calc(100vw - 32px)">
     <div class="mh"><div class="mt" id="pin-prompt-title">🔐 Enter PIN</div><button class="mc" onclick="closeModal('pin-prompt')">✕</button></div>
     <div class="mb" style="text-align:center">
       <p id="pin-prompt-msg" style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter the center PIN or supervisor master PIN to continue.</p>
-      <div style="display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap">
-        <input type="password" id="pin-prompt-input" maxlength="4" pattern="\d{4}" placeholder="• • • •" style="letter-spacing:10px;text-align:center;font-size:24px;padding:14px;width:140px;max-width:calc(100% - 60px);border:2px solid var(--border);border-radius:10px;font-family:inherit" onkeyup="if(event.key==='Enter')verifyPinPrompt()">
-        <button type="button" onclick="togglePinVis('pin-prompt-input',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:16px" title="Show/Hide">👁️</button>
-      </div>
+      <input type="password" id="pin-prompt-input" maxlength="4" pattern="\d{4}" placeholder="• • • •" inputmode="numeric"
+        style="letter-spacing:8px;text-align:center;font-size:24px;padding:14px;width:100%;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:inherit;display:block"
+        onkeyup="if(event.key==='Enter')verifyPinPrompt()">
       <div id="pin-prompt-error" style="color:var(--danger);font-size:12px;margin-top:8px;display:none">Incorrect PIN. Try again.</div>
-      <div class="mf" style="justify-content:center;margin-top:16px">
-        <button class="btn-c" onclick="closeModal('pin-prompt')">Cancel</button>
-        <button class="btn-p" onclick="verifyPinPrompt()">Unlock</button>
-      </div>
-      <div style="margin-top:18px;padding:10px 14px;background:#f0fdf4;border-radius:10px;font-size:12px;color:#2d5a3d;line-height:1.8;text-align:left">
+      <button class="btn-p" onclick="verifyPinPrompt()" style="width:100%;margin-top:14px;padding:14px;font-size:15px">🔓 Unlock</button>
+      <button class="btn-c" onclick="closeModal('pin-prompt')" style="width:100%;margin-top:8px">Cancel</button>
+      <div style="margin-top:14px;padding:10px 14px;background:#f0fdf4;border-radius:10px;font-size:12px;color:#2d5a3d;line-height:1.8;text-align:left">
         <strong>Not a supervisor?</strong><br>
-        👤 Clients → <a href="client.html" target="_blank" style="color:#2d5a3d;font-weight:600">Open Client Portal</a><br>
-        👨‍🏫 Coaches → <a href="coach.html" target="_blank" style="color:#2d5a3d;font-weight:600">Open Coach Portal</a>
+        👤 Clients → <a href="client.html" target="_blank" style="color:#2d5a3d;font-weight:600">Client Portal</a> &nbsp;
+        👨‍🏫 Coaches → <a href="coach.html" target="_blank" style="color:#2d5a3d;font-weight:600">Coach Portal</a>
       </div>
     </div>
   </div>
