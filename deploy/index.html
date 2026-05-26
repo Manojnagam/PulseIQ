@@ -3693,7 +3693,18 @@ async function loadAll() {
       loadLeads(), loadExpenses(), loadFoods(), loadInventory(), loadContests()]);
     _daysLeftCache = {};  // all data loaded — recalculate with full attendance
     try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
-    try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
+    var _ovErr = null;
+    try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); _ovErr = re; }
+    // Show diagnostic info if renderOverview failed or data is empty
+    var _diagEl = document.getElementById('overview-stats');
+    if(_diagEl && (_ovErr || (!D.customers.length && !D.centers.length))) {
+      _diagEl.innerHTML = '<div style="grid-column:1/-1;background:#fffbeb;border:1px solid #f59e0b;border-radius:10px;padding:14px 16px;font-size:12px;color:#92400e">'
+        +'<strong>📊 App Status</strong><br>'
+        +'Centers: '+D.centers.length+' | Customers: '+D.customers.length+' | Finance: '+D.finance.length+'<br>'
+        +'PINs in DB: '+Object.keys(_DB_PINS).length+' | Supervisor PIN: '+(_DB_SUPERVISOR_PIN?'✅ set':'❌ not set')+'<br>'
+        +(_ovErr?'<span style="color:#dc2626">Render error: '+(_ovErr.message||String(_ovErr))+'</span>':'')
+        +'</div>';
+    }
     applyLang();          // apply saved language preference
     startAutoPing();
     migrateSvBodyToSupabase();
