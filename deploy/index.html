@@ -2301,9 +2301,9 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mh"><div class="mt" id="pin-prompt-title">🔐 Enter PIN</div><button class="mc" onclick="closeModal('pin-prompt')">✕</button></div>
     <div class="mb" style="text-align:center">
       <p id="pin-prompt-msg" style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter the center PIN or supervisor master PIN to continue.</p>
-      <input type="number" id="pin-prompt-input" min="0" max="9999" placeholder="0000" autocomplete="off"
-        style="letter-spacing:6px;text-align:center;font-size:32px;padding:16px;width:100%;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:inherit;display:block"
-        oninput="this.value=this.value.replace(/\D/g,'').slice(0,4);if(this.value.length>=4)verifyPinPrompt()" onkeyup="if(event.key==='Enter')verifyPinPrompt()">
+      <input type="password" id="pin-prompt-input" maxlength="6" inputmode="numeric" placeholder="••••" autocomplete="off"
+        style="letter-spacing:8px;text-align:center;font-size:32px;padding:16px;width:100%;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:inherit;display:block"
+        oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length>=4)setTimeout(verifyPinPrompt,100)" onkeyup="if(event.key==='Enter')verifyPinPrompt()">
       <div id="pin-prompt-error" style="color:var(--danger);font-size:12px;margin-top:8px;display:none">Incorrect PIN. Try again.</div>
       <button class="btn-p" onclick="verifyPinPrompt()" style="width:100%;margin-top:14px;padding:14px;font-size:15px">🔓 Unlock</button>
       <button class="btn-c" onclick="closeModal('pin-prompt')" style="width:100%;margin-top:8px">Cancel</button>
@@ -2931,8 +2931,8 @@ function switchActiveCenter(centerId) {
 }
 
 function verifyPinPrompt() {
-  var entered = (document.getElementById('pin-prompt-input').value||'').replace(/\D/g,'').trim();
-  if(!entered || entered.length < 4) return;
+  var entered = (document.getElementById('pin-prompt-input').value||'').trim();
+  if(!entered) return;
   var targetCenter = _pendingSwitchCenter;
 
   // Check supervisor PIN — DB first, localStorage fallback
