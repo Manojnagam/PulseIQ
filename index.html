@@ -3095,7 +3095,9 @@ function checkStartupAuth() {
   if(_centerAuth.type === 'center' && _centerAuth.centerId && _DB_PINS[_centerAuth.centerId]) {
     ACTIVE_CENTER = _centerAuth.centerId;
     localStorage.setItem('activeCenter', _centerAuth.centerId);
-    _applySwitch(_centerAuth.centerId);
+    // Don't reload data — just re-render with center filter (data already loaded)
+    try { renderOverview(); } catch(e){}
+    try { renderCustomers(); } catch(e){}
     updateCenterSwitcher();
     return;
   }
