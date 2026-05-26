@@ -1464,6 +1464,12 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Recency · Frequency · Monetary — who are your most valuable customers?</div>
         <div id="analytics-rfm"></div>
       </div>
+      <!-- Walk-ins Analytics -->
+      <div class="tcard" style="padding:20px;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">🚶 Walk-ins Analytics</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Source breakdown, outcomes, conversion rate and monthly trend</div>
+        <div id="analytics-walkins"></div>
+      </div>
       <div class="tcard" style="padding:20px;margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div style="font-family:'DM Serif Display',serif;font-size:16px">⚖️ Body Metric Trend</div>
@@ -9350,6 +9356,132 @@ function renderAnalytics() {
     html += '</tbody></table></div>';
     html += '<div style="font-size:10px;color:var(--muted);margin-top:8px">R = Recency (5=visited this week), F = Frequency (5=5+ visits/wk), M = Monetary (5=top 20% spender). Scores are relative to filtered customers.</div>';
     rfmEl.innerHTML = html;
+  })();
+
+  // ── Walk-ins Analytics ──
+  (function() {
+    var el = document.getElementById('analytics-walkins');
+    if (!el) return;
+
+    var walkins = (D.walkins || []).filter(function(w) {
+      if (!inRange(w.date)) return false;
+      if (centerFilter && w.wellness_center_id !== centerFilter) return false;
+      return true;
+    });
+
+    if (!walkins.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">No walk-in data in this period.</div>';
+      return;
+    }
+
+    var total = walkins.length;
+    var converted = walkins.filter(function(w){ return w.converted; }).length;
+    var convPct = total > 0 ? Math.round((converted / total) * 100) : 0;
+    var productRev = walkins.reduce(function(s, w){ return s + (parseFloat(w.amount_received) || 0); }, 0);
+    var avgSale = converted > 0 ? Math.round(productRev / walkins.filter(function(w){ return (parseFloat(w.amount_received)||0) > 0; }).length || 1) : 0;
+    var paidCount = walkins.filter(function(w){ return (parseFloat(w.amount_received)||0) > 0; }).length;
+    avgSale = paidCount > 0 ? Math.round(productRev / paidCount) : 0;
+
+    // KPI row
+    var html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">';
+    html += kpiCard('Total Walk-ins', total, '#2563eb');
+    html += kpiCard('Converted', converted + ' (' + convPct + '%)', '#16a34a');
+    html += kpiCard('Product Revenue', '₹' + productRev.toLocaleString('en-IN'), '#d97706');
+    html += kpiCard('Avg Sale', paidCount ? '₹' + avgSale.toLocaleString('en-IN') : '—', '#7c3aed');
+    html += '</div>';
+
+    function kpiCard(label, val, color) {
+      return '<div style="background:var(--bg2);border-radius:10px;padding:12px;text-align:center">'
+        + '<div style="font-size:18px;font-weight:700;color:' + color + '">' + val + '</div>'
+        + '<div style="font-size:11px;color:var(--muted);margin-top:3px">' + label + '</div>'
+        + '</div>';
+    }
+
+    // Source breakdown
+    var sourceDef = [
+      { key: 'google', label: 'Google / Search' },
+      { key: 'customer_referral', label: 'Customer Referral' },
+      { key: 'coach_referral', label: 'Coach Referral' },
+      { key: 'owner', label: 'Owner / Self' },
+      { key: 'other', label: 'Other' }
+    ];
+    var sourceCounts = {};
+    walkins.forEach(function(w){ var s = w.source || 'other'; sourceCounts[s] = (sourceCounts[s] || 0) + 1; });
+    var maxSrc = Math.max.apply(null, sourceDef.map(function(s){ return sourceCounts[s.key] || 0; }).concat([1]));
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">';
+
+    // Source bars
+    html += '<div><div style="font-size:13px;font-weight:700;margin-bottom:10px">How They Found Us</div>';
+    sourceDef.forEach(function(s) {
+      var cnt = sourceCounts[s.key] || 0;
+      var pct = Math.round((cnt / maxSrc) * 100);
+      html += '<div style="margin-bottom:8px">'
+        + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px"><span>' + s.label + '</span><strong>' + cnt + '</strong></div>'
+        + '<div style="background:var(--bg2);border-radius:4px;height:8px"><div style="background:#2563eb;width:' + pct + '%;height:8px;border-radius:4px;transition:width 0.4s"></div></div>'
+        + '</div>';
+    });
+    html += '</div>';
+
+    // Outcome breakdown
+    var outcomeDef = [
+      { key: 'checkup', label: 'Body Checkup', color: '#06b6d4' },
+      { key: 'trial_pack', label: 'Trial Pack', color: '#8b5cf6' },
+      { key: 'product_sale', label: 'Product Sale', color: '#f59e0b' },
+      { key: 'monthly_pack', label: 'Monthly Pack', color: '#16a34a' },
+      { key: 'other', label: 'Other', color: '#6b7280' }
+    ];
+    var outcomeCounts = {}, outcomeRev = {};
+    walkins.forEach(function(w) {
+      var o = w.outcome || 'other';
+      outcomeCounts[o] = (outcomeCounts[o] || 0) + 1;
+      outcomeRev[o] = (outcomeRev[o] || 0) + (parseFloat(w.amount_received) || 0);
+    });
+    var maxOut = Math.max.apply(null, outcomeDef.map(function(o){ return outcomeCounts[o.key] || 0; }).concat([1]));
+
+    html += '<div><div style="font-size:13px;font-weight:700;margin-bottom:10px">Outcomes</div>';
+    outcomeDef.forEach(function(o) {
+      var cnt = outcomeCounts[o.key] || 0;
+      var rev = outcomeRev[o.key] || 0;
+      var pct = Math.round((cnt / maxOut) * 100);
+      html += '<div style="margin-bottom:8px">'
+        + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">'
+        + '<span>' + o.label + '</span>'
+        + '<strong>' + cnt + (rev > 0 ? ' · ₹' + rev.toLocaleString('en-IN') : '') + '</strong>'
+        + '</div>'
+        + '<div style="background:var(--bg2);border-radius:4px;height:8px"><div style="background:' + o.color + ';width:' + pct + '%;height:8px;border-radius:4px;transition:width 0.4s"></div></div>'
+        + '</div>';
+    });
+    html += '</div>';
+    html += '</div>'; // grid end
+
+    // Monthly trend (last 6 months)
+    var months = [];
+    for (var mi = 5; mi >= 0; mi--) {
+      var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - mi);
+      months.push({ label: d.toLocaleString('default',{month:'short'})+' '+d.getFullYear().toString().slice(2), y: d.getFullYear(), m: d.getMonth() });
+    }
+    var monthlyCounts = months.map(function(mo) {
+      return walkins.filter(function(w) {
+        var d = new Date(w.date); return d.getFullYear() === mo.y && d.getMonth() === mo.m;
+      }).length;
+    });
+    var maxMo = Math.max.apply(null, monthlyCounts.concat([1]));
+
+    html += '<div style="margin-top:4px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">Monthly Trend</div>';
+    html += '<div style="display:flex;align-items:flex-end;gap:8px;height:70px">';
+    months.forEach(function(mo, i) {
+      var cnt = monthlyCounts[i];
+      var h = Math.max(4, Math.round((cnt / maxMo) * 60));
+      html += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">'
+        + '<div style="font-size:11px;font-weight:700;color:' + (cnt ? '#2563eb' : 'var(--muted)') + '">' + (cnt || '') + '</div>'
+        + '<div style="width:100%;background:#2563eb;border-radius:4px 4px 0 0;height:' + h + 'px;opacity:' + (cnt ? '1' : '0.15') + '"></div>'
+        + '<div style="font-size:9px;color:var(--muted);text-align:center">' + mo.label + '</div>'
+        + '</div>';
+    });
+    html += '</div></div>';
+
+    el.innerHTML = html;
   })();
 }
 
