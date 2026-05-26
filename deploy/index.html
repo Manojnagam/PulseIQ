@@ -2,9 +2,6 @@
 <!-- saved from url=(0050)file:///C:/Users/nagam/Downloads/PulseIQ-v3_2.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>Dharani's — Supervisor Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
@@ -580,22 +577,6 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
-<script>
-// Global error catcher — shows errors visually on mobile instead of silent white screen
-window.onerror = function(msg, src, line, col, err) {
-  var ld = document.getElementById('app-loading');
-  if (ld) {
-    ld.style.background = '#1a3a28';
-    ld.style.display = 'flex';
-    ld.innerHTML = '<div style="padding:24px;max-width:360px;text-align:center">'
-      + '<div style="font-size:40px;margin-bottom:12px">⚠️</div>'
-      + '<div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px">App Error</div>'
-      + '<div style="font-size:12px;color:#a8d5b8;background:rgba(255,255,255,.1);padding:10px;border-radius:8px;word-break:break-all;margin-bottom:16px">' + msg + '<br><span style="color:#a8d5b8">Line ' + line + '</span></div>'
-      + '<button onclick="location.reload()" style="background:#fff;color:#1a3a28;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🔄 Reload</button>'
-      + '</div>';
-  }
-};
-</script>
 
 <div class="toast" id="toast"></div>
 <button class="menu-btn" onclick="toggleSidebar()">☰</button>
@@ -645,10 +626,10 @@ window.onerror = function(msg, src, line, col, err) {
 </div>
 
 <!-- LOADING SPLASH -->
-<div id="app-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#1a3a28;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:18px">
+<div id="app-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f7f3;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:18px">
   <div style="font-size:56px;animation:spin 1.5s linear infinite">🌿</div>
-  <div style="font-size:22px;font-weight:700;color:#fff;font-family:'DM Serif Display',serif">PulseIQ</div>
-  <div style="font-size:14px;color:#a8d5b8" id="app-loading-msg">Loading your center data…</div>
+  <div style="font-size:18px;font-weight:700;color:#1a3a28;font-family:'DM Serif Display',serif">PulseIQ</div>
+  <div style="font-size:13px;color:#5a7a6a" id="app-loading-msg">Loading your center data…</div>
 </div>
 <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
 
@@ -736,11 +717,6 @@ window.onerror = function(msg, src, line, col, err) {
         </div>
       </div>
       <button onclick="gotoOverdueLeads()" style="background:#fff;color:#c0392b;border:none;border-radius:8px;padding:8px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">View Overdue Leads →</button>
-    </div>
-    <!-- DEBUG PANEL - remove after fix -->
-    <div id="debug-panel" style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#92400e;display:none">
-      <strong>📊 Debug Info</strong><br>
-      <span id="dbg-text">Loading...</span>
     </div>
     <!-- OVERVIEW -->
     <div class="sec active" id="sec-overview">
@@ -2328,8 +2304,8 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
   </div>
 </div>
 
-<div class="overlay" id="modal-pin-prompt" style="align-items:center;justify-content:center;overflow-y:auto;padding:16px">
-  <div class="modal" style="max-width:320px;width:100%;animation:none!important;opacity:1!important;transform:none!important">
+<div class="overlay" id="modal-pin-prompt" style="align-items:flex-start;overflow-y:auto;padding:40px 16px 16px">
+  <div class="modal" style="max-width:320px;width:100%">
     <div class="mh"><div class="mt" id="pin-prompt-title">🔐 Enter PIN</div></div>
     <div class="mb" style="text-align:center;padding:20px">
       <p id="pin-prompt-msg" style="font-size:13px;color:var(--muted);margin-bottom:20px">Enter your center PIN or supervisor PIN.</p>
@@ -3102,11 +3078,9 @@ var OWNER_PROFILE = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
 
 function checkStartupAuth() {
   var hasCenterPins = Object.keys(_DB_PINS).length > 0;
-  _dbg('checkStartupAuth: hasPins='+hasCenterPins+' svPin='+!!_DB_SUPERVISOR_PIN+' auth='+JSON.stringify(_centerAuth));
 
   // No PINs configured in DB at all — full supervisor access
   if(!hasCenterPins && !_DB_SUPERVISOR_PIN) {
-    _dbg('→ no pins: master access');
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     updateCenterSwitcher();
@@ -3115,16 +3089,14 @@ function checkStartupAuth() {
 
   // Valid session already exists — restore it
   if(_centerAuth.type === 'master') {
-    _dbg('→ existing master session');
     updateCenterSwitcher();
     return;
   }
   if(_centerAuth.type === 'center' && _centerAuth.centerId && _DB_PINS[_centerAuth.centerId]) {
-    _dbg('→ existing center session: '+_centerAuth.centerId);
     ACTIVE_CENTER = _centerAuth.centerId;
     localStorage.setItem('activeCenter', _centerAuth.centerId);
     // Don't reload data — just re-render with center filter (data already loaded)
-    try { renderOverview(); } catch(e){ _dbg('renderOverview err: '+e.message); }
+    try { renderOverview(); } catch(e){}
     try { renderCustomers(); } catch(e){}
     updateCenterSwitcher();
     return;
@@ -3679,65 +3651,31 @@ async function refreshDashboard() {
 }
 
 // ── LOAD ──
-var _loadAllDone = false;
-setTimeout(function(){
-  if(!_loadAllDone){
-    var ld=document.getElementById('app-loading');
-    if(ld && ld.style.display!=='none'){
-      ld.style.display='flex';
-      ld.innerHTML='<div style="padding:24px;max-width:360px;text-align:center">'
-        +'<div style="font-size:40px;margin-bottom:12px">⏳</div>'
-        +'<div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px">Taking too long...</div>'
-        +'<div style="font-size:12px;color:#a8d5b8;margin-bottom:16px">Check your internet connection and try reloading.</div>'
-        +'<button onclick="location.reload()" style="background:#fff;color:#1a3a28;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🔄 Reload</button>'
-        +'</div>';
-    }
-  }
-},15000);
-function _dbg(msg){ var p=document.getElementById('debug-panel'); var t=document.getElementById('dbg-text'); if(p&&t){p.style.display='block';t.innerHTML=(t.innerHTML==='Loading...'?'':t.innerHTML+'<br>')+msg;} }
 async function loadAll() {
-  _dbg('loadAll started');
   D.stockIn=[]; D.stockOut=[]; D.dailyUsage=[]; D.currentStock={};
   D.coupons=[]; D.payments=[]; D.packHistory=[];
   try {
     // Phase 1: centers + customers + coaches first (attendance/body need customer IDs for center-scoped query)
     var _ldMsg = document.getElementById('app-loading-msg'); if(_ldMsg) _ldMsg.textContent = 'Connecting to database…';
     await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
-    _dbg('Phase1 done: '+D.centers.length+' centers, '+D.customers.length+' customers, pins:'+Object.keys(_DB_PINS).length+', svPin:'+(!!_DB_SUPERVISOR_PIN));
     if(_ldMsg) _ldMsg.textContent = 'Loading attendance & finance…';
     // Phase 2: everything else — attendance/body/packHistory use customer IDs from phase 1
     await Promise.all([loadAttendance(), loadBody(), loadFinance(),
       loadCoupons(), loadPayments(), loadPackHistory(),
       loadLeads(), loadExpenses(), loadFoods(), loadInventory(), loadContests()]);
     _daysLeftCache = {};  // all data loaded — recalculate with full attendance
-    _dbg('Phase2 done: att='+D.attendance.length+', fin='+D.finance.length);
-    try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); _dbg('renderCustomers ERR: '+re.message); }
-    var _ovErr = null;
-    try { renderOverview(); _dbg('renderOverview OK'); } catch(re){ console.error('renderOverview crash:',re); _ovErr = re; _dbg('renderOverview ERR: '+re.message); }
-    // Show diagnostic info if renderOverview failed or data is empty
-    var _diagEl = document.getElementById('overview-stats');
-    if(_diagEl) {
-      var _diagHtml = '<div style="grid-column:1/-1;background:#fffbeb;border:1px solid #f59e0b;border-radius:10px;padding:14px 16px;font-size:12px;color:#92400e;margin-bottom:12px">'
-        +'<strong>📊 App Status (tap to dismiss)</strong><br>'
-        +'Centers: '+D.centers.length+' | Customers: '+D.customers.length+' | Finance: '+D.finance.length+'<br>'
-        +'PINs in DB: '+Object.keys(_DB_PINS).length+' | Supervisor PIN: '+(_DB_SUPERVISOR_PIN?'✅ set':'❌ not set')+'<br>'
-        +'Auth: '+JSON.stringify(_centerAuth)+'<br>'
-        +(_ovErr?'<span style="color:#dc2626">Render error: '+(_ovErr.message||String(_ovErr))+'</span>':'✅ renderOverview OK')
-        +'</div>';
-      _diagEl.innerHTML = _diagHtml + _diagEl.innerHTML;
-    }
+    try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
+    try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
     applyLang();          // apply saved language preference
     startAutoPing();
     migrateSvBodyToSupabase();
     // Hide loading splash — data is ready
-    _loadAllDone = true;
     var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
     // On startup: if PINs exist but no session auth, prompt for PIN
     checkStartupAuth();
   } catch(e) {
     console.error('loadAll crash:', e);
     // Hide loading splash and show error
-    _loadAllDone = true;
     var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
     var app = document.getElementById('app');
     if(app) app.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8faf8;padding:32px;text-align:center">'
