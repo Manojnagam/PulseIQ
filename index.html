@@ -2303,7 +2303,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <p id="pin-prompt-msg" style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter the center PIN or supervisor master PIN to continue.</p>
       <input type="password" id="pin-prompt-input" maxlength="6" inputmode="numeric" placeholder="••••" autocomplete="off"
         style="letter-spacing:8px;text-align:center;font-size:32px;padding:16px;width:100%;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:inherit;display:block"
-        oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length>=4)setTimeout(verifyPinPrompt,100)" onkeyup="if(event.key==='Enter')verifyPinPrompt()">
+        onkeyup="if(event.key==='Enter')verifyPinPrompt()">
       <div id="pin-prompt-error" style="color:var(--danger);font-size:12px;margin-top:8px;display:none">Incorrect PIN. Try again.</div>
       <button class="btn-p" onclick="verifyPinPrompt()" style="width:100%;margin-top:14px;padding:14px;font-size:15px">🔓 Unlock</button>
       <button class="btn-c" onclick="closeModal('pin-prompt')" style="width:100%;margin-top:8px">Cancel</button>
