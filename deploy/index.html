@@ -3697,13 +3697,15 @@ async function loadAll() {
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); _ovErr = re; }
     // Show diagnostic info if renderOverview failed or data is empty
     var _diagEl = document.getElementById('overview-stats');
-    if(_diagEl && (_ovErr || (!D.customers.length && !D.centers.length))) {
-      _diagEl.innerHTML = '<div style="grid-column:1/-1;background:#fffbeb;border:1px solid #f59e0b;border-radius:10px;padding:14px 16px;font-size:12px;color:#92400e">'
-        +'<strong>📊 App Status</strong><br>'
+    if(_diagEl) {
+      var _diagHtml = '<div style="grid-column:1/-1;background:#fffbeb;border:1px solid #f59e0b;border-radius:10px;padding:14px 16px;font-size:12px;color:#92400e;margin-bottom:12px">'
+        +'<strong>📊 App Status (tap to dismiss)</strong><br>'
         +'Centers: '+D.centers.length+' | Customers: '+D.customers.length+' | Finance: '+D.finance.length+'<br>'
         +'PINs in DB: '+Object.keys(_DB_PINS).length+' | Supervisor PIN: '+(_DB_SUPERVISOR_PIN?'✅ set':'❌ not set')+'<br>'
-        +(_ovErr?'<span style="color:#dc2626">Render error: '+(_ovErr.message||String(_ovErr))+'</span>':'')
+        +'Auth: '+JSON.stringify(_centerAuth)+'<br>'
+        +(_ovErr?'<span style="color:#dc2626">Render error: '+(_ovErr.message||String(_ovErr))+'</span>':'✅ renderOverview OK')
         +'</div>';
+      _diagEl.innerHTML = _diagHtml + _diagEl.innerHTML;
     }
     applyLang();          // apply saved language preference
     startAutoPing();
