@@ -11297,10 +11297,6 @@ function openWalkinModal(id) {
   document.getElementById('walkin-referred-wrap').style.display='none';
   document.getElementById('walkin-amount-wrap').style.display='none';
   document.getElementById('walkin-modal-title').textContent='🚶 Add Walk-in';
-  // Populate searchable referred-by dropdown
-  var allPersons = (D.customers||[]).map(function(c){return{id:c.id,label:c.name+' (Customer)'}; })
-    .concat((D.coaches||[]).map(function(c){return{id:c.id,label:c.name+' 👨‍🏫 (Coach)'};} ));
-  sdSetItems('walkin-ref', allPersons);
   if(id) {
     var w=(D.walkins||[]).find(function(x){return x.id===id;});
     if(w){
@@ -11326,6 +11322,21 @@ function openWalkinModal(id) {
 function onWalkinSourceChange(){
   var src=document.getElementById('walkin-source').value;
   document.getElementById('walkin-referred-wrap').style.display=(src==='customer_referral'||src==='coach_referral')?'block':'none';
+  // Clear previous selection
+  document.getElementById('walkin-referred-by-id').value='';
+  document.getElementById('sd-walkin-ref-input').value='';
+  // Filter dropdown to only customers or only coaches from the active center
+  var persons=[];
+  if(src==='customer_referral'){
+    persons=(D.customers||[]).filter(function(c){
+      return !ACTIVE_CENTER||c.wellness_center_id===ACTIVE_CENTER;
+    }).map(function(c){return{id:c.id,label:c.name};});
+  } else if(src==='coach_referral'){
+    persons=(D.coaches||[]).filter(function(c){
+      return !ACTIVE_CENTER||c.wellness_center_id===ACTIVE_CENTER;
+    }).map(function(c){return{id:c.id,label:c.name+' 👨‍🏫'};});
+  }
+  sdSetItems('walkin-ref',persons);
 }
 function onWalkinOutcomeChange(){
   var out=document.getElementById('walkin-outcome').value;
@@ -11358,6 +11369,13 @@ async function saveWalkin(){
   try{
     if(id){await dbUpdate('walkins',id,data);showToast('Walk-in updated','success');}
     else{await dbInsert('walkins',data);showToast('Walk-in saved ✅','success');}
+    // Auto-add to finance if product sold with amount (new entries only, skip edits to avoid duplicates)
+    if(!id && data.outcome==='product_sale' && data.amount_received>0){
+      var finDesc='Walk-in product sale — '+name+(data.product_details?' ('+data.product_details+')':'');
+      await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:'Walk-in product sale',date:data.date,wellness_center_id:data.wellness_center_id||null});
+      await loadFinance();
+      showToast('₹'+data.amount_received.toLocaleString('en-IN')+' added to finance ✅','success');
+    }
     closeModal('walkin');
     await loadWalkins();
   }catch(e){showToast('Error: '+e.message,'error');}
