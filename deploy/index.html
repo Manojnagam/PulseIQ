@@ -723,7 +723,7 @@ window.onerror = function(msg, src, line, col, err) {
 
   <main class="main">
     <!-- OVERDUE LEADS BANNER -->
-    <div id="overdue-leads-banner" style="display:none;background:#c0392b;color:#fff;padding:12px 18px;border-radius:10px;margin-bottom:18px;display:none;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 4px 14px rgba(192,57,43,.35);animation:pulseRed 2s infinite">
+    <div id="overdue-leads-banner" style="display:none;background:#c0392b;color:#fff;padding:12px 18px;border-radius:10px;margin-bottom:18px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 4px 14px rgba(192,57,43,.35)">
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:20px">⚠️</span>
         <div>
@@ -2319,17 +2319,16 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
   </div>
 </div>
 
-<div class="overlay" id="modal-pin-prompt" style="align-items:flex-start;padding-top:60px">
-  <div class="modal" style="max-width:340px;width:calc(100vw - 32px)">
-    <div class="mh"><div class="mt" id="pin-prompt-title">🔐 Enter PIN</div><button class="mc" onclick="closeModal('pin-prompt')">✕</button></div>
-    <div class="mb" style="text-align:center">
-      <p id="pin-prompt-msg" style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter the center PIN or supervisor master PIN to continue.</p>
-      <input type="password" id="pin-prompt-input" maxlength="6" inputmode="numeric" placeholder="••••" autocomplete="off"
-        style="letter-spacing:8px;text-align:center;font-size:32px;padding:16px;width:100%;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:inherit;display:block"
+<div class="overlay" id="modal-pin-prompt" style="align-items:center;padding:16px">
+  <div class="modal" style="max-width:320px;width:100%">
+    <div class="mh"><div class="mt" id="pin-prompt-title">🔐 Enter PIN</div></div>
+    <div class="mb" style="text-align:center;padding:20px">
+      <p id="pin-prompt-msg" style="font-size:13px;color:var(--muted);margin-bottom:20px">Enter your center PIN or supervisor PIN.</p>
+      <input type="tel" id="pin-prompt-input" maxlength="6" placeholder="Enter PIN" autocomplete="off"
+        style="-webkit-text-security:disc;text-security:disc;text-align:center;font-size:28px;padding:14px 12px;width:100%;box-sizing:border-box;border:2px solid var(--primary);border-radius:12px;font-family:inherit;display:block;background:#f0fdf4;color:var(--primary);font-weight:700;letter-spacing:6px"
         onkeyup="if(event.key==='Enter')verifyPinPrompt()">
-      <div id="pin-prompt-error" style="color:var(--danger);font-size:12px;margin-top:8px;display:none">Incorrect PIN. Try again.</div>
-      <button class="btn-p" onclick="verifyPinPrompt()" style="width:100%;margin-top:14px;padding:14px;font-size:15px">🔓 Unlock</button>
-      <button class="btn-c" onclick="closeModal('pin-prompt')" style="width:100%;margin-top:8px">Cancel</button>
+      <div id="pin-prompt-error" style="color:var(--danger);font-size:13px;margin-top:10px;font-weight:600;display:none">❌ Incorrect PIN. Try again.</div>
+      <button class="btn-p" onclick="verifyPinPrompt()" style="width:100%;margin-top:16px;padding:16px;font-size:16px;font-weight:700;border-radius:12px">🔓 Unlock</button>
       <div style="margin-top:14px;padding:10px 14px;background:#f0fdf4;border-radius:10px;font-size:12px;color:#2d5a3d;line-height:1.8;text-align:left">
         <strong>Not a supervisor?</strong><br>
         👤 Clients → <a href="client.html" target="_blank" style="color:#2d5a3d;font-weight:600">Client Portal</a> &nbsp;
@@ -2999,10 +2998,15 @@ function _applySwitch(centerId) {
   updateSidebarLogo();
   var sel = document.getElementById('center-switcher');
   if(sel) sel.value = centerId;
-  showToast(centerId ? 'Switching center...' : 'Loading all centers...');
+  // Show loading splash during center switch
+  var _ld = document.getElementById('app-loading');
+  var _ldMsg = document.getElementById('app-loading-msg');
+  if(_ld) { _ld.style.display='flex'; }
+  if(_ldMsg) _ldMsg.textContent = 'Loading center data…';
   // Reload data scoped to new center (2-phase, same as loadAll)
   Promise.all([loadCustomers(), loadCoaches()])
     .then(function(){
+      if(_ldMsg) _ldMsg.textContent = 'Almost ready…';
       return Promise.all([loadAttendance(), loadBody(), loadFinance(),
         loadCoupons(), loadPayments(), loadPackHistory(),
         loadLeads(), loadExpenses(), loadInventory()]);
@@ -3011,16 +3015,23 @@ function _applySwitch(centerId) {
       _daysLeftCache = {};
       try { renderCustomers(); } catch(e){ console.error('renderCustomers:', e); }
       try { renderCenters(); } catch(e){ console.error('renderCenters:', e); }
-      try { renderOverview(); } catch(e){ console.error('renderOverview:', e); }
+      try { renderOverview(); } catch(e){
+        console.error('renderOverview:', e);
+        var og = document.getElementById('ov-main-grid');
+        if(og) og.innerHTML = '<div style="padding:32px;text-align:center;color:var(--danger)"><strong>Dashboard error:</strong><br><span style="font-size:12px;font-family:monospace">'+(e&&e.message?e.message:String(e))+'</span><br><br><button onclick="location.reload()" class="btn-p">🔄 Reload</button></div>';
+      }
       if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
       if(typeof renderCoupons==='function') try { renderCoupons(); } catch(e){}
       if(typeof renderPayments==='function') try { renderPayments(); } catch(e){}
       updateCustSelects();
+      if(_ld) _ld.style.display='none';
       showToast(centerId ? 'Switched to center' : 'Ready');
     })
     .catch(function(e){
       console.error('_applySwitch failed:', e);
-      showToast('Load failed — please refresh', 'error');
+      if(_ld) _ld.style.display='none';
+      var og = document.getElementById('ov-main-grid');
+      if(og) og.innerHTML = '<div style="padding:32px;text-align:center;color:var(--danger)"><strong>Failed to load center data:</strong><br><span style="font-size:12px;font-family:monospace">'+(e&&e.message?e.message:String(e))+'</span><br><br><button onclick="location.reload()" class="btn-p">🔄 Reload</button></div>';
     });
 }
 
