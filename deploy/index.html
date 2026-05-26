@@ -577,6 +577,21 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
+<script>
+// Global error catcher — shows errors visually on mobile instead of silent white screen
+window.onerror = function(msg, src, line, col, err) {
+  var ld = document.getElementById('app-loading');
+  if (ld) {
+    ld.style.display = 'flex';
+    ld.innerHTML = '<div style="padding:24px;max-width:360px;text-align:center">'
+      + '<div style="font-size:40px;margin-bottom:12px">⚠️</div>'
+      + '<div style="font-size:15px;font-weight:700;color:#1a3a28;margin-bottom:8px">App Error</div>'
+      + '<div style="font-size:12px;color:#666;background:#fff;padding:10px;border-radius:8px;word-break:break-all;margin-bottom:16px">' + msg + '<br><span style="color:#999">Line ' + line + '</span></div>'
+      + '<button onclick="location.reload()" style="background:#1a3a28;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🔄 Reload</button>'
+      + '</div>';
+  }
+};
+</script>
 
 <div class="toast" id="toast"></div>
 <button class="menu-btn" onclick="toggleSidebar()">☰</button>
@@ -3638,6 +3653,21 @@ async function refreshDashboard() {
 }
 
 // ── LOAD ──
+var _loadAllDone = false;
+setTimeout(function(){
+  if(!_loadAllDone){
+    var ld=document.getElementById('app-loading');
+    if(ld && ld.style.display!=='none'){
+      ld.style.display='flex';
+      ld.innerHTML='<div style="padding:24px;max-width:360px;text-align:center">'
+        +'<div style="font-size:40px;margin-bottom:12px">⏳</div>'
+        +'<div style="font-size:15px;font-weight:700;color:#1a3a28;margin-bottom:8px">Taking too long...</div>'
+        +'<div style="font-size:12px;color:#666;margin-bottom:16px">Check your internet connection and try reloading.</div>'
+        +'<button onclick="location.reload()" style="background:#1a3a28;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🔄 Reload</button>'
+        +'</div>';
+    }
+  }
+},15000);
 async function loadAll() {
   D.stockIn=[]; D.stockOut=[]; D.dailyUsage=[]; D.currentStock={};
   D.coupons=[]; D.payments=[]; D.packHistory=[];
@@ -3657,12 +3687,14 @@ async function loadAll() {
     startAutoPing();
     migrateSvBodyToSupabase();
     // Hide loading splash — data is ready
+    _loadAllDone = true;
     var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
     // On startup: if PINs exist but no session auth, prompt for PIN
     checkStartupAuth();
   } catch(e) {
     console.error('loadAll crash:', e);
     // Hide loading splash and show error
+    _loadAllDone = true;
     var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
     var app = document.getElementById('app');
     if(app) app.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8faf8;padding:32px;text-align:center">'
