@@ -5447,7 +5447,8 @@ function renderCoaches() {
       ? '<button class="btn-p" style="font-size:11px;padding:3px 8px;background:#e8a838;border-color:#e8a838;margin-right:4px" onclick="openCoachPaymentSetup(\''+c.id+'\')">💰 Record Payment</button>'
       : '';
     var renewBtn = c.pack_type ? '<button class="btn-p" style="font-size:11px;padding:3px 8px;margin-right:4px" onclick="openRenewForCoach(\''+c.id+'\')">🔄 Renew</button>' : '';
-    return '<tr><td><strong>'+c.name+'</strong>'+pinHtml+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(st==='Active'?'bg':'br')+'">'+st+'</span></td><td>'+(c.upline||'—')+'</td><td>'+refs+'</td><td>'+(c.join_date||'—')+'</td><td><div class="acts">'+payBtn+renewBtn+'<button class="btn-e" onclick="editCoach(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'coaches\',\''+c.id+'\',\'coaches\')">Delete</button></div></td></tr>';
+    var promoteBtn = '<button class="btn-p" style="font-size:11px;padding:3px 8px;background:#7c3aed;border-color:#7c3aed;margin-right:4px" onclick="openPromoteModal(\''+c.id+'\')" title="Promote to Supervisor — Open New Center">🏆 Promote</button>';
+    return '<tr><td><strong>'+c.name+'</strong>'+pinHtml+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(st==='Active'?'bg':'br')+'">'+st+'</span></td><td>'+(c.upline||'—')+'</td><td>'+refs+'</td><td>'+(c.join_date||'—')+'</td><td><div class="acts">'+promoteBtn+payBtn+renewBtn+'<button class="btn-e" onclick="editCoach(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'coaches\',\''+c.id+'\',\'coaches\')">Delete</button></div></td></tr>';
   }).join('');
   document.getElementById('coaches-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Coaches</div><div class="stat-v">'+_coaches.length+'</div></div><div class="stat"><div class="stat-l">Active</div><div class="stat-v">'+_coaches.filter(function(c){return (c.status||'Active')==='Active';}).length+'</div></div>';
 }
@@ -11269,6 +11270,155 @@ function toggleGuideCard(idx) {
 }
 
 // ══════════════════════════════════════════════
+// PROMOTE TO SUPERVISOR / OPEN NEW CENTER
+// ══════════════════════════════════════════════
+
+var _promoteStep = 1;
+var _promoteCoachId = null;
+var _promoteCoachCusts = [];
+
+function openPromoteModal(coachId) {
+  var coach = D.coaches.find(function(c){ return c.id === coachId; });
+  if(!coach) return;
+  _promoteCoachId = coachId;
+  document.getElementById('promote-coach-info').innerHTML =
+    '🏆 Promoting <strong>'+coach.name+'</strong> to Supervisor'
+    +(coach.herbalife_pin?' &nbsp;·&nbsp; Current pin: <span style="background:#e8f4fd;color:var(--primary);padding:2px 8px;border-radius:10px;font-size:12px">'+coach.herbalife_pin+'</span>':'')
+    +(coach.contact?'<br><span style="font-size:12px;color:var(--muted);margin-top:4px;display:block">📞 '+coach.contact+'</span>':'');
+  document.getElementById('promote-center-name').value = coach.name+'\'s Wellness Center';
+  document.getElementById('promote-center-location').value = '';
+  document.getElementById('promote-center-contact').value = coach.contact||'';
+  document.getElementById('promote-center-pin').value = '';
+  _promoteCoachCusts = D.customers.filter(function(c){
+    return c.referred_by_id===coachId || c.coach_id===coachId;
+  });
+  promoteShowStep(1);
+  openModal('promote');
+}
+
+function promoteShowStep(n) {
+  _promoteStep = n;
+  [1,2,3].forEach(function(i){
+    document.getElementById('promote-step-'+i).style.display = i===n?'block':'none';
+    var s = document.getElementById('ps-'+i);
+    s.style.background = i===n?'var(--primary)':(i<n?'var(--success)':'var(--surface2)');
+    s.style.color = i<=n?'#fff':'var(--muted)';
+  });
+  document.getElementById('promote-back-btn').style.display = n>1?'block':'none';
+  var btn = document.getElementById('promote-next-btn');
+  btn.disabled = false;
+  if(n===1) btn.textContent='Next → Select Customers';
+  else if(n===2) btn.textContent='Next → Review';
+  else btn.textContent='✅ Confirm & Create Center';
+  if(n===2) renderPromoteCustList();
+  if(n===3) renderPromoteSummary();
+}
+
+function renderPromoteCustList() {
+  var el = document.getElementById('promote-cust-list');
+  document.getElementById('promote-cust-count').textContent = _promoteCoachCusts.length+' customer(s) linked to this coach';
+  if(!_promoteCoachCusts.length){
+    el.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">No customers referred by or assigned to this coach.</div>';
+    return;
+  }
+  el.innerHTML = _promoteCoachCusts.map(function(c){
+    var st = getDaysLeft(c);
+    var reason = (c.referred_by_id===_promoteCoachId&&c.coach_id===_promoteCoachId)?'Referred + Assigned'
+      :c.referred_by_id===_promoteCoachId?'Referred by coach':'Assigned to coach';
+    return '<label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer">'
+      +'<input type="checkbox" class="promote-cust-cb" value="'+c.id+'" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">'
+      +'<div style="flex:1">'
+        +'<div style="font-weight:600;font-size:14px">'+c.name+'</div>'
+        +'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+(c.contact||'No contact')+' &nbsp;·&nbsp; '+(c.pack_type||'No pack')
+        +'<span style="margin-left:8px;background:#f0f4ff;color:#3b4fcf;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600">'+reason+'</span></div>'
+      +'</div>'
+      +'<span class="badge '+(st.active?'bg':'br')+'" style="font-size:10px;white-space:nowrap">'+(st.active?st.days+'d left':'Expired')+'</span>'
+      +'</label>';
+  }).join('');
+}
+
+function promoteSelectAll(val) {
+  document.querySelectorAll('.promote-cust-cb').forEach(function(cb){ cb.checked=val; });
+}
+
+function renderPromoteSummary() {
+  var centerName = document.getElementById('promote-center-name').value.trim();
+  var location = document.getElementById('promote-center-location').value.trim();
+  var selected = Array.from(document.querySelectorAll('.promote-cust-cb:checked')).map(function(cb){return cb.value;});
+  var selectedCusts = _promoteCoachCusts.filter(function(c){return selected.indexOf(c.id)!==-1;});
+  var coach = D.coaches.find(function(c){return c.id===_promoteCoachId;});
+  document.getElementById('promote-summary').innerHTML =
+    '<div style="background:#f0fdf4;border:1px solid #a7f3d0;border-radius:12px;padding:18px;margin-bottom:14px">'
+    +'<div style="font-size:15px;font-weight:700;color:#065f46;margin-bottom:12px">✅ What will happen:</div>'
+    +'<div style="display:flex;flex-direction:column;gap:10px;font-size:13px">'
+    +'<div>🏢 New <strong>Downline Center</strong> created: <strong>'+centerName+'</strong>'+(location?' in <strong>'+location+'</strong>':'')+'</div>'
+    +'<div>👤 <strong>'+(coach?coach.name:'Coach')+'</strong> set as owner of the new center</div>'
+    +'<div>🏅 Coach pin updated to <span style="background:#e8f4fd;color:var(--primary);padding:2px 8px;border-radius:10px;font-weight:700">Supervisor</span></div>'
+    +(selectedCusts.length
+      ?'<div>👥 <strong>'+selectedCusts.length+' customer(s)</strong> will move to '+centerName+':<br><div style="margin-top:6px;padding-left:16px;line-height:1.9">'+selectedCusts.map(function(c){return '• '+c.name+(c.contact?' <span style="color:var(--muted);font-size:11px">'+c.contact+'</span>':'');}).join('<br>')+'</div></div>'
+      :'<div style="color:var(--muted)">👥 No customers selected to move — all stay in your center</div>')
+    +'</div></div>'
+    +'<div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:12px 16px;font-size:12px;color:#854d0e">'
+    +'⚠️ The coach stays in your coaches list as a Downline connection. Customers who don\'t move remain in your center.'
+    +'</div>';
+}
+
+function promoteBack() {
+  if(_promoteStep>1) promoteShowStep(_promoteStep-1);
+}
+
+function promoteNext() {
+  if(_promoteStep===1){
+    var name=document.getElementById('promote-center-name').value.trim();
+    var loc=document.getElementById('promote-center-location').value.trim();
+    var pin=document.getElementById('promote-center-pin').value.trim();
+    if(!name){showToast('Center name is required','error');return;}
+    if(!loc){showToast('City / Location is required','error');return;}
+    if(pin&&!/^\d{4}$/.test(pin)){showToast('PIN must be exactly 4 digits','error');return;}
+    promoteShowStep(2);
+  } else if(_promoteStep===2){
+    promoteShowStep(3);
+  } else {
+    executePromotion();
+  }
+}
+
+async function executePromotion() {
+  var coach = D.coaches.find(function(c){return c.id===_promoteCoachId;});
+  if(!coach) return;
+  getCredentials();
+  if(!SB_URL||!SB_KEY){showToast('Supabase not configured','error');return;}
+  var centerName=document.getElementById('promote-center-name').value.trim();
+  var location=document.getElementById('promote-center-location').value.trim();
+  var contact=document.getElementById('promote-center-contact').value.trim();
+  var pin=document.getElementById('promote-center-pin').value.trim();
+  var selected=Array.from(document.querySelectorAll('.promote-cust-cb:checked')).map(function(cb){return cb.value;});
+  var btn=document.getElementById('promote-next-btn');
+  btn.disabled=true; btn.textContent='⏳ Processing…';
+  try{
+    // 1. Create new Downline center
+    var networkId=generateNetworkId(centerName);
+    var centerPayload={name:centerName,location:location,contact:contact||null,type:'downline',owner_id:_promoteCoachId,center_pin:pin||null,network_id:networkId};
+    var newCenterArr=await dbInsert('wellness_centers',centerPayload);
+    var newCenterId=Array.isArray(newCenterArr)&&newCenterArr[0]?newCenterArr[0].id:null;
+    // 2. Update coach pin to Supervisor
+    await dbUpdate('coaches',_promoteCoachId,{herbalife_pin:'Supervisor'});
+    // 3. Move selected customers to new center
+    if(selected.length&&newCenterId){
+      await Promise.all(selected.map(function(cid){return dbUpdate('customers',cid,{wellness_center_id:newCenterId});}));
+    }
+    auditLog('Promoted','Coach',coach.name+' → Supervisor · New center: '+centerName+' ('+location+')'+(selected.length?' · '+selected.length+' customers moved':''));
+    showToast('🎉 '+coach.name+' promoted! New center created in '+location+(selected.length?' with '+selected.length+' customer(s)':'')+'.','success');
+    closeModal('promote');
+    await Promise.all([loadCenters(),loadCoaches(),loadCustomers()]);
+    renderOverview();
+  }catch(e){
+    btn.disabled=false; btn.textContent='✅ Confirm & Create Center';
+    showToast('Error: '+e.message,'error');
+  }
+}
+
+// ══════════════════════════════════════════════
 // WALK-INS
 // ══════════════════════════════════════════════
 
@@ -13717,6 +13867,57 @@ async function removeContestParticipant(pid) {
         <button class="btn-c" onclick="closeModal('contest-progress')">Cancel</button>
         <button class="btn-p" onclick="saveContestProgress()">Save Progress</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROMOTE TO SUPERVISOR / OPEN NEW CENTER -->
+<div class="overlay" id="modal-promote" style="align-items:flex-start;overflow-y:auto;padding:40px 16px 16px">
+  <div class="modal" style="max-width:560px">
+    <div class="mh"><div class="mt">🏆 Promote to Supervisor — Open New Center</div><button class="mc" onclick="closeModal('promote')">✕</button></div>
+    <div class="mb">
+      <div style="display:flex;gap:0;margin-bottom:20px;border-radius:10px;overflow:hidden;border:1px solid var(--border)">
+        <div id="ps-1" style="flex:1;padding:10px;text-align:center;font-size:12px;font-weight:700;background:var(--primary);color:#fff;transition:all .2s">1. Center Details</div>
+        <div id="ps-2" style="flex:1;padding:10px;text-align:center;font-size:12px;font-weight:700;background:var(--surface2);color:var(--muted);transition:all .2s">2. Transfer Customers</div>
+        <div id="ps-3" style="flex:1;padding:10px;text-align:center;font-size:12px;font-weight:700;background:var(--surface2);color:var(--muted);transition:all .2s">3. Confirm</div>
+      </div>
+      <!-- Step 1 -->
+      <div id="promote-step-1">
+        <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px">
+          <div id="promote-coach-info" style="font-size:14px;font-weight:600"></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>New Center Name *</label><input type="text" id="promote-center-name" placeholder="e.g. Prasanna's Wellness Center" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg"><label>City / Location *</label><input type="text" id="promote-center-location" placeholder="e.g. Nandyal" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Contact</label><input type="tel" id="promote-center-contact" placeholder="Center phone" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg"><label>Center PIN (4 digits)</label><input type="text" id="promote-center-pin" maxlength="4" placeholder="Optional" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        </div>
+      </div>
+      <!-- Step 2 -->
+      <div id="promote-step-2" style="display:none">
+        <div style="background:#f0fdf4;border:1px solid #a7f3d0;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#065f46">
+          👥 Customers referred by or assigned to this coach are listed below. Check the ones <strong>who wish to move</strong> to the new center. Unchecked customers stay in your center.
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase" id="promote-cust-count">0 customers found</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-c" style="font-size:12px;padding:5px 10px" onclick="promoteSelectAll(true)">Select All</button>
+            <button class="btn-c" style="font-size:12px;padding:5px 10px" onclick="promoteSelectAll(false)">Clear All</button>
+          </div>
+        </div>
+        <div id="promote-cust-list" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:10px"></div>
+      </div>
+      <!-- Step 3 -->
+      <div id="promote-step-3" style="display:none">
+        <div id="promote-summary"></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn-c" onclick="promoteBack()" id="promote-back-btn" style="display:none">← Back</button>
+      <button class="btn-c" onclick="closeModal('promote')">Cancel</button>
+      <button class="btn-p" id="promote-next-btn" onclick="promoteNext()">Next → Select Customers</button>
     </div>
   </div>
 </div>
