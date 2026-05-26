@@ -2301,8 +2301,8 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mh"><div class="mt" id="pin-prompt-title">🔐 Enter PIN</div><button class="mc" onclick="closeModal('pin-prompt')">✕</button></div>
     <div class="mb" style="text-align:center">
       <p id="pin-prompt-msg" style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter the center PIN or supervisor master PIN to continue.</p>
-      <div style="display:inline-flex;align-items:center;gap:8px">
-        <input type="password" id="pin-prompt-input" maxlength="4" pattern="\d{4}" placeholder="• • • •" style="letter-spacing:10px;text-align:center;font-size:24px;padding:14px;width:160px;border:2px solid var(--border);border-radius:10px;font-family:inherit" onkeyup="if(event.key==='Enter')verifyPinPrompt()">
+      <div style="display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap">
+        <input type="password" id="pin-prompt-input" maxlength="4" pattern="\d{4}" placeholder="• • • •" style="letter-spacing:10px;text-align:center;font-size:24px;padding:14px;width:140px;max-width:calc(100% - 60px);border:2px solid var(--border);border-radius:10px;font-family:inherit" onkeyup="if(event.key==='Enter')verifyPinPrompt()">
         <button type="button" onclick="togglePinVis('pin-prompt-input',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:16px" title="Show/Hide">👁️</button>
       </div>
       <div id="pin-prompt-error" style="color:var(--danger);font-size:12px;margin-top:8px;display:none">Incorrect PIN. Try again.</div>
