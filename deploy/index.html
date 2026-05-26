@@ -11611,7 +11611,7 @@ function renderWalkins() {
 }
 
 function openWalkinModal(id) {
-  ['walkin-id','walkin-name','walkin-phone','walkin-pincode','walkin-notes','walkin-product'].forEach(function(f){
+  ['walkin-id','walkin-finance-id','walkin-name','walkin-phone','walkin-pincode','walkin-notes','walkin-product'].forEach(function(f){
     var el=document.getElementById(f); if(el) el.value='';
   });
   document.getElementById('walkin-date').value = new Date().toISOString().slice(0,10);
@@ -11628,6 +11628,7 @@ function openWalkinModal(id) {
     if(w){
       document.getElementById('walkin-modal-title').textContent='✏️ Edit Walk-in';
       document.getElementById('walkin-id').value=w.id;
+      document.getElementById('walkin-finance-id').value=w.finance_id||'';
       document.getElementById('walkin-date').value=w.date||'';
       document.getElementById('walkin-name').value=w.name||'';
       document.getElementById('walkin-phone').value=w.phone||'';
@@ -11692,16 +11693,44 @@ async function saveWalkin(){
     wellness_center_id:ACTIVE_CENTER||null
   };
   getCredentials(); if(!SB_URL||!SB_KEY){showToast('Supabase not configured','error');return;}
+  var existingFinanceId = document.getElementById('walkin-finance-id') ? document.getElementById('walkin-finance-id').value : '';
+  var hasAmount = data.outcome === 'product_sale' && data.amount_received > 0;
+  var finDesc = 'Walk-in product sale — ' + name + (data.product_details ? ' (' + data.product_details + ')' : '');
   try{
-    if(id){await dbUpdate('walkins',id,data);showToast('Walk-in updated','success');}
-    else{await dbInsert('walkins',data);showToast('Walk-in saved ✅','success');}
-    // Auto-add to finance if product sold with amount (new entries only, skip edits to avoid duplicates)
-    if(!id && data.outcome==='product_sale' && data.amount_received>0){
-      var finDesc='Walk-in product sale — '+name+(data.product_details?' ('+data.product_details+')':'');
-      await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:'Walk-in product sale',date:data.date,wellness_center_id:data.wellness_center_id||null});
-      await loadFinance();
-      showToast('₹'+data.amount_received.toLocaleString('en-IN')+' added to finance ✅','success');
+    if(id){
+      // ── Edit mode ──
+      await dbUpdate('walkins', id, data);
+      if(existingFinanceId && hasAmount){
+        // Update existing finance record
+        await dbUpdate('finance', existingFinanceId, {description:finDesc, amount:data.amount_received, date:data.date, wellness_center_id:data.wellness_center_id||null});
+        showToast('Walk-in & finance updated ✅','success');
+      } else if(existingFinanceId && !hasAmount){
+        // Amount removed or outcome changed — delete finance record
+        await dbDelete('finance', existingFinanceId);
+        await dbUpdate('walkins', id, {finance_id: null});
+        showToast('Walk-in updated (finance entry removed)','success');
+      } else if(!existingFinanceId && hasAmount){
+        // Amount newly added on edit — create finance record and link it
+        var newFin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:'Walk-in product sale',date:data.date,wellness_center_id:data.wellness_center_id||null});
+        if(newFin && newFin[0] && newFin[0].id) await dbUpdate('walkins', id, {finance_id: newFin[0].id});
+        showToast('Walk-in updated · ₹'+data.amount_received.toLocaleString('en-IN')+' added to finance ✅','success');
+      } else {
+        showToast('Walk-in updated','success');
+      }
+    } else {
+      // ── New entry ──
+      var savedWalkin = await dbInsert('walkins', data);
+      if(hasAmount){
+        var fin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:'Walk-in product sale',date:data.date,wellness_center_id:data.wellness_center_id||null});
+        if(fin && fin[0] && fin[0].id && savedWalkin && savedWalkin[0] && savedWalkin[0].id){
+          await dbUpdate('walkins', savedWalkin[0].id, {finance_id: fin[0].id});
+        }
+        showToast('Walk-in saved · ₹'+data.amount_received.toLocaleString('en-IN')+' added to finance ✅','success');
+      } else {
+        showToast('Walk-in saved ✅','success');
+      }
     }
+    await loadFinance();
     closeModal('walkin');
     await loadWalkins();
   }catch(e){showToast('Error: '+e.message,'error');}
@@ -14060,6 +14089,7 @@ async function removeContestParticipant(pid) {
     <div class="mh"><div class="mt" id="walkin-modal-title">🚶 Add Walk-in</div><button class="mc" onclick="closeModal('walkin')">✕</button></div>
     <div class="mb">
       <input type="hidden" id="walkin-id">
+      <input type="hidden" id="walkin-finance-id">
       <div class="fr">
         <div class="fg"><label>Date</label><input type="date" id="walkin-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
         <div class="fg"><label>Full Name *</label><input type="text" id="walkin-name" placeholder="Visitor name" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
