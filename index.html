@@ -3573,37 +3573,47 @@ function saveWaLang() {
   showToast('Default WhatsApp language set to: ' + lang, 'success');
 }
 window.onload = async function() {
-  var url = localStorage.getItem('sb_url');
-  var key = localStorage.getItem('sb_key');
-  var gKey = getGroqKey();
-  var cc = localStorage.getItem('countryCode');
-  if(gKey) document.getElementById('cfg-groq-key').value = gKey;
-  if(cc) { document.getElementById('cfg-country-code').value = cc; COUNTRY_CODE = cc; }
-  else document.getElementById('cfg-country-code').value = '91';
-  var savedWaLang = localStorage.getItem('waLang');
-  if (savedWaLang) { WA_LANG = savedWaLang; var wsel = document.getElementById('cfg-wa-lang'); if(wsel) wsel.value = savedWaLang; }
-  var savedModel = localStorage.getItem('groqModel');
-  if (savedModel) { GROQ_MODEL = savedModel; var msel = document.getElementById('cfg-groq-model'); if(msel) msel.value = savedModel; }
-  onFinTypeChange();
-  setFinPeriod('all', document.querySelectorAll('.fin-period')[3]);
-  renderProfileCard();
-  if (url && key) {
-    document.getElementById('sb-url').value = url;
-    document.getElementById('sb-key').value = key;
-    SB_URL = url.replace(/\/$/, '');
-    SB_KEY = key;
-    await doConnect();
-  } else {
-    // No main Supabase credentials — use CENTER_SB fallback (paying customer devices)
-    document.getElementById('setup').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    await loadAll();
+  try {
+    var url = localStorage.getItem('sb_url');
+    var key = localStorage.getItem('sb_key');
+    var gKey = getGroqKey();
+    var cc = localStorage.getItem('countryCode');
+    if(gKey) document.getElementById('cfg-groq-key').value = gKey;
+    if(cc) { document.getElementById('cfg-country-code').value = cc; COUNTRY_CODE = cc; }
+    else document.getElementById('cfg-country-code').value = '91';
+    var savedWaLang = localStorage.getItem('waLang');
+    if (savedWaLang) { WA_LANG = savedWaLang; var wsel = document.getElementById('cfg-wa-lang'); if(wsel) wsel.value = savedWaLang; }
+    var savedModel = localStorage.getItem('groqModel');
+    if (savedModel) { GROQ_MODEL = savedModel; var msel = document.getElementById('cfg-groq-model'); if(msel) msel.value = savedModel; }
+    onFinTypeChange();
+    setFinPeriod('all', document.querySelectorAll('.fin-period')[3]);
+    renderProfileCard();
+    if (url && key) {
+      document.getElementById('sb-url').value = url;
+      document.getElementById('sb-key').value = key;
+      SB_URL = url.replace(/\/$/, '');
+      SB_KEY = key;
+      await doConnect();
+    } else {
+      // No main Supabase credentials — use CENTER_SB fallback (paying customer devices)
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      await loadAll();
+    }
+    var _d=new Date(); var today=_d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
+    ['att-date','body-date','fin-date','inv-in-date','inv-out-date','inv-sum-date','inv-usage-date'].forEach(function(id){
+      var el = document.getElementById(id); if(el) el.value = today;
+    });
+  } catch(e) {
+    console.error('startup crash:', e);
+    document.body.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8faf8;padding:32px;text-align:center">'
+      + '<div style="font-size:48px;margin-bottom:16px">⚠️</div>'
+      + '<h2 style="color:#1a3a28;margin-bottom:8px">App failed to start</h2>'
+      + '<p style="color:#666;margin-bottom:8px;font-size:14px">Please reload. If the problem persists, contact support.</p>'
+      + '<p style="color:#999;font-size:12px;margin-bottom:24px;font-family:monospace;background:#f0f0f0;padding:8px 16px;border-radius:8px">' + (e && e.message ? e.message : String(e)) + '</p>'
+      + '<button onclick="location.reload()" style="background:#1a3a28;color:#fff;border:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🔄 Reload App</button>'
+      + '</div>';
   }
-  var _d=new Date(); var today=_d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
-  ['att-date','body-date','fin-date','inv-in-date','inv-out-date','inv-sum-date','inv-usage-date'].forEach(function(id){
-    var el = document.getElementById(id); if(el) el.value = today;
-  });
-
 };
 
 // ── REFRESH BUTTON ──
@@ -3620,20 +3630,33 @@ async function refreshDashboard() {
 async function loadAll() {
   D.stockIn=[]; D.stockOut=[]; D.dailyUsage=[]; D.currentStock={};
   D.coupons=[]; D.payments=[]; D.packHistory=[];
-  // Phase 1: centers + customers + coaches first (attendance/body need customer IDs for center-scoped query)
-  await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
-  // Phase 2: everything else — attendance/body/packHistory use customer IDs from phase 1
-  await Promise.all([loadAttendance(), loadBody(), loadFinance(),
-    loadCoupons(), loadPayments(), loadPackHistory(),
-    loadLeads(), loadExpenses(), loadFoods(), loadInventory(), loadContests()]);
-  _daysLeftCache = {};  // all data loaded — recalculate with full attendance
-  renderCustomers();    // re-render so days-left matches attendance data
-  renderOverview();
-  applyLang();          // apply saved language preference
-  startAutoPing();
-  migrateSvBodyToSupabase();
-  // On startup: if PINs exist but no session auth, prompt for PIN
-  checkStartupAuth();
+  try {
+    // Phase 1: centers + customers + coaches first (attendance/body need customer IDs for center-scoped query)
+    await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
+    // Phase 2: everything else — attendance/body/packHistory use customer IDs from phase 1
+    await Promise.all([loadAttendance(), loadBody(), loadFinance(),
+      loadCoupons(), loadPayments(), loadPackHistory(),
+      loadLeads(), loadExpenses(), loadFoods(), loadInventory(), loadContests()]);
+    _daysLeftCache = {};  // all data loaded — recalculate with full attendance
+    try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
+    try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
+    applyLang();          // apply saved language preference
+    startAutoPing();
+    migrateSvBodyToSupabase();
+    // On startup: if PINs exist but no session auth, prompt for PIN
+    checkStartupAuth();
+  } catch(e) {
+    console.error('loadAll crash:', e);
+    // Show a friendly reload button instead of blank screen
+    var app = document.getElementById('app');
+    if(app) app.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8faf8;padding:32px;text-align:center">'
+      + '<div style="font-size:48px;margin-bottom:16px">⚠️</div>'
+      + '<h2 style="color:#1a3a28;margin-bottom:8px">Something went wrong</h2>'
+      + '<p style="color:#666;margin-bottom:8px;font-size:14px">The app failed to load. This is usually a temporary issue.</p>'
+      + '<p style="color:#999;font-size:12px;margin-bottom:24px;font-family:monospace;background:#f0f0f0;padding:8px 16px;border-radius:8px">' + (e && e.message ? e.message : String(e)) + '</p>'
+      + '<button onclick="location.reload()" style="background:#1a3a28;color:#fff;border:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🔄 Reload App</button>'
+      + '</div>';
+  }
 }
 async function loadCenters() {
   D.centers = await dbGet('wellness_centers');
