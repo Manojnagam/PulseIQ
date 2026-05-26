@@ -4129,17 +4129,22 @@ function updateCenterSelects() {
 }
 function updateCustSelects() {
   var _custs = filterByCenter(D.customers);
-  var coachesWithPacks = filterByCenter(D.coaches).filter(function(c){ return c.pack_type && c.pack_start_date && c.status !== 'owner'; });
-  ['att-customer','body-customer'].forEach(function(id){
-    var sel = document.getElementById(id);
-    if(!sel) return;
+  var _allCoaches = filterByCenter(D.coaches);
+  var coachesWithPacks = _allCoaches.filter(function(c){ return c.pack_type && c.pack_start_date && c.status !== 'owner'; });
+  // Attendance — only coaches with active packs
+  var attSel = document.getElementById('att-customer');
+  if(attSel) {
     var custOpts = _custs.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
-    var coachOpts = coachesWithPacks.length
-      ? '<optgroup label="── Coaches ──">'+coachesWithPacks.map(function(c){return '<option value="'+c.id+'">'+c.name+' (Coach)</option>';}).join('')+'</optgroup>'
-      : '';
-    var svOpt = id === 'body-customer' ? '<option value="__sv__">👤 Myself (Supervisor)</option>' : '';
-    sel.innerHTML = '<option value="">Select person</option>' + svOpt + custOpts + coachOpts;
-  });
+    var coachOpts = coachesWithPacks.length ? '<optgroup label="── Coaches ──">'+coachesWithPacks.map(function(c){return '<option value="'+c.id+'">'+c.name+' (Coach)</option>';}).join('')+'</optgroup>' : '';
+    attSel.innerHTML = '<option value="">Select person</option>' + custOpts + coachOpts;
+  }
+  // Body composition — ALL coaches regardless of pack status
+  var bodySel = document.getElementById('body-customer');
+  if(bodySel) {
+    var bCustOpts = _custs.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
+    var bCoachOpts = _allCoaches.length ? '<optgroup label="── Coaches ──">'+_allCoaches.map(function(c){return '<option value="'+c.id+'">'+c.name+' (Coach)</option>';}).join('')+'</optgroup>' : '';
+    bodySel.innerHTML = '<option value="">Select person</option><option value="__sv__">👤 Myself (Supervisor)</option>' + bCustOpts + bCoachOpts;
+  }
   var cCoach = document.getElementById('customer-coach');
   if(cCoach) cCoach.innerHTML = '<option value="">Select coach</option>' + D.coaches.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
   var assignSel = document.getElementById('customer-assigned-coach');
@@ -9769,8 +9774,9 @@ async function delSvBody(id) {
 function updateBodyCustSelect() {
   var sel = document.getElementById('body-cust-select'); if(!sel) return;
   var prev = sel.value;
-  sel.innerHTML = '<option value="">— Choose a customer —</option>' +
-    D.customers.map(function(c){return '<option value="'+c.id+'">'+c.name+(c.pack_type?' ('+c.pack_type+')':'')+'</option>';}).join('');
+  var custOpts = D.customers.map(function(c){return '<option value="'+c.id+'">'+c.name+(c.pack_type?' ('+c.pack_type+')':'')+'</option>';}).join('');
+  var coachOpts = D.coaches.length ? '<optgroup label="── Coaches ──">'+D.coaches.map(function(c){return '<option value="'+c.id+'">'+c.name+' 👨‍🏫</option>';}).join('')+'</optgroup>' : '';
+  sel.innerHTML = '<option value="">— Choose a person —</option>' + custOpts + coachOpts;
   if(prev) sel.value = prev;
 }
 function onBodyCustomerChange() {
@@ -9782,7 +9788,8 @@ function onBodySearch() {
   var q = document.getElementById('body-search').value.toLowerCase().trim();
   var sel = document.getElementById('body-cust-select');
   if(!q){_selectedBodyCustId=null;sel.value='';renderBody();return;}
-  var match = D.customers.find(function(c){return(c.name||'').toLowerCase().includes(q);});
+  var match = D.customers.find(function(c){return(c.name||'').toLowerCase().includes(q);})
+           || D.coaches.find(function(c){return(c.name||'').toLowerCase().includes(q);});
   if(match){_selectedBodyCustId=match.id;sel.value=match.id;}
   else{_selectedBodyCustId=null;sel.value='';}
   renderBody();
