@@ -6438,7 +6438,6 @@ function renderAttendance() {
   var _tn=new Date(); var todayStr=_tn.getFullYear()+'-'+String(_tn.getMonth()+1).padStart(2,'0')+'-'+String(_tn.getDate()).padStart(2,'0');
   
   var activeCusts = filterByCenter(D.customers).filter(function(c){
-    if (c.pack_owner_id) return false; // linked members — shown under their pack owner, not separately
     var packActive = getDaysLeft(c).active;
     var presentToday = D.attendance.some(function(a){ return a.customer_id===c.id && a.date===todayStr && a.status==='present'; });
     if (!packActive && !presentToday) return false; // hide expired-pack customers unless present today
