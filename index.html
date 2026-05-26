@@ -2302,8 +2302,8 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mb" style="text-align:center">
       <p id="pin-prompt-msg" style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter the center PIN or supervisor master PIN to continue.</p>
       <input type="password" id="pin-prompt-input" maxlength="4" pattern="\d{4}" placeholder="• • • •" inputmode="numeric"
-        style="letter-spacing:8px;text-align:center;font-size:24px;padding:14px;width:100%;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:inherit;display:block"
-        onkeyup="if(event.key==='Enter')verifyPinPrompt()">
+        style="letter-spacing:8px;text-align:center;font-size:28px;padding:16px;width:100%;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:inherit;display:block"
+        oninput="if(this.value.length>=4)verifyPinPrompt()" onkeyup="if(event.key==='Enter')verifyPinPrompt()">
       <div id="pin-prompt-error" style="color:var(--danger);font-size:12px;margin-top:8px;display:none">Incorrect PIN. Try again.</div>
       <button class="btn-p" onclick="verifyPinPrompt()" style="width:100%;margin-top:14px;padding:14px;font-size:15px">🔓 Unlock</button>
       <button class="btn-c" onclick="closeModal('pin-prompt')" style="width:100%;margin-top:8px">Cancel</button>
@@ -2932,7 +2932,7 @@ function switchActiveCenter(centerId) {
 
 function verifyPinPrompt() {
   var entered = (document.getElementById('pin-prompt-input').value||'').trim();
-  if(!entered) return;
+  if(!entered || entered.length < 4) return;
   var targetCenter = _pendingSwitchCenter;
 
   // Check supervisor PIN — DB first, localStorage fallback
