@@ -2301,9 +2301,9 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mh"><div class="mt" id="pin-prompt-title">🔐 Enter PIN</div><button class="mc" onclick="closeModal('pin-prompt')">✕</button></div>
     <div class="mb" style="text-align:center">
       <p id="pin-prompt-msg" style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter the center PIN or supervisor master PIN to continue.</p>
-      <input type="password" id="pin-prompt-input" maxlength="4" pattern="\d{4}" placeholder="• • • •" inputmode="numeric"
-        style="letter-spacing:8px;text-align:center;font-size:28px;padding:16px;width:100%;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:inherit;display:block"
-        oninput="if(this.value.length>=4)verifyPinPrompt()" onkeyup="if(event.key==='Enter')verifyPinPrompt()">
+      <input type="tel" id="pin-prompt-input" maxlength="4" pattern="\d{4}" placeholder="_ _ _ _" autocomplete="off"
+        style="letter-spacing:12px;text-align:center;font-size:28px;padding:16px;width:100%;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:inherit;display:block;-webkit-text-security:disc"
+        oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length>=4)verifyPinPrompt()" onkeyup="if(event.key==='Enter')verifyPinPrompt()">
       <div id="pin-prompt-error" style="color:var(--danger);font-size:12px;margin-top:8px;display:none">Incorrect PIN. Try again.</div>
       <button class="btn-p" onclick="verifyPinPrompt()" style="width:100%;margin-top:14px;padding:14px;font-size:15px">🔓 Unlock</button>
       <button class="btn-c" onclick="closeModal('pin-prompt')" style="width:100%;margin-top:8px">Cancel</button>
@@ -2986,12 +2986,18 @@ function _applySwitch(centerId) {
     })
     .then(function(){
       _daysLeftCache = {};
-      renderCustomers(); renderCenters(); renderOverview();
-      if(typeof renderCurrentStock==='function') renderCurrentStock();
-      if(typeof renderCoupons==='function') renderCoupons();
-      if(typeof renderPayments==='function') renderPayments();
+      try { renderCustomers(); } catch(e){ console.error('renderCustomers:', e); }
+      try { renderCenters(); } catch(e){ console.error('renderCenters:', e); }
+      try { renderOverview(); } catch(e){ console.error('renderOverview:', e); }
+      if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
+      if(typeof renderCoupons==='function') try { renderCoupons(); } catch(e){}
+      if(typeof renderPayments==='function') try { renderPayments(); } catch(e){}
       updateCustSelects();
-      showToast(centerId ? 'Switched center' : 'Showing all centers');
+      showToast(centerId ? 'Switched to center' : 'Ready');
+    })
+    .catch(function(e){
+      console.error('_applySwitch failed:', e);
+      showToast('Load failed — please refresh', 'error');
     });
 }
 
