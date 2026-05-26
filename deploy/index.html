@@ -5145,6 +5145,12 @@ function renderOverview() {
   });
   var mNet = mInc - mExp;
 
+  // ── Walk-ins ──
+  var _walkins = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER; });
+  var walkinsToday = _walkins.filter(function(w){return w.date===todayStr;});
+  var walkinsMonth = _walkins.filter(function(w){return (w.date||'').startsWith(currentMonth);});
+  var walkinRevMonth = walkinsMonth.reduce(function(s,w){return s+Number(w.amount_received||0);},0);
+
   // ── Inventory alerts ──
   var lowCount = 0, outCount = 0;
   if(typeof PRODUCTS_DB!=='undefined') PRODUCTS_DB.forEach(function(p){
@@ -5198,6 +5204,7 @@ function renderOverview() {
     '<div class="stat"><div class="stat-ic">⏰</div><div class="stat-l">Expiring (≤3 days)</div><div class="stat-v" style="color:'+(expiringCusts.length?'var(--accent)':'var(--success)')+'">'+expiringCusts.length+'</div></div>'+
     '<div class="stat"><div class="stat-ic">📋</div><div class="stat-l">Today\'s Check-ins</div><div class="stat-v">'+attToday+'</div></div>'+
     '<div class="stat"><div class="stat-ic">😴</div><div class="stat-l">Inactive (7d+)</div><div class="stat-v" style="color:'+(inactiveCusts?'var(--danger)':'var(--success)')+'">'+inactiveCusts+'</div></div>'+
+    '<div class="stat"><div class="stat-ic">🚶</div><div class="stat-l">Walk-ins Today</div><div class="stat-v" style="color:'+(walkinsToday.length?'var(--primary)':'var(--muted)')+'">'+walkinsToday.length+'</div></div>'+
     '<div class="stat"><div class="stat-ic">📦</div><div class="stat-l">Low / Out of Stock</div><div class="stat-v" style="font-size:20px;color:'+(lowCount+outCount?'var(--danger)':'var(--success)')+'">'+lowCount+' / '+outCount+'</div></div>'+
     (expiryAlerts.length?'<div class="stat" style="border-left:3px solid var(--danger);grid-column:1/-1"><div class="stat-l" style="color:var(--danger)">🚨 Stock Expiry Alerts</div><div style="margin-top:6px;font-size:13px">'+expiryAlerts.map(function(a){return '<span style="display:inline-block;margin:2px 6px 2px 0;padding:2px 8px;border-radius:12px;background:'+(a.isExpired?'var(--danger-light)':'var(--accent-light)')+';color:'+(a.isExpired?'var(--danger)':'#b07800')+'">'+a.name+' — '+a.date+(a.isExpired?' EXPIRED':'')+'</span>';}).join('')+'</div></div>':'');
 
@@ -5301,6 +5308,36 @@ function renderOverview() {
   rightHtml += '<div style="flex:1"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Active</div><div style="font-family:DM Serif Display,serif;font-size:24px;color:var(--success);margin-top:4px">'+activeCoaches+'</div></div>';
   rightHtml += '<div style="flex:1"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Centers</div><div style="font-family:DM Serif Display,serif;font-size:24px;color:var(--primary);margin-top:4px">'+D.centers.length+'</div></div>';
   rightHtml += '</div></div></div>';
+
+  // ── Walk-ins Card ──
+  var OUT_ICON = {checkup:'🔬',trial:'📦',product_sale:'🛒',other:'📝'};
+  rightHtml += '<div class="ov-card" style="margin-top:16px"><div class="ov-card-h"><h3>🚶 Walk-ins</h3>'
+    +'<span class="ov-link" onclick="goTo(\'walkins\',document.querySelector(\'[onclick*=walkins]\'))">View all →</span></div>'
+    +'<div class="ov-card-body">';
+  // Month summary row
+  rightHtml += '<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">'
+    +'<div style="flex:1;text-align:center;background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">This Month</div><div style="font-family:DM Serif Display,serif;font-size:22px;color:var(--primary)">'+walkinsMonth.length+'</div></div>'
+    +'<div style="flex:1;text-align:center;background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Converted</div><div style="font-family:DM Serif Display,serif;font-size:22px;color:var(--success)">'+walkinsMonth.filter(function(w){return w.converted;}).length+'</div></div>'
+    +(walkinRevMonth>0?'<div style="flex:1;text-align:center;background:#f0fdf4;border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Revenue</div><div style="font-family:DM Serif Display,serif;font-size:18px;color:var(--success)">₹'+walkinRevMonth.toLocaleString('en-IN')+'</div></div>':'')
+    +'</div>';
+  // Today's walk-ins list
+  if(!walkinsToday.length){
+    rightHtml += '<div class="ov-empty">No walk-ins today yet</div>';
+  } else {
+    rightHtml += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Today</div>';
+    rightHtml += walkinsToday.map(function(w){
+      var outIcon = OUT_ICON[w.outcome]||'📝';
+      var outColor = w.outcome==='product_sale'?'var(--success)':w.outcome==='trial'?'#b07800':'#1d4ed8';
+      var amt = w.amount_received>0?'<span style="font-weight:700;color:var(--success);font-size:13px">₹'+Number(w.amount_received).toLocaleString('en-IN')+'</span>':'<span style="font-size:11px;color:var(--success)">Free</span>';
+      return '<div class="ov-row"><div class="ov-row-info">'
+        +'<div class="ov-row-name">'+w.name+(w.converted?'<span class="badge bg" style="font-size:9px;margin-left:6px">✅</span>':'')+'</div>'
+        +'<div class="ov-row-sub"><span style="color:'+outColor+'">'+outIcon+' '+(w.outcome||'—').replace('_',' ')+'</span>'+(w.pincode?' · 📍'+w.pincode:'')+'</div>'
+        +'</div>'+amt+'</div>';
+    }).join('');
+  }
+  // Add walk-in quick button
+  rightHtml += '<div style="margin-top:10px"><button class="btn-p" style="width:100%;font-size:13px;padding:9px" onclick="openWalkinModal()">+ Add Walk-in</button></div>';
+  rightHtml += '</div></div>';
 
   // ── Monthly Goals Mini Card ──
   var goals = (getGoals()[currentMonth]) || {};
