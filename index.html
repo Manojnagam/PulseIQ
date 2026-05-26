@@ -4648,9 +4648,9 @@ async function runFinanceAnalystAgent() {
   var expCat={};
   _fin.forEach(function(f){
     var amt = Number(f.amount)||0;
-    if (f.date.startsWith(curMon))  { if(f.type==='income') curInc+=amt; else { curExp+=amt; var c=f.category||'Other'; expCat[c]=(expCat[c]||0)+amt; } }
-    if (f.date.startsWith(lastMon)) { if(f.type==='income') lastInc+=amt; else lastExp+=amt; }
-    if (f.date.startsWith(twoMon))  { if(f.type==='income') twoInc+=amt; }
+    if (f.date && f.date.startsWith(curMon))  { if(f.type==='income') curInc+=amt; else { curExp+=amt; var c=f.category||'Other'; expCat[c]=(expCat[c]||0)+amt; } }
+    if (f.date && f.date.startsWith(lastMon)) { if(f.type==='income') lastInc+=amt; else lastExp+=amt; }
+    if (f.date && f.date.startsWith(twoMon))  { if(f.type==='income') twoInc+=amt; }
   });
 
   // ── Pending collections ──
@@ -5053,7 +5053,7 @@ function renderOverview() {
   // ── Finance ──
   var mInc=0, mExp=0;
   _fin.forEach(function(f){
-    if(f.date.startsWith(currentMonth)){
+    if(f.date && f.date.startsWith(currentMonth)){
       if(f.type==='income') mInc+=Number(f.amount); else mExp+=Number(f.amount);
     }
   });
@@ -6279,13 +6279,13 @@ function renderAttGrid() {
   var y=parseInt(parts[0]), m=parseInt(parts[1]);
   var daysInMonth = new Date(y, m, 0).getDate();
   var custRows = filterByCenter(D.customers).filter(function(c){
-    var hasAttThisMonth = D.attendance.some(function(a){return a.customer_id===c.id&&a.date.startsWith(monthStr);});
+    var hasAttThisMonth = D.attendance.some(function(a){return a.customer_id===c.id&&a.date&&a.date.startsWith(monthStr);});
     if(hasAttThisMonth) return true; // always show if they actually attended this month
     if(!getDaysLeft(c).active) return false; // expired pack, no attendance — hide
     if(isInactive(c) && !ATT_SHOW_INACTIVE) return false; // inactive, toggle off — hide
     return true;
   }).map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:false}; });
-  var coachRows = filterByCenter(D.coaches).filter(function(c){ return (c.pack_type && c.pack_start_date) || D.attendance.some(function(a){return a.customer_id===c.id&&a.date.startsWith(monthStr);}); })
+  var coachRows = filterByCenter(D.coaches).filter(function(c){ return (c.pack_type && c.pack_start_date) || D.attendance.some(function(a){return a.customer_id===c.id&&a.date&&a.date.startsWith(monthStr);}); })
     .map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:true}; });
   var allRows = custRows.concat(coachRows);
 
@@ -8316,7 +8316,7 @@ function renderAnalytics() {
     var d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
     var ym=d.toISOString().substring(0,7);
     months.push(d.toLocaleString('en-IN',{month:'short',year:'2-digit'}));
-    var mFin = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance).filter(function(f){return f.date.startsWith(ym);});
+    var mFin = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance).filter(function(f){return f.date && f.date.startsWith(ym);});
     incData.push(mFin.filter(function(f){return f.type==='income';}).reduce(function(s,f){return s+Number(f.amount);},0));
     expData.push(mFin.filter(function(f){return f.type==='expense';}).reduce(function(s,f){return s+Number(f.amount);},0));
   }
@@ -8833,12 +8833,12 @@ function renderAnalytics() {
       var ym = d.toISOString().substring(0, 7);
       var label = d.toLocaleString('en-IN', { month: 'short', year: '2-digit' });
       var mIncome = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance)
-        .filter(function(f) { return f.type === 'income' && f.date.startsWith(ym); })
+        .filter(function(f) { return f.type === 'income' && f.date && f.date.startsWith(ym); })
         .reduce(function(s, f) { return s + Number(f.amount); }, 0);
       // Active users that month = unique customers with at least 1 present attendance
       var activeIds = {};
       D.attendance.filter(function(a) {
-        return a.status === 'present' && a.date.startsWith(ym) && filtIds.indexOf(a.customer_id) > -1;
+        return a.status === 'present' && a.date && a.date.startsWith(ym) && filtIds.indexOf(a.customer_id) > -1;
       }).forEach(function(a) { activeIds[a.customer_id] = true; });
       var activeCount = Object.keys(activeIds).length;
       var arpu = activeCount > 0 ? Math.round(mIncome / activeCount) : null;
@@ -10128,7 +10128,7 @@ function renderBizAnalyst() {
     var vp = calcMonthlyVP(month, cid);
     var custIds = custs.map(function(c){return c.id;});
     var monthAtt = D.attendance.filter(function(a){
-      return a.date.startsWith(month) && a.status==='present' && custIds.indexOf(a.customer_id)>-1;
+      return a.date && a.date.startsWith(month) && a.status==='present' && custIds.indexOf(a.customer_id)>-1;
     }).length;
     var renewals = (D.packHistory||[]).filter(function(h){
       return h.start_date&&h.start_date.startsWith(month)&&custIds.indexOf(h.customer_id)>-1;
@@ -10240,7 +10240,7 @@ async function generateBizAIReport() {
   var activeCusts = D.customers.filter(function(c){ return getDaysLeft(c).active; }).length;
   var inactiveCusts = D.customers.filter(function(c){ return isInactive(c.id); }).length;
   var renewals = (D.packHistory||[]).filter(function(h){ return h.start_date&&h.start_date.startsWith(month); }).length;
-  var monthAtt = D.attendance.filter(function(a){ return a.date.startsWith(month)&&a.status==='present'; }).length;
+  var monthAtt = D.attendance.filter(function(a){ return a.date&&a.date.startsWith(month)&&a.status==='present'; }).length;
   var coachCount = D.coaches.length;
   var centerCount = D.centers.length;
   var coachLines = D.coaches.map(function(c){
