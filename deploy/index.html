@@ -736,6 +736,11 @@ window.onerror = function(msg, src, line, col, err) {
       </div>
       <button onclick="gotoOverdueLeads()" style="background:#fff;color:#c0392b;border:none;border-radius:8px;padding:8px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">View Overdue Leads →</button>
     </div>
+    <!-- DEBUG PANEL - remove after fix -->
+    <div id="debug-panel" style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#92400e;display:none">
+      <strong>📊 Debug Info</strong><br>
+      <span id="dbg-text">Loading...</span>
+    </div>
     <!-- OVERVIEW -->
     <div class="sec active" id="sec-overview">
       <div class="ph">
@@ -3096,9 +3101,11 @@ var OWNER_PROFILE = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
 
 function checkStartupAuth() {
   var hasCenterPins = Object.keys(_DB_PINS).length > 0;
+  _dbg('checkStartupAuth: hasPins='+hasCenterPins+' svPin='+!!_DB_SUPERVISOR_PIN+' auth='+JSON.stringify(_centerAuth));
 
   // No PINs configured in DB at all — full supervisor access
   if(!hasCenterPins && !_DB_SUPERVISOR_PIN) {
+    _dbg('→ no pins: master access');
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
     updateCenterSwitcher();
@@ -3107,10 +3114,12 @@ function checkStartupAuth() {
 
   // Valid session already exists — restore it
   if(_centerAuth.type === 'master') {
+    _dbg('→ existing master session');
     updateCenterSwitcher();
     return;
   }
   if(_centerAuth.type === 'center' && _centerAuth.centerId && _DB_PINS[_centerAuth.centerId]) {
+    _dbg('→ existing center session: '+_centerAuth.centerId);
     ACTIVE_CENTER = _centerAuth.centerId;
     localStorage.setItem('activeCenter', _centerAuth.centerId);
     _applySwitch(_centerAuth.centerId);
@@ -3682,22 +3691,26 @@ setTimeout(function(){
     }
   }
 },15000);
+function _dbg(msg){ var p=document.getElementById('debug-panel'); var t=document.getElementById('dbg-text'); if(p&&t){p.style.display='block';t.innerHTML=(t.innerHTML==='Loading...'?'':t.innerHTML+'<br>')+msg;} }
 async function loadAll() {
+  _dbg('loadAll started');
   D.stockIn=[]; D.stockOut=[]; D.dailyUsage=[]; D.currentStock={};
   D.coupons=[]; D.payments=[]; D.packHistory=[];
   try {
     // Phase 1: centers + customers + coaches first (attendance/body need customer IDs for center-scoped query)
     var _ldMsg = document.getElementById('app-loading-msg'); if(_ldMsg) _ldMsg.textContent = 'Connecting to database…';
     await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
+    _dbg('Phase1 done: '+D.centers.length+' centers, '+D.customers.length+' customers, pins:'+Object.keys(_DB_PINS).length+', svPin:'+(!!_DB_SUPERVISOR_PIN));
     if(_ldMsg) _ldMsg.textContent = 'Loading attendance & finance…';
     // Phase 2: everything else — attendance/body/packHistory use customer IDs from phase 1
     await Promise.all([loadAttendance(), loadBody(), loadFinance(),
       loadCoupons(), loadPayments(), loadPackHistory(),
       loadLeads(), loadExpenses(), loadFoods(), loadInventory(), loadContests()]);
     _daysLeftCache = {};  // all data loaded — recalculate with full attendance
-    try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
+    _dbg('Phase2 done: att='+D.attendance.length+', fin='+D.finance.length);
+    try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); _dbg('renderCustomers ERR: '+re.message); }
     var _ovErr = null;
-    try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); _ovErr = re; }
+    try { renderOverview(); _dbg('renderOverview OK'); } catch(re){ console.error('renderOverview crash:',re); _ovErr = re; _dbg('renderOverview ERR: '+re.message); }
     // Show diagnostic info if renderOverview failed or data is empty
     var _diagEl = document.getElementById('overview-stats');
     if(_diagEl) {
