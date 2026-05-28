@@ -2974,6 +2974,11 @@ async function startApp() {
       // Lock center owner to their own center
       ACTIVE_CENTER = myCenter.id;
       localStorage.setItem('activeCenter', myCenter.id);
+      // Store center name so sidebar shows correctly before loadAll completes
+      var _op = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+      _op.center_name = myCenter.name;
+      localStorage.setItem('ownerProfile', JSON.stringify(_op));
+      if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _op;
     }
   }
 
