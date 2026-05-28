@@ -2952,8 +2952,8 @@ async function startApp() {
         // Unknown email — access denied
         document.getElementById('app-loading').style.display = 'none';
         document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('login-form-state').style.display = 'none';
-        document.getElementById('login-success-state').style.display = 'none';
+        document.getElementById('login-email-state').style.display = 'none';
+        document.getElementById('login-code-state').style.display = 'none';
         document.getElementById('login-screen').querySelector('div').insertAdjacentHTML('beforeend',
           '<div id="access-denied" style="text-align:center;padding:8px 0"><div style="font-size:40px;margin-bottom:12px">🚫</div><div style="font-size:16px;font-weight:700;color:#dc2626;margin-bottom:8px">Access Denied</div><div style="font-size:13px;color:#6b7280;line-height:1.7">Your email is not linked to any center.<br>Contact your supervisor to get access.</div><button onclick="signOut()" style="margin-top:20px;background:#1a3a28;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Sign Out</button></div>'
         );
