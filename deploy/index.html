@@ -608,7 +608,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <div style="font-size:13px;color:#6b7280;line-height:1.6">We sent a 6-digit code to<br><strong id="login-sent-to" style="color:#1a3a28"></strong></div>
       </div>
       <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;display:block;margin-bottom:6px">6-Digit Code</label>
-      <input type="text" id="login-otp" placeholder="123456" maxlength="6" inputmode="numeric" onkeydown="if(event.key==='Enter')verifyOtpCode()" style="width:100%;padding:14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:22px;font-family:inherit;margin-bottom:12px;outline:none;text-align:center;letter-spacing:8px;transition:border .2s" onfocus="this.style.borderColor='#1a3a28'" onblur="this.style.borderColor='#e5e7eb'">
+      <input type="text" id="login-otp" placeholder="······" maxlength="8" inputmode="numeric" onkeydown="if(event.key==='Enter')verifyOtpCode()" style="width:100%;padding:14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:22px;font-family:inherit;margin-bottom:12px;outline:none;text-align:center;letter-spacing:8px;transition:border .2s" onfocus="this.style.borderColor='#1a3a28'" onblur="this.style.borderColor='#e5e7eb'">
       <button id="verify-btn" onclick="verifyOtpCode()" style="width:100%;padding:14px;background:#1a3a28;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s" onmouseover="this.style.background='#2d5a3d'" onmouseout="this.style.background='#1a3a28'">Verify & Sign In →</button>
       <div id="login-code-error" style="display:none;margin-top:10px;padding:10px 14px;background:#fef2f2;border-radius:8px;font-size:13px;color:#dc2626;border-left:3px solid #dc2626"></div>
       <button onclick="document.getElementById('login-code-state').style.display='none';document.getElementById('login-email-state').style.display='block';document.getElementById('login-btn').textContent='Send Code →';document.getElementById('login-btn').disabled=false" style="width:100%;margin-top:10px;background:none;border:1.5px solid #e5e7eb;border-radius:8px;padding:8px 16px;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Change email</button>
@@ -2894,7 +2894,7 @@ async function sendOtpCode() {
 async function verifyOtpCode() {
   var email = (document.getElementById('login-email').value || '').trim();
   var token = (document.getElementById('login-otp').value || '').trim();
-  if (!token || token.length < 6) { showCodeErr('Please enter the 6-digit code.'); return; }
+  if (!token || token.length < 6) { showCodeErr('Please enter the login code.'); return; }
   var btn = document.getElementById('verify-btn');
   btn.textContent = 'Verifying…'; btn.disabled = true;
   var res = await _sbAuth.auth.verifyOtp({ email: email, token: token, type: 'email' });
@@ -2941,7 +2941,15 @@ async function startApp() {
     var superAdminEmail = settingsData[0] ? settingsData[0].value : '';
     var isSuperAdmin = (_authUser.user_metadata && _authUser.user_metadata.role === 'super_admin') || _authUser.email === superAdminEmail;
 
-    if (!isSuperAdmin) {
+    if (isSuperAdmin) {
+      // Super admin: clear any center lock from previous session
+      ACTIVE_CENTER = '';
+      localStorage.setItem('activeCenter', '');
+      var _opSA = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+      delete _opSA.center_name;
+      localStorage.setItem('ownerProfile', JSON.stringify(_opSA));
+      if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _opSA;
+    } else {
       // Try to auto-link by email if auth_user_id not set yet
       var jwt = _authSession.access_token;
       var centersRes = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?select=id,name,owner_id,owner_email', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + jwt } });
