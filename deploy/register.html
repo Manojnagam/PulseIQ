@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join PulseZen — Register Your Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #05120b 0%, #0f2419 35%, #1a3a28 65%, #2d5a3d 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px; font-family: 'DM Sans', sans-serif; color: #1a1a1a;
+    }
+    .card {
+      background: #fff; border-radius: 20px; padding: 36px 32px;
+      width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    .logo { font-family: 'DM Serif Display', serif; font-size: 26px; color: #1a3a28; margin-bottom: 4px; }
+    .logo span { color: #4caf7d; }
+    .subtitle { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
+    .invite-badge {
+      background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px;
+      padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: #1a3a28;
+    }
+    .invite-badge strong { display: block; font-size: 15px; margin-top: 2px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+    input {
+      width: 100%; padding: 11px 13px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      font-size: 14px; font-family: inherit; outline: none; transition: border .2s;
+      margin-bottom: 16px;
+    }
+    input:focus { border-color: #1a3a28; }
+    input.err { border-color: #dc2626; }
+    .optional { font-size: 11px; color: #9ca3af; font-weight: 400; text-transform: none; }
+    .btn {
+      width: 100%; padding: 14px; background: #1a3a28; color: #fff; border: none;
+      border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: background .2s; margin-top: 4px;
+    }
+    .btn:hover { background: #2d5a3d; }
+    .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .error-box {
+      display: none; margin-top: 12px; padding: 10px 14px;
+      background: #fef2f2; border-radius: 8px; font-size: 13px;
+      color: #dc2626; border-left: 3px solid #dc2626;
+    }
+    .success-screen { display: none; text-align: center; }
+    .success-screen .icon { font-size: 56px; margin-bottom: 16px; }
+    .success-screen h2 { font-family: 'DM Serif Display', serif; font-size: 22px; color: #1a3a28; margin-bottom: 8px; }
+    .success-screen p { font-size: 14px; color: #6b7280; line-height: 1.6; margin-bottom: 20px; }
+    .success-screen .nid { font-family: monospace; background: #e8f5e9; padding: 8px 16px; border-radius: 8px; font-size: 16px; font-weight: 700; color: #1a3a28; display: inline-block; margin-bottom: 20px; }
+    .login-btn {
+      display: inline-block; background: #1a3a28; color: #fff; text-decoration: none;
+      padding: 13px 32px; border-radius: 10px; font-size: 15px; font-weight: 700;
+      font-family: inherit;
+    }
+    .loading-screen { text-align: center; padding: 20px 0; }
+    .spin { display: inline-block; font-size: 36px; animation: spin 1.5s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .divider { border: none; border-top: 1px solid #f3f4f6; margin: 20px 0; }
+    .field { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+<div class="card" id="main-card">
+
+  <!-- Loading state -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="spin">🌿</div>
+    <p style="margin-top:12px;color:#6b7280;font-size:14px">Loading invite details…</p>
+  </div>
+
+  <!-- Registration form -->
+  <div id="form-screen" style="display:none">
+    <div class="logo">Pulse<span>Zen</span></div>
+    <p class="subtitle">Register your wellness center</p>
+
+    <div class="invite-badge" id="invite-badge" style="display:none">
+      🔗 Invited by
+      <strong id="inviter-name">—</strong>
+    </div>
+
+    <div class="field"><label>Your Name</label><input type="text" id="f-name" placeholder="e.g. Priya Sharma"></div>
+    <div class="field"><label>Email Address</label><input type="email" id="f-email" placeholder="you@example.com"></div>
+    <hr class="divider">
+    <div class="field"><label>Center Name</label><input type="text" id="f-center" placeholder="e.g. Priya's Wellness Center"></div>
+    <div class="field"><label>Location / Area</label><input type="text" id="f-location" placeholder="e.g. Hyderabad, Telangana"></div>
+    <div class="field"><label>WhatsApp Number</label><input type="tel" id="f-contact" placeholder="e.g. 9876543210"></div>
+    <div class="field"><label>Distributor ID <span class="optional">(optional)</span></label><input type="text" id="f-distid" placeholder="Your Herbalife distributor ID"></div>
+
+    <button class="btn" id="submit-btn" onclick="submitRegistration()">Register My Center →</button>
+    <div class="error-box" id="err-box"></div>
+  </div>
+
+  <!-- Success state -->
+  <div class="success-screen" id="success-screen">
+    <div class="icon">🎉</div>
+    <h2>You're registered!</h2>
+    <p>Your center has been created. Your Network ID is:</p>
+    <div class="nid" id="success-nid"></div>
+    <p>Log in to your dashboard with your email address.</p>
+    <a href="https://app.pulsezen.in" class="login-btn">Open App →</a>
+  </div>
+
+  <!-- Error state (bad/missing invite link) -->
+  <div id="error-screen" style="display:none;text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">🔗</div>
+    <h2 style="font-family:'DM Serif Display',serif;font-size:20px;color:#1a3a28;margin-bottom:8px">Invalid invite link</h2>
+    <p style="font-size:14px;color:#6b7280;line-height:1.6">This link is missing or expired.<br>Ask your supervisor to resend their invite link.</p>
+  </div>
+
+</div>
+
+<script>
+  var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+
+  var _inviterCenter = null;
+
+  function show(id) {
+    ['loading-screen','form-screen','success-screen','error-screen'].forEach(function(s){
+      document.getElementById(s).style.display = s === id ? (id === 'form-screen' ? 'block' : 'block') : 'none';
+    });
+  }
+
+  async function sbGet(table, filter) {
+    var res = await fetch(SB_URL + '/rest/v1/' + table + '?' + filter, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    return res.ok ? res.json() : [];
+  }
+
+  async function sbPost(table, body) {
+    var res = await fetch(SB_URL + '/rest/v1/' + table, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(body)
+    });
+    return { ok: res.ok, data: await res.json() };
+  }
+
+  function generateNetworkId(centerName, count) {
+    var initials = (centerName || 'XX').replace(/[^a-zA-Z]/g,'').substring(0,2).toUpperCase() || 'ZZ';
+    var num = String(count).padStart(4, '0');
+    return 'PZ-' + initials + '-' + num;
+  }
+
+  async function init() {
+    show('loading-screen');
+    var params = new URLSearchParams(window.location.search);
+    var ref = params.get('ref');
+
+    if (!ref) { show('error-screen'); return; }
+
+    var rows = await sbGet('wellness_centers', 'network_id=eq.' + encodeURIComponent(ref) + '&select=id,name,network_id');
+    if (!rows || !rows.length) { show('error-screen'); return; }
+
+    _inviterCenter = rows[0];
+    document.getElementById('inviter-name').textContent = _inviterCenter.name;
+    document.getElementById('invite-badge').style.display = 'block';
+    show('form-screen');
+  }
+
+  function showErr(msg) {
+    var box = document.getElementById('err-box');
+    box.textContent = msg;
+    box.style.display = 'block';
+  }
+
+  async function submitRegistration() {
+    var btn = document.getElementById('submit-btn');
+    var name = document.getElementById('f-name').value.trim();
+    var email = document.getElementById('f-email').value.trim().toLowerCase();
+    var center = document.getElementById('f-center').value.trim();
+    var location = document.getElementById('f-location').value.trim();
+    var contact = document.getElementById('f-contact').value.trim();
+    var distid = document.getElementById('f-distid').value.trim();
+
+    document.getElementById('err-box').style.display = 'none';
+
+    if (!name) { showErr('Please enter your name.'); return; }
+    if (!email || !email.includes('@')) { showErr('Please enter a valid email address.'); return; }
+    if (!center) { showErr('Please enter your center name.'); return; }
+    if (!location) { showErr('Please enter your location.'); return; }
+    if (!contact) { showErr('Please enter your WhatsApp number.'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Registering…';
+
+    try {
+      // Check if email already registered
+      var checkRes = await fetch(SB_URL + '/rest/v1/rpc/is_registered_email', {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: email })
+      });
+      if (checkRes.ok) {
+        var already = await checkRes.json();
+        if (already === true) {
+          showErr('This email is already registered. Go to app.pulsezen.in to log in.');
+          btn.disabled = false; btn.textContent = 'Register My Center →';
+          return;
+        }
+      }
+
+      // Count centers to generate network ID
+      var all = await sbGet('wellness_centers', 'select=id');
+      var count = (Array.isArray(all) ? all.length : 0) + 1;
+      var networkId = generateNetworkId(center, count);
+
+      var payload = {
+        name: center,
+        location: location,
+        contact: contact,
+        type: 'downline',
+        owner_email: email,
+        network_id: networkId,
+        upline_center_id: _inviterCenter ? _inviterCenter.id : null,
+        distributor_id: distid || null
+      };
+
+      var result = await sbPost('wellness_centers', payload);
+      if (!result.ok) {
+        showErr('Registration failed. Please try again.');
+        btn.disabled = false; btn.textContent = 'Register My Center →';
+        return;
+      }
+
+      // Also store owner name in center pin field note (best effort, non-blocking)
+      // Network ID success
+      document.getElementById('success-nid').textContent = networkId;
+      show('success-screen');
+
+    } catch(e) {
+      showErr('Something went wrong: ' + (e.message || e));
+      btn.disabled = false; btn.textContent = 'Register My Center →';
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
