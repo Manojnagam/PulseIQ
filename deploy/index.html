@@ -2943,10 +2943,11 @@ async function startApp() {
 
     if (!isSuperAdmin) {
       // Try to auto-link by email if auth_user_id not set yet
-      var centersRes = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?select=id,name,auth_user_id,owner_email', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY } });
+      var jwt = _authSession.access_token;
+      var centersRes = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?select=id,name,owner_id,owner_email', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + jwt } });
       var centers = await centersRes.json();
-      var myCenter = centers.find(function(c){ return c.auth_user_id === _authUser.id; })
-                  || centers.find(function(c){ return c.owner_email === _authUser.email; });
+      var myCenter = (Array.isArray(centers) ? centers : []).find(function(c){ return c.owner_id === _authUser.id; })
+                  || (Array.isArray(centers) ? centers : []).find(function(c){ return c.owner_email === _authUser.email; });
 
       if (!myCenter) {
         // Unknown email — access denied
@@ -2954,18 +2955,20 @@ async function startApp() {
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('login-email-state').style.display = 'none';
         document.getElementById('login-code-state').style.display = 'none';
-        document.getElementById('login-screen').querySelector('div').insertAdjacentHTML('beforeend',
-          '<div id="access-denied" style="text-align:center;padding:8px 0"><div style="font-size:40px;margin-bottom:12px">🚫</div><div style="font-size:16px;font-weight:700;color:#dc2626;margin-bottom:8px">Access Denied</div><div style="font-size:13px;color:#6b7280;line-height:1.7">Your email is not linked to any center.<br>Contact your supervisor to get access.</div><button onclick="signOut()" style="margin-top:20px;background:#1a3a28;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Sign Out</button></div>'
-        );
+        if (!document.getElementById('access-denied')) {
+          document.getElementById('login-screen').querySelector('div').insertAdjacentHTML('beforeend',
+            '<div id="access-denied" style="text-align:center;padding:8px 0"><div style="font-size:40px;margin-bottom:12px">🚫</div><div style="font-size:16px;font-weight:700;color:#dc2626;margin-bottom:8px">Access Denied</div><div style="font-size:13px;color:#6b7280;line-height:1.7">Your email is not linked to any center.<br>Contact your supervisor to get access.</div><button onclick="signOut()" style="margin-top:20px;background:#1a3a28;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Sign Out</button></div>'
+          );
+        }
         return;
       }
 
-      // Auto-link auth_user_id if not set
-      if (!myCenter.auth_user_id) {
+      // Auto-link owner_id if not set
+      if (!myCenter.owner_id) {
         await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?id=eq.' + myCenter.id, {
           method: 'PATCH',
-          headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ auth_user_id: _authUser.id })
+          headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ owner_id: _authUser.id })
         });
       }
     }
