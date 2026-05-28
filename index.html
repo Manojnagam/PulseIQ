@@ -577,10 +577,38 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
 </style>
 <script src="./index_files/chart.umd.min.js.download"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen" style="display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#05120b 0%,#0f2419 35%,#1a3a28 65%,#2d5a3d 100%);align-items:center;justify-content:center;padding:24px;font-family:'DM Sans',sans-serif">
+  <div style="background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#1a3a28,#3d7a52);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px">🌿</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:26px;color:#1a3a28;line-height:1.2">PulseZen</div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:4px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Supervisor Dashboard</div>
+    </div>
+    <div id="login-form-state">
+      <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px">Sign in to your dashboard</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:20px;line-height:1.6">We'll send a secure login link to your email. No password needed.</div>
+      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;display:block;margin-bottom:6px">Email Address</label>
+      <input type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendMagicLink()" style="width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:12px;outline:none;transition:border .2s" onfocus="this.style.borderColor='#1a3a28'" onblur="this.style.borderColor='#e5e7eb'">
+      <button id="login-btn" onclick="sendMagicLink()" style="width:100%;padding:14px;background:#1a3a28;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s" onmouseover="this.style.background='#2d5a3d'" onmouseout="this.style.background='#1a3a28'">Send Login Link →</button>
+      <div id="login-error" style="display:none;margin-top:10px;padding:10px 14px;background:#fef2f2;border-radius:8px;font-size:13px;color:#dc2626;border-left:3px solid #dc2626"></div>
+    </div>
+    <div id="login-success-state" style="display:none;text-align:center;padding:8px 0">
+      <div style="font-size:48px;margin-bottom:16px">📧</div>
+      <div style="font-size:17px;font-weight:700;color:#111827;margin-bottom:8px">Check your email</div>
+      <div style="font-size:13px;color:#6b7280;line-height:1.8">We sent a login link to<br><strong id="login-sent-to" style="color:#1a3a28"></strong><br>Click the link to sign in. Link expires in 1 hour.</div>
+      <button onclick="document.getElementById('login-success-state').style.display='none';document.getElementById('login-form-state').style.display='block';document.getElementById('login-btn').textContent='Send Login Link →';document.getElementById('login-btn').disabled=false" style="margin-top:20px;background:none;border:1.5px solid #e5e7eb;border-radius:8px;padding:8px 16px;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Use a different email</button>
+    </div>
+    <div style="margin-top:28px;padding-top:18px;border-top:1px solid #f3f4f6;text-align:center;font-size:11px;color:#d1d5db">Powered by PulseZen · Wellness Intelligence Platform</div>
+  </div>
+</div>
+
 <button class="menu-btn" onclick="toggleSidebar()">☰</button>
 <div class="sb-overlay" id="sb-overlay" onclick="toggleSidebar()"></div>
 
@@ -701,10 +729,12 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
       </select>
     </div>
     <div class="sb-foot">
+      <div id="sb-auth-user" style="padding:8px 12px 4px;font-size:10px;color:rgba(255,255,255,.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
       <div class="sb-foot-row">
         <button class="disc-btn" id="refresh-btn" onclick="refreshDashboard()" title="Refresh Data">🔄</button>
         <button class="disc-btn" id="lang-toggle-btn" onclick="toggleLang()" title="Toggle Language" style="font-weight:700">తె</button>
         <button class="disc-btn" onclick="doDisconnect()" title="Disconnect">⚡</button>
+        <button class="disc-btn" onclick="signOut()" title="Sign Out" style="font-size:13px">🔓</button>
       </div>
     </div>
   </nav>
@@ -2796,6 +2826,79 @@ function getActiveSbUrl() { return SB_URL || CENTER_SB_URL; }
 function getActiveSbKey() { return SB_KEY || CENTER_SB_KEY; }
 var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
 var WA_LANG = localStorage.getItem('waLang') || 'English';
+
+// ── AUTH ──
+var _sbAuth = null;
+var _authUser = null;
+var _authSession = null;
+
+function initAuthClient() {
+  if (_sbAuth) return;
+  _sbAuth = window.supabase.createClient(CENTER_SB_URL, CENTER_SB_KEY, {
+    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+  });
+}
+
+async function checkExistingSession() {
+  initAuthClient();
+  var d = await _sbAuth.auth.getSession();
+  if (d.data && d.data.session) {
+    _authSession = d.data.session;
+    _authUser = d.data.session.user;
+    return true;
+  }
+  return false;
+}
+
+async function sendMagicLink() {
+  initAuthClient();
+  var email = (document.getElementById('login-email').value || '').trim();
+  if (!email) { showLoginErr('Please enter your email address.'); return; }
+  var btn = document.getElementById('login-btn');
+  btn.textContent = 'Sending…'; btn.disabled = true;
+  var res = await _sbAuth.auth.signInWithOtp({ email: email, options: { emailRedirectTo: location.origin } });
+  if (res.error) {
+    showLoginErr(res.error.message);
+    btn.textContent = 'Send Login Link →'; btn.disabled = false;
+  } else {
+    document.getElementById('login-sent-to').textContent = email;
+    document.getElementById('login-form-state').style.display = 'none';
+    document.getElementById('login-success-state').style.display = 'block';
+  }
+}
+
+function showLoginErr(msg) {
+  var el = document.getElementById('login-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+async function signOut() {
+  if (_sbAuth) await _sbAuth.auth.signOut();
+  _authUser = null; _authSession = null;
+  location.reload();
+}
+
+async function startApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-loading').style.display = 'flex';
+  if (window.location.hash) history.replaceState(null, '', window.location.pathname);
+  // Show logged-in email in sidebar footer
+  var authEl = document.getElementById('sb-auth-user');
+  if (authEl && _authUser) authEl.textContent = '● ' + _authUser.email;
+  var url = localStorage.getItem('sb_url');
+  var key = localStorage.getItem('sb_key');
+  if (url && key) {
+    document.getElementById('sb-url').value = url;
+    document.getElementById('sb-key').value = key;
+    SB_URL = url.replace(/\/$/, '');
+    SB_KEY = key;
+    await doConnect();
+  } else {
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    await loadAll();
+  }
+}
 var ACTIVE_CENTER = localStorage.getItem('activeCenter') || '';
 
 // ── LANGUAGE / TRANSLATIONS ──
@@ -3640,8 +3743,23 @@ function saveWaLang() {
 }
 window.onload = async function() {
   try {
-    var url = localStorage.getItem('sb_url');
-    var key = localStorage.getItem('sb_key');
+    // ── STEP 1: Auth check — must pass before loading any data ──
+    initAuthClient();
+    _sbAuth.auth.onAuthStateChange(async function(event, session) {
+      if (event === 'SIGNED_IN' && session && document.getElementById('login-screen').style.display !== 'none') {
+        _authSession = session;
+        _authUser = session.user;
+        await startApp();
+      }
+    });
+    var authed = await checkExistingSession();
+    if (!authed) {
+      document.getElementById('app-loading').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      return;
+    }
+
+    // ── STEP 2: UI init (runs only when authed) ──
     var gKey = getGroqKey();
     var cc = localStorage.getItem('countryCode');
     if(gKey) document.getElementById('cfg-groq-key').value = gKey;
@@ -3654,18 +3772,9 @@ window.onload = async function() {
     onFinTypeChange();
     setFinPeriod('all', document.querySelectorAll('.fin-period')[3]);
     renderProfileCard();
-    if (url && key) {
-      document.getElementById('sb-url').value = url;
-      document.getElementById('sb-key').value = key;
-      SB_URL = url.replace(/\/$/, '');
-      SB_KEY = key;
-      await doConnect();
-    } else {
-      // No main Supabase credentials — use CENTER_SB fallback (paying customer devices)
-      document.getElementById('setup').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      await loadAll();
-    }
+
+    // ── STEP 3: Load app data ──
+    await startApp();
     var _d=new Date(); var today=_d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
     ['att-date','body-date','fin-date','inv-in-date','inv-out-date','inv-sum-date','inv-usage-date'].forEach(function(id){
       var el = document.getElementById(id); if(el) el.value = today;
