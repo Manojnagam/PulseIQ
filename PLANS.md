@@ -17,7 +17,7 @@ Status: Free + Growth (₹499) to launch first. Elite + President built in code 
 - Add / view customers (basic profile only)
 - Manual attendance check-in (no WhatsApp reminders)
 - Basic finance — add income/expense entries only (no charts, no analytics)
-- Up to **30 walk-ins per month**
+- Walk-ins: add freely, **see last 15 days only** (covered by history limit)
 
 ### Growth
 - Generate **invite links** for direct downlines (so the network grows)
@@ -53,7 +53,7 @@ Status: Free + Growth (₹499) to launch first. Elite + President built in code 
 - **Finance analytics** — revenue charts, expense breakdown, monthly trends
 - **Coupons & pack renewals** — full coupon system, installment tracking
 - **Leads management** — follow-up pipeline, conversion tracking
-- **Walk-ins** — unlimited, with analytics
+- **Walk-ins** — unlimited, with analytics, full 6-month history
 - **AI body composition analysis** (Groq powered)
 - Full analytics dashboard — attendance trends, revenue, churn risk
 
@@ -109,7 +109,7 @@ Status: Free + Growth (₹499) to launch first. Elite + President built in code 
 
 ## Plan Rules
 
-- **Walk-ins** do NOT count toward customer limit (any plan)
+- **Walk-ins** do NOT count toward customer limit (any plan). Free plan sees last 15 days only — no separate counter needed, history limit covers it.
 - **"Delete" = archive** on free plan — archived customers still count toward your 20 limit
 - **Permanently delete** an archived customer to free the slot
 - **Downline visibility**: upline's plan determines access — downline does NOT need a paid plan to be visible
