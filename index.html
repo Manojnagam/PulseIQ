@@ -3932,8 +3932,9 @@ async function loadAll() {
     migrateSvBodyToSupabase();
     // Hide loading splash — data is ready
     var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
-    // On startup: if PINs exist but no session auth, prompt for PIN
-    checkStartupAuth();
+    // On startup: if PINs exist but no email-auth session, prompt for PIN
+    // Skip PIN prompt if user is already authenticated via email OTP
+    if (!_authSession) checkStartupAuth();
   } catch(e) {
     console.error('loadAll crash:', e);
     // Hide loading splash and show error
