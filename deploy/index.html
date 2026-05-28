@@ -2823,7 +2823,7 @@ var CENTER_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 function isCenterSession() { return _centerAuth && _centerAuth.type === 'center'; }
 // Use main Supabase if credentials exist, otherwise fall back to center Supabase (for paying customers)
 function getActiveSbUrl() { return SB_URL || CENTER_SB_URL; }
-function getActiveSbKey() { return SB_KEY || CENTER_SB_KEY; }
+function getActiveSbKey() { return (_authSession && _authSession.access_token) || SB_KEY || CENTER_SB_KEY; }
 var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
 var WA_LANG = localStorage.getItem('waLang') || 'English';
 
@@ -2855,7 +2855,22 @@ async function sendMagicLink() {
   var email = (document.getElementById('login-email').value || '').trim();
   if (!email) { showLoginErr('Please enter your email address.'); return; }
   var btn = document.getElementById('login-btn');
-  btn.textContent = 'Sending…'; btn.disabled = true;
+  btn.textContent = 'Checking…'; btn.disabled = true;
+  // Block unregistered emails before sending OTP
+  try {
+    var checkRes = await fetch(CENTER_SB_URL + '/rest/v1/rpc/is_registered_email', {
+      method: 'POST',
+      headers: { 'apikey': CENTER_SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_email: email })
+    });
+    var allowed = await checkRes.json();
+    if (!allowed) {
+      showLoginErr('This email is not registered. Contact your supervisor to get access.');
+      btn.textContent = 'Send Login Link →'; btn.disabled = false;
+      return;
+    }
+  } catch(e) { /* network error — let Supabase OTP handle it */ }
+  btn.textContent = 'Sending…';
   var res = await _sbAuth.auth.signInWithOtp({ email: email, options: { emailRedirectTo: 'https://app.pulsezen.in' } });
   if (res.error) {
     showLoginErr(res.error.message);
@@ -3790,6 +3805,9 @@ window.onload = async function() {
         _authSession = session;
         _authUser = session.user;
         await startApp();
+      }
+      if (event === 'TOKEN_REFRESHED' && session) {
+        _authSession = session;
       }
     });
     var authed = await checkExistingSession();
