@@ -2971,6 +2971,9 @@ async function startApp() {
           body: JSON.stringify({ owner_id: _authUser.id })
         });
       }
+      // Lock center owner to their own center
+      ACTIVE_CENTER = myCenter.id;
+      localStorage.setItem('activeCenter', myCenter.id);
     }
   }
 
