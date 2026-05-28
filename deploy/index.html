@@ -3674,9 +3674,10 @@ async function req(method, table, body, filter) {
   filter = filter || '';
   var activeUrl = getActiveSbUrl();
   var activeKey = getActiveSbKey();
+  var anonKey = SB_KEY || CENTER_SB_KEY;
   var url = activeUrl + '/rest/v1/' + table + filter;
   var headers = {
-    'apikey': activeKey,
+    'apikey': anonKey,
     'Authorization': 'Bearer ' + activeKey,
     'Content-Type': 'application/json',
     'Prefer': 'return=representation'
