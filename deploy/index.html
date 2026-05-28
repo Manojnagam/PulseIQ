@@ -2856,7 +2856,7 @@ async function sendMagicLink() {
   if (!email) { showLoginErr('Please enter your email address.'); return; }
   var btn = document.getElementById('login-btn');
   btn.textContent = 'Sending…'; btn.disabled = true;
-  var res = await _sbAuth.auth.signInWithOtp({ email: email, options: { emailRedirectTo: location.origin } });
+  var res = await _sbAuth.auth.signInWithOtp({ email: email, options: { emailRedirectTo: 'https://app.pulsezen.in' } });
   if (res.error) {
     showLoginErr(res.error.message);
     btn.textContent = 'Send Login Link →'; btn.disabled = false;
