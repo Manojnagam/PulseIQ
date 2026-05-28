@@ -42,9 +42,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 #app{display:none;min-height:100vh}
 .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sw);background:linear-gradient(180deg,#0f2318 0%,#1a3a28 40%,#1f4530 100%);display:flex;flex-direction:column;z-index:100;overflow-y:auto;transition:transform .3s;box-shadow:2px 0 20px rgba(0,0,0,.18)}
 .sb-logo{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
-.sb-logo-inner{display:flex;align-items:center;gap:10px}
+.sb-logo-inner{display:flex;align-items:center;gap:10px;min-width:0}
+.sb-logo-inner>div:last-child{min-width:0;overflow:hidden}
 .sb-logo-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid rgba(255,255,255,.14);flex-shrink:0}
-.sb-logo h1{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;line-height:1.2}
+.sb-logo h1{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sb-logo span{color:rgba(255,255,255,.4);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;display:block;margin-top:1px}
 .sb-nav{padding:10px 8px;flex:1;overflow-y:auto;min-height:0}
 .nav-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.35);padding:10px 10px 3px;font-weight:700;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between}
@@ -251,6 +252,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
   .sb-overlay.open{display:block}
   .main{margin-left:0;padding:60px 14px 20px}
   .menu-btn{display:block}
+  .sb-logo h1{font-size:13px}
   .fr{grid-template-columns:1fr}
   .ph{flex-direction:column;align-items:flex-start}
   #sec-profile [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
@@ -11739,8 +11741,14 @@ async function saveWalkin(){
 async function deleteWalkin(id){
   if(!confirm('Delete this walk-in record?'))return;
   getCredentials();
-  try{await dbDelete('walkins',id);showToast('Deleted','success');await loadWalkins();}
-  catch(e){showToast('Error: '+e.message,'error');}
+  try{
+    var w=(D.walkins||[]).find(function(x){return x.id===id;});
+    if(w && w.finance_id) await dbDelete('finance', w.finance_id);
+    await dbDelete('walkins',id);
+    showToast('Deleted','success');
+    await loadWalkins();
+    await loadFinance();
+  }catch(e){showToast('Error: '+e.message,'error');}
 }
 
 function convertWalkinToCustomer(walkinId){
