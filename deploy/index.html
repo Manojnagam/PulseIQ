@@ -1173,6 +1173,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
     <div class="sec" id="sec-attendance">
       <div class="ph">
         <div><div class="pt" data-t="pt_attendance">Attendance</div><div class="ps" data-t="ps_attendance">Track customer visit history</div></div>
+        <button class="btn-e" onclick="sendDailySummaryWA()" style="background:#25D366;color:#fff;border-color:#25D366;font-weight:600">📊 Daily Summary</button>
         <button class="btn-p" onclick="openBackfillModal()" style="background:var(--accent);border-color:var(--accent)">📅 Backfill Past Days</button>
       </div>
       <div class="stats" id="att-stats"><div class="stat"><div class="stat-l">Today's Present</div><div class="stat-v" style="color:var(--success)">0</div></div><div class="stat"><div class="stat-l">Not Yet</div><div class="stat-v" style="color:var(--danger)">0</div></div></div>
@@ -8187,6 +8188,81 @@ function selectBodyCustomer(cid) {
   if (sel) sel.value = cid;
   switchBodyTab('records', document.getElementById('body-tab-records'));
   renderBody();
+}
+
+// ── Daily Check-in Summary WhatsApp ──
+function sendDailySummaryWA() {
+  var today = new Date().toISOString().split('T')[0];
+  var tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  var centerName = getCenterName();
+  var custs = ACTIVE_CENTER ? filterByCenter(D.customers) : D.customers;
+
+  // Who attended today
+  var presentIds = new Set(
+    D.attendance.filter(function(a){ return a.date === today && a.status === 'present'; })
+               .map(function(a){ return a.customer_id; })
+  );
+
+  // Active customers who didn't come
+  var activeCusts = custs.filter(function(c){ return getDaysLeft(c).active; });
+  var present = activeCusts.filter(function(c){ return presentIds.has(c.id); });
+  var absent  = activeCusts.filter(function(c){ return !presentIds.has(c.id); });
+
+  // Expiring tomorrow
+  var expiringTomorrow = custs.filter(function(c){ return c.pack_end_date === tomorrow; });
+
+  // Expiring today
+  var expiringToday = custs.filter(function(c){ return c.pack_end_date === today; });
+
+  var dateStr = new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' });
+
+  var lines = [];
+  lines.push('📊 *Daily Summary — ' + centerName + '*');
+  lines.push('📅 ' + dateStr);
+  lines.push('');
+  lines.push('✅ *Present (' + present.length + ')*');
+  if (present.length) lines.push(present.map(function(c){ return '  • ' + c.name; }).join('\n'));
+  else lines.push('  — None yet');
+  lines.push('');
+  lines.push('❌ *Absent (' + absent.length + ')*');
+  if (absent.length) lines.push(absent.map(function(c){ return '  • ' + c.name; }).join('\n'));
+  else lines.push('  — All active customers attended! 🎉');
+
+  if (expiringToday.length) {
+    lines.push('');
+    lines.push('⚠️ *Packs Expiring Today (' + expiringToday.length + ')*');
+    lines.push(expiringToday.map(function(c){ return '  • ' + c.name; }).join('\n'));
+  }
+  if (expiringTomorrow.length) {
+    lines.push('');
+    lines.push('🔔 *Packs Expiring Tomorrow (' + expiringTomorrow.length + ')*');
+    lines.push(expiringTomorrow.map(function(c){ return '  • ' + c.name; }).join('\n'));
+  }
+
+  lines.push('');
+  lines.push('_Sent via PulseIQ_ 💚');
+
+  var msg = lines.join('\n');
+
+  // Get supervisor's own phone from first center owner contact or prompt
+  var myPhone = localStorage.getItem('supervisorPhone') || '';
+  if (!myPhone) {
+    myPhone = prompt('Enter your WhatsApp number (with country code, e.g. 917981614593) to receive summaries:') || '';
+    if (myPhone) localStorage.setItem('supervisorPhone', myPhone.replace(/\D/g,''));
+  }
+  myPhone = myPhone.replace(/\D/g,'');
+
+  if (myPhone) {
+    window.open('https://api.whatsapp.com/send?phone=' + myPhone + '&text=' + encodeURIComponent(msg), '_blank');
+  } else {
+    // Fallback: copy to clipboard
+    navigator.clipboard.writeText(msg).then(function(){
+      showToast('Summary copied to clipboard! Paste in WhatsApp.', 'success');
+    }).catch(function(){
+      showToast('No phone set. Open WhatsApp and paste manually.', 'error');
+      console.log(msg);
+    });
+  }
 }
 
 // ── Recheck WhatsApp reminder ──
