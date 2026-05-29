@@ -1588,6 +1588,12 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Source breakdown, outcomes, conversion rate and monthly trend</div>
         <div id="analytics-walkins"></div>
       </div>
+      <!-- Peak Hour Tracker -->
+      <div class="tcard" style="padding:20px;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">⏰ Peak Hour Tracker</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">When do most customers check in? Hourly distribution across all attendance records.</div>
+        <div id="analytics-peak-hours"></div>
+      </div>
       <div class="tcard" style="padding:20px;margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div style="font-family:'DM Serif Display',serif;font-size:16px">⚖️ Body Metric Trend</div>
@@ -7578,7 +7584,7 @@ async function toggleAtt(cid, cname, date, currentStatus) {
       await dbUpdate('attendance', existing.id, {status:'present', servings:1});
       showToast(cname+' — marked present (1 serving)','success');
     } else {
-      await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1});
+      await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1, check_in_time: new Date().toTimeString().slice(0,5)});
       showToast(cname+' — marked present (1 serving)','success');
     }
     _daysLeftCache = {};
@@ -9083,7 +9089,8 @@ async function saveAttendance() {
     servings:servings,
     notes:document.getElementById('att-notes').value.trim(),
     morning_shake: morningShake,
-    postworkout_shake: (cust.shake_frequency==='twice') ? postworkoutShake : 'na'
+    postworkout_shake: (cust.shake_frequency==='twice') ? postworkoutShake : 'na',
+    check_in_time: (!document.getElementById('att-id').value && document.getElementById('att-status').value==='present') ? new Date().toTimeString().slice(0,5) : undefined
   };
   if (!payload.date) { showToast('Date is required','error'); return; }
   if (!custId) { showToast('Please select a customer','error'); return; }
@@ -11143,6 +11150,66 @@ function renderAnalytics() {
     });
     html += '</div></div>';
 
+    el.innerHTML = html;
+  })();
+
+  // ── Peak Hour Tracker ──
+  (function() {
+    var el = document.getElementById('analytics-peak-hours'); if (!el) return;
+    var att = filterByCenterViaCustomer(D.attendance);
+    // Only records with check_in_time
+    var timed = att.filter(function(a){ return a.check_in_time && a.status === 'present'; });
+    if (!timed.length) {
+      el.innerHTML = '<div class="empty"><div class="ei">⏰</div><p>No check-in time data yet. Check-in times will be recorded automatically from now on when marking attendance.</p></div>';
+      return;
+    }
+    // Build hourly buckets 5am–10pm
+    var buckets = {};
+    for (var h = 5; h <= 22; h++) buckets[h] = 0;
+    timed.forEach(function(a) {
+      var parts = a.check_in_time.split(':');
+      var hr = parseInt(parts[0]);
+      if (hr >= 5 && hr <= 22) buckets[hr]++;
+      else if (hr < 5) buckets[5]++;
+      else buckets[22]++;
+    });
+    var hours = Object.keys(buckets).map(Number).sort(function(a,b){return a-b;});
+    var counts = hours.map(function(h){ return buckets[h]; });
+    var maxCount = Math.max.apply(null, counts.concat([1]));
+    var peakHr = hours[counts.indexOf(maxCount)];
+    function fmtHr(h) {
+      if (h === 0) return '12 AM';
+      if (h === 12) return '12 PM';
+      return h < 12 ? h + ' AM' : (h-12) + ' PM';
+    }
+    var html = '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Peak time: <strong style="color:var(--primary)">' + fmtHr(peakHr) + '</strong> · ' + timed.length + ' timed check-ins</div>';
+    html += '<div style="display:flex;align-items:flex-end;gap:4px;height:90px;padding-bottom:2px">';
+    hours.forEach(function(h) {
+      var cnt = buckets[h];
+      var barH = Math.max(4, Math.round((cnt / maxCount) * 76));
+      var isPeak = h === peakHr;
+      html += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px" title="' + fmtHr(h) + ': ' + cnt + '">'
+        + (cnt ? '<div style="font-size:9px;font-weight:700;color:' + (isPeak ? 'var(--primary)' : 'var(--muted)') + '">' + cnt + '</div>' : '<div style="font-size:9px">&nbsp;</div>')
+        + '<div style="width:100%;background:' + (isPeak ? 'var(--primary)' : '#93c5fd') + ';border-radius:3px 3px 0 0;height:' + barH + 'px;opacity:' + (cnt ? '1' : '0.2') + '"></div>'
+        + '</div>';
+    });
+    html += '</div>';
+    html += '<div style="display:flex;gap:4px;margin-top:4px">';
+    hours.forEach(function(h) {
+      html += '<div style="flex:1;text-align:center;font-size:8px;color:var(--muted);white-space:nowrap;overflow:hidden">' + fmtHr(h).replace(' ','') + '</div>';
+    });
+    html += '</div>';
+
+    // Top 3 busiest hours summary
+    var ranked = hours.slice().sort(function(a,b){ return buckets[b]-buckets[a]; }).slice(0,3).filter(function(h){return buckets[h]>0;});
+    if (ranked.length) {
+      html += '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">';
+      ranked.forEach(function(h, i) {
+        var medal = i===0 ? '🥇' : i===1 ? '🥈' : '🥉';
+        html += '<div style="background:var(--bg2);border-radius:8px;padding:8px 14px;font-size:12px"><span>' + medal + ' </span><strong>' + fmtHr(h) + '</strong><span style="color:var(--muted)"> — ' + buckets[h] + ' check-ins</span></div>';
+      });
+      html += '</div>';
+    }
     el.innerHTML = html;
   })();
 }
