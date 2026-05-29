@@ -6125,6 +6125,40 @@ function renderOverview() {
     rightHtml += '</div></div>';
   }
 
+  // ── Churn Prediction Alert Card ──
+  var churnCritical = [], churnAtRisk = [];
+  (ACTIVE_CENTER ? filterByCenter(D.customers) : D.customers).forEach(function(c) {
+    var risk = getChurnRisk(c.id);
+    if (risk.level === 'critical') churnCritical.push({ c: c, risk: risk });
+    else if (risk.level === 'at-risk') churnAtRisk.push({ c: c, risk: risk });
+  });
+  var churnAll = churnCritical.concat(churnAtRisk);
+  if (churnAll.length) {
+    rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid var(--danger)">'
+      + '<div class="ov-card-h"><h3>⚠️ Churn Alerts</h3>'
+      + '<div style="display:flex;gap:6px">'
+      + (churnCritical.length ? '<span class="ov-count" style="background:#fee2e2;color:#b91c1c">🔴 '+churnCritical.length+' Critical</span>' : '')
+      + (churnAtRisk.length  ? '<span class="ov-count" style="background:#fef9c3;color:#854d0e">🟡 '+churnAtRisk.length+' At Risk</span>' : '')
+      + '</div></div>'
+      + '<div class="ov-card-body">'
+      + churnAll.slice(0, 6).map(function(entry) {
+          var c = entry.c, risk = entry.risk;
+          var phone = (c.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
+          var st = getDaysLeft(c);
+          var waMsg = encodeURIComponent('Hi '+c.name+'! 🙏 We noticed you haven\'t visited us recently. Your health journey matters to us — please come in this week, we miss you! 💚 — '+getCenterName());
+          return '<div class="ov-row">'
+            + '<div class="ov-row-info">'
+            +   '<div class="ov-row-name">'+c.name+' <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;'+(risk.level==='critical'?'background:#fee2e2;color:#b91c1c':'background:#fef9c3;color:#854d0e')+'">'+risk.label+'</span></div>'
+            +   '<div class="ov-row-sub">'+risk.reasons.slice(0,2).join(' · ')+(st.days>0?' · '+st.days+' days left':'')+'</div>'
+            + '</div>'
+            + (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+waMsg+'" target="_blank" rel="noopener" class="wa-btn" style="font-size:11px;padding:3px 8px;text-decoration:none">💬</a>' : '')
+            + '</div>';
+        }).join('')
+      + (churnAll.length > 6 ? '<div style="text-align:center;padding-top:8px;font-size:12px;color:var(--muted)">+' + (churnAll.length-6) + ' more at risk</div>' : '')
+      + '<div style="margin-top:10px"><button class="btn-p" style="width:100%;font-size:13px;padding:9px;background:var(--danger);border:none" onclick="goTo(\'customers\',document.querySelector(\'[onclick*=customers]\'))">View All Customers →</button></div>'
+      + '</div></div>';
+  }
+
   // ── Milestone Dashboard Card ──
   var custs = ACTIVE_CENTER ? filterByCenter(D.customers) : D.customers;
   var msEntries = custs.map(function(c){
