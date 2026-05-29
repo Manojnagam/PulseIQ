@@ -2184,6 +2184,19 @@ alter table coach_attendance enable row level security;
 create policy "allow all" on coach_attendance for all using (true);
 
 -- ==========================================
+-- 📝 CUSTOMER NOTES (Run once)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS customer_notes (
+  id uuid default gen_random_uuid() primary key,
+  customer_id uuid references customers(id) on delete cascade,
+  note text not null,
+  follow_up_date date,
+  created_at timestamptz default now()
+);
+alter table customer_notes enable row level security;
+create policy "allow all" on customer_notes for all using (true);
+
+-- ==========================================
 -- 📢 ANNOUNCEMENTS (Run once)
 -- ==========================================
 CREATE TABLE IF NOT EXISTS announcements (
@@ -2455,6 +2468,25 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 
 
 
+
+<div class="overlay" id="modal-cust-notes">
+  <div class="modal" style="max-width:520px">
+    <div class="mh"><div class="mt">📝 Notes — <span id="notes-cust-name"></span></div><button class="mc" onclick="closeModal('cust-notes')">✕</button></div>
+    <div class="mb">
+      <div id="notes-history" style="max-height:260px;overflow-y:auto;margin-bottom:14px"></div>
+      <div style="border-top:1px solid var(--border);padding-top:14px">
+        <label style="font-size:12px;font-weight:700;color:var(--muted)">Add Note</label>
+        <textarea id="notes-text" rows="3" placeholder="Health update, follow-up call, goal progress..." style="width:100%;margin-top:6px;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text);resize:vertical"></textarea>
+        <label style="font-size:12px;font-weight:700;color:var(--muted);margin-top:8px;display:block">Follow-up Date (optional)</label>
+        <input type="date" id="notes-followup" style="margin-top:4px;width:100%">
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn-p" onclick="saveNote()">💾 Save Note</button>
+      <button class="btn-s" onclick="closeModal('cust-notes')">Close</button>
+    </div>
+  </div>
+</div>
 
 <div class="overlay" id="modal-recurring-expenses">
   <div class="modal" style="max-width:560px">
@@ -4259,6 +4291,7 @@ async function loadAll() {
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
     try { renderAnnouncementBanner(); } catch(re){ console.error('renderAnnouncementBanner crash:',re); }
     try { autoApplyRecurring(); } catch(re){ console.error('autoApplyRecurring crash:',re); }
+    try { loadFollowUps(); } catch(re){ console.error('loadFollowUps crash:',re); }
     applyLang();
     (function(){ var btn=document.getElementById('dark-mode-btn'); if(btn) btn.textContent=localStorage.getItem('svTheme')==='dark'?'☀️':'🌙'; })();
     startAutoPing();
@@ -7086,6 +7119,84 @@ function renderAnnouncementBanner() {
       + '<div style="color:#0c4a6e;font-size:13px">'+a.message+'</div>'
       + '</div>';
   }).join('');
+}
+
+// ══════════════════════════════════════════
+// 📝 CUSTOMER NOTES & FOLLOW-UPS
+// ══════════════════════════════════════════
+var _notesCustomerId = null;
+
+async function openNotesModal(custId, custName) {
+  _notesCustomerId = custId;
+  document.getElementById('notes-cust-name').textContent = custName;
+  document.getElementById('notes-text').value = '';
+  document.getElementById('notes-followup').value = '';
+  document.getElementById('notes-history').innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Loading…</div>';
+  openModal('cust-notes');
+  await renderNotesHistory(custId);
+}
+
+async function renderNotesHistory(custId) {
+  var el = document.getElementById('notes-history'); if (!el) return;
+  var notes = [];
+  try {
+    notes = await dbGet('customer_notes', { customer_id: 'eq.' + custId, order: 'created_at.desc' });
+  } catch(e) { notes = []; }
+  if (!notes.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">No notes yet. Add one below.</div>'; return; }
+  el.innerHTML = notes.map(function(n) {
+    var date = n.created_at ? new Date(n.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    var fu = n.follow_up_date
+      ? '<div style="margin-top:5px"><span style="font-size:11px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:20px;font-weight:600">📅 Follow-up: '+n.follow_up_date+'</span></div>'
+      : '';
+    return '<div style="padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:8px;position:relative">'
+      + '<div style="font-size:13px;line-height:1.5;color:var(--text)">'+n.note+'</div>'
+      + fu
+      + '<div style="font-size:10px;color:var(--muted);margin-top:5px;display:flex;justify-content:space-between;align-items:center">'
+      +   '<span>'+date+'</span>'
+      +   '<button style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:11px;padding:0" onclick="deleteNote(\''+n.id+'\',\''+custId+'\')">Delete</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function saveNote() {
+  var custId = _notesCustomerId; if (!custId) return;
+  var note = (document.getElementById('notes-text').value || '').trim();
+  var followUp = document.getElementById('notes-followup').value || null;
+  if (!note) { showToast('Note cannot be empty', 'error'); return; }
+  try {
+    await dbInsert('customer_notes', { customer_id: custId, note: note, follow_up_date: followUp });
+    document.getElementById('notes-text').value = '';
+    document.getElementById('notes-followup').value = '';
+    showToast('Note saved!', 'success');
+    await renderNotesHistory(custId);
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function deleteNote(noteId, custId) {
+  if (!confirm('Delete this note?')) return;
+  try {
+    await dbDelete('customer_notes', noteId);
+    showToast('Note deleted');
+    await renderNotesHistory(custId);
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function loadFollowUps() {
+  // Load today's follow-ups into overview banner
+  var today = new Date().toISOString().split('T')[0];
+  try {
+    var due = await dbGet('customer_notes', { follow_up_date: 'eq.' + today });
+    if (!due || !due.length) return;
+    // Deduplicate by customer
+    var seen = {};
+    var unique = due.filter(function(n){ if(seen[n.customer_id]) return false; seen[n.customer_id]=true; return true; });
+    var names = unique.map(function(n){
+      var c = D.customers.find(function(x){return x.id===n.customer_id;});
+      return c ? c.name : '?';
+    });
+    showToast('📅 Follow-ups due today: ' + names.join(', '), 'success');
+  } catch(e) { /* silent */ }
 }
 
 // ══════════════════════════════════════════
@@ -12442,6 +12553,7 @@ function renderCustomers() {
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#dc2626" onclick="openRefundModal(\''+c.id+'\')" title="Refund / Cancel Pack">↩</button> '
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#16a34a" onclick="generateDietPlan(\''+c.id+'\')" title="'+(c.diet_plan?'Regenerate Diet Plan':'Generate Diet Plan')+'">🥗'+(c.diet_plan?' ✓':'')+' Diet</button> '
         +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#0891b2" onclick="viewMealCompliance(\''+c.id+'\',\''+c.name+'\')" title="Meal Compliance">📋 Compliance</button> ':'')
+        +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#f59e0b;border-color:#f59e0b" onclick="openNotesModal(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Notes &amp; Follow-ups">📝 Notes</button> '
         +'<button class="btn-e" onclick="editCustomer(\''+c.id+'\')">Edit</button>'
         +'<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:#fef3c7;color:#92400e;border-color:#fcd34d" title="Convert to Coach">⭐ Make Coach</button>'
         +'<button class="btn-d" onclick="delRecord(\'customers\',\''+c.id+'\',\'customers\')">Delete</button>'
