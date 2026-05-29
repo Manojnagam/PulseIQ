@@ -2084,6 +2084,14 @@ alter table lead_followups enable row level security;
 create policy "allow all" on lead_followups for all using (true);
 
 -- ==========================================
+-- 💳 SAAS PLAN TRACKING (Run once)
+-- ==========================================
+ALTER TABLE wellness_centers
+ADD COLUMN IF NOT EXISTS plan_type text default 'free';
+-- plan_type values: 'free' | 'growth' | 'elite' | 'president'
+-- Set to 'growth' manually after a center upgrades.
+
+-- ==========================================
 -- 🪪 PULSEZEN NETWORK ID + DISTRIBUTOR ID (Run once)
 -- ==========================================
 ALTER TABLE wellness_centers
@@ -5512,6 +5520,28 @@ function renderOverview() {
 
   // ── Right Column ──
   var rightHtml = '';
+
+  // ── Upgrade Banner (center-owner on free plan, 30+ days old) ──
+  if (isCenterSession() || (_authSession && ACTIVE_CENTER)) {
+    var _bannerCenter = D.centers.find(function(c){ return c.id === ACTIVE_CENTER; });
+    if (_bannerCenter && (!_bannerCenter.plan_type || _bannerCenter.plan_type === 'free')) {
+      var _daysOld = _bannerCenter.created_at ? Math.floor((Date.now() - new Date(_bannerCenter.created_at).getTime()) / 86400000) : 0;
+      if (_daysOld >= 30) {
+        var _upgradeMsg = encodeURIComponent('Hi! I am the owner of ' + (_bannerCenter.name||'my wellness center') + ' on PulseIQ. I would like to upgrade to the Growth plan (₹499/month). Please help me proceed. 🙏');
+        rightHtml += '<div class="ov-card" style="margin-bottom:16px;border:2px solid #7c3aed;background:linear-gradient(135deg,#f5f3ff,#ede9fe)">'
+          + '<div class="ov-card-h"><h3 style="color:#7c3aed">🚀 Upgrade to Growth</h3></div>'
+          + '<div class="ov-card-body">'
+          + '<div style="font-size:13px;color:#4c1d95;margin-bottom:6px;font-weight:600">You\'ve been on the Free plan for ' + _daysOld + ' days!</div>'
+          + '<div style="font-size:12px;color:#6b7280;margin-bottom:12px;line-height:1.6">Unlock AI insights, advanced analytics, multi-center reports, and priority support.</div>'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+          + '<div><div style="font-size:22px;font-weight:800;color:#7c3aed">₹499<span style="font-size:13px;font-weight:400">/month</span></div><div style="font-size:11px;color:var(--muted)">Growth Plan</div></div>'
+          + '<div style="font-size:11px;color:#6b7280;line-height:1.8">✅ AI Agents<br>✅ Advanced Analytics<br>✅ Priority Support</div>'
+          + '</div>'
+          + '<button class="btn-p" style="width:100%;font-size:13px;padding:10px;background:#7c3aed;border-color:#7c3aed" onclick="window.open(\'https://api.whatsapp.com/send?phone=917981614593&text=' + _upgradeMsg + '\',\'_blank\')">💬 Request Upgrade via WhatsApp</button>'
+          + '</div></div>';
+      }
+    }
+  }
 
   // ── Invite Link Card (center-owner OTP users only) ──
   if (isCenterSession() || (_authSession && ACTIVE_CENTER)) {
