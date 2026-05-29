@@ -7,8 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Primary working file**: `index.html` — always edit this, not `PulseIQ-v8 (1).html`
 
 Before deploying:
-1. Copy `index.html` → `deploy/index.html` (the Vercel deploy target)
-2. Run `npx vercel --prod` from the repo root (or `./deploy-all.sh` to deploy all sub-projects in parallel)
+1. Copy `index.html` → `deploy/index.html` (kept in sync as a backup)
+2. Run `vercel --prod` from the **repo root** — this deploys the root `pulseiq` project to `app.pulsezen.in`
+   - Do NOT run from `deploy/` — that targets a different Vercel project and won't update the live site
+3. Optionally run `./deploy-all.sh` to deploy all sub-projects in parallel
 
 Sub-projects each have their own `vercel.json` and are deployed independently:
 - Root (`app.pulsezen.in`) — supervisor dashboard (`index.html`)
@@ -85,6 +87,25 @@ ALTER TABLE finance ADD COLUMN IF NOT EXISTS wellness_center_id uuid references 
 - **Email OTP login**: 6-digit code via Resend + Supabase Edge Function. After OTP login, `_authSession` is set and PIN prompt is skipped.
 - **PIN auth**: Center-level PINs + supervisor master PIN stored/checked via `checkStartupAuth()`. Center-PIN users get restricted section access.
 - **JWT**: Supabase JWT is included in all `req()` calls via `Authorization: Bearer` header.
+
+## pulseiq-guard Agent
+
+A custom pre-deployment safety agent defined in `.claude/agents/pulseiq-guard.md`. Run it with:
+
+> "run the pulseiq-guard agent"
+
+It enforces six invariants on `index.html` and must pass before any deploy to `app.pulsezen.in`:
+
+| Check | Invariant |
+|---|---|
+| 1 — SB_URL | `var SB_URL = null` top-level is allowed (startup default). Flag if nulled inside any function. |
+| 2 — loadBody() | Must exist, fetch `/rest/v1/body_composition`, and populate `D.body[]`. |
+| 3 — Supabase fetch only | All data ops use `req()`/`dbGet()`/`dbInsert()`/`dbUpdate()`/`dbDelete()`. SDK (`@supabase/supabase-js`) allowed only for `_sbAuth` auth calls (signInWithOtp, verifyOtp, getSession, signOut, onAuthStateChange). |
+| 4 — Karada field order | Form, table, and save payloads must follow: date → height → age → weight → fat% → visceral fat → BMR → BMI → body age → subcu fat% → muscle% |
+| 5 — Groq model | Default must be `llama-3.1-8b-instant`. All Groq fetch calls must use this model. |
+| 6 — No file:// paths | No runtime `file://` protocol checks or local file paths for external resources. |
+
+**Key architectural rule enforced by Check 3:** `loadBody()` has its own `fetch()` (not via `req()`). It must use `SB_KEY || CENTER_SB_KEY` for the `apikey` header and `getActiveSbKey()` for `Authorization: Bearer`. Using `getActiveSbKey()` for both breaks OTP-authenticated users (JWT is not a valid API key).
 
 ## SaaS Plans (PLANS.md)
 
