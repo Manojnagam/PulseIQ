@@ -784,6 +784,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <div><div class="pt" data-t="pt_overview">Overview Dashboard</div><div class="ps" data-t="ps_overview">Your wellness center at a glance</div></div>
         <button class="btn-p" id="ai-overview-btn" onclick="generateWeeklySummary()">✨ AI Summary</button>
       </div>
+      <div id="announcement-banner" style="display:none;margin-bottom:14px"></div>
       <div id="birthday-banner" style="display:none;background:linear-gradient(135deg,#fff8e1,#fffde7);border:1px solid #f9c74f;border-radius:var(--radius);padding:12px 18px;margin-bottom:14px;font-size:13px;color:#b07800;line-height:1.8"></div>
       <div id="ai-overview-summary" class="tcard" style="display:none; padding:20px; line-height:1.6; margin-bottom:20px;"></div>
       <!-- Quick Actions -->
@@ -812,6 +813,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <div><div class="pt" data-t="pt_centers">Wellness Centers</div><div class="ps" data-t="ps_centers">Manage all centers in your network</div></div>
         <button class="btn-p" onclick="openAddCenter()">+ Add Center</button>
         <button class="btn-p" onclick="openModal('onboard-customer')" style="background:linear-gradient(135deg,#7c3aed,#a855f7);margin-left:8px">+ Onboard ₹1999 Customer</button>
+        <button class="btn-p" onclick="openAnnouncementModal()" style="background:#0369a1;border-color:#0369a1;margin-left:8px">📢 Post Announcement</button>
       </div>
       <div class="stats" id="centers-stats"><div class="stat"><div class="stat-l">Total Centers</div><div class="stat-v">1</div></div><div class="stat"><div class="stat-l">Downline</div><div class="stat-v">0</div></div><div class="stat"><div class="stat-l">Branches</div><div class="stat-v">0</div></div></div>
       <div class="tcard">
@@ -2159,6 +2161,20 @@ alter table coach_attendance enable row level security;
 create policy "allow all" on coach_attendance for all using (true);
 
 -- ==========================================
+-- 📢 ANNOUNCEMENTS (Run once)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS announcements (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  message text not null,
+  target_center_id uuid references wellness_centers(id),
+  expires_at date,
+  created_at timestamptz default now()
+);
+alter table announcements enable row level security;
+create policy "allow all" on announcements for all using (true);
+
+-- ==========================================
 -- 💳 SAAS PLAN TRACKING (Run once)
 -- ==========================================
 ALTER TABLE wellness_centers
@@ -2416,6 +2432,28 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 
 
 
+
+<div class="overlay" id="modal-announcement">
+  <div class="modal">
+    <div class="mh"><div class="mt">📢 Post Announcement</div><button class="mc" onclick="closeModal('announcement')">✕</button></div>
+    <div class="mb">
+      <label>Title</label>
+      <input type="text" id="ann-title" placeholder="e.g. Holiday closure on Sunday" maxlength="100">
+      <label>Message</label>
+      <textarea id="ann-message" rows="4" placeholder="Full announcement text..." style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text);resize:vertical"></textarea>
+      <label>Target Center (leave blank = all centers)</label>
+      <select id="ann-center">
+        <option value="">— All Centers —</option>
+      </select>
+      <label>Expires On (optional)</label>
+      <input type="date" id="ann-expires">
+    </div>
+    <div class="mf">
+      <button class="btn-p" onclick="saveAnnouncement()">📢 Post Announcement</button>
+      <button class="btn-s" onclick="closeModal('announcement')">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <div class="overlay" id="modal-onboard-customer">
   <div class="modal">
@@ -4158,12 +4196,13 @@ async function loadAll() {
     // Phase 2: walkins must load before body (body filter includes walk-in IDs)
     await Promise.all([loadAttendance(), loadFinance(),
       loadCoupons(), loadPayments(), loadPackHistory(),
-      loadLeads(), loadWalkins(), loadExpenses(), loadFoods(), loadInventory(), loadContests()]);
+      loadLeads(), loadWalkins(), loadExpenses(), loadFoods(), loadInventory(), loadContests(), loadAnnouncements()]);
     // Phase 3: body runs after walkins so _custIdsFilter() includes walk-in IDs
     await loadBody();
     _daysLeftCache = {};  // all data loaded — recalculate with full attendance
     try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
+    try { renderAnnouncementBanner(); } catch(re){ console.error('renderAnnouncementBanner crash:',re); }
     applyLang();
     (function(){ var btn=document.getElementById('dark-mode-btn'); if(btn) btn.textContent=localStorage.getItem('svTheme')==='dark'?'☀️':'🌙'; })();
     startAutoPing();
@@ -6930,6 +6969,67 @@ async function renderCoachAttSummary() {
       }).join('')
     + '</tbody></table>'
     + '<div style="font-size:11px;color:var(--muted);margin-top:8px">Based on '+daysInMonth+' working day(s) so far in '+month+'</div>';
+}
+
+// ══════════════════════════════════════════
+// 📢 CENTER ANNOUNCEMENTS
+// ══════════════════════════════════════════
+async function openAnnouncementModal() {
+  // Populate center dropdown
+  var sel = document.getElementById('ann-center');
+  if (sel) {
+    sel.innerHTML = '<option value="">— All Centers —</option>'
+      + D.centers.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  }
+  openModal('announcement');
+}
+
+async function saveAnnouncement() {
+  var title   = (document.getElementById('ann-title').value || '').trim();
+  var message = (document.getElementById('ann-message').value || '').trim();
+  var centerId = document.getElementById('ann-center').value || null;
+  var expires = document.getElementById('ann-expires').value || null;
+  if (!title || !message) { showToast('Title and message are required', 'error'); return; }
+  try {
+    await dbInsert('announcements', { title: title, message: message, target_center_id: centerId, expires_at: expires });
+    showToast('Announcement posted!', 'success');
+    closeModal('announcement');
+    document.getElementById('ann-title').value = '';
+    document.getElementById('ann-message').value = '';
+    document.getElementById('ann-expires').value = '';
+  } catch(e) { showToast('Failed to post announcement: ' + e.message, 'error'); }
+}
+
+async function loadAnnouncements() {
+  try {
+    var today = new Date().toISOString().split('T')[0];
+    D.announcements = await dbGet('announcements');
+    // Filter: not yet expired
+    D.announcements = (D.announcements || []).filter(function(a){
+      return !a.expires_at || a.expires_at >= today;
+    });
+  } catch(e) { D.announcements = []; }
+}
+
+function renderAnnouncementBanner() {
+  var el = document.getElementById('announcement-banner');
+  if (!el) return;
+  // Determine current center context
+  var centerId = null;
+  if (_authSession && _authSession.center_id) centerId = _authSession.center_id;
+  else if (ACTIVE_CENTER) centerId = ACTIVE_CENTER;
+  var relevant = (D.announcements || []).filter(function(a){
+    return !a.target_center_id || a.target_center_id === centerId;
+  });
+  if (!relevant.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = relevant.map(function(a){
+    var exp = a.expires_at ? ' <span style="opacity:0.7;font-size:11px">(until '+a.expires_at+')</span>' : '';
+    return '<div style="background:linear-gradient(135deg,#e0f2fe,#bae6fd);border:1px solid #7dd3fc;border-radius:var(--radius);padding:12px 16px;margin-bottom:8px">'
+      + '<div style="font-weight:700;color:#0369a1;margin-bottom:4px">📢 '+a.title+exp+'</div>'
+      + '<div style="color:#0c4a6e;font-size:13px">'+a.message+'</div>'
+      + '</div>';
+  }).join('');
 }
 
 var _attResetTimer = null;
