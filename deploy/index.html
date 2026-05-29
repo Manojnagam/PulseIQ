@@ -1727,15 +1727,15 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">🧠 AI Model Quality</label>
         <div class="fr" style="grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:4px">
           <select id="cfg-groq-model" style="padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px" onchange="saveGroqModel()">
-            <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile — Best quality (recommended)</option>
+            <option value="llama-3.1-8b-instant">llama-3.1-8b-instant — Fast &amp; lightweight (default)</option>
+            <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile — Best quality</option>
             <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile — Great quality</option>
             <option value="llama3-70b-8192">llama3-70b-8192 — Good quality</option>
             <option value="mixtral-8x7b-32768">mixtral-8x7b-32768 — Good quality, longer context</option>
-            <option value="llama-3.1-8b-instant">llama-3.1-8b-instant — Fast but basic</option>
           </select>
           <button class="btn-p" onclick="saveGroqModel()">Save</button>
         </div>
-        <p style="font-size:11px;color:var(--muted);margin-bottom:14px">All models are free on Groq. Larger models give much better insights. <strong>llama-3.3-70b-versatile</strong> is closest to ChatGPT quality.</p>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:14px">All models are free on Groq. Larger models give much better AI insights. <strong>llama-3.3-70b-versatile</strong> is closest to ChatGPT quality.</p>
         <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">📱 WhatsApp Country Code</label>
         <div class="fr" style="grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:14px">
           <input type="text" id="cfg-country-code" placeholder="91 (India), 1 (USA), 44 (UK)..." style="margin-bottom:0" maxlength="5">
