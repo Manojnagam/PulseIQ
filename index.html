@@ -2194,6 +2194,19 @@ alter table coach_attendance enable row level security;
 create policy "allow all" on coach_attendance for all using (true);
 
 -- ==========================================
+-- 📜 DIET PLAN HISTORY (Run once)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS diet_plan_history (
+  id uuid default gen_random_uuid() primary key,
+  customer_id uuid references customers(id) on delete cascade,
+  plan_json text not null,
+  generated_at date not null default current_date,
+  created_at timestamptz default now()
+);
+alter table diet_plan_history enable row level security;
+create policy "allow all" on diet_plan_history for all using (true);
+
+-- ==========================================
 -- 📝 CUSTOMER NOTES (Run once)
 -- ==========================================
 CREATE TABLE IF NOT EXISTS customer_notes (
@@ -2494,6 +2507,15 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mf">
       <button class="btn-p" onclick="saveNote()">💾 Save Note</button>
       <button class="btn-s" onclick="closeModal('cust-notes')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-diet-history">
+  <div class="modal" style="max-width:640px">
+    <div class="mh"><div class="mt">📜 Diet Plan History — <span id="diet-history-cust-name"></span></div><button class="mc" onclick="closeModal('diet-history')">✕</button></div>
+    <div class="mb" style="padding:0">
+      <div id="diet-history-list" style="max-height:70vh;overflow-y:auto;padding:16px"></div>
     </div>
   </div>
 </div>
@@ -12804,6 +12826,7 @@ function renderCustomers() {
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#dc2626" onclick="openRefundModal(\''+c.id+'\')" title="Refund / Cancel Pack">↩</button> '
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#16a34a" onclick="generateDietPlan(\''+c.id+'\')" title="'+(c.diet_plan?'Regenerate Diet Plan':'Generate Diet Plan')+'">🥗'+(c.diet_plan?' ✓':'')+' Diet</button> '
         +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#0891b2" onclick="viewMealCompliance(\''+c.id+'\',\''+c.name+'\')" title="Meal Compliance">📋 Compliance</button> ':'')
+        +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#7c3aed" onclick="viewDietHistory(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Diet Plan History">📜 History</button> ':'')
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#f59e0b;border-color:#f59e0b" onclick="openNotesModal(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Notes &amp; Follow-ups">📝 Notes</button> '
         +'<button class="btn-e" onclick="editCustomer(\''+c.id+'\')">Edit</button>'
         +'<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:#fef3c7;color:#92400e;border-color:#fcd34d" title="Convert to Coach">⭐ Make Coach</button>'
@@ -14473,6 +14496,8 @@ async function generateDietPlan(custId, silent) {
     plan.client_name = c.name;
     // Save to Supabase
     await dbUpdate('customers', custId, { diet_plan: JSON.stringify(plan) });
+    // Save to diet_plan_history
+    try { await dbInsert('diet_plan_history', { customer_id: custId, plan_json: JSON.stringify(plan), generated_at: plan.generated || new Date().toISOString().split('T')[0] }); } catch(e) { /* history save is non-critical */ }
     // Update local cache
     var idx = D.customers.findIndex(function(x){return x.id===custId;});
     if(idx>=0) D.customers[idx].diet_plan = JSON.stringify(plan);
@@ -14483,6 +14508,68 @@ async function generateDietPlan(custId, silent) {
   } finally {
     _dietInFlight = false;
   }
+}
+
+// ── DIET PLAN HISTORY VIEWER ──
+async function viewDietHistory(custId, custName) {
+  document.getElementById('diet-history-cust-name').textContent = custName;
+  var el = document.getElementById('diet-history-list');
+  el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Loading…</div>';
+  openModal('diet-history');
+  var records = [];
+  try {
+    records = await dbGet('diet_plan_history', { customer_id: 'eq.' + custId, order: 'created_at.desc' });
+  } catch(e) { records = []; }
+
+  // Also show current plan if no history yet
+  if (!records.length) {
+    var cust = D.customers.find(function(x){ return x.id === custId; });
+    if (cust && cust.diet_plan) {
+      try {
+        var p = JSON.parse(cust.diet_plan);
+        records = [{ plan_json: cust.diet_plan, generated_at: p.generated || 'Current', id: 'current' }];
+      } catch(e) {}
+    }
+  }
+
+  if (!records.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px">No diet plan history found. Generate a plan first.</div>'; return; }
+
+  el.innerHTML = records.map(function(r, i) {
+    var plan = {};
+    try { plan = JSON.parse(r.plan_json); } catch(e) { return ''; }
+    var isLatest = i === 0;
+    var days = plan.days || [];
+    var label = r.generated_at || plan.generated || '—';
+    var calories = plan.targetCalories || '—';
+    var protein = plan.targetProtein || '—';
+    var collapsed = i > 0; // only latest expanded by default
+
+    var daysHtml = days.map(function(day) {
+      return '<div style="margin-bottom:10px">'
+        + '<div style="font-weight:700;font-size:12px;color:var(--primary);margin-bottom:4px">'+day.day+'</div>'
+        + (day.meals||[]).map(function(meal){
+            return '<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">'
+              + '<span style="font-weight:600;color:var(--muted)">'+meal.time+'</span> — '+meal.items
+              + (meal.calories?' <span style="color:var(--muted);font-size:11px">('+meal.calories+' kcal)</span>':'')
+              + '</div>';
+          }).join('')
+        + '</div>';
+    }).join('');
+
+    var uid = 'dph-' + r.id;
+    return '<div style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface2);cursor:pointer" onclick="var b=document.getElementById(\''+uid+'\');b.style.display=b.style.display===\'none\'?\'block\':\'none\'">'
+      +   '<div>'
+      +     '<span style="font-weight:700;font-size:13px">'+(isLatest?'⭐ Latest — ':'')+label+'</span>'
+      +     '<span style="font-size:11px;color:var(--muted);margin-left:10px">'+calories+' kcal · '+protein+'g protein · '+days.length+' days</span>'
+      +   '</div>'
+      +   '<span style="font-size:12px;color:var(--muted)">'+(collapsed?'▼ Expand':'▲ Collapse')+'</span>'
+      + '</div>'
+      + '<div id="'+uid+'" style="padding:14px 16px;display:'+(collapsed?'none':'block')+'">'
+      +   (daysHtml || '<div style="color:var(--muted);font-size:12px">No day data</div>')
+      + '</div>'
+      + '</div>';
+  }).join('');
 }
 
 // ── MEAL COMPLIANCE VIEWER ──
