@@ -5439,7 +5439,10 @@ function renderOverview() {
   var pendingPay = (D.payments||[]).filter(function(p){
     return Math.max(0, Number(p.total_amount)-Number(p.amount_paid))>0;
   }).map(function(p){
-    return {name:p.person_name||'Unknown', bal:Math.max(0,Number(p.total_amount)-Number(p.amount_paid)), due:p.due_date||'', overdue:p.due_date&&p.due_date<todayStr};
+    var cust = (D.customers||[]).find(function(c){ return c.id === p.person_id; });
+    var phone = cust ? (cust.contact||'').replace(/\D/g,'') : '';
+    if(phone.length===10) phone = COUNTRY_CODE+phone;
+    return {name:p.person_name||'Unknown', bal:Math.max(0,Number(p.total_amount)-Number(p.amount_paid)), due:p.due_date||'', overdue:p.due_date&&p.due_date<todayStr, phone:phone, desc:p.description||'pack'};
   });
 
   // ══════════ RENDER ══════════
@@ -5493,7 +5496,13 @@ function renderOverview() {
   if(pendingPay.length){
     leftHtml += '<div class="ov-card" style="margin-top:16px"><div class="ov-card-h"><h3>💳 Pending Payments</h3><span class="ov-count">'+pendingPay.length+'</span></div><div class="ov-card-body">';
     leftHtml += pendingPay.slice(0,8).map(function(p){
-      return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">'+p.name+'</div>'+(p.overdue?'<div class="ov-row-sub" style="color:var(--danger)">Overdue — due '+p.due+'</div>':'<div class="ov-row-sub">Due: '+(p.due||'No date')+'</div>')+'</div><span style="font-weight:700;color:var(--danger);font-size:14px">₹'+p.bal.toLocaleString('en-IN')+'</span></div>';
+      var dueLabel = p.overdue ? '<div class="ov-row-sub" style="color:var(--danger)">⚠️ Overdue — due '+p.due+'</div>' : '<div class="ov-row-sub">Due: '+(p.due||'No date')+'</div>';
+      var waBtn = '';
+      if(p.phone) {
+        var waMsg = encodeURIComponent('Hi '+p.name+'! 👋\n\nThis is a friendly reminder that ₹'+p.bal.toLocaleString('en-IN')+' is pending for your '+p.desc+' at '+getCenterName()+'.'+(p.due?'\n\nDue date: '+p.due:'')+(p.overdue?'\n\n⚠️ Your payment is overdue. Please clear it at your earliest convenience.':'\n\nKindly arrange the payment at your next visit. Thank you! 🙏'));
+        waBtn = '<button class="wa-btn" style="font-size:11px;padding:3px 8px;margin-left:8px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+p.phone+'&text='+waMsg+'\',\'_blank\')" title="Send payment reminder">💬 Remind</button>';
+      }
+      return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">'+p.name+'</div>'+dueLabel+'</div><div class="ov-row-actions" style="display:flex;align-items:center;gap:4px"><span style="font-weight:700;color:var(--danger);font-size:14px">₹'+p.bal.toLocaleString('en-IN')+'</span>'+waBtn+'</div></div>';
     }).join('');
     if(pendingPay.length>8) leftHtml += '<div style="text-align:center;padding-top:8px"><span class="ov-link" onclick="goTo(\'payments\',document.querySelector(\'[onclick*=payments]\'))">View all '+pendingPay.length+' pending →</span></div>';
     leftHtml += '</div></div>';
