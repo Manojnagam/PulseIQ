@@ -1530,6 +1530,12 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Leads → Interested → Joined → Trial → Full Pack → Renewed — where do people drop off?</div>
         <div id="analytics-funnel"></div>
       </div>
+      <!-- Monthly Renewal Rate -->
+      <div class="tcard" style="padding:20px;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">🔄 Monthly Renewal Rate</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Of customers whose pack expired each month, how many renewed? Tracks churn vs loyalty over time.</div>
+        <div id="analytics-renewal-rate"></div>
+      </div>
       <!-- Correlation Analysis -->
       <div class="tcard" style="padding:20px;margin-bottom:16px">
         <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">🔗 Correlation — Attendance vs Results</div>
@@ -9817,6 +9823,98 @@ function renderAnalytics() {
       + '<div style="font-size:10px;color:var(--muted);margin-top:8px">Stage conversion rate = count at this stage / count at previous stage. Respects active center filter.</div>';
 
     el.innerHTML = html;
+  })();
+
+  // ── Monthly Renewal Rate ──
+  (function() {
+    var el = document.getElementById('analytics-renewal-rate'); if (!el) return;
+    // Last 9 months
+    var rrMonths = [];
+    for (var i = 8; i >= 0; i--) {
+      var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+      rrMonths.push(d.toISOString().slice(0,7));
+    }
+    var custs = ACTIVE_CENTER ? filterByCenter(D.customers) : D.customers;
+    var renewedIds = new Set((D.packHistory||[]).map(function(p){ return p.customer_id; }));
+    var rows = rrMonths.map(function(ym) {
+      // Customers whose pack expired in this month
+      var expired = custs.filter(function(c){ return (c.pack_end_date||'').slice(0,7) === ym; });
+      var renewed = expired.filter(function(c){ return renewedIds.has(c.id); }).length;
+      var rate = expired.length > 0 ? Math.round(renewed / expired.length * 100) : null;
+      return { ym: ym, expired: expired.length, renewed: renewed, rate: rate };
+    }).filter(function(r){ return r.expired > 0; });
+
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty"><div class="ei">🔄</div><p>No pack expiry data yet.</p></div>';
+      return;
+    }
+
+    var labels = rows.map(function(r){ var d=new Date(r.ym+'-01'); return d.toLocaleString('en-IN',{month:'short',year:'2-digit'}); });
+    var rates  = rows.map(function(r){ return r.rate; });
+
+    // Chart
+    var cid = 'renewal-rate-chart';
+    el.innerHTML = '<canvas id="'+cid+'" height="120" style="margin-bottom:14px"></canvas><div id="renewal-rate-table"></div>';
+    destroyChart(cid);
+    var canvas = document.getElementById(cid);
+    if (canvas) {
+      _charts[cid] = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Renewal Rate %',
+            data: rates,
+            borderColor: '#16a34a',
+            backgroundColor: 'rgba(22,163,74,0.12)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 5,
+            pointBackgroundColor: rates.map(function(r){ return r>=70?'#16a34a':r>=40?'#d97706':'#e74c3c'; }),
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { min: 0, max: 100, ticks: { callback: function(v){ return v+'%'; }, font: { size: 11 } } },
+            x: { ticks: { font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    // Table
+    var tbl = document.getElementById('renewal-rate-table');
+    if (tbl) {
+      tbl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+        + '<thead><tr style="border-bottom:2px solid var(--border)">'
+        + '<th style="text-align:left;padding:5px 8px;color:var(--muted)">Month</th>'
+        + '<th style="text-align:center;padding:5px 8px;color:var(--muted)">Expired</th>'
+        + '<th style="text-align:center;padding:5px 8px;color:var(--muted)">Renewed</th>'
+        + '<th style="text-align:center;padding:5px 8px;color:var(--muted)">Churned</th>'
+        + '<th style="text-align:center;padding:5px 8px;color:var(--muted)">Rate</th>'
+        + '</tr></thead><tbody>'
+        + rows.map(function(r) {
+            var rateColor = r.rate >= 70 ? '#16a34a' : r.rate >= 40 ? '#d97706' : '#e74c3c';
+            var barW = r.rate || 0;
+            return '<tr style="border-bottom:1px solid var(--border)">'
+              + '<td style="padding:6px 8px;font-weight:600">'+new Date(r.ym+'-01').toLocaleString('en-IN',{month:'long',year:'numeric'})+'</td>'
+              + '<td style="text-align:center;padding:6px 8px">'+r.expired+'</td>'
+              + '<td style="text-align:center;padding:6px 8px;color:#16a34a;font-weight:600">'+r.renewed+'</td>'
+              + '<td style="text-align:center;padding:6px 8px;color:#e74c3c">'+( r.expired - r.renewed )+'</td>'
+              + '<td style="text-align:center;padding:6px 8px">'
+              +   '<div style="display:flex;align-items:center;gap:6px;justify-content:center">'
+              +     '<div style="background:var(--border);border-radius:4px;height:6px;width:60px"><div style="background:'+rateColor+';height:6px;border-radius:4px;width:'+barW+'%"></div></div>'
+              +     '<span style="font-weight:700;color:'+rateColor+'">'+( r.rate !== null ? r.rate+'%' : '—' )+'</span>'
+              +   '</div>'
+              + '</td>'
+              + '</tr>';
+          }).join('')
+        + '</tbody></table>'
+        + '<div style="font-size:10px;color:var(--muted);margin-top:8px">🟢 ≥70% good &nbsp; 🟡 40–69% watch &nbsp; 🔴 &lt;40% churn risk. Renewal detected via pack_history records.</div>';
+    }
   })();
 
   // ── Correlation: Attendance vs Weight/Fat Change ──
