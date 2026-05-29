@@ -46,21 +46,21 @@
 
 ---
 
-## Pricing Tiers
+## Pricing Tiers (The Founder's Deal)
 
-| Tier | Who | Price | What They Get |
+| Tier | Who | Price | Core Focus |
 |---|---|---|---|
-| Free | Family only | ₹0 | Full PulseZen page — brother's center (Nandyal) + mom's center (Kurnool) |
-| Exclusive | First center in locality (area is free) | ₹999/month | Full exclusivity — no competitor ever in that area |
-| Non-exclusive | Locality already taken | ₹299/month | PulseZen page only, no area lock |
-| Elite | Any tier upgrade | ₹1999/month | Everything + priority support + AI features |
+| **Free** | New downlines & beginner coaches | ₹0 | Build the org tree. Up to 20 customers. |
+| **Basic** | Growing coaches | ₹499/month | Body composition analytics & 200 customers. |
+| **Pro** | Serious center owners | ₹999/month | Unlimited customers, area exclusivity, and diet planning. |
+| **Elite** | Supervisors & Presidents | ₹1999/month | Multi-center management & AI-powered insights. |
 
-**Important:** Free tier is ONLY for family. Never give free to other centers — it creates competitor conflicts and devalues the product.
+**Important:** The Free tier is an acquisition engine. By limiting it to 20 customers, we force successful coaches to naturally upgrade to a paid tier once they start making real money.
 
-### Why Simple 3 Tiers
-- ₹499 tier was confusing — no clear difference from ₹999 or ₹299
-- Either your area is free (₹999) or it's taken (₹299) — that's it
-- Simpler = easier to sell, no confusion on the call
+### The Org Tree Strategy
+- By giving every coach a referral link, uplines naturally push the app to their downlines.
+- Uplines can monitor their downlines' performance.
+- We lock these prices and benefits forever for early adopters to build massive trust.
 
 ---
 

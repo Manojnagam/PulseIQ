@@ -1,139 +1,55 @@
-# PulseZen — Subscription Plans
+# PulseZen — Subscription Plans & Business Strategy
 
-Last updated: 2026-05-28
-Status: Free + Growth (₹499) to launch first. Elite + President built in code but hidden until user base grows.
+Last updated: 2026-05-29
 
----
-
-## Free — ₹0
-*Try the product. Feel the limits.*
-
-### Customers & Team
-- Up to **20 active customers**
-- **1 coach** only
-- **15 days** data history
-
-### Daily Operations
-- Add / view customers (basic profile only)
-- Manual attendance check-in (no WhatsApp reminders)
-- Basic finance — add income/expense entries only (no charts, no analytics)
-- Walk-ins: add freely, **see last 15 days only** (covered by history limit)
-
-### Growth
-- Generate **invite links** for direct downlines (so the network grows)
-
-### NOT included (upgrade to unlock)
-- WhatsApp reminders & messaging
-- Body composition tracking
-- Finance analytics & charts
-- Coupons & pack renewals
-- Leads management
-- AI features
-- Inventory
-- Pin tracker
-- Contests
-- Analytics dashboard
-- Public website
-- Downline data
+**Strategic Philosophy:** Lock in benefits and prices forever for early adopters (Founder's Deal) to build massive trust. The Free tier acts as a viral acquisition engine, while premium tiers offer automation, exclusivity, and advanced coaching tools.
 
 ---
 
-## Growth — ₹499/month
-*The real product. For active supervisors.*
+## 1. FREE Tier — ₹0
+*Goal: Maximum viral growth. Let them build their downline tree and get hooked on data.*
 
-### Customers & Team
-- Up to **100 active customers**
-- Up to **5 coaches**
-- **6 months** data history
-- Archive + restore customers
-
-### Daily Operations (everything in Free, plus:)
-- **WhatsApp reminders** — attendance nudges, renewal alerts, birthday wishes
-- **Body composition tracking** — full history, progress charts
-- **Finance analytics** — revenue charts, expense breakdown, monthly trends
-- **Coupons & pack renewals** — full coupon system, installment tracking
-- **Leads management** — follow-up pipeline, conversion tracking
-- **Walk-ins** — unlimited, with analytics, full 6-month history
-- **AI body composition analysis** (Groq powered)
-- Full analytics dashboard — attendance trends, revenue, churn risk
-
-### Website
-- **Public website** — yourname.pulsezen.in
-- Standard template (your center name, location, WhatsApp CTA)
-- Shows on Google search for your area
-
-### Downline
-- **1 level downline view** — their customer count, revenue total, attendance rate
-- Org tree (1 level deep)
-
-### Feels premium because:
-- Public website with your name on it (status)
-- Seeing your downline's numbers in one place (power)
-- AI features (exclusive feel)
-- WhatsApp automation (saves daily time)
+### Core Benefits
+- Up to **20 active customers** (perfect testing ground; once they hit 20, they are successful and ready to pay)
+- **Daily Attendance Tracking** (basic check-in system)
+- **The Organization Tree Link** — Unique referral link to invite their "first lines" and view basic tree structure
+- **PulseZen Public Profile** — Simple, non-exclusive online profile
+- **PIN-Based Auth** — Center-level security lock
 
 ---
 
-## Elite — ₹999/month *(hidden — launch later)*
-*For Millionaire Team. Serious business.*
+## 2. BASIC Tier — ₹499/month
+*Goal: For active coaches growing their business who need more capacity and body data.*
 
-### Everything in Growth, plus:
-- Up to **300 active customers**
-- Unlimited coaches
-- **Full data history** (no cutoff)
-- Full downline tree analytics (all levels deep)
-- Cross-center revenue aggregation
-- Downline inactivity alerts
-- AI business insights (weekly summaries, growth tips)
-- Commission calculator
-- Contests module
-- Pin tracker
-- **Customizable website** — your photos, testimonials, color scheme
-- Org tree full visualization
+### Core Benefits
+- Up to **200 active customers**
+- **Body Composition Analytics** — Unlock tracking for weight, fat %, and muscle mass over time
+- **Downline Visibility (Level 1)** — Track the basic performance of direct first lines
+- **WhatsApp Integration** — Manual click-to-send messages for renewals
+- **Personal Coach Health** — Coaches can track their own personal body composition and diet
 
 ---
 
-## President — ₹1999/month *(hidden — launch later)*
-*For President's Team & above. Full org visibility.*
+## 3. PRO Tier — ₹999/month (The Core Product)
+*Goal: For serious center owners wanting area dominance, deep automation, and premium diet planning.*
 
-### Everything in Elite, plus:
-- **Unlimited customers**
-- **Retroactive upline linking** — connect existing registered centers to your tree
-- Multi-center switcher with full access across all downlines
-- Export reports (PDF / CSV)
-- **Custom website branding** — your logo, colors, near-custom design
-- Priority support
-- Early access to new features
-
----
-
-## Plan Rules
-
-- **Walk-ins** do NOT count toward customer limit (any plan). Free plan sees last 15 days only — no separate counter needed, history limit covers it.
-- **"Delete" = archive** on free plan — archived customers still count toward your 20 limit
-- **Permanently delete** an archived customer to free the slot
-- **Downline visibility**: upline's plan determines access — downline does NOT need a paid plan to be visible
-- **Invite links**: available on all plans — network growth is always open
-- **Super admin (Manoj)**: separate role, above all plans, sees everything
+### Core Benefits
+- **Unlimited Customers**
+- **Area Exclusivity on PulseZen** — Complete monopoly over their local street/area on Google. No competitor can take their spot.
+- **Client Diet & Food Logging System** — Unlock the full South Indian food database for creating diet plans and tracking client meals
+- **Financial Dashboard** — Revenue tracking, pending payments, and income analytics
+- **Coupon & Loyalty System** — Auto-earn coupons for customer referrals
+- **Automated WhatsApp Nudges** — One-click bulk messaging for expiring packs and inactive users
+- **Advanced Organization Tree** — See the entire downline (multiple levels deep) and track branch growth
 
 ---
 
-## Why Higher Plans Feel Worth It
+## 4. ELITE Tier — ₹1999/month
+*Goal: For top supervisors and Presidents managing massive networks or multiple physical centers.*
 
-| Feeling | Feature that creates it |
-|---|---|
-| Status / presence | Public website with your name |
-| Power | Seeing downline numbers in one place |
-| Exclusivity | AI insights, full tree analytics |
-| Time saved | WhatsApp automation |
-| Scale | Unlimited customers, full history |
-| Trust | Custom website with your photos |
-
----
-
-## Launch Strategy
-
-1. Launch Free only → get centers registered
-2. When 5–10 centers are active daily → introduce ₹499 Growth
-3. When Growth users are growing their downlines → introduce ₹999 Elite
-4. President plan only when there's genuine demand from large uplines
+### Core Benefits
+- **Multi-Center Management** — Switch between and manage 2+ centers from one dashboard
+- **AI-Powered Health Insights (Groq LLM)** — AI analyzes body/diet data and automatically generates personalized health insights
+- **AI Churn Risk Alerts** — System flags which customers or downline coaches are likely to quit soon
+- **Master Tree Analytics** — Full financial and performance rollup of their entire organization tree
+- **Priority Support** — Direct WhatsApp access to the developer
