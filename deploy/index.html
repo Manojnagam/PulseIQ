@@ -1586,6 +1586,11 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
     <div class="sec" id="sec-coupons">
       <div class="ph"><div><div class="pt" data-t="pt_coupons">Coupon System</div><div class="ps" data-t="ps_coupons">Track coupons from referrals for coaches &amp; customers</div></div><button class="btn-p" onclick="openModal('add-coupon')">+ Add Coupon</button></div>
       <div class="stats" id="coupon-stats"></div>
+      <!-- Referral Leaderboard -->
+      <div class="tcard" style="padding:18px;margin-bottom:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:14px">🏆 Referral Leaderboard</div>
+        <div id="referral-leaderboard"><div class="empty"><div class="ei">🏆</div><p>No coupon data yet.</p></div></div>
+      </div>
       <div class="tcard" style="padding:16px 18px;margin-bottom:16px">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:180px"><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px">Filter by Person</label><input type="hidden" id="coupon-coach-sel"><input type="text" id="coupon-filter-input" placeholder="Type to filter..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
@@ -11580,8 +11585,51 @@ function findPerson(id){
   if(cu) return {name:cu.name, pack_price:cu.pack_price, pack_type:cu.pack_type, pack_start_date:cu.pack_start_date, type:'customer'};
   return null;
 }
+function renderReferralLeaderboard() {
+  var el = document.getElementById('referral-leaderboard'); if (!el) return;
+  var coupons = D.coupons || [];
+  if (!coupons.length) { el.innerHTML = '<div class="empty"><div class="ei">🏆</div><p>No coupon data yet.</p></div>'; return; }
+  // Aggregate earned coupons per person
+  var map = {};
+  coupons.filter(function(c){ return c.type === 'earned'; }).forEach(function(c){
+    var pid = c.coach_id; if (!pid) return;
+    if (!map[pid]) map[pid] = 0;
+    map[pid] += Number(c.coupons) || 0;
+  });
+  var ranked = Object.keys(map).map(function(pid){
+    var p = findPerson(pid);
+    return { name: p ? p.name : 'Unknown', type: p ? p.type : '?', earned: map[pid] };
+  }).filter(function(r){ return r.earned > 0; })
+    .sort(function(a,b){ return b.earned - a.earned; })
+    .slice(0, 10);
+  if (!ranked.length) { el.innerHTML = '<div class="empty"><div class="ei">🏆</div><p>No earned coupons yet.</p></div>'; return; }
+  var medals = ['🥇','🥈','🥉'];
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px">'
+    + ranked.map(function(r, i){
+        var medal = medals[i] || ('<span style="font-weight:700;color:var(--muted);min-width:24px;display:inline-block">#'+(i+1)+'</span>');
+        var badge = r.type === 'coach'
+          ? '<span style="font-size:10px;background:#dbeafe;color:#1d4ed8;padding:2px 7px;border-radius:20px;font-weight:600">Coach</span>'
+          : '<span style="font-size:10px;background:#dcfce7;color:#166534;padding:2px 7px;border-radius:20px;font-weight:600">Customer</span>';
+        var barW = Math.round(r.earned / ranked[0].earned * 100);
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:10px">'
+          + '<span style="font-size:18px;min-width:26px">' + medal + '</span>'
+          + '<div style="flex:1">'
+          +   '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+          +     '<span style="font-weight:700;font-size:13px">'+r.name+'</span>'+badge
+          +   '</div>'
+          +   '<div style="background:var(--border);border-radius:4px;height:6px;width:100%">'
+          +     '<div style="background:var(--accent);height:6px;border-radius:4px;width:'+barW+'%"></div>'
+          +   '</div>'
+          + '</div>'
+          + '<span style="font-weight:800;font-size:16px;color:var(--accent);min-width:36px;text-align:right">'+r.earned+'</span>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+}
+
 function renderCouponView(){
   renderCoupons();
+  renderReferralLeaderboard();
   var cid=document.getElementById('coupon-coach-sel')?document.getElementById('coupon-coach-sel').value:'';
   var card=document.getElementById('coupon-coach-card');
   if(!cid){card.style.display='none';return;}
