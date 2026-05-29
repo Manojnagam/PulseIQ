@@ -771,6 +771,11 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
       <div id="ai-overview-summary" class="tcard" style="display:none; padding:20px; line-height:1.6; margin-bottom:20px;"></div>
       <!-- Quick Actions -->
       <div class="ov-quick" id="ov-quick-actions"></div>
+      <!-- Global Search -->
+      <div style="position:relative;margin-bottom:16px">
+        <input type="text" id="ov-global-search" placeholder="🔍 Search customers, coaches, or centers..." oninput="renderGlobalSearch()" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--surface);color:var(--text);outline:none;transition:border .2s" onfocus="this.style.borderColor='var(--primary-light)'" onblur="this.style.borderColor='var(--border)'">
+        <div id="ov-global-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);z-index:100;max-height:320px;overflow-y:auto"></div>
+      </div>
       <!-- Stat Cards -->
       <div class="stats" id="overview-stats"></div>
       <!-- Revenue Row -->
@@ -3185,6 +3190,64 @@ function toggleLang() {
   localStorage.setItem('svLang', LANG);
   applyLang();
 }
+
+// ── Global Search ──
+function renderGlobalSearch() {
+  var q = (document.getElementById('ov-global-search').value || '').trim().toLowerCase();
+  var el = document.getElementById('ov-global-results');
+  if (!el) return;
+  if (!q) { el.style.display = 'none'; return; }
+
+  var results = [];
+
+  // Customers
+  (D.customers||[]).forEach(function(c) {
+    if ((c.name||'').toLowerCase().includes(q) || (c.contact||'').includes(q) || (c.email||'').toLowerCase().includes(q)) {
+      var st = getDaysLeft(c);
+      var badge = st.active ? (st.days <= 3 ? '<span class="badge br" style="font-size:10px">'+st.days+'d left</span>' : '<span class="badge bg" style="font-size:10px">Active</span>') : '<span class="badge" style="font-size:10px;background:#f3f4f6;color:#6b7280">Expired</span>';
+      results.push({ type: 'customer', id: c.id, name: c.name, sub: (c.pack_type||'No pack') + ' · ' + (c.contact||''), badge: badge });
+    }
+  });
+
+  // Coaches
+  (D.coaches||[]).forEach(function(c) {
+    if ((c.name||'').toLowerCase().includes(q) || (c.contact||'').includes(q)) {
+      results.push({ type: 'coach', id: c.id, name: c.name, sub: 'Coach · ' + (c.contact||''), badge: '<span style="font-size:12px">🧑‍🏫</span>' });
+    }
+  });
+
+  // Centers
+  (D.centers||[]).forEach(function(c) {
+    if ((c.name||'').toLowerCase().includes(q) || (c.location||'').toLowerCase().includes(q)) {
+      results.push({ type: 'center', id: c.id, name: c.name, sub: 'Center · ' + (c.location||''), badge: '<span style="font-size:12px">🏢</span>' });
+    }
+  });
+
+  if (!results.length) {
+    el.style.display = 'block';
+    el.innerHTML = '<div style="padding:14px 16px;color:var(--muted);font-size:13px">No results for "' + q + '"</div>';
+    return;
+  }
+
+  el.style.display = 'block';
+  el.innerHTML = results.slice(0, 10).map(function(r) {
+    var onclick = r.type === 'customer'
+      ? "goTo('customers',document.querySelector('[onclick*=customers]'));setTimeout(function(){var s=document.getElementById('customers-search');if(s){s.value='"+r.name.replace(/'/g,"\\'")+"';renderCustomers();}},300);document.getElementById('ov-global-search').value='';document.getElementById('ov-global-results').style.display='none';"
+      : r.type === 'coach'
+      ? "goTo('coaches',document.querySelector('[onclick*=coaches]'));document.getElementById('ov-global-search').value='';document.getElementById('ov-global-results').style.display='none';"
+      : "goTo('centers',document.querySelector('[onclick*=centers]'));document.getElementById('ov-global-search').value='';document.getElementById('ov-global-results').style.display='none';";
+    return '<div onclick="'+onclick+'" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;transition:background .15s" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">'
+      + '<div><div style="font-size:13px;font-weight:600;color:var(--text)">'+r.name+'</div><div style="font-size:11px;color:var(--muted);margin-top:1px">'+r.sub+'</div></div>'
+      + r.badge
+      + '</div>';
+  }).join('');
+}
+// Close search results on outside click
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('ov-global-search');
+  var res = document.getElementById('ov-global-results');
+  if (res && wrap && !wrap.contains(e.target) && !res.contains(e.target)) res.style.display = 'none';
+});
 
 // ── CSV Export ──
 function exportCSV(headers, rows, filename) {
