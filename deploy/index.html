@@ -2862,6 +2862,19 @@ async function sendOtpCode() {
   initAuthClient();
   var email = (document.getElementById('login-email').value || '').trim();
   if (!email) { showLoginErr('Please enter your email address.'); return; }
+  // Rate limit: max 3 OTP requests per email per 10 minutes
+  var RL_KEY = 'otp_rl_' + email.toLowerCase();
+  var RL_MAX = 3, RL_WINDOW = 10 * 60 * 1000;
+  var now = Date.now();
+  var attempts = JSON.parse(localStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
+  if (attempts.length >= RL_MAX) {
+    var waitMs = RL_WINDOW - (now - attempts[0]);
+    var waitMin = Math.ceil(waitMs / 60000);
+    showLoginErr('Too many requests. Please wait ' + waitMin + ' minute' + (waitMin > 1 ? 's' : '') + ' before trying again.');
+    return;
+  }
+  attempts.push(now);
+  localStorage.setItem(RL_KEY, JSON.stringify(attempts));
   var btn = document.getElementById('login-btn');
   btn.textContent = 'Checking…'; btn.disabled = true;
   // Block unregistered emails before sending OTP
