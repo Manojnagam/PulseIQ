@@ -5724,7 +5724,7 @@ function renderOverview() {
     var centerName = getCenterName();
     var packInfo = c.pack_type ? c.pack_type + ' pack' : 'wellness pack';
     var sessionLine = (e.used && e.total) ? ' You have completed '+e.used+' of '+e.total+' sessions.' : '';
-    var urgencyLine = e.days === 0 ? 'Your pack expires *today*!' : 'Your pack expires in *'+e.days+' day'+(e.days!==1?'s':'')+\'*.';
+    var urgencyLine = e.days === 0 ? 'Your pack expires *today*!' : 'Your pack expires in *'+e.days+' day'+(e.days!==1?'s':'')+'*.';
     var msg = encodeURIComponent('Hi '+c.name+'! 👋\n\n'+urgencyLine+sessionLine+'\n\nRenew your '+packInfo+' at '+centerName+' to continue your health journey without a break! 💚\n\nReply to this message to confirm your renewal.');
     var badgeClass = e.days === 0 ? 'br' : e.days <= 2 ? 'br' : 'by';
     var badgeLabel = e.days === 0 ? 'Expires Today!' : e.days+' day'+(e.days!==1?'s':'')+' left';
