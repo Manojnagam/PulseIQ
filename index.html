@@ -5715,6 +5715,39 @@ function renderOverview() {
     rightHtml += '</div></div>';
   }
 
+  // ── Inventory Alert Card ──
+  if (outCount > 0 || lowCount > 0 || expiryAlerts.length > 0) {
+    var invAlertItems = [];
+    if (typeof PRODUCTS_DB !== 'undefined') PRODUCTS_DB.forEach(function(p) {
+      var s = D.currentStock && D.currentStock[p.id];
+      var qty = s ? Math.max(0, s.qty) : 0;
+      if (qty === 0) invAlertItems.push({ name: p.name, qty: qty, status: 'out' });
+      else if (qty <= p.threshold) invAlertItems.push({ name: p.name, qty: qty, unit: s.unit||'', threshold: p.threshold, status: 'low' });
+    });
+    expiryAlerts.forEach(function(e) {
+      invAlertItems.push({ name: e.name, date: e.date, status: e.isExpired ? 'expired' : 'expiring' });
+    });
+    rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid '+(outCount?'var(--danger)':'var(--accent)') + '">'
+      + '<div class="ov-card-h"><h3>📦 Inventory Alerts</h3>'
+      + '<span class="ov-count" style="background:'+(outCount?'#fee2e2':'#fef9c3')+';color:'+(outCount?'#b91c1c':'#854d0e')+'">'+(outCount+lowCount+expiryAlerts.length)+'</span></div>'
+      + '<div class="ov-card-body">';
+    if (outCount || lowCount) {
+      rightHtml += '<div style="display:flex;gap:10px;margin-bottom:10px;font-size:12px">'
+        + (outCount ? '<span style="background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:20px;font-weight:700">🔴 ' + outCount + ' Out of Stock</span>' : '')
+        + (lowCount ? '<span style="background:#fef9c3;color:#854d0e;padding:3px 10px;border-radius:20px;font-weight:700">🟡 ' + lowCount + ' Low Stock</span>' : '')
+        + '</div>';
+    }
+    rightHtml += invAlertItems.slice(0, 8).map(function(item) {
+      if (item.status === 'out') return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">' + item.name + '</div><div class="ov-row-sub" style="color:var(--danger)">Out of stock — reorder needed</div></div><span class="badge br" style="font-size:10px">0</span></div>';
+      if (item.status === 'low') return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">' + item.name + '</div><div class="ov-row-sub" style="color:#854d0e">Low — ' + item.qty + ' ' + item.unit + ' left (min ' + item.threshold + ')</div></div><span class="badge by" style="font-size:10px">' + item.qty + '</span></div>';
+      if (item.status === 'expired') return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">' + item.name + '</div><div class="ov-row-sub" style="color:var(--danger)">Expired on ' + item.date + '</div></div><span class="badge br" style="font-size:10px">Expired</span></div>';
+      return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">' + item.name + '</div><div class="ov-row-sub" style="color:#854d0e">Expires ' + item.date + '</div></div><span class="badge by" style="font-size:10px">Soon</span></div>';
+    }).join('');
+    if (invAlertItems.length > 8) rightHtml += '<div style="text-align:center;padding-top:8px"><span class="ov-link" onclick="goTo(\'inventory\',document.querySelector(\'[onclick*=inventory]\'))">View all ' + invAlertItems.length + ' alerts →</span></div>';
+    rightHtml += '<div style="margin-top:10px"><button class="btn-p" style="width:100%;font-size:13px;padding:9px;background:var(--accent);border-color:var(--accent);color:#333" onclick="goTo(\'inventory\',document.querySelector(\'[onclick*=inventory]\'))">📦 Go to Inventory</button></div>';
+    rightHtml += '</div></div>';
+  }
+
   document.getElementById('ov-col-right').innerHTML = rightHtml;
 
   // ── Pin Progress Mini Widget ──
