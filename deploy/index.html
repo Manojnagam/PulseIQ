@@ -6,6 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f0f5f2;--surface:#fff;--surface2:#f0f5f2;--primary:#1a3a28;--primary-mid:#2d5a3d;--primary-light:#3d7a52;--accent:#e8a838;--accent-light:#fef3c7;--text:#111827;--muted:#6b7280;--border:#e5e7eb;--danger:#dc2626;--danger-light:#fef2f2;--success:#16a34a;--success-light:#f0fdf4;--shadow:0 1px 3px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.07);--shadow-md:0 4px 20px rgba(0,0,0,.09);--shadow-lg:0 12px 40px rgba(0,0,0,.14);--radius:14px;--sw:234px}
+[data-theme="dark"]{--bg:#0f1a14;--surface:#1a2b1f;--surface2:#243326;--text:#e8f0ea;--muted:#8fa898;--border:#2e4234;--danger-light:#2d1212;--success-light:#0d2016;--accent-light:#2d2209;--shadow:0 1px 3px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.4);--shadow-md:0 4px 20px rgba(0,0,0,.5);--shadow-lg:0 12px 40px rgba(0,0,0,.6)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 /* SETUP */
@@ -741,6 +742,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
       <div class="sb-foot-row">
         <button class="disc-btn" id="refresh-btn" onclick="refreshDashboard()" title="Refresh Data">🔄</button>
         <button class="disc-btn" id="lang-toggle-btn" onclick="toggleLang()" title="Toggle Language" style="font-weight:700">తె</button>
+        <button class="disc-btn" id="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button>
         <button class="disc-btn" onclick="doDisconnect()" title="Disconnect">⚡</button>
         <button class="disc-btn" onclick="signOut()" title="Sign Out" style="font-size:13px">🔓</button>
       </div>
@@ -3182,6 +3184,20 @@ function toggleLang() {
   applyLang();
 }
 
+function toggleDarkMode() {
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var next = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('svTheme', next);
+  document.getElementById('dark-mode-btn').textContent = next === 'dark' ? '☀️' : '🌙';
+}
+(function applyTheme() {
+  var t = localStorage.getItem('svTheme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  var btn = document.getElementById('dark-mode-btn');
+  if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
+})();
+
 // PINs loaded from Supabase — single source of truth, works across all devices
 var _DB_PINS = {};           // { centerId: pin } — built from wellness_centers.pin
 var _DB_SUPERVISOR_PIN = ''; // from app_settings key='supervisor_pin'
@@ -3966,7 +3982,8 @@ async function loadAll() {
     _daysLeftCache = {};  // all data loaded — recalculate with full attendance
     try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
-    applyLang();          // apply saved language preference
+    applyLang();
+    (function(){ var btn=document.getElementById('dark-mode-btn'); if(btn) btn.textContent=localStorage.getItem('svTheme')==='dark'?'☀️':'🌙'; })();
     startAutoPing();
     migrateSvBodyToSupabase();
     // Hide loading splash — data is ready
