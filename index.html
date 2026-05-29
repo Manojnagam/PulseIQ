@@ -1212,7 +1212,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <div id="body-records-wrap" style="display:none">
           <div class="tcard">
             <div class="twrap"><table>
-              <thead><tr><th>Date</th><th>Weight (kg)</th><th>Fat (kg)</th><th>Subcu Fat (kg)</th><th>Muscle (kg)</th><th>Visceral (kg)</th><th>BMR</th><th>BMI</th><th>Body Age</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Date</th><th>Weight (kg)</th><th>Fat %</th><th>Visceral Fat</th><th>BMR</th><th>BMI</th><th>Body Age</th><th>Subcu Fat %</th><th>Muscle %</th><th>Actions</th></tr></thead>
               <tbody id="body-body"></tbody>
             </table></div>
           </div>
@@ -1243,7 +1243,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
           <div id="sv-ideal-card" style="margin-bottom:16px"></div>
           <div class="tcard">
             <div class="twrap"><table>
-              <thead><tr><th>Date</th><th>Weight (kg)</th><th>Fat (kg)</th><th>Subcu Fat (kg)</th><th>Muscle (kg)</th><th>Visceral (kg)</th><th>BMR</th><th>BMI</th><th>Body Age</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Date</th><th>Weight (kg)</th><th>Fat %</th><th>Visceral Fat</th><th>BMR</th><th>BMI</th><th>Body Age</th><th>Subcu Fat %</th><th>Muscle %</th><th>Actions</th></tr></thead>
               <tbody id="sv-body-body"></tbody>
             </table></div>
           </div>
@@ -3245,9 +3245,10 @@ function _applySwitch(centerId) {
   Promise.all([loadCustomers(), loadCoaches()])
     .then(function(){
       if(_ldMsg) _ldMsg.textContent = 'Almost ready…';
-      return Promise.all([loadAttendance(), loadBody(), loadFinance(),
+      return Promise.all([loadAttendance(), loadFinance(),
         loadCoupons(), loadPayments(), loadPackHistory(),
-        loadLeads(), loadWalkins(), loadExpenses(), loadInventory()]);
+        loadLeads(), loadWalkins(), loadExpenses(), loadInventory()])
+        .then(function(){ return loadBody(); });
     })
     .then(function(){
       _daysLeftCache = {};
@@ -3716,6 +3717,7 @@ function _custIdsFilter() {
   var svId = (JSON.parse(localStorage.getItem('ownerProfile')||'{}')).sv_body_id;
   if (svId) ids.push(svId);
   D.coaches.forEach(function(c){ if(c.id) ids.push(c.id); });
+  (D.walkins||[]).forEach(function(w){ if(w.id) ids.push(w.id); });
   if (!ids.length) return '';
   return 'customer_id=in.(' + ids.join(',') + ')';
 }
@@ -3757,7 +3759,7 @@ function doDisconnect() {
   document.getElementById('setup').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
-var GROQ_MODEL = localStorage.getItem('groqModel') || 'llama-3.3-70b-versatile';
+var GROQ_MODEL = localStorage.getItem('groqModel') || 'llama-3.1-8b-instant';
 var DEFAULT_GROQ_KEY = ''; // set in deploy/index.html — not stored in repo
 function getGroqKey() { return localStorage.getItem('groqKey') || DEFAULT_GROQ_KEY; }
 
@@ -3922,10 +3924,12 @@ async function loadAll() {
     var _ldMsg = document.getElementById('app-loading-msg'); if(_ldMsg) _ldMsg.textContent = 'Connecting to database…';
     await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
     if(_ldMsg) _ldMsg.textContent = 'Loading attendance & finance…';
-    // Phase 2: everything else — attendance/body/packHistory use customer IDs from phase 1
-    await Promise.all([loadAttendance(), loadBody(), loadFinance(),
+    // Phase 2: walkins must load before body (body filter includes walk-in IDs)
+    await Promise.all([loadAttendance(), loadFinance(),
       loadCoupons(), loadPayments(), loadPackHistory(),
       loadLeads(), loadWalkins(), loadExpenses(), loadFoods(), loadInventory(), loadContests()]);
+    // Phase 3: body runs after walkins so _custIdsFilter() includes walk-in IDs
+    await loadBody();
     _daysLeftCache = {};  // all data loaded — recalculate with full attendance
     try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
@@ -3995,7 +3999,7 @@ async function loadBody() {
     var custF = _custIdsFilter();
     var bodyUrl = getActiveSbUrl() + '/rest/v1/body_composition?order=date.desc&limit=500' + (custF ? '&' + custF : '');
     const res = await fetch(bodyUrl, {
-      headers: { 'apikey': getActiveSbKey(), 'Authorization': 'Bearer ' + getActiveSbKey() }
+      headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
     });
     D.body = await res.json();
     if (!Array.isArray(D.body)) D.body = [];
@@ -4318,7 +4322,8 @@ function openModal(type) {
   if(type==='body' && _selectedBodyCustId) {
     var bodyCust = document.getElementById('body-customer');
     if(bodyCust && !document.getElementById('body-id').value) {
-      bodyCust.value = _selectedBodyCustId;
+      var _isWalkin = (D.walkins||[]).some(function(w){ return w.id === _selectedBodyCustId; });
+      bodyCust.value = _isWalkin ? 'walkin__' + _selectedBodyCustId : _selectedBodyCustId;
     }
   }
 }
@@ -6945,16 +6950,18 @@ function renderBody() {
     // Highlight most recent row
     var rowStyle = isMostRecent ? ' style="background:#f0fdf4"' : '';
 
+    var cv  = b.visceral_fat   ? Number(b.visceral_fat)   : null;
+    var pv  = prev && prev.visceral_fat ? Number(prev.visceral_fat) : null;
     return '<tr'+rowStyle+'>'
       +'<td>'+b.date+(isMostRecent ? ' <span class="badge bg" style="font-size:9px">Latest</span>' : '')+'</td>'
       +'<td>'+(cw||'—')+getArr(cw,pw,revWeight)+'</td>'
-      +'<td>'+(cfKg!==null?cfKg:'—')+getArr(cfKg,pfKg,false)+'</td>'
-      +'<td>'+(csfKg!==null?csfKg:'—')+getArr(csfKg,psfKg,false)+'</td>'
-      +'<td>'+(cmKg!==null?cmKg:'—')+getArr(cmKg,pmKg,true)+'</td>'
-      +'<td>'+(cV!==null?cV:'—')+getArr(cV,pV,false)+'</td>'
+      +'<td>'+(cf||'—')+(cf?'%':'')+getArr(cf,pf,false)+'</td>'
+      +'<td>'+(cv!==null?cv:'—')+getArr(cv,pv,false)+'</td>'
       +'<td>'+(b.bmr||'—')+'</td>'
       +'<td>'+(b.bmi||'—')+'</td>'
       +'<td>'+(b.body_age||'—')+'</td>'
+      +'<td>'+(csf||'—')+(csf?'%':'')+getArr(csf,psf,false)+'</td>'
+      +'<td>'+(cm||'—')+(cm?'%':'')+getArr(cm,pm,true)+'</td>'
       +'<td><div class="acts">'+aiBtns
         +'<button class="btn-p" style="font-size:11px;padding:3px 5px;margin-right:3px;background:#f9c74f;color:#333" onclick="sendMilestoneWA(\''+b.customer_id+'\')">🏆</button>'
         +'<button class="btn-p" style="font-size:11px;padding:3px 5px;margin-right:3px" onclick="askBodyAI(\''+b.customer_id+'\',\''+b.id+'\')">✨</button>'
@@ -8228,6 +8235,7 @@ async function saveBody() {
   var id = document.getElementById('body-id').value;
   var custId = document.getElementById('body-customer').value;
   var dateVal = document.getElementById('body-date').value;
+  if (!custId) { showToast('Please select a person','error'); return; }
   if (!dateVal) { showToast('Date is required','error'); return; }
 
   if (custId === '__sv__') {
@@ -9925,17 +9933,19 @@ function renderSvBody() {
     var pmKg=(pw&&pm)?parseFloat((pw*pm/100).toFixed(2)):null;
     var cV=(cfKg!==null&&csfKg!==null)?parseFloat((cfKg-csfKg).toFixed(2)):null;
     var pV=(pfKg!==null&&psfKg!==null)?parseFloat((pfKg-psfKg).toFixed(2)):null;
+    var cv=(b.visceral_fat)?Number(b.visceral_fat):null;
+    var pv=(prev&&prev.visceral_fat)?Number(prev.visceral_fat):null;
     var isMostRecent=idx===sorted.length-1;
     return '<tr'+(isMostRecent?' style="background:#f0fdf4"':'')+'>'
       +'<td>'+b.date+(isMostRecent?' <span class="badge bg" style="font-size:9px">Latest</span>':'')+'</td>'
       +'<td>'+(cw||'—')+getArr(cw,pw,revWeight)+'</td>'
-      +'<td>'+(cfKg!==null?cfKg:'—')+getArr(cfKg,pfKg,false)+'</td>'
-      +'<td>'+(csfKg!==null?csfKg:'—')+getArr(csfKg,psfKg,false)+'</td>'
-      +'<td>'+(cmKg!==null?cmKg:'—')+getArr(cmKg,pmKg,true)+'</td>'
-      +'<td>'+(cV!==null?cV:'—')+getArr(cV,pV,false)+'</td>'
+      +'<td>'+(cf||'—')+(cf?'%':'')+getArr(cf,pf,false)+'</td>'
+      +'<td>'+(cv!==null?cv:'—')+getArr(cv,pv,false)+'</td>'
       +'<td>'+(b.bmr||'—')+'</td>'
       +'<td>'+(b.bmi||'—')+'</td>'
       +'<td>'+(b.body_age||'—')+'</td>'
+      +'<td>'+(csf||'—')+(csf?'%':'')+getArr(csf,psf,false)+'</td>'
+      +'<td>'+(cm||'—')+(cm?'%':'')+getArr(cm,pm,true)+'</td>'
       +'<td><div class="acts">'
         +'<button class="btn-e" onclick="editSvBody(\''+b.id+'\')">Edit</button>'
         +'<button class="btn-d" onclick="delSvBody(\''+b.id+'\')">Del</button>'
