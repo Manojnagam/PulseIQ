@@ -1517,6 +1517,18 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         </div>
         <canvas id="chart-weightloss" height="120"></canvas>
       </div>
+      <!-- Center Comparison (supervisor only) -->
+      <div id="analytics-center-comparison" style="display:none">
+        <div class="tcard" style="padding:20px;margin-bottom:16px">
+          <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">🏢 Center Comparison</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Revenue and attendance this month across all centers</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">💰 Revenue This Month (₹)</div><canvas id="chart-center-revenue" height="180"></canvas></div>
+            <div><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">📋 Attendance This Month</div><canvas id="chart-center-attendance" height="180"></canvas></div>
+          </div>
+          <div id="analytics-center-table" style="margin-top:16px"></div>
+        </div>
+      </div>
     </div>
 
     <!-- COUPONS -->
@@ -8940,6 +8952,62 @@ function renderAnalytics() {
       options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:false}},spanGaps:true}
     });
   }
+
+  // ── Center Comparison (supervisor, no center filter, 2+ centers) ──
+  (function() {
+    var compWrap = document.getElementById('analytics-center-comparison');
+    if (!compWrap) return;
+    // Only show when supervisor is viewing all centers
+    if (ACTIVE_CENTER || D.centers.length < 2) { compWrap.style.display = 'none'; return; }
+    compWrap.style.display = 'block';
+    var thisMonth = new Date().toISOString().substring(0, 7);
+    var colors = ['#2d5a3d','#e8a838','#2b5ce6','#9333ea','#c0392b','#27ae60','#e67e22','#16a34a'];
+    var centerLabels = [], revData = [], attData = [], tableRows = [];
+    D.centers.forEach(function(center, i) {
+      var rev = (D.finance||[]).filter(function(f){
+        return f.wellness_center_id === center.id && f.type === 'income' && (f.date||'').startsWith(thisMonth);
+      }).reduce(function(s, f){ return s + Number(f.amount||0); }, 0);
+      var att = (D.attendance||[]).filter(function(a){
+        var c = (D.customers||[]).find(function(x){ return x.id === a.customer_id; });
+        return c && c.wellness_center_id === center.id && a.status === 'present' && (a.date||'').startsWith(thisMonth);
+      }).length;
+      var custs = (D.customers||[]).filter(function(c){ return c.wellness_center_id === center.id; }).length;
+      centerLabels.push(center.name || 'Center '+(i+1));
+      revData.push(rev);
+      attData.push(att);
+      tableRows.push({ name: center.name||'Center '+(i+1), rev: rev, att: att, custs: custs, color: colors[i % colors.length] });
+    });
+    destroyChart('center-revenue'); destroyChart('center-attendance');
+    var crEl = document.getElementById('chart-center-revenue');
+    var caEl = document.getElementById('chart-center-attendance');
+    if (crEl) _charts['center-revenue'] = new Chart(crEl, {
+      type: 'bar',
+      data: { labels: centerLabels, datasets: [{ label: 'Revenue (₹)', data: revData, backgroundColor: colors.slice(0, centerLabels.length), borderRadius: 6 }] },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: function(v){ return '₹'+v.toLocaleString('en-IN'); } } } } }
+    });
+    if (caEl) _charts['center-attendance'] = new Chart(caEl, {
+      type: 'bar',
+      data: { labels: centerLabels, datasets: [{ label: 'Check-ins', data: attData, backgroundColor: colors.slice(0, centerLabels.length), borderRadius: 6 }] },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+    var tbl = document.getElementById('analytics-center-table');
+    if (tbl) tbl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      + '<thead><tr style="border-bottom:2px solid var(--border)">'
+      + '<th style="text-align:left;padding:6px 8px;color:var(--muted)">Center</th>'
+      + '<th style="text-align:right;padding:6px 8px;color:var(--muted)">Customers</th>'
+      + '<th style="text-align:right;padding:6px 8px;color:var(--muted)">Attendance</th>'
+      + '<th style="text-align:right;padding:6px 8px;color:var(--muted)">Revenue</th>'
+      + '</tr></thead><tbody>'
+      + tableRows.sort(function(a,b){ return b.rev - a.rev; }).map(function(r){
+        return '<tr style="border-bottom:1px solid var(--border)">'
+          + '<td style="padding:7px 8px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:'+r.color+';display:inline-block"></span>'+r.name+'</td>'
+          + '<td style="text-align:right;padding:7px 8px">'+r.custs+'</td>'
+          + '<td style="text-align:right;padding:7px 8px">'+r.att+'</td>'
+          + '<td style="text-align:right;padding:7px 8px;font-weight:700;color:var(--success)">₹'+r.rev.toLocaleString('en-IN')+'</td>'
+          + '</tr>';
+      }).join('')
+      + '</tbody></table>';
+  })();
 
   // ── Conversion Funnel ──
   (function() {
