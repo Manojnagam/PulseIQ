@@ -1169,6 +1169,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
       <div class="tabs">
         <button class="tab-btn active" id="tab-daily" onclick="switchAttTab(&#39;daily&#39;)">Daily Check-in</button>
         <button class="tab-btn" id="tab-monthly" onclick="switchAttTab(&#39;monthly&#39;)">Monthly Grid</button>
+        <button class="tab-btn" id="tab-coach-att" onclick="switchAttTab(&#39;coach&#39;)">👨‍🏫 Coach Check-in</button>
       </div>
       <!-- WhatsApp prompt bar (shown after marking attendance) -->
       <div id="att-wa-bar" style="display:none;background:#e6f9ee;border:1.5px solid #25D366;border-radius:10px;padding:12px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
@@ -1202,6 +1203,27 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
           <input type="month" id="att-month-picker" onchange="renderAttGrid()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-family:inherit">
         </div>
         <div class="att-grid"><table id="att-grid-table"></table></div>
+      </div>
+      <!-- Coach Attendance View -->
+      <div id="att-coach-view" style="display:none">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="date" id="coach-att-date" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)">
+          <button class="btn-c" style="font-size:12px" onclick="renderCoachAttendance()">🔄 Refresh</button>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+            <label style="font-size:12px;font-weight:600;color:var(--muted)">Month summary:</label>
+            <input type="month" id="coach-att-month" onchange="renderCoachAttSummary()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;background:var(--surface);color:var(--text)">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Today's Coach Check-in</div>
+            <div id="coach-att-list"><div style="color:var(--muted);font-size:13px;padding:20px;text-align:center">Loading coaches...</div></div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Monthly Summary</div>
+            <div id="coach-att-summary"><div style="color:var(--muted);font-size:13px;padding:20px;text-align:center">Select a month above</div></div>
+          </div>
+        </div>
       </div>
     </div>
     <!-- BODY -->
@@ -2120,6 +2142,21 @@ create table if not exists lead_followups (
 );
 alter table lead_followups enable row level security;
 create policy "allow all" on lead_followups for all using (true);
+
+-- ==========================================
+-- 👨‍🏫 COACH ATTENDANCE (Run once)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS coach_attendance (
+  id uuid default gen_random_uuid() primary key,
+  coach_id uuid references coaches(id) on delete cascade,
+  date date not null default current_date,
+  status text default 'present',
+  wellness_center_id uuid references wellness_centers(id),
+  created_at timestamptz default now(),
+  unique(coach_id, date)
+);
+alter table coach_attendance enable row level security;
+create policy "allow all" on coach_attendance for all using (true);
 
 -- ==========================================
 -- 💳 SAAS PLAN TRACKING (Run once)
@@ -6804,13 +6841,97 @@ function switchAttTab(tab) {
   ATT_TAB = tab;
   document.getElementById('tab-daily').classList.toggle('active', tab==='daily');
   document.getElementById('tab-monthly').classList.toggle('active', tab==='monthly');
+  document.getElementById('tab-coach-att').classList.toggle('active', tab==='coach');
   document.getElementById('att-daily-view').style.display = tab==='daily' ? 'block' : 'none';
   document.getElementById('att-monthly-view').style.display = tab==='monthly' ? 'block' : 'none';
+  document.getElementById('att-coach-view').style.display = tab==='coach' ? 'block' : 'none';
   if(tab==='monthly' && !document.getElementById('att-month-picker').value) {
     document.getElementById('att-month-picker').value = new Date().toISOString().substring(0,7);
     renderAttGrid();
+  } else if(tab==='coach') {
+    var dateEl = document.getElementById('coach-att-date');
+    if (!dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+    var monEl = document.getElementById('coach-att-month');
+    if (!monEl.value) monEl.value = new Date().toISOString().substring(0,7);
+    renderCoachAttendance();
+    renderCoachAttSummary();
   } else renderAttendance();
 }
+// ══════════════════════════════════════════
+// 👨‍🏫 COACH ATTENDANCE
+// ══════════════════════════════════════════
+async function renderCoachAttendance() {
+  var date = document.getElementById('coach-att-date').value || new Date().toISOString().split('T')[0];
+  var el = document.getElementById('coach-att-list'); if (!el) return;
+  var coaches = filterByCenter(D.coaches).filter(function(c){ return (c.status||'Active')==='Active'; });
+  if (!coaches.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center">No active coaches found</div>'; return; }
+  // Load today's coach attendance records
+  var recs = [];
+  try {
+    recs = await dbGet('coach_attendance', { date: 'eq.' + date });
+  } catch(e) { recs = []; }
+  el.innerHTML = coaches.map(function(c) {
+    var rec = recs.find(function(r){ return r.coach_id === c.id; });
+    var status = rec ? rec.status : null;
+    var recId = rec ? rec.id : null;
+    var isPresent = status === 'present';
+    var isAbsent = status === 'absent';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);margin-bottom:8px">'
+      + '<div><div style="font-weight:600;font-size:14px">'+c.name+'</div><div style="font-size:11px;color:var(--muted)">'+( c.center_name||getCenterName())+'</div></div>'
+      + '<div style="display:flex;gap:6px">'
+      + '<button onclick="toggleCoachAtt(\''+c.id+'\',\''+c.name+'\',\''+date+'\','+(recId?'\''+recId+'\'':'null')+',\'present\')" style="padding:6px 14px;border-radius:8px;border:1.5px solid '+(isPresent?'var(--success)':'var(--border)')+';background:'+(isPresent?'var(--success)':'var(--surface2)')+';color:'+(isPresent?'#fff':'var(--muted)')+';font-weight:600;font-size:12px;cursor:pointer;font-family:inherit">✅ Present</button>'
+      + '<button onclick="toggleCoachAtt(\''+c.id+'\',\''+c.name+'\',\''+date+'\','+(recId?'\''+recId+'\'':'null')+',\'absent\')" style="padding:6px 14px;border-radius:8px;border:1.5px solid '+(isAbsent?'var(--danger)':'var(--border)')+';background:'+(isAbsent?'var(--danger)':'var(--surface2)')+';color:'+(isAbsent?'#fff':'var(--muted)')+';font-weight:600;font-size:12px;cursor:pointer;font-family:inherit">❌ Absent</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+async function toggleCoachAtt(coachId, coachName, date, existingId, newStatus) {
+  var centerId = ACTIVE_CENTER || null;
+  try {
+    if (existingId) {
+      await dbUpdate('coach_attendance', existingId, { status: newStatus });
+    } else {
+      await dbInsert('coach_attendance', { coach_id: coachId, date: date, status: newStatus, wellness_center_id: centerId });
+    }
+    showToast(coachName + ' marked ' + newStatus, newStatus === 'present' ? 'success' : 'error');
+    renderCoachAttendance();
+    renderCoachAttSummary();
+  } catch(e) {
+    showToast('Error saving: ' + e.message, 'error');
+  }
+}
+
+async function renderCoachAttSummary() {
+  var month = document.getElementById('coach-att-month').value;
+  var el = document.getElementById('coach-att-summary'); if (!el || !month) return;
+  var coaches = filterByCenter(D.coaches).filter(function(c){ return (c.status||'Active')==='Active'; });
+  if (!coaches.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center">No active coaches</div>'; return; }
+  var recs = [];
+  try { recs = await dbGet('coach_attendance', { date: 'gte.' + month + '-01', 'date.lte': month + '-31' }); } catch(e) { recs = []; }
+  // Count working days in month up to today
+  var today = new Date().toISOString().split('T')[0];
+  var daysInMonth = 0;
+  var y = parseInt(month.split('-')[0]), m = parseInt(month.split('-')[1]);
+  var d = new Date(y, m-1, 1);
+  while(d.getMonth() === m-1 && d.toISOString().split('T')[0] <= today) { daysInMonth++; d.setDate(d.getDate()+1); }
+  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+    + '<thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--muted)">Coach</th><th style="text-align:center;padding:6px 8px;color:var(--muted)">Present</th><th style="text-align:center;padding:6px 8px;color:var(--muted)">Absent</th><th style="text-align:center;padding:6px 8px;color:var(--muted)">Rate</th></tr></thead><tbody>'
+    + coaches.map(function(c) {
+        var present = recs.filter(function(r){ return r.coach_id===c.id && r.status==='present'; }).length;
+        var absent  = recs.filter(function(r){ return r.coach_id===c.id && r.status==='absent'; }).length;
+        var rate = daysInMonth ? Math.round(present/daysInMonth*100) : 0;
+        var color = rate>=80?'var(--success)':rate>=50?'var(--accent)':'var(--danger)';
+        return '<tr style="border-bottom:1px solid var(--border)">'
+          + '<td style="padding:7px 8px;font-weight:600">'+c.name+'</td>'
+          + '<td style="text-align:center;padding:7px 8px;color:var(--success)">'+present+'</td>'
+          + '<td style="text-align:center;padding:7px 8px;color:var(--danger)">'+absent+'</td>'
+          + '<td style="text-align:center;padding:7px 8px;font-weight:700;color:'+color+'">'+rate+'%</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table>'
+    + '<div style="font-size:11px;color:var(--muted);margin-top:8px">Based on '+daysInMonth+' working day(s) so far in '+month+'</div>';
+}
+
 var _attResetTimer = null;
 async function toggleAtt(cid, cname, date, currentStatus) {
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
