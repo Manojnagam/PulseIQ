@@ -1404,6 +1404,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <div><div class="pt" data-t="pt_finance">Finance & P&amp;L</div><div class="ps" data-t="ps_finance">Income, expenses and profit &amp; loss</div></div>
         <div style="display:flex;gap:8px">
           <button class="btn-e" id="fin-ai-btn" onclick="generateFinanceInsights()" style="background:#f0f4ff;border-color:#c7d2fe;color:#4f46e5;font-weight:600">✨ AI Insights</button>
+          <button class="btn-e" onclick="openRecurringModal()" style="background:#fef3c7;border-color:#fcd34d;color:#92400e;font-weight:600">🔁 Recurring</button>
           <button class="btn-p" onclick="openFinanceModal()">+ Add Transaction</button>
         </div>
       </div>
@@ -2432,6 +2433,38 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 
 
 
+
+<div class="overlay" id="modal-recurring-expenses">
+  <div class="modal" style="max-width:560px">
+    <div class="mh"><div class="mt">🔁 Recurring Expenses</div><button class="mc" onclick="closeModal('recurring-expenses')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">These expenses are auto-inserted into Finance at the start of each month. Add fixed costs like rent, electricity, water can, etc.</p>
+      <div id="recurring-list" style="margin-bottom:16px"></div>
+      <div style="border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:10px">+ Add New Recurring Expense</div>
+        <div class="fr" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div><label>Name</label><input type="text" id="rec-name" placeholder="e.g. Rent, Electricity"></div>
+          <div><label>Amount (₹)</label><input type="number" id="rec-amount" placeholder="5000" min="0"></div>
+          <div><label>Day of Month</label><input type="number" id="rec-day" value="1" min="1" max="28"></div>
+          <div><label>Category</label>
+            <select id="rec-cat">
+              <option>Operational</option><option>Rent</option><option>Utilities</option>
+              <option>Salaries</option><option>Marketing</option><option>Miscellaneous</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:6px"><label>Center</label>
+          <select id="rec-center"><option value="">— All / Default —</option></select>
+        </div>
+        <button class="btn-p" style="margin-top:12px;width:100%" onclick="saveRecurring()">+ Add Recurring Expense</button>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn-e" onclick="applyRecurringNow()">▶ Apply This Month Now</button>
+      <button class="btn-s" onclick="closeModal('recurring-expenses')">Close</button>
+    </div>
+  </div>
+</div>
 
 <div class="overlay" id="modal-announcement">
   <div class="modal">
@@ -4196,13 +4229,14 @@ async function loadAll() {
     // Phase 2: walkins must load before body (body filter includes walk-in IDs)
     await Promise.all([loadAttendance(), loadFinance(),
       loadCoupons(), loadPayments(), loadPackHistory(),
-      loadLeads(), loadWalkins(), loadExpenses(), loadFoods(), loadInventory(), loadContests(), loadAnnouncements()]);
+      loadLeads(), loadWalkins(), loadExpenses(), loadFoods(), loadInventory(), loadContests(), loadAnnouncements(), loadRecurring()]);
     // Phase 3: body runs after walkins so _custIdsFilter() includes walk-in IDs
     await loadBody();
     _daysLeftCache = {};  // all data loaded — recalculate with full attendance
     try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
     try { renderAnnouncementBanner(); } catch(re){ console.error('renderAnnouncementBanner crash:',re); }
+    try { autoApplyRecurring(); } catch(re){ console.error('autoApplyRecurring crash:',re); }
     applyLang();
     (function(){ var btn=document.getElementById('dark-mode-btn'); if(btn) btn.textContent=localStorage.getItem('svTheme')==='dark'?'☀️':'🌙'; })();
     startAutoPing();
@@ -7030,6 +7064,119 @@ function renderAnnouncementBanner() {
       + '<div style="color:#0c4a6e;font-size:13px">'+a.message+'</div>'
       + '</div>';
   }).join('');
+}
+
+// ══════════════════════════════════════════
+// 🔁 RECURRING EXPENSES
+// ══════════════════════════════════════════
+async function loadRecurring() {
+  try { D.recurring = await dbGet('recurring_expenses'); } catch(e) { D.recurring = []; }
+}
+
+async function openRecurringModal() {
+  await loadRecurring();
+  // Populate center dropdown
+  var sel = document.getElementById('rec-center');
+  if (sel) {
+    sel.innerHTML = '<option value="">— All / Default —</option>'
+      + D.centers.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+    if (ACTIVE_CENTER) sel.value = ACTIVE_CENTER;
+  }
+  renderRecurringList();
+  openModal('recurring-expenses');
+}
+
+function renderRecurringList() {
+  var el = document.getElementById('recurring-list'); if (!el) return;
+  var items = D.recurring || [];
+  if (!items.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No recurring expenses set up yet.</div>'; return; }
+  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+    + '<thead><tr style="border-bottom:2px solid var(--border)">'
+    + '<th style="text-align:left;padding:5px 8px;color:var(--muted)">Name</th>'
+    + '<th style="text-align:right;padding:5px 8px;color:var(--muted)">₹</th>'
+    + '<th style="text-align:center;padding:5px 8px;color:var(--muted)">Day</th>'
+    + '<th style="text-align:left;padding:5px 8px;color:var(--muted)">Category</th>'
+    + '<th style="padding:5px 8px"></th></tr></thead><tbody>'
+    + items.map(function(r){
+        return '<tr style="border-bottom:1px solid var(--border)">'
+          + '<td style="padding:6px 8px;font-weight:600">'+r.name+'</td>'
+          + '<td style="padding:6px 8px;text-align:right;color:var(--danger)">₹'+Number(r.amount).toLocaleString('en-IN')+'</td>'
+          + '<td style="padding:6px 8px;text-align:center;color:var(--muted)">'+r.day_of_month+'</td>'
+          + '<td style="padding:6px 8px;color:var(--muted)">'+r.category+'</td>'
+          + '<td style="padding:6px 8px;text-align:right"><button class="btn-c" style="color:var(--danger);font-size:11px;padding:3px 8px" onclick="deleteRecurring(\''+r.id+'\')">Delete</button></td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table>';
+}
+
+async function saveRecurring() {
+  var name = (document.getElementById('rec-name').value || '').trim();
+  var amount = parseFloat(document.getElementById('rec-amount').value);
+  var day = parseInt(document.getElementById('rec-day').value) || 1;
+  var cat = document.getElementById('rec-cat').value || 'Operational';
+  var centerId = document.getElementById('rec-center').value || null;
+  if (!name || !amount) { showToast('Name and amount are required', 'error'); return; }
+  if (day < 1 || day > 28) { showToast('Day must be between 1 and 28', 'error'); return; }
+  try {
+    await dbInsert('recurring_expenses', { name: name, amount: amount, day_of_month: day, category: cat, wellness_center_id: centerId });
+    showToast('Recurring expense added!', 'success');
+    document.getElementById('rec-name').value = '';
+    document.getElementById('rec-amount').value = '';
+    document.getElementById('rec-day').value = '1';
+    await loadRecurring();
+    renderRecurringList();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function deleteRecurring(id) {
+  if (!confirm('Delete this recurring expense?')) return;
+  try {
+    await dbDelete('recurring_expenses', id);
+    showToast('Deleted!');
+    await loadRecurring();
+    renderRecurringList();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// Auto-apply recurring expenses for the current month (runs once per month per device)
+async function autoApplyRecurring() {
+  var items = D.recurring || [];
+  if (!items.length) return;
+  var today = new Date();
+  var ym = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
+  var lsKey = 'recurringApplied_' + ym;
+  if (localStorage.getItem(lsKey)) return; // already applied this month on this device
+  var todayStr = today.toISOString().split('T')[0];
+  var applied = 0;
+  for (var i = 0; i < items.length; i++) {
+    var r = items[i];
+    var expDate = ym + '-' + String(r.day_of_month).padStart(2,'0');
+    if (expDate > todayStr) continue; // not due yet this month
+    try {
+      await dbInsert('finance', {
+        type: 'expense',
+        description: r.name + ' (auto)',
+        amount: r.amount,
+        category: r.category,
+        date: expDate,
+        wellness_center_id: r.wellness_center_id || ACTIVE_CENTER || null
+      });
+      applied++;
+    } catch(e) { /* skip duplicates or errors silently */ }
+  }
+  localStorage.setItem(lsKey, '1');
+  if (applied > 0) {
+    await loadFinance();
+    showToast(applied + ' recurring expense(s) auto-added for ' + ym, 'success');
+  }
+}
+
+// Manual "Apply This Month Now" button
+async function applyRecurringNow() {
+  var ym = new Date().toISOString().slice(0,7);
+  localStorage.removeItem('recurringApplied_' + ym); // reset guard so it re-applies
+  closeModal('recurring-expenses');
+  await autoApplyRecurring();
 }
 
 var _attResetTimer = null;
