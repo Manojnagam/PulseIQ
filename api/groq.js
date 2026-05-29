@@ -37,7 +37,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${key}`
       },
       body: JSON.stringify({
-        model: model || 'llama-3.3-70b-versatile',
+        model: model || 'llama-3.1-8b-instant',
         messages,
         max_tokens: maxTokens || 500,
         temperature: temperature !== undefined ? temperature : 0.85
