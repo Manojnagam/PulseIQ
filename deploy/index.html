@@ -1650,7 +1650,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
       <div id="biz-org-summary" style="margin-bottom:16px"></div>
       <div class="tcard" style="margin-bottom:16px">
         <div style="font-weight:700;font-size:14px;margin-bottom:14px">🏆 Coach Leaderboard</div>
-        <div class="cp-row cp-header"><span>Coach</span><span>Customers</span><span>New This Month</span><span>Att. Rate</span><span>Leads</span></div>
+        <div class="cp-row cp-header" style="grid-template-columns:2fr 1fr 1fr 1.5fr 1fr 1.2fr"><span>Coach</span><span>Customers</span><span>New</span><span>Att. Rate</span><span>Leads</span><span>Revenue</span></div>
         <div id="biz-leaderboard"></div>
       </div>
       <div id="biz-content"></div>
@@ -11612,7 +11612,8 @@ function renderBizAnalyst() {
     if(!coachData.length) {
       lbEl.innerHTML = '<div class="empty"><p>No coaches found.</p></div>';
     } else {
-      var lbRows = coachData.map(function(d, i) {
+      var maxRev = 0;
+      var lbRowData = coachData.map(function(d, i) {
         var coach = d.coach;
         var custs = D.customers.filter(function(c){ return c.referred_by===coach.id||c.coach_id===coach.id; });
         var newThis = custs.filter(function(c){ return (c.created_at||'').startsWith(month)||(c.join_date||'').startsWith(month); }).length;
@@ -11621,13 +11622,21 @@ function renderBizAnalyst() {
         var uniqueAtt = monthAttCt.reduce(function(s,a){if(s.indexOf(a.customer_id)===-1)s.push(a.customer_id);return s;},[]).length;
         var attRate = custs.length ? Math.round((uniqueAtt/custs.length)*100) : 0;
         var leads = (D.leads||[]).filter(function(l){return l.coach_id===coach.id;}).length;
+        // Revenue: finance income from coach's center this month
+        var centerRev = d.center ? D.finance.filter(function(f){ return f.type==='income' && f.wellness_center_id===d.center.id && (f.date||'').startsWith(month); }).reduce(function(s,f){return s+Number(f.amount);},0) : 0;
+        if (centerRev > maxRev) maxRev = centerRev;
         var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-        return '<div class="cp-row">'+
-          '<span style="font-weight:700">'+medal+' '+coach.name+'<div style="font-size:11px;font-weight:400;color:var(--muted)">'+(d.center?d.center.name:'')+'</div></span>'+
-          '<span style="font-weight:700">'+custs.length+'</span>'+
-          '<span style="color:var(--success);font-weight:700">+'+newThis+'</span>'+
-          '<div><span style="font-weight:700">'+attRate+'%</span><div class="cp-bar-wrap"><div class="cp-bar" style="width:'+attRate+'%"></div></div></div>'+
-          '<span>'+leads+'</span>'+
+        return { coach:coach, center:d.center, custs:custs, newThis:newThis, attRate:attRate, leads:leads, centerRev:centerRev, medal:medal };
+      });
+      var lbRows = lbRowData.map(function(d) {
+        var revBarW = maxRev > 0 ? Math.round(d.centerRev/maxRev*100) : 0;
+        return '<div class="cp-row" style="grid-template-columns:2fr 1fr 1fr 1.5fr 1fr 1.2fr">'+
+          '<span style="font-weight:700">'+d.medal+' '+d.coach.name+'<div style="font-size:11px;font-weight:400;color:var(--muted)">'+(d.center?d.center.name:'No center')+'</div></span>'+
+          '<span style="font-weight:700">'+d.custs.length+'</span>'+
+          '<span style="color:var(--success);font-weight:700">+'+d.newThis+'</span>'+
+          '<div><span style="font-weight:700">'+d.attRate+'%</span><div class="cp-bar-wrap"><div class="cp-bar" style="width:'+d.attRate+'%"></div></div></div>'+
+          '<span>'+d.leads+'</span>'+
+          '<div><span style="font-weight:700;color:var(--success);font-size:12px">₹'+d.centerRev.toLocaleString('en-IN')+'</span><div class="cp-bar-wrap"><div class="cp-bar" style="width:'+revBarW+'%;background:#16a34a"></div></div></div>'+
         '</div>';
       });
       lbEl.innerHTML = lbRows.join('');
@@ -11663,11 +11672,18 @@ function renderBizAnalyst() {
       +'<span class="badge '+healthColor+'" style="font-size:9px;margin-top:4px">'+health+'</span>'
       +'</div>'
       +'</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;text-align:center">'
-      +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:18px;font-weight:700;color:var(--primary)">'+d.vp+'</div><div style="font-size:10px;color:var(--muted)">VP this month</div></div>'
-      +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:18px;font-weight:700;color:var(--success)">'+d.activeCusts+'</div><div style="font-size:10px;color:var(--muted)">active</div></div>'
-      +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:18px;font-weight:700;color:'+(d.inactiveCusts?'var(--danger)':'var(--success)')+'">'+d.inactiveCusts+'</div><div style="font-size:10px;color:var(--muted)">inactive</div></div>'
-      +'</div>'
+      +(function(){
+          var rev = d.center ? D.finance.filter(function(f){ return f.type==='income' && f.wellness_center_id===d.center.id && (f.date||'').startsWith(month); }).reduce(function(s,f){return s+Number(f.amount);},0) : 0;
+          var exp = d.center ? D.finance.filter(function(f){ return f.type==='expense' && f.wellness_center_id===d.center.id && (f.date||'').startsWith(month); }).reduce(function(s,f){return s+Number(f.amount);},0) : 0;
+          var net = rev - exp;
+          return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:12px;text-align:center">'
+            +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:16px;font-weight:700;color:var(--primary)">'+d.vp+'</div><div style="font-size:10px;color:var(--muted)">VP</div></div>'
+            +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:16px;font-weight:700;color:var(--success)">'+d.activeCusts+'</div><div style="font-size:10px;color:var(--muted)">active</div></div>'
+            +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:16px;font-weight:700;color:'+(d.inactiveCusts?'var(--danger)':'var(--success)')+'">'+d.inactiveCusts+'</div><div style="font-size:10px;color:var(--muted)">inactive</div></div>'
+            +'<div style="background:'+(net>=0?'#f0fdf4':'#fef2f2')+';border-radius:8px;padding:8px 4px"><div style="font-size:13px;font-weight:700;color:'+(net>=0?'#16a34a':'#e74c3c')+'">₹'+Math.round(rev).toLocaleString('en-IN')+'</div><div style="font-size:10px;color:var(--muted)">revenue</div></div>'
+            +'</div>';
+        })()
+
       +'<div style="font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;gap:12px">'
       +'<span>👥 '+d.custs+' total customers</span>'
       +'<span>📋 '+d.monthAtt+' check-ins</span>'
