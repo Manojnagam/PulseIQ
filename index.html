@@ -746,6 +746,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <button class="nav-item" onclick="goTo('guide',this)"><span class="ic">📖</span><span data-t="nav_guide">How to Use</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('profile',this)"><span class="ic">👤</span><span data-t="nav_profile">My Profile</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo(&#39;sql&#39;,this)"><span class="ic">🛠️</span><span data-t="nav_sql">SQL Setup Guide</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('export',this)"><span class="ic">📦</span><span>Data Export</span></button>
       </div>
     </div>
     <div class="sb-center-switch">
@@ -2358,6 +2359,51 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       </div>
     </div>
 
+    <!-- DATA EXPORT -->
+    <div class="sec" id="sec-export">
+      <div class="ph">
+        <div><div class="pt">Data Export Pack</div><div class="ps">Download your data as CSV — with optional date range filter</div></div>
+      </div>
+      <!-- Date range filter -->
+      <div class="tcard" style="padding:18px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">📅 Date Range Filter <span style="font-size:11px;color:var(--muted);font-weight:400">(optional — leave blank to export all data)</span></div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px"><label>From</label><input type="date" id="exp-from" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px"><label>To</label><input type="date" id="exp-to" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <button class="btn-c" style="font-size:12px" onclick="document.getElementById('exp-from').value='';document.getElementById('exp-to').value='';">✕ Clear</button>
+        </div>
+      </div>
+      <!-- Export cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="tcard" style="padding:20px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px">👥 Customers</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Name, contact, pack, status, goal, coach, center, join date</div>
+          <button class="btn-p" style="width:100%" onclick="exportDataPack('customers')">⬇️ Export Customers CSV</button>
+        </div>
+        <div class="tcard" style="padding:20px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px">📅 Attendance</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Customer, date, status, servings, check-in time, notes</div>
+          <button class="btn-p" style="width:100%" onclick="exportDataPack('attendance')">⬇️ Export Attendance CSV</button>
+        </div>
+        <div class="tcard" style="padding:20px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px">💰 Finance</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Type, description, amount, category, date, center</div>
+          <button class="btn-p" style="width:100%" onclick="exportDataPack('finance')">⬇️ Export Finance CSV</button>
+        </div>
+        <div class="tcard" style="padding:20px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px">⚖️ Body Composition</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Weight, fat%, BMI, BMR, muscle%, visceral fat — all records</div>
+          <button class="btn-p" style="width:100%" onclick="exportDataPack('body')">⬇️ Export Body Data CSV</button>
+        </div>
+      </div>
+      <!-- Export all -->
+      <div class="tcard" style="padding:20px;text-align:center;border:2px dashed var(--primary)">
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px">📦 Export Everything</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Downloads all 4 CSVs one after another with a short delay between each</div>
+        <button class="btn-p" style="font-size:14px;padding:12px 32px" onclick="exportAllData()">⬇️ Download All CSVs</button>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -3545,6 +3591,71 @@ function exportBodyCSV() {
 function getCenterById(id) {
   if (!id) return '';
   var c = (D.centers||[]).find(function(x){return x.id===id;}); return c?c.name:'';
+}
+
+// ── Data Export Pack ──
+function _expDateRange() {
+  return {
+    from: document.getElementById('exp-from') ? document.getElementById('exp-from').value : '',
+    to:   document.getElementById('exp-to')   ? document.getElementById('exp-to').value   : ''
+  };
+}
+function _inExpRange(dateStr) {
+  var r = _expDateRange();
+  if (!dateStr) return true;
+  if (r.from && dateStr < r.from) return false;
+  if (r.to   && dateStr > r.to)   return false;
+  return true;
+}
+function exportDataPack(type) {
+  if (type === 'customers') {
+    var custs = filterByCenter(D.customers).filter(function(c){ return _inExpRange(c.pack_start_date || c.join_date || c.created_at); });
+    exportCSV(
+      ['Name','Contact','Email','Pack','Pack Start','Days Left','Status','Goal','Coach','Center','Joined'],
+      custs.map(function(c){
+        var st = getDaysLeft(c);
+        return [c.name, c.contact||'', c.email||'', c.pack_type||'', c.pack_start_date||'', st.active?st.days:'Expired', st.active?'Active':'Expired', c.goal||'', c.coach_name||'', getCenterById(c.wellness_center_id)||'', c.join_date||c.created_at||''];
+      }),
+      'customers'
+    );
+  } else if (type === 'attendance') {
+    var att = filterByCenterViaCustomer(D.attendance).filter(function(a){ return _inExpRange(a.date); });
+    exportCSV(
+      ['Customer','Date','Status','Servings','Check-in Time','Notes'],
+      att.map(function(a){
+        var cu = (D.customers||[]).find(function(x){return x.id===a.customer_id;});
+        return [cu?cu.name:(a.customer_name||''), a.date||'', a.status||'', a.servings||1, a.check_in_time||'', a.notes||''];
+      }),
+      'attendance'
+    );
+  } else if (type === 'finance') {
+    var fin = filterFinanceByCenter(D.finance).filter(function(f){ return _inExpRange(f.date); });
+    exportCSV(
+      ['Type','Description','Amount','Category','Date','Center'],
+      fin.map(function(f){
+        return [f.type||'', f.description||'', f.amount||0, f.category||'', f.date||'', getCenterById(f.wellness_center_id)||''];
+      }),
+      'finance'
+    );
+  } else if (type === 'body') {
+    var body = filterByCenterViaCustomer(D.body||[]).filter(function(b){ return _inExpRange(b.date); });
+    exportCSV(
+      ['Customer','Date','Height','Age','Weight','Fat%','Visceral Fat','BMR','BMI','Body Age','Subcu Fat%','Muscle%'],
+      body.map(function(b){
+        var cu = (D.customers||[]).find(function(x){return x.id===b.customer_id;});
+        return [cu?cu.name:b.customer_id, b.date||'', b.height||'', b.age||'', b.weight||'', b.fat_percentage||'', b.visceral_fat||'', b.bmr||'', b.bmi||'', b.body_age||'', b.subcutaneous_fat_percentage||'', b.muscle_percentage||''];
+      }),
+      'body_composition'
+    );
+  }
+}
+async function exportAllData() {
+  var types = ['customers','attendance','finance','body'];
+  for (var i = 0; i < types.length; i++) {
+    exportDataPack(types[i]);
+    if (i < types.length - 1) await new Promise(function(r){ setTimeout(r, 600); });
+  }
+  showToast('All 4 CSVs downloaded!', 'success');
 }
 
 function toggleDarkMode() {
