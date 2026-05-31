@@ -615,6 +615,10 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
       <div style="font-size:13px;color:#6b7280;margin-bottom:20px;line-height:1.6">We'll send a 6-digit code to your email. No password needed.</div>
       <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;display:block;margin-bottom:6px">Email Address</label>
       <input type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendOtpCode()" style="width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:12px;outline:none;transition:border .2s" onfocus="this.style.borderColor='#1a3a28'" onblur="this.style.borderColor='#e5e7eb'">
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="remember-device" checked style="width:16px;height:16px;accent-color:#1a3a28;cursor:pointer">
+        <span style="font-size:13px;color:#374151;font-weight:500">Remember this device for 60 days</span>
+      </label>
       <button id="login-btn" onclick="sendOtpCode()" style="width:100%;padding:14px;background:#1a3a28;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s" onmouseover="this.style.background='#2d5a3d'" onmouseout="this.style.background='#1a3a28'">Send Code →</button>
       <div id="login-error" style="display:none;margin-top:10px;padding:10px 14px;background:#fef2f2;border-radius:8px;font-size:13px;color:#dc2626;border-left:3px solid #dc2626"></div>
     </div>
@@ -755,6 +759,11 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <option value="">All Centers</option>
       </select>
     </div>
+    <div style="padding:10px 12px 6px">
+      <button onclick="copySidebarInviteLink()" style="width:100%;background:linear-gradient(135deg,#25d366,#1da851);color:#fff;border:none;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.2px;box-shadow:0 3px 10px rgba(37,211,102,.35)">
+        <span>🔗</span><span>Invite First-Lines</span>
+      </button>
+    </div>
     <div class="sb-foot">
       <div id="sb-auth-user" style="padding:8px 12px 4px;font-size:10px;color:rgba(255,255,255,.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
       <div class="sb-foot-row">
@@ -799,6 +808,8 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
       <div class="stats" id="overview-stats"></div>
       <!-- Revenue Row -->
       <div id="ov-revenue-row" style="margin-bottom:20px"></div>
+      <!-- Center Health Score -->
+      <div id="ov-center-health" style="margin-bottom:20px"></div>
       <!-- Pin Progress Widget -->
       <div id="ov-pin-widget" style="margin-bottom:16px"></div>
       <!-- Main Grid: Left & Right columns -->
@@ -1273,7 +1284,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <div id="body-records-wrap" style="display:none">
           <div class="tcard">
             <div class="twrap"><table>
-              <thead><tr><th>Date</th><th>Weight (kg)</th><th>Fat %</th><th>Visceral Fat</th><th>BMR</th><th>BMI</th><th>Body Age</th><th>Subcu Fat %</th><th>Muscle %</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Date</th><th>Weight (kg)</th><th>Fat</th><th>Visceral Fat</th><th>BMR</th><th>BMI</th><th>Body Age</th><th>Subcu Fat</th><th>Muscle</th><th>Actions</th></tr></thead>
               <tbody id="body-body"></tbody>
             </table></div>
           </div>
@@ -1304,7 +1315,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
           <div id="sv-ideal-card" style="margin-bottom:16px"></div>
           <div class="tcard">
             <div class="twrap"><table>
-              <thead><tr><th>Date</th><th>Weight (kg)</th><th>Fat %</th><th>Visceral Fat</th><th>BMR</th><th>BMI</th><th>Body Age</th><th>Subcu Fat %</th><th>Muscle %</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Date</th><th>Weight (kg)</th><th>Fat</th><th>Visceral Fat</th><th>BMR</th><th>BMI</th><th>Body Age</th><th>Subcu Fat</th><th>Muscle</th><th>Actions</th></tr></thead>
               <tbody id="sv-body-body"></tbody>
             </table></div>
           </div>
@@ -3159,11 +3170,35 @@ function initAuthClient() {
 
 async function checkExistingSession() {
   initAuthClient();
+  // Try Supabase's built-in session first
   var d = await _sbAuth.auth.getSession();
   if (d.data && d.data.session) {
-    _authSession = d.data.session;
-    _authUser = d.data.session.user;
+    var sess = d.data.session;
+    var exp = sess.expires_at;
+    if (exp && exp < Math.floor(Date.now() / 1000) && sess.refresh_token) {
+      var r = await _sbAuth.auth.setSession({ access_token: sess.access_token, refresh_token: sess.refresh_token });
+      if (r.data && r.data.session) { sess = r.data.session; }
+    }
+    _authSession = sess;
+    _authUser = sess.user;
     return true;
+  }
+  // Fallback: use manually stored tokens (access_token needed as parseable JWT even if expired)
+  var storedRaw = localStorage.getItem('pz_session_tokens');
+  if (storedRaw) {
+    try {
+      var tokens = JSON.parse(storedRaw);
+      if (tokens.access_token && tokens.refresh_token) {
+        var r2 = await _sbAuth.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
+        if (r2.data && r2.data.session) {
+          _authSession = r2.data.session;
+          _authUser = r2.data.session.user;
+          localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: r2.data.session.access_token, refresh_token: r2.data.session.refresh_token }));
+          return true;
+        }
+      }
+    } catch(e) {}
+    localStorage.removeItem('pz_session_tokens');
   }
   return false;
 }
@@ -3227,6 +3262,15 @@ async function verifyOtpCode() {
   } else {
     _authSession = res.data.session;
     _authUser = res.data.user;
+    // Remember this device if checkbox is checked
+    var rememberCb = document.getElementById('remember-device');
+    if (!rememberCb || rememberCb.checked) {
+      localStorage.setItem('pz_remembered_email', email);
+      localStorage.setItem('pz_login_ts', String(Date.now()));
+    }
+    if (res.data.session && res.data.session.refresh_token) {
+      localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
+    }
     await startApp();
   }
 }
@@ -3245,6 +3289,9 @@ function showLoginErr(msg) {
 async function signOut() {
   if (_sbAuth) await _sbAuth.auth.signOut();
   _authUser = null; _authSession = null;
+  localStorage.removeItem('pz_session_tokens');
+  localStorage.removeItem('pz_remembered_email');
+  localStorage.removeItem('pz_login_ts');
   location.reload();
 }
 
@@ -4377,23 +4424,48 @@ function saveWaLang() {
 }
 window.onload = async function() {
   try {
-    // ── STEP 1: Auth check — must pass before loading any data ──
+    // ── STEP 1: Auth check ──
     initAuthClient();
-    _sbAuth.auth.onAuthStateChange(async function(event, session) {
-      if (event === 'SIGNED_IN' && session && document.getElementById('login-screen').style.display !== 'none') {
-        _authSession = session;
-        _authUser = session.user;
-        await startApp();
-      }
+
+    // Token refresh listener (keeps pz_session_tokens fresh while tab is open)
+    _sbAuth.auth.onAuthStateChange(function(event, session) {
       if (event === 'TOKEN_REFRESHED' && session) {
+        _authSession = session;
+        localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
+      }
+      if (event === 'SIGNED_IN' && session) {
         _authSession = session;
       }
     });
-    var authed = await checkExistingSession();
-    if (!authed) {
+
+    // ── "Remember this device" — valid for 60 days ──
+    var SIXTY_DAYS = 60 * 24 * 60 * 60 * 1000;
+    var rememberedEmail = localStorage.getItem('pz_remembered_email');
+    var loginTs = parseInt(localStorage.getItem('pz_login_ts') || '0');
+    var deviceTrusted = rememberedEmail && (Date.now() - loginTs) < SIXTY_DAYS;
+
+    if (!deviceTrusted) {
+      // Try restoring full Supabase session (works when token hasn't expired)
+      var sessionRestored = await checkExistingSession();
+      if (sessionRestored) {
+        // Upgrade trust on successful session restore
+        if (_authUser && _authUser.email) {
+          localStorage.setItem('pz_remembered_email', _authUser.email);
+          localStorage.setItem('pz_login_ts', Date.now());
+        }
+        deviceTrusted = true;
+      }
+    }
+
+    if (!deviceTrusted) {
       document.getElementById('app-loading').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
       return;
+    }
+
+    // Device is trusted — set a synthetic session if no real one (uses CENTER_SB_KEY as fallback)
+    if (!_authSession) {
+      _authSession = { access_token: null, user: { email: rememberedEmail } };
     }
 
     // ── STEP 2: UI init (runs only when authed) ──
@@ -5877,6 +5949,53 @@ function computeBodyAlerts() {
   return alerts.sort(function(a,b){ return (a.sev==='critical'?0:1)-(b.sev==='critical'?0:1); });
 }
 
+function getCustomerHealthRankings() {
+  var _custs = filterByCenter(D.customers);
+  var results = [];
+
+  _custs.forEach(function(c) {
+    // Get all body records for this customer, sorted by date asc
+    var recs = (D.body || []).filter(function(b){ return b.customer_id === c.id; })
+      .sort(function(a, b){ return (a.date||'') < (b.date||'') ? -1 : 1; });
+    if (!recs.length) return;
+
+    var latest = recs[recs.length - 1];
+    var prev   = recs.length >= 2 ? recs[recs.length - 2] : null;
+
+    var bmi       = parseFloat(latest.bmi)            || 0;
+    var fatPct    = parseFloat(latest.fat_percentage)  || 0;
+    var vfKg      = parseFloat(latest.visceral_fat)    || 0;
+    var musclePct = parseFloat(latest.muscle_percentage)|| 0;
+    var weight    = parseFloat(latest.weight)          || 0;
+    var gender    = c.gender || '';
+
+    var score = svCalcHealthScore(bmi, fatPct, vfKg, musclePct, gender, weight);
+    if (score === null) return;
+
+    // Trend vs previous scan
+    var trend = 0;
+    if (prev) {
+      var prevScore = svCalcHealthScore(
+        parseFloat(prev.bmi)||0, parseFloat(prev.fat_percentage)||0,
+        parseFloat(prev.visceral_fat)||0, parseFloat(prev.muscle_percentage)||0,
+        gender, parseFloat(prev.weight)||0
+      );
+      if (prevScore !== null) trend = score - prevScore;
+    }
+
+    results.push({
+      name: c.name, contact: c.contact, id: c.id,
+      score: score, trend: trend,
+      date: latest.date || '',
+      bmi: bmi, fatPct: fatPct, vfKg: vfKg, musclePct: musclePct
+    });
+  });
+
+  // Sort lowest score first (needs attention at top)
+  results.sort(function(a, b){ return a.score - b.score; });
+  return results;
+}
+
 function renderOverview() {
   var todayStr = new Date().toISOString().split('T')[0];
   var today = new Date(); today.setHours(0,0,0,0);
@@ -5986,6 +6105,83 @@ function renderOverview() {
       '<div class="ov-rev-card exp"><div class="ov-rev-lbl">Expenses ('+currentMonth+')</div><div class="ov-rev-val">₹'+mExp.toLocaleString('en-IN')+'</div></div>'+
       '<div class="ov-rev-card net"><div class="ov-rev-lbl">Net Profit</div><div class="ov-rev-val">'+(mNet>=0?'+':'')+' ₹'+mNet.toLocaleString('en-IN')+'</div></div>'+
     '</div>';
+
+  // ── Customer Health Score Rankings ──
+  var hsRanks = getCustomerHealthRankings();
+  var chsEl = document.getElementById('ov-center-health');
+  if (chsEl) {
+    if (!hsRanks.length) {
+      chsEl.innerHTML = '';
+    } else {
+      var avgScore = Math.round(hsRanks.reduce(function(s,r){ return s+r.score; }, 0) / hsRanks.length);
+      var avgGradeEmoji = avgScore >= 85 ? '🌟' : avgScore >= 70 ? '💚' : avgScore >= 55 ? '🟡' : avgScore >= 40 ? '🔶' : '🔴';
+      var avgGradeColor = avgScore >= 85 ? 'var(--success)' : avgScore >= 70 ? '#16a34a' : avgScore >= 55 ? '#b45309' : avgScore >= 40 ? '#c2410c' : 'var(--danger)';
+
+      function hsGrade(s) {
+        return s >= 85 ? { emoji:'🌟', lbl:'Excellent', bg:'#dcfce7', c:'#166534' }
+             : s >= 70 ? { emoji:'💚', lbl:'Good',      bg:'#d1fae5', c:'#14532d' }
+             : s >= 55 ? { emoji:'🟡', lbl:'Fair',      bg:'#fef9c3', c:'#854d0e' }
+             : s >= 40 ? { emoji:'🔶', lbl:'Needs Work',bg:'#ffedd5', c:'#9a3412' }
+             :           { emoji:'🔴', lbl:'Critical',  bg:'#fee2e2', c:'#991b1b' };
+      }
+
+      var hsHtml = '<div class="ov-card">'
+        + '<div class="ov-card-h">'
+        +   '<h3>🏥 Health Scores</h3>'
+        +   '<div style="display:flex;align-items:center;gap:8px">'
+        +     '<span style="font-size:12px;color:var(--muted)">Avg:</span>'
+        +     '<span style="font-family:DM Serif Display,serif;font-size:18px;color:'+avgGradeColor+'">'+avgGradeEmoji+' '+avgScore+'</span>'
+        +     '<span style="font-size:11px;color:var(--muted)">/100</span>'
+        +     '<span class="ov-link" onclick="goTo(\'body\',document.querySelector(\'[onclick*=body]\'))">All scans →</span>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="ov-card-body">';
+
+      // Sub-header row
+      hsHtml += '<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:0 4px 6px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">'
+        + '<span>Customer</span><span style="text-align:center">Score</span><span style="text-align:center">Trend</span><span></span>'
+        + '</div>';
+
+      hsRanks.slice(0, 10).forEach(function(r) {
+        var g = hsGrade(r.score);
+        var trendHtml = r.trend === 0
+          ? '<span style="color:var(--muted);font-size:12px">—</span>'
+          : r.trend > 0
+            ? '<span style="color:var(--success);font-size:12px;font-weight:700">▲ +'+r.trend+'</span>'
+            : '<span style="color:var(--danger);font-size:12px;font-weight:700">▼ '+r.trend+'</span>';
+
+        var metrics = [];
+        if (r.bmi)       metrics.push('BMI '+r.bmi.toFixed(1));
+        if (r.fatPct)    metrics.push('Fat '+r.fatPct.toFixed(1)+'%');
+        if (r.musclePct) metrics.push('Muscle '+r.musclePct.toFixed(1)+'%');
+        if (r.vfKg > 0)  metrics.push('VF '+r.vfKg.toFixed(1)+'kg');
+
+        var phone = (r.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
+        var waMsg = phone ? encodeURIComponent('Hi '+r.name+'! 🏥 Your latest Health Score is *'+r.score+'/100* — '+g.emoji+' '+g.lbl+'.\n\nKey metrics: '+metrics.join(', ')+'.\n\nLet\'s continue working on your health goals! 💪 — '+getCenterName()) : '';
+
+        hsHtml += '<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:7px 4px;border-bottom:1px solid var(--border)">'
+          + '<div>'
+          +   '<div style="font-weight:600;font-size:13px">'+r.name+'</div>'
+          +   '<div style="font-size:10px;color:var(--muted);margin-top:1px">'+(r.date||'No date')+' · '+metrics.slice(0,2).join(' · ')+'</div>'
+          + '</div>'
+          + '<div style="text-align:center">'
+          +   '<span style="background:'+g.bg+';color:'+g.c+';font-weight:700;font-size:13px;padding:3px 10px;border-radius:20px;white-space:nowrap">'+r.score+'</span>'
+          + '</div>'
+          + '<div style="text-align:center;min-width:44px">'+trendHtml+'</div>'
+          + '<div>'
+          +   (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+waMsg+'" target="_blank" rel="noopener" class="wa-btn" style="font-size:11px;padding:3px 8px;text-decoration:none" title="Send health score report">💬</a>' : '')
+          + '</div>'
+          + '</div>';
+      });
+
+      if (hsRanks.length > 10) {
+        hsHtml += '<div style="text-align:center;padding:8px 0;font-size:12px;color:var(--muted)">+' + (hsRanks.length - 10) + ' more customers</div>';
+      }
+
+      hsHtml += '</div></div>';
+      chsEl.innerHTML = hsHtml;
+    }
+  }
 
   // ── Left Column ──
   var leftHtml = '';
@@ -8107,16 +8303,23 @@ function renderBody() {
 
     var cv  = b.visceral_fat   ? Number(b.visceral_fat)   : null;
     var pv  = prev && prev.visceral_fat ? Number(prev.visceral_fat) : null;
+    function kgCell(kg, pct, pKg, goodWhenDown) {
+      if (kg === null && !pct) return '<td>—</td>';
+      var main = kg !== null ? kg + ' kg' : (pct ? pct + '%' : '—');
+      var sub  = (kg !== null && pct) ? '<div style="font-size:11px;color:var(--muted);line-height:1">' + pct + '%</div>' : '';
+      var arr  = kg !== null ? getArr(kg, pKg, goodWhenDown) : '';
+      return '<td style="line-height:1.4">' + main + arr + sub + '</td>';
+    }
     return '<tr'+rowStyle+'>'
       +'<td>'+b.date+(isMostRecent ? ' <span class="badge bg" style="font-size:9px">Latest</span>' : '')+'</td>'
       +'<td>'+(cw||'—')+getArr(cw,pw,revWeight)+'</td>'
-      +'<td>'+(cf||'—')+(cf?'%':'')+getArr(cf,pf,false)+'</td>'
+      +kgCell(cfKg, cf, pfKg, true)
       +'<td>'+(cv!==null?cv:'—')+getArr(cv,pv,false)+'</td>'
       +'<td>'+(b.bmr||'—')+'</td>'
       +'<td>'+(b.bmi||'—')+'</td>'
       +'<td>'+(b.body_age||'—')+'</td>'
-      +'<td>'+(csf||'—')+(csf?'%':'')+getArr(csf,psf,false)+'</td>'
-      +'<td>'+(cm||'—')+(cm?'%':'')+getArr(cm,pm,true)+'</td>'
+      +kgCell(csfKg, csf, psfKg, true)
+      +kgCell(cmKg, cm, pmKg, false)
       +'<td><div class="acts">'+aiBtns
         +'<button class="btn-p" style="font-size:11px;padding:3px 5px;margin-right:3px;background:#f9c74f;color:#333" onclick="sendMilestoneWA(\''+b.customer_id+'\')">🏆</button>'
         +'<button class="btn-p" style="font-size:11px;padding:3px 5px;margin-right:3px" onclick="askBodyAI(\''+b.customer_id+'\',\''+b.id+'\')">✨</button>'
@@ -8731,6 +8934,20 @@ function copyCoachLink(networkId) {
     prompt('Copy this link and share with your coaches:', link);
   });
 }
+function copySidebarInviteLink() {
+  // Find the current logged-in center's network_id
+  var center = null;
+  if (ACTIVE_CENTER) {
+    center = D.centers.find(function(c){ return c.id === ACTIVE_CENTER; });
+  } else if (D.centers.length === 1) {
+    center = D.centers[0];
+  }
+  if (!center || !center.network_id) {
+    showToast('No invite link yet — contact PulseZen support to get your Network ID.', 'error');
+    return;
+  }
+  copyInviteLink(center.network_id);
+}
 function copyInviteLink(networkId) {
   var link = 'https://app.pulsezen.in/register?ref=' + networkId;
   navigator.clipboard.writeText(link).then(function() {
@@ -9247,7 +9464,7 @@ document.getElementById('body-customer').addEventListener('change', async functi
   const custId = this.value;
   if (!custId || !getActiveSbUrl() || !getActiveSbKey()) return;
   const res = await fetch(getActiveSbUrl() + '/rest/v1/customers?id=eq.' + custId, {
-    headers: { 'apikey': getActiveSbKey(), 'Authorization': 'Bearer ' + getActiveSbKey() }
+    headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
   });
   const data = await res.json();
   if (data && data[0]) {
@@ -11525,17 +11742,24 @@ function renderSvBody() {
     var pV=(pfKg!==null&&psfKg!==null)?parseFloat((pfKg-psfKg).toFixed(2)):null;
     var cv=(b.visceral_fat)?Number(b.visceral_fat):null;
     var pv=(prev&&prev.visceral_fat)?Number(prev.visceral_fat):null;
+    function svKgCell(kg, pct, pKg, goodWhenDown) {
+      if (kg === null && !pct) return '<td>—</td>';
+      var main = kg !== null ? kg + ' kg' : (pct ? pct + '%' : '—');
+      var sub  = (kg !== null && pct) ? '<div style="font-size:11px;color:var(--muted);line-height:1">' + pct + '%</div>' : '';
+      var arr  = kg !== null ? getArr(kg, pKg, goodWhenDown) : '';
+      return '<td style="line-height:1.4">' + main + arr + sub + '</td>';
+    }
     var isMostRecent=idx===sorted.length-1;
     return '<tr'+(isMostRecent?' style="background:#f0fdf4"':'')+'>'
       +'<td>'+b.date+(isMostRecent?' <span class="badge bg" style="font-size:9px">Latest</span>':'')+'</td>'
       +'<td>'+(cw||'—')+getArr(cw,pw,revWeight)+'</td>'
-      +'<td>'+(cf||'—')+(cf?'%':'')+getArr(cf,pf,false)+'</td>'
+      +svKgCell(cfKg, cf, pfKg, true)
       +'<td>'+(cv!==null?cv:'—')+getArr(cv,pv,false)+'</td>'
       +'<td>'+(b.bmr||'—')+'</td>'
       +'<td>'+(b.bmi||'—')+'</td>'
       +'<td>'+(b.body_age||'—')+'</td>'
-      +'<td>'+(csf||'—')+(csf?'%':'')+getArr(csf,psf,false)+'</td>'
-      +'<td>'+(cm||'—')+(cm?'%':'')+getArr(cm,pm,true)+'</td>'
+      +svKgCell(csfKg, csf, psfKg, true)
+      +svKgCell(cmKg, cm, pmKg, false)
       +'<td><div class="acts">'
         +'<button class="btn-e" onclick="editSvBody(\''+b.id+'\')">Edit</button>'
         +'<button class="btn-d" onclick="delSvBody(\''+b.id+'\')">Del</button>'
@@ -12590,7 +12814,7 @@ function renderCoupons(){
     '<div class="stat"><div class="stat-l">Outstanding</div><div class="stat-v" style="color:var(--accent)">'+total+'</div></div>';
 }
 async function saveCoupon(){
-  getCredentials();if(!SB_URL||!SB_KEY){showToast('Not connected','error');return;}
+  getCredentials();if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
   var personId=document.getElementById('coupon-coach-id').value;
   var qty=Number(document.getElementById('coupon-qty').value)||1;
   var reason=document.getElementById('coupon-reason').value;
@@ -12630,7 +12854,7 @@ function calcCouponRenewal(){
     +(bal.balance>0 && actualUse<bal.balance?'<div style="color:var(--danger);font-size:12px;margin-top:8px;padding:8px 10px;background:#fdf0ef;border-radius:8px;font-weight:600">⚠️ WARNING: '+(bal.balance-actualUse)+' unused coupon'+(bal.balance-actualUse>1?'s':'')+' will be WASTED after this renewal! Use them now or they expire.</div>':'');
 }
 async function saveCouponRenewal(){
-  getCredentials();if(!SB_URL||!SB_KEY){showToast('Not connected','error');return;}
+  getCredentials();if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
   var cid=document.getElementById('cr-coach').value;
   var price=Number(document.getElementById('cr-price').value)||0;
   var days=Number(document.getElementById('cr-days').value)||26;
@@ -12676,7 +12900,7 @@ function showShakeBalance(){
   document.getElementById('sr-qty').max=bal;
 }
 async function saveShakeRedemption(){
-  getCredentials();if(!SB_URL||!SB_KEY){showToast('Not connected','error');return;}
+  getCredentials();if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
   var cid=document.getElementById('sr-person-id').value;
   var qty=Math.max(1,Number(document.getElementById('sr-qty').value)||1);
   var date=document.getElementById('sr-date').value;
@@ -12801,7 +13025,7 @@ function updateCpsPreview() {
   if(el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</strong>';
 }
 async function saveCoachPaymentSetup() {
-  getCredentials(); if(!SB_URL||!SB_KEY){showToast('Not connected','error');return;}
+  getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
   var coachId = document.getElementById('cps-coach-id').value;
   var c = D.coaches.find(function(x){return x.id===coachId;});
   if (!c) return;
@@ -12932,7 +13156,7 @@ function updateInstPreview() {
   el.innerHTML = 'After this payment: Paid <strong style="color:var(--success)">₹'+newPaid.toLocaleString('en-IN')+'</strong> &nbsp;|&nbsp; Balance <strong style="color:'+(newBal>0?'var(--danger)':'var(--success)')+'">₹'+Math.max(0,newBal).toLocaleString('en-IN')+'</strong>'+(newBal<=0?' &nbsp;<span style="color:var(--success)">✅ Fully paid!</span>':'');
 }
 async function saveInstallment() {
-  getCredentials(); if(!SB_URL||!SB_KEY){showToast('Not connected','error');return;}
+  getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
   var pid = document.getElementById('inst-payment-id').value;
   var p = (D.payments||[]).find(function(x){return x.id===pid;});
   if (!p) return;
@@ -12953,7 +13177,7 @@ async function saveInstallment() {
 }
 
 async function savePayment(){
-  getCredentials();if(!SB_URL||!SB_KEY){showToast('Not connected','error');return;}
+  getCredentials();if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
   var id=document.getElementById('payment-id').value;
   var personSel=document.getElementById('payment-person');
   var personName=personSel?personSel.options[personSel.selectedIndex].text:'';
@@ -13895,7 +14119,7 @@ function openLeadModal(id) {
 
 async function saveLead() {
   getCredentials();
-  if (!SB_URL) { showToast('Not connected — please set up your Supabase credentials first', 'error'); return; }
+  if (!getActiveSbUrl()) { showToast('Not connected — please set up your Supabase credentials first', 'error'); return; }
   var id = document.getElementById('lead-id').value;
   var name = document.getElementById('lead-name').value.trim();
   var mobile = document.getElementById('lead-mobile').value.trim();
