@@ -51,6 +51,7 @@
 | Tier | Who | Price | Core Focus |
 |---|---|---|---|
 | **Free** | New downlines & beginner coaches | ₹0 | Build the org tree. Up to 20 customers. |
+| **Starter** | Basic centers wanting Google presence | ₹99/month | Subdomain website (`centername.pulsezen.in`). No CRM extras. |
 | **Basic** | Growing coaches | ₹499/month | Body composition analytics & 200 customers. |
 | **Pro** | Serious center owners | ₹999/month | Unlimited customers, area exclusivity, and diet planning. |
 | **Elite** | Supervisors & Presidents | ₹1999/month | Multi-center management & AI-powered insights. |

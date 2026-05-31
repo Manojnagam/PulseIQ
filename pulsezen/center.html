@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta id="meta-desc" name="description" content="Wellness center — personalized nutrition programs for weight loss, weight gain and healthy living.">
+  <meta id="og-title" property="og:title" content="Wellness Center — PulseZen">
+  <meta id="og-desc" property="og:description" content="Personalized nutrition programs with daily coach support.">
+  <meta property="og:type" content="website">
+  <title id="page-title">Wellness Center — PulseZen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a3a28; --primary-mid: #2d5a3d; --primary-light: #3d7a52;
+      --accent: #e8a838; --accent-light: #fef3c7;
+      --text: #111827; --muted: #6b7280;
+      --surface: #f8faf9; --border: #e5e7eb; --white: #ffffff;
+      --success: #16a34a; --wa: #25D366;
+      --shadow-sm: 0 1px 4px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 20px rgba(0,0,0,.09);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,.12);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { font-family:'DM Sans',sans-serif; color:var(--text); background:var(--white); overflow-x:hidden; }
+    h1,h2,h3 { font-family:'DM Serif Display',serif; }
+
+    /* ── LOADING ── */
+    #loading {
+      position:fixed; inset:0; background:#fff; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; z-index:9999; gap:18px;
+    }
+    .loading-logo { font-family:'DM Serif Display',serif; font-size:28px; color:var(--primary); }
+    .loading-logo span { color:var(--accent); }
+    .loading-spinner {
+      width:36px; height:36px; border:3px solid var(--border);
+      border-top-color:var(--primary); border-radius:50%;
+      animation:spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── NOT FOUND ── */
+    #notfound {
+      display:none; min-height:100vh; background:linear-gradient(135deg,#05120b,#1a3a28);
+      align-items:center; justify-content:center; text-align:center; padding:40px 24px;
+      flex-direction:column; gap:18px;
+    }
+    #notfound h2 { font-size:32px; color:#fff; }
+    #notfound p { font-size:15px; color:rgba(255,255,255,.6); max-width:420px; line-height:1.7; }
+    #notfound a { color:var(--accent); text-decoration:none; font-weight:700; }
+
+    /* ── NAVBAR ── */
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      padding:0 32px; height:68px;
+      display:flex; align-items:center; justify-content:space-between;
+      transition:all .3s;
+    }
+    nav.scrolled {
+      background:rgba(255,255,255,.97); backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border); box-shadow:var(--shadow-sm);
+    }
+    .nav-logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .nav-logo-icon {
+      width:38px; height:38px; border-radius:10px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-family:'DM Serif Display',serif; font-size:18px;
+      box-shadow:0 2px 8px rgba(26,58,40,.3);
+    }
+    .nav-logo-name { font-family:'DM Serif Display',serif; font-size:16px; color:var(--primary); line-height:1.2; }
+    nav:not(.scrolled) .nav-logo-name { color:#fff; }
+    .nav-logo-sub { font-size:10px; color:var(--muted); }
+    nav:not(.scrolled) .nav-logo-sub { color:rgba(255,255,255,.45); }
+    .nav-right { display:flex; align-items:center; gap:14px; }
+    .nav-link { font-size:13px; font-weight:600; color:var(--primary); text-decoration:none; transition:opacity .2s; }
+    nav:not(.scrolled) .nav-link { color:rgba(255,255,255,.8); }
+    .nav-link:hover { opacity:.65; }
+    .nav-cta {
+      background:var(--wa); color:#fff; border:none; border-radius:9px;
+      padding:10px 20px; font-family:'DM Sans',sans-serif; font-size:13px;
+      font-weight:700; cursor:pointer; text-decoration:none;
+      display:inline-flex; align-items:center; gap:6px;
+      transition:all .2s; box-shadow:0 2px 8px rgba(37,211,102,.3);
+    }
+    .nav-cta:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(37,211,102,.45); }
+    .nav-ham { display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; padding:4px; }
+    .nav-ham span { width:22px; height:2px; background:var(--text); display:block; transition:all .3s; border-radius:2px; }
+    nav:not(.scrolled) .nav-ham span { background:#fff; }
+    .nav-ham.open span:nth-child(1) { transform:rotate(45deg) translate(5px,5px); }
+    .nav-ham.open span:nth-child(2) { opacity:0; transform:scaleX(0); }
+    .nav-ham.open span:nth-child(3) { transform:rotate(-45deg) translate(5px,-5px); }
+    .nav-mobile {
+      display:none; position:fixed; top:68px; left:0; right:0;
+      background:var(--white); border-bottom:1px solid var(--border);
+      padding:20px 24px; flex-direction:column; gap:4px;
+      box-shadow:var(--shadow-md); z-index:99;
+    }
+    .nav-mobile.open { display:flex; }
+    .nav-mobile a { font-size:15px; font-weight:600; color:var(--text); text-decoration:none; padding:12px 0; border-bottom:1px solid var(--border); }
+    .nav-mobile a:last-child { border:none; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height:100vh;
+      background:linear-gradient(135deg,#05120b 0%,#0f2419 35%,#1a3a28 65%,#2d5a3d 100%);
+      display:flex; align-items:center; justify-content:center;
+      text-align:center; padding:120px 24px 80px; position:relative; overflow:hidden;
+    }
+    .hero-orb1 {
+      position:absolute; top:-120px; right:-120px; width:550px; height:550px;
+      border-radius:50%; background:radial-gradient(circle,rgba(232,168,56,.09) 0%,transparent 65%);
+      animation:orb-float 14s ease-in-out infinite alternate;
+    }
+    .hero-orb2 {
+      position:absolute; bottom:-150px; left:-150px; width:650px; height:650px;
+      border-radius:50%; background:radial-gradient(circle,rgba(61,122,82,.14) 0%,transparent 65%);
+      animation:orb-float 18s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes orb-float { from{transform:translate(0,0)} to{transform:translate(28px,18px)} }
+    .hero-content { position:relative; z-index:1; max-width:700px; }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:8px;
+      background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18);
+      color:rgba(255,255,255,.9); font-size:12px; font-weight:600; padding:7px 18px;
+      border-radius:40px; margin-bottom:24px; letter-spacing:.5px; backdrop-filter:blur(8px);
+    }
+    .badge-dot { width:6px; height:6px; background:var(--wa); border-radius:50%; animation:blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+    .hero h1 { font-size:clamp(34px,6.5vw,62px); color:#fff; line-height:1.1; margin-bottom:20px; letter-spacing:-.5px; }
+    .hero h1 em { font-style:normal; background:linear-gradient(90deg,#f0c060,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .hero-sub { font-size:clamp(15px,2.5vw,18px); color:rgba(255,255,255,.7); line-height:1.8; margin-bottom:36px; max-width:540px; margin-left:auto; margin-right:auto; }
+    .hero-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:52px; }
+    .btn-primary {
+      background:var(--wa); color:#fff; border:none; border-radius:12px;
+      padding:16px 32px; font-family:'DM Sans',sans-serif; font-size:15px;
+      font-weight:700; cursor:pointer; text-decoration:none;
+      display:inline-flex; align-items:center; gap:8px;
+      transition:all .25s; box-shadow:0 6px 24px rgba(37,211,102,.4);
+    }
+    .btn-primary:hover { transform:translateY(-3px); box-shadow:0 10px 32px rgba(37,211,102,.55); }
+    .btn-secondary {
+      background:rgba(255,255,255,.08); color:#fff;
+      border:1.5px solid rgba(255,255,255,.22); border-radius:12px;
+      padding:16px 32px; font-family:'DM Sans',sans-serif; font-size:15px;
+      font-weight:600; cursor:pointer; text-decoration:none;
+      display:inline-flex; align-items:center; gap:8px;
+      transition:all .25s; backdrop-filter:blur(8px);
+    }
+    .btn-secondary:hover { background:rgba(255,255,255,.16); }
+    .hero-stats {
+      display:flex; justify-content:center;
+      background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
+      border-radius:18px; backdrop-filter:blur(16px);
+      overflow:hidden; max-width:480px; margin:0 auto;
+    }
+    .hero-stat { flex:1; padding:18px 14px; text-align:center; border-right:1px solid rgba(255,255,255,.08); }
+    .hero-stat:last-child { border-right:none; }
+    .hero-stat-num { font-family:'DM Serif Display',serif; font-size:26px; color:#fff; display:block; line-height:1; }
+    .hero-stat-num em { color:var(--accent); font-style:normal; }
+    .hero-stat-label { font-size:11px; color:rgba(255,255,255,.45); margin-top:4px; display:block; line-height:1.4; }
+
+    /* ── COMMONS ── */
+    .container { max-width:1100px; margin:0 auto; }
+    .section-tag { display:inline-block; background:var(--accent-light); color:#92400e; font-size:11px; font-weight:700; padding:5px 14px; border-radius:40px; letter-spacing:.8px; text-transform:uppercase; margin-bottom:14px; }
+    .section-title { font-size:clamp(26px,4vw,40px); color:var(--primary); margin-bottom:14px; line-height:1.2; }
+    .section-sub { font-size:15px; color:var(--muted); line-height:1.8; max-width:560px; }
+    .section-header { margin-bottom:48px; }
+    .section-header.center { text-align:center; }
+    .section-header.center .section-sub { margin:0 auto; }
+    section { padding:80px 24px; }
+    .fade-in { opacity:0; transform:translateY(22px); transition:opacity .6s ease,transform .6s ease; }
+    .fade-in.visible { opacity:1; transform:translateY(0); }
+
+    /* ── ABOUT ── */
+    .about-grid { display:grid; grid-template-columns:1fr 1fr; gap:52px; align-items:center; }
+    .about-img {
+      border-radius:22px; overflow:hidden; position:relative;
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
+      min-height:380px; display:flex; align-items:center; justify-content:center;
+      box-shadow:0 12px 40px rgba(26,58,40,.2);
+    }
+    .about-img-placeholder { text-align:center; color:rgba(255,255,255,.65); padding:40px; }
+    .about-img-placeholder .icon { font-size:64px; margin-bottom:14px; display:block; }
+    .about-img-placeholder p { font-size:13px; line-height:1.6; }
+    .about-points { display:flex; flex-direction:column; gap:18px; margin-top:28px; }
+    .about-point { display:flex; gap:14px; align-items:flex-start; }
+    .about-point-icon {
+      width:40px; height:40px; border-radius:10px; flex-shrink:0;
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
+      display:flex; align-items:center; justify-content:center; font-size:17px;
+      box-shadow:0 3px 10px rgba(26,58,40,.18);
+    }
+    .about-point-text h4 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:3px; }
+    .about-point-text p { font-size:13px; color:var(--muted); line-height:1.6; }
+    .about-location-note { margin-top:14px; font-size:13px; color:var(--muted); line-height:1.7; background:var(--surface); border-radius:10px; padding:12px 16px; border:1px solid var(--border); }
+
+    /* ── PROGRAMS ── */
+    .programs-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
+    .program-card { background:var(--white); border-radius:20px; padding:32px 28px; border:1.5px solid var(--border); transition:all .25s; box-shadow:var(--shadow-sm); position:relative; overflow:hidden; }
+    .program-card::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--primary),var(--primary-light)); transform:scaleX(0); transform-origin:left; transition:transform .25s; }
+    .program-card:hover { border-color:var(--primary-light); box-shadow:0 8px 32px rgba(26,58,40,.1); transform:translateY(-3px); }
+    .program-card:hover::after { transform:scaleX(1); }
+    .program-card.featured { background:linear-gradient(160deg,#05120b,var(--primary) 60%,var(--primary-mid)); border-color:transparent; color:#fff; box-shadow:0 16px 48px rgba(26,58,40,.28); }
+    .program-card.featured:hover { transform:translateY(-4px); }
+    .program-card.featured::after { display:none; }
+    .program-icon { font-size:36px; margin-bottom:16px; display:block; }
+    .program-badge { display:inline-block; background:var(--accent); color:#fff; font-size:10px; font-weight:700; padding:3px 12px; border-radius:40px; margin-bottom:12px; letter-spacing:.5px; }
+    .program-card h3 { font-size:21px; margin-bottom:10px; color:var(--primary); }
+    .program-card.featured h3 { color:#fff; }
+    .program-card p { font-size:14px; color:var(--muted); line-height:1.7; margin-bottom:18px; }
+    .program-card.featured p { color:rgba(255,255,255,.68); }
+    .program-features { list-style:none; display:flex; flex-direction:column; gap:9px; }
+    .program-features li { font-size:13px; display:flex; align-items:center; gap:9px; color:var(--muted); }
+    .program-card.featured .program-features li { color:rgba(255,255,255,.75); }
+    .program-features li::before { content:'✓'; font-weight:800; color:var(--success); font-size:12px; flex-shrink:0; }
+    .program-card.featured .program-features li::before { color:var(--accent); }
+
+    /* ── HOW IT WORKS ── */
+    .steps-row { display:grid; grid-template-columns:repeat(3,1fr); gap:0; position:relative; max-width:800px; margin:0 auto; }
+    .steps-row::before { content:''; position:absolute; top:27px; left:16%; right:16%; height:2px; background:linear-gradient(90deg,var(--primary-light),var(--primary)); z-index:0; }
+    .step-card { text-align:center; padding:0 20px 24px; position:relative; }
+    .step-num { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff; font-family:'DM Serif Display',serif; font-size:22px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; position:relative; z-index:1; box-shadow:0 4px 16px rgba(26,58,40,.3); }
+    .step-icon { font-size:30px; margin-bottom:12px; }
+    .step-card h3 { font-size:17px; color:var(--primary); margin-bottom:8px; }
+    .step-card p { font-size:13px; color:var(--muted); line-height:1.65; }
+
+    /* ── CONDITIONS ── */
+    .conditions-pills { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+    .condition-pill { background:var(--white); border:1.5px solid var(--border); border-radius:40px; padding:11px 22px; font-size:14px; font-weight:600; color:var(--primary); transition:all .2s; cursor:default; }
+    .condition-pill:hover { border-color:var(--primary-light); background:#f0f7f3; box-shadow:var(--shadow-sm); transform:translateY(-1px); }
+    .conditions-note { text-align:center; font-size:12px; color:var(--muted); margin-top:24px; line-height:1.6; }
+
+    /* ── TESTIMONIALS ── */
+    .testi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
+    .testi-card { background:var(--surface); border-radius:18px; padding:28px 24px; border:1.5px solid var(--border); box-shadow:var(--shadow-sm); transition:all .25s; }
+    .testi-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); border-color:#d1d5db; }
+    .testi-stars { color:#f59e0b; font-size:15px; letter-spacing:2px; margin-bottom:12px; }
+    .testi-text { font-size:14px; color:var(--text); line-height:1.75; font-style:italic; margin-bottom:16px; }
+    .testi-author { display:flex; align-items:center; gap:10px; padding-top:14px; border-top:1px solid var(--border); }
+    .testi-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff; font-weight:700; font-size:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .testi-name { font-size:13px; font-weight:700; color:var(--text); }
+    .testi-meta { font-size:11px; color:var(--muted); }
+
+    /* ── LOCATION ── */
+    .location { background:var(--primary); color:#fff; }
+    .location .section-title { color:#fff; }
+    .location .section-sub { color:rgba(255,255,255,.62); }
+    .location .section-tag { background:rgba(255,255,255,.1); color:rgba(255,255,255,.7); }
+    .location-grid { display:grid; grid-template-columns:1fr 1fr; gap:44px; align-items:start; }
+    .location-map { border-radius:18px; overflow:hidden; height:340px; border:1.5px solid rgba(255,255,255,.12); box-shadow:0 8px 32px rgba(0,0,0,.25); }
+    .location-map iframe { width:100%; height:100%; border:none; }
+    .location-details { display:flex; flex-direction:column; gap:22px; }
+    .location-item { display:flex; gap:16px; align-items:flex-start; }
+    .location-item-icon { width:42px; height:42px; border-radius:11px; flex-shrink:0; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,.1); }
+    .location-item-label { font-size:11px; color:rgba(255,255,255,.45); font-weight:700; text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
+    .location-item-val { font-size:14px; color:#fff; line-height:1.6; }
+    .location-item-val a { color:var(--accent); text-decoration:none; }
+
+    /* ── FINAL CTA ── */
+    .cta-section { background:linear-gradient(135deg,#05120b 0%,#0f2419 40%,#1a3a28 100%); text-align:center; padding:100px 24px; position:relative; overflow:hidden; }
+    .cta-section::before { content:''; position:absolute; top:-100px; right:-100px; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(232,168,56,.06) 0%,transparent 70%); }
+    .cta-section h2 { font-size:clamp(28px,4.5vw,48px); color:#fff; margin-bottom:16px; position:relative; }
+    .cta-section p { font-size:16px; color:rgba(255,255,255,.65); margin-bottom:40px; max-width:480px; margin-left:auto; margin-right:auto; line-height:1.8; position:relative; }
+    .cta-btns { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; position:relative; }
+
+    /* ── FLOATING WA ── */
+    .wa-float { position:fixed; bottom:28px; right:28px; z-index:200; width:58px; height:58px; border-radius:50%; background:var(--wa); color:#fff; font-size:28px; display:flex; align-items:center; justify-content:center; text-decoration:none; box-shadow:0 4px 20px rgba(37,211,102,.55); animation:wa-pulse 2.5s infinite; transition:transform .2s; }
+    .wa-float:hover { transform:scale(1.12); }
+    @keyframes wa-pulse { 0%,100%{box-shadow:0 4px 20px rgba(37,211,102,.5)} 50%{box-shadow:0 4px 36px rgba(37,211,102,.9),0 0 0 8px rgba(37,211,102,.08)} }
+
+    /* ── FOOTER ── */
+    footer { background:#030a05; padding:44px 24px; text-align:center; }
+    .footer-inner { max-width:700px; margin:0 auto; }
+    .footer-brand { font-family:'DM Serif Display',serif; font-size:22px; color:#fff; margin-bottom:4px; }
+    .footer-powered { font-size:11px; color:rgba(255,255,255,.28); margin-bottom:20px; }
+    .footer-powered a { color:rgba(255,255,255,.45); text-decoration:none; }
+    .footer-links { display:flex; gap:22px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; }
+    .footer-links a { font-size:13px; color:rgba(255,255,255,.38); text-decoration:none; transition:color .2s; }
+    .footer-links a:hover { color:rgba(255,255,255,.7); }
+    .footer-divider { height:1px; background:rgba(255,255,255,.06); margin-bottom:18px; }
+    .footer-copy { font-size:11px; color:rgba(255,255,255,.2); line-height:1.6; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width:900px) { .steps-row{grid-template-columns:1fr} .steps-row::before{display:none} }
+    @media (max-width:768px) {
+      nav{padding:0 20px;height:60px} .nav-link{display:none} .nav-cta{display:none}
+      .nav-logo-sub{display:none} .nav-ham{display:flex}
+      .about-grid{grid-template-columns:1fr} .location-grid{grid-template-columns:1fr}
+      .hero-stats{max-width:100%} section{padding:56px 16px}
+    }
+    @media (max-width:520px) { .hero-stat{padding:14px 10px} .hero-stat-label{font-size:10px} }
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="loading-logo">Pulse<span>Zen</span></div>
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- NOT FOUND -->
+<div id="notfound" style="display:none;min-height:100vh;background:linear-gradient(135deg,#05120b,#1a3a28);display:none;align-items:center;justify-content:center;text-align:center;padding:40px 24px;flex-direction:column;gap:18px">
+  <div style="font-family:'DM Serif Display',serif;font-size:36px;color:#fff">PulseZen</div>
+  <h2 style="font-size:26px;color:#fff">This wellness center is coming soon</h2>
+  <p style="color:rgba(255,255,255,.6);font-size:15px;max-width:400px;line-height:1.7">This center is setting up their page. Check back soon or visit <a href="https://pulsezen.in" style="color:#e8a838">pulsezen.in</a> to find a center near you.</p>
+</div>
+
+<!-- MAIN PAGE (hidden until data loads) -->
+<div id="page" style="display:none">
+
+<!-- NAVBAR -->
+<nav id="mainNav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-icon" id="nav-icon">W</div>
+    <div>
+      <div class="nav-logo-name" id="nav-name">Wellness Center</div>
+      <div class="nav-logo-sub">Nutrition &amp; Health Center</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="#programs">Programs</a>
+    <a class="nav-link" href="#how">How It Works</a>
+    <a class="nav-link" href="#location">Location</a>
+    <a class="nav-cta" id="nav-wa" href="#" target="_blank">💬 Book Free Consultation</a>
+    <button class="nav-ham" id="navHam" onclick="toggleMobileNav()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE NAV -->
+<div class="nav-mobile" id="navMobile">
+  <a href="#programs" onclick="closeMobileNav()">Programs</a>
+  <a href="#how" onclick="closeMobileNav()">How It Works</a>
+  <a href="#location" onclick="closeMobileNav()">Location</a>
+  <a id="mob-wa" href="#" target="_blank" onclick="closeMobileNav()" style="color:var(--success)">💬 Book Free Consultation</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-orb1"></div>
+  <div class="hero-orb2"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      <span id="hero-badge-text">Trusted Wellness Center</span>
+    </div>
+    <h1>Transform Your Health,<br><em>One Day at a Time</em></h1>
+    <p class="hero-sub">Personalized nutrition programs for weight loss, weight gain and healthy living — guided by expert coaches every step of the way.</p>
+    <div class="hero-btns">
+      <a class="btn-primary" id="hero-wa" href="#" target="_blank">💬 Book Free Consultation</a>
+      <a class="btn-secondary" href="#programs">View Programs ↓</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-num"><em>100</em>+</span>
+        <span class="hero-stat-label">Happy Members</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num" id="hero-est"><em>1</em>+</span>
+        <span class="hero-stat-label">Years of Excellence</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num"><em>95</em>%</span>
+        <span class="hero-stat-label">Success Rate</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num em" style="color:var(--accent);font-family:'DM Serif Display',serif;font-size:26px;display:block;line-height:1">Free</span>
+        <span class="hero-stat-label">First Consultation</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section style="background:var(--white)" id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-img fade-in">
+        <div class="about-img-placeholder">
+          <span class="icon">🌿</span>
+          <p>Center photo<br>coming soon</p>
+        </div>
+      </div>
+      <div class="fade-in">
+        <div class="section-header">
+          <span class="section-tag">About Us</span>
+          <h2 class="section-title">We Care About Your Real Results</h2>
+          <p class="section-sub" id="about-sub">Our coaches work with you personally to build a program that fits your body, your lifestyle and your goals.</p>
+        </div>
+        <div class="about-location-note" id="about-location">
+          📍 Located in your city — come visit us for a free first consultation.
+        </div>
+        <div class="about-points">
+          <div class="about-point">
+            <div class="about-point-icon">📊</div>
+            <div class="about-point-text">
+              <h4>Body Composition Analysis</h4>
+              <p>Scientific body scanning to track your real progress — not just weight, but fat, muscle and overall health score.</p>
+            </div>
+          </div>
+          <div class="about-point">
+            <div class="about-point-icon">🥗</div>
+            <div class="about-point-text">
+              <h4>Personalised Meal Plans</h4>
+              <p>Custom 7-day meal plans based on your goal, age, and lifestyle — no generic diets.</p>
+            </div>
+          </div>
+          <div class="about-point">
+            <div class="about-point-icon">💬</div>
+            <div class="about-point-text">
+              <h4>Daily Coach Support</h4>
+              <p>Your coach stays connected with you throughout your journey — guidance, motivation and accountability.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRAMS -->
+<section style="background:var(--white)" id="programs">
+  <div class="container">
+    <div class="section-header center fade-in">
+      <span class="section-tag">Our Programs</span>
+      <h2 class="section-title">Choose Your Wellness Journey</h2>
+      <p class="section-sub">Every program is guided by a personal coach and powered by scientifically formulated nutrition products.</p>
+    </div>
+    <div class="programs-grid">
+      <div class="program-card fade-in">
+        <span class="program-icon">🔥</span>
+        <h3>Weight Loss</h3>
+        <p>Lose weight sustainably with a structured nutrition plan, daily shakes and regular body scans to track progress.</p>
+        <ul class="program-features">
+          <li>Body composition analysis</li>
+          <li>Personalised meal plan</li>
+          <li>Daily protein shake</li>
+          <li>Weekly progress check</li>
+          <li>Coach WhatsApp support</li>
+        </ul>
+      </div>
+      <div class="program-card featured fade-in">
+        <span class="program-icon">⭐</span>
+        <div class="program-badge">Most Popular</div>
+        <h3>Complete Wellness</h3>
+        <p>A full-body transformation program combining weight management, energy boost and long-term habit building.</p>
+        <ul class="program-features">
+          <li>Everything in Weight Loss</li>
+          <li>Supplement guidance</li>
+          <li>Bi-weekly body scans</li>
+          <li>Custom supplement plan</li>
+          <li>Priority coach support</li>
+        </ul>
+      </div>
+      <div class="program-card fade-in">
+        <span class="program-icon">💪</span>
+        <h3>Weight Gain &amp; Muscle</h3>
+        <p>Build lean muscle and healthy weight with high-protein nutrition plans designed for your body type and activity level.</p>
+        <ul class="program-features">
+          <li>Muscle mass tracking</li>
+          <li>High-protein meal plan</li>
+          <li>Protein shake program</li>
+          <li>Strength-focused guidance</li>
+          <li>Coach WhatsApp support</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section style="background:var(--surface)" id="how">
+  <div class="container">
+    <div class="section-header center fade-in">
+      <span class="section-tag">How It Works</span>
+      <h2 class="section-title">Your Journey in 3 Simple Steps</h2>
+      <p class="section-sub">Getting started is free. No commitment. Just walk in or book via WhatsApp.</p>
+    </div>
+    <div class="steps-row fade-in">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-icon">💬</div>
+        <h3>Book Free Consultation</h3>
+        <p>Message us on WhatsApp or walk into the center. Your first consultation and body checkup is completely free.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-icon">📊</div>
+        <h3>Get Your Body Scan</h3>
+        <p>We do a full body composition scan — BMI, fat percentage, muscle mass — and explain exactly what your numbers mean.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-icon">🌿</div>
+        <h3>Start Your Program</h3>
+        <p>Your coach builds a personalised nutrition plan. You come in daily, take your shake, get motivated and see real results.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONDITIONS -->
+<section style="background:var(--white)">
+  <div class="container">
+    <div class="section-header center fade-in">
+      <span class="section-tag">Health Conditions</span>
+      <h2 class="section-title">Problems Our Members Overcame</h2>
+      <p class="section-sub">Our members have seen real improvement in many health conditions through consistent nutrition and wellness programs.</p>
+    </div>
+    <div class="conditions-pills fade-in">
+      <span class="condition-pill">⚖️ Weight Loss</span>
+      <span class="condition-pill">💪 Weight Gain &amp; Muscle</span>
+      <span class="condition-pill">🦴 Back Pain</span>
+      <span class="condition-pill">😴 Sleep Problems</span>
+      <span class="condition-pill">🌿 Digestive Issues</span>
+      <span class="condition-pill">✨ Skin &amp; Acne Problems</span>
+      <span class="condition-pill">🦵 Knee &amp; Joint Pain</span>
+      <span class="condition-pill">🩸 Low Blood Pressure</span>
+      <span class="condition-pill">🧠 Post-Illness Recovery</span>
+      <span class="condition-pill">⚡ Low Energy &amp; Fatigue</span>
+      <span class="condition-pill">🦷 Sciatica</span>
+    </div>
+    <p class="conditions-note">* Nutrition support complements but does not replace medical treatment. Always consult your doctor for medical conditions.</p>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section style="background:var(--surface)" id="testimonials">
+  <div class="container">
+    <div class="section-header center fade-in">
+      <span class="section-tag">Testimonials</span>
+      <h2 class="section-title">What Our Members Say</h2>
+      <p class="section-sub" id="testi-sub">Real stories from people who transformed their health at our wellness center.</p>
+    </div>
+    <div class="testi-grid fade-in">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"I had tried so many diets before but nothing worked long-term. At this center the coach explained everything clearly and the daily shake routine made it easy to stay consistent. I lost 6 kg in my first month!"</p>
+        <div class="testi-author">
+          <div class="testi-avatar">P</div>
+          <div><div class="testi-name">Priya S.</div><div class="testi-meta">Weight Loss Member</div></div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"The body scan every week showed me real data — not just the weighing scale. My fat percentage dropped from 34% to 26% in 45 days. The coach WhatsApp support is what makes this different from anywhere else."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">R</div>
+          <div><div class="testi-name">Ravi K.</div><div class="testi-meta">Complete Wellness Member</div></div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"I was underweight and wanted to build muscle. The personalized meal plan and protein shake program helped me gain 5 kg of healthy weight in 2 months. Coach is very motivating and always available."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">A</div>
+          <div><div class="testi-name">Arjun M.</div><div class="testi-meta">Muscle Gain Member</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOCATION -->
+<section class="location" id="location">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-tag">Find Us</span>
+      <h2 class="section-title">Visit Our Center</h2>
+      <p class="section-sub">Walk in anytime during center hours — no appointment needed for your first free consultation.</p>
+    </div>
+    <div class="location-grid fade-in">
+      <div class="location-map" id="map-wrap">
+        <iframe id="map-frame" src="" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+      <div class="location-details">
+        <div class="location-item">
+          <div class="location-item-icon">📍</div>
+          <div>
+            <div class="location-item-label">Address</div>
+            <div class="location-item-val" id="loc-address">—</div>
+          </div>
+        </div>
+        <div class="location-item">
+          <div class="location-item-icon">🕐</div>
+          <div>
+            <div class="location-item-label">Center Timings</div>
+            <div class="location-item-val">
+              Mon – Sat: 7:00 AM – 8:00 PM<br>
+              Sunday: 8:00 AM – 1:00 PM
+            </div>
+          </div>
+        </div>
+        <div class="location-item">
+          <div class="location-item-icon">📞</div>
+          <div>
+            <div class="location-item-label">Contact</div>
+            <div class="location-item-val" id="loc-phone">—</div>
+          </div>
+        </div>
+        <div class="location-item">
+          <div class="location-item-icon">💬</div>
+          <div>
+            <div class="location-item-label">WhatsApp</div>
+            <div class="location-item-val"><a id="loc-wa" href="#" target="_blank">Message us on WhatsApp →</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta-section">
+  <h2>Ready to Start Your<br>Health Journey?</h2>
+  <p>Your first consultation is completely free. Walk in or send us a message on WhatsApp — we'll take care of the rest.</p>
+  <div class="cta-btns">
+    <a class="btn-primary" id="cta-wa" href="#" target="_blank">💬 Book Free Consultation</a>
+    <a class="btn-secondary" href="#programs">View Programs ↓</a>
+  </div>
+</section>
+
+<!-- FLOATING WA -->
+<a class="wa-float" id="float-wa" href="#" target="_blank" title="Chat on WhatsApp">💬</a>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand" id="footer-name">Wellness Center</div>
+    <div class="footer-powered">Powered by <a href="https://pulsezen.in" target="_blank">PulseZen</a> — wellness management platform</div>
+    <div class="footer-links">
+      <a href="https://pulsezen.in/terms.html" target="_blank">Terms</a>
+      <a href="https://pulsezen.in/consent.html" target="_blank">Privacy</a>
+      <a href="https://pulsezen.in" target="_blank">PulseZen</a>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-copy" id="footer-copy">© 2025 Wellness Center. All rights reserved.</div>
+    <div class="footer-disclaimer">* Results may vary. Nutrition support is not a substitute for medical treatment. Individual results depend on consistency, diet and lifestyle factors.</div>
+  </div>
+</footer>
+
+</div><!-- #page -->
+
+<script>
+  var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+
+  var host = window.location.hostname.toLowerCase(); // e.g. dharanis.pulsezen.in
+  var slug = host.split('.')[0];                     // e.g. dharanis
+
+  function el(id) { return document.getElementById(id); }
+
+  function setWA(ids, link) {
+    ids.forEach(function(id){ var e = el(id); if(e){ e.href = link; } });
+  }
+
+  async function loadCenter() {
+    try {
+      var res = await fetch(
+        SB_URL + '/rest/v1/wellness_centers?slug=eq.' + encodeURIComponent(slug) + '&select=*&limit=1',
+        { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
+      );
+      var data = await res.json();
+      var c = Array.isArray(data) ? data[0] : null;
+
+      if (!c) {
+        el('loading').style.display = 'none';
+        el('notfound').style.display = 'flex';
+        return;
+      }
+
+      var name     = c.name || 'Wellness Center';
+      var owner    = c.owner || c.owner_name || '';
+      var location = c.location || '';
+      var contact  = (c.contact || '').replace(/\D/g,'');
+      var phone    = contact.length === 10 ? '91' + contact : contact;
+      var estYear  = c.created_at ? new Date(c.created_at).getFullYear() : new Date().getFullYear();
+      var yearsOld = Math.max(1, new Date().getFullYear() - estYear);
+      var letter   = name.charAt(0).toUpperCase();
+      var waText   = encodeURIComponent('Hi! I\'d like to book a free consultation at ' + name);
+      var waLink   = phone ? 'https://wa.me/' + phone + '?text=' + waText : '#';
+      var mapsQ    = encodeURIComponent(name + (location ? ' ' + location : ''));
+
+      // Page meta
+      document.title = name + (location ? ' — ' + location : '') + ' | Weight Loss · Wellness Programs';
+      el('meta-desc').setAttribute('content', name + (location?' in '+location:'') + ' — Personalized nutrition programs for weight loss, weight gain and healthy living. Free first consultation.');
+      el('og-title').setAttribute('content', name + ' — Lose Weight · Gain Muscle · Feel Better');
+      el('og-desc').setAttribute('content', 'Personalized nutrition programs with daily coach support at ' + name + (location?' in '+location:'') + '. Free first consultation.');
+
+      // Navbar
+      el('nav-icon').textContent = letter;
+      el('nav-name').textContent = name;
+
+      // Hero
+      el('hero-badge-text').textContent = 'Trusted Wellness Center' + (location ? ' · ' + location : '');
+      el('hero-est').innerHTML = '<em>' + yearsOld + '</em>+';
+
+      // About
+      el('about-sub').textContent = 'At ' + name + ', we believe that good health is not a luxury — it\'s a right. Our coaches work with you personally to build a program that fits your body, your lifestyle and your goals.';
+      el('about-location').innerHTML = '📍 Located in <strong>' + (location || 'your city') + '</strong>' + (owner ? ' · Run by ' + owner : '') + ' — come visit us for a free first consultation.';
+
+      // Testimonials sub
+      el('testi-sub').textContent = 'Real stories from people who transformed their health at ' + name + '.';
+
+      // Location
+      el('loc-address').innerHTML = name + (location ? '<br>' + location : '') + (owner ? '<br><span style="font-size:12px;color:rgba(255,255,255,.42)">Run by ' + owner + '</span>' : '');
+      if (phone) {
+        el('loc-phone').innerHTML = '<a href="tel:+' + phone + '" style="color:var(--accent)">+' + phone.replace(/^91/, '+91 ').replace(/(\d{5})(\d{5})$/, '$1 $2') + '</a>';
+        el('loc-wa').href = waLink;
+      } else {
+        el('loc-phone').textContent = 'Contact via WhatsApp';
+      }
+      el('map-frame').src = 'https://maps.google.com/maps?q=' + mapsQ + '&output=embed';
+
+      // WA buttons
+      setWA(['nav-wa','mob-wa','hero-wa','cta-wa','float-wa'], waLink);
+
+      // Footer
+      el('footer-name').textContent = name;
+      el('footer-copy').textContent = '© ' + new Date().getFullYear() + ' ' + name + '. All rights reserved.';
+
+      // Show page
+      el('loading').style.display = 'none';
+      el('page').style.display = 'block';
+
+      // Scroll + fade-in
+      initScroll();
+      initFadeIn();
+
+    } catch(e) {
+      el('loading').style.display = 'none';
+      el('notfound').style.display = 'flex';
+    }
+  }
+
+  function initScroll() {
+    var nav = el('mainNav');
+    window.addEventListener('scroll', function(){
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive:true });
+  }
+
+  function initFadeIn() {
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold:0.12 });
+    document.querySelectorAll('.fade-in').forEach(function(el){ obs.observe(el); });
+  }
+
+  function toggleMobileNav() {
+    var ham = el('navHam'), mob = el('navMobile');
+    ham.classList.toggle('open');
+    mob.classList.toggle('open');
+  }
+  function closeMobileNav() {
+    el('navHam').classList.remove('open');
+    el('navMobile').classList.remove('open');
+  }
+
+  loadCenter();
+</script>
+</body>
+</html>
