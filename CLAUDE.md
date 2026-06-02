@@ -15,7 +15,10 @@ Before deploying:
 Sub-projects each have their own `vercel.json` and are deployed independently:
 - Root (`app.pulsezen.in`) — supervisor dashboard (`index.html`)
 - `pulsezen/` — public wellness center website
-- `coaches/`, `clients/`, `dharanis/`, `bksprime/` — per-center or role-specific sub-apps
+- `coaches/`, `clients/` — role-specific sub-apps
+- `dharanis/`, `bksprime/` — per-center sub-apps (each contains a `centers/` subdir)
+
+**Alternative deploy (Cloudflare Workers)**: `wrangler.jsonc` is configured to serve the `deploy/` directory at `app.pulsezen.in/*`. Use `wrangler deploy` as an alternative to Vercel if needed.
 
 **Supabase Edge Function deployment**:
 ```sh
@@ -48,6 +51,8 @@ D = { centers[], customers[], attendance[], coaches[], inventory[], body[], fina
 
 **Active center filtering**: `ACTIVE_CENTER` global (UUID or `null` for all). Use `filterByCenter()` for tables with `wellness_center_id`. For finance specifically use `filterFinanceByCenter()`. For customer-joined tables use `filterByCenterViaCustomer()`.
 
+**Multi-center Supabase keys**: `SB_URL` / `SB_KEY` are the supervisor-level Supabase credentials. `CENTER_SB_KEY` is a per-center override. `getActiveSbKey()` returns the JWT for `Authorization: Bearer` headers — but for `apikey` headers, always use `SB_KEY || CENTER_SB_KEY` (a JWT is not a valid API key).
+
 **Searchable dropdowns**: generic system — `sdInit(inputEl, dropEl)`, `sdRender(dropEl, items)`, `sdPick(cb)`, `sdSetItems(dropEl, items)`.
 
 **Performance**: `parsePack()` + `_daysLeftCache` memoize pack expiry calculations. `_aiInFlight` guard prevents duplicate Groq requests.
@@ -65,11 +70,12 @@ Deno runtime. Currently:
 - `register.html` — invite-based center registration, auto-links new center via `upline_center_id`
 - `coach.html` — coach-facing view
 - `client.html` — customer-facing view
+- `customer.html` — customer self-service view
 - `pulsezen/` — public website for wellness centers (separate Vercel project)
 
 ## Database Schema (Supabase/PostgreSQL)
 
-12 tables: `wellness_centers`, `customers`, `attendance`, `body_composition`, `finance`, `coaches`, `inventory_stock_in`, `inventory_stock_out`, `inventory_daily_usage`, `inventory_balance`, `coupons`, `payments`, `pack_history`
+13 tables: `wellness_centers`, `customers`, `attendance`, `body_composition`, `finance`, `coaches`, `inventory_stock_in`, `inventory_stock_out`, `inventory_daily_usage`, `inventory_balance`, `coupons`, `payments`, `pack_history`
 
 Key relationships:
 - `customers.wellness_center_id` → `wellness_centers.id`
@@ -94,6 +100,8 @@ A custom pre-deployment safety agent defined in `.claude/agents/pulseiq-guard.md
 
 > "run the pulseiq-guard agent"
 
+**Auto-triggers**: the agent is configured to launch automatically after any edit to `index.html` that touches Supabase config, body composition logic, AI integration, or data field ordering — and always before deploying. You do not need to invoke it manually in those cases.
+
 It enforces six invariants on `index.html` and must pass before any deploy to `app.pulsezen.in`:
 
 | Check | Invariant |
@@ -109,4 +117,4 @@ It enforces six invariants on `index.html` and must pass before any deploy to `a
 
 ## SaaS Plans (PLANS.md)
 
-Free (₹0) → Growth (₹499/mo) → Elite (₹999, hidden) → President (₹1999, hidden). Launch order: Free first, then Growth when 5–10 centers are active.
+3 tiers: **Free** (₹0, up to 20 customers) → **Growth** (₹499/mo, up to 200 customers + public website) → **Elite** (₹999/mo, unlimited + AI diet plans + org analytics). Launch order: sign up centers on Free, convert to Growth with website hook, upsell Elite when 5–10 centers are active.
