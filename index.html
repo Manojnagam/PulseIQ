@@ -13910,8 +13910,7 @@ function convertWalkinToCustomer(walkinId){
   // Store walkin id to mark converted after save
   window._convertingWalkinId=walkinId;
   // Reset and open customer modal pre-filled
-  var resetEvent = document.querySelector('[onclick*="openAddCustomerModal"]');
-  openAddCustomerModal();
+  openNewCustomerModal();
   setTimeout(function(){
     document.getElementById('customer-name').value=w.name||'';
     document.getElementById('customer-contact').value=w.phone||'';
