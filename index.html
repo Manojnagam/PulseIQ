@@ -3727,6 +3727,20 @@ var _DB_SUPERVISOR_PIN = ''; // from app_settings key='supervisor_pin'
 var _centerAuth = JSON.parse(sessionStorage.getItem('centerAuth') || '{}');
 var _pendingSwitchCenter = '';
 
+// Returns array of centerId + all recursive downline center IDs via upline_center_id
+function getOrgCenterIds(rootId) {
+  var ids = [rootId];
+  var i = 0;
+  while (i < ids.length) {
+    var parent = ids[i];
+    D.centers.forEach(function(c) {
+      if (c.upline_center_id === parent && ids.indexOf(c.id) === -1) ids.push(c.id);
+    });
+    i++;
+  }
+  return ids;
+}
+
 function switchActiveCenter(centerId) {
   var hasPins = _DB_SUPERVISOR_PIN || Object.keys(_DB_PINS).length > 0;
 
@@ -3742,10 +3756,13 @@ function switchActiveCenter(centerId) {
     return;
   }
 
-  // Already authenticated for this specific center
-  if(centerId && _centerAuth.type === 'center' && _centerAuth.centerId === centerId) {
-    _applySwitch(centerId);
-    return;
+  // Center-PIN user: allow switching to own center or any downline center without re-entering PIN
+  if(centerId && _centerAuth.type === 'center') {
+    var orgIds = getOrgCenterIds(_centerAuth.centerId);
+    if(orgIds.indexOf(centerId) !== -1) {
+      _applySwitch(centerId);
+      return;
+    }
   }
 
   // Need PIN verification
@@ -3852,11 +3869,12 @@ function updateCenterSwitcher() {
   var noPins = !_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0;
   // Build options: non-master users only see their authenticated center
   var opts = '';
+  var orgIds = (_centerAuth.type === 'center') ? getOrgCenterIds(_centerAuth.centerId) : null;
   if(isMaster || noPins) {
     opts = '<option value="">All Centers</option>';
   }
   D.centers.forEach(function(c){
-    if(isMaster || noPins || (_centerAuth.type==='center' && _centerAuth.centerId===c.id)) {
+    if(isMaster || noPins || (orgIds && orgIds.indexOf(c.id) !== -1)) {
       opts += '<option value="'+c.id+'"'+(c.id===prev?' selected':'')+'>'+c.name+'</option>';
     }
   });
