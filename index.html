@@ -1309,6 +1309,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
           <div style="font-size:38px;margin-bottom:10px">👤</div>
           <p style="font-size:15px;font-weight:600;color:var(--text)">No records yet</p>
           <p style="font-size:13px;margin-top:4px">Click "+ Add My Record" to log your first scan</p>
+          <p style="font-size:12px;margin-top:12px;color:var(--muted)">Had records before? <button class="btn-c" style="font-size:12px;padding:4px 12px" onclick="recoverSvBodyRecords()">Recover Records</button></p>
         </div>
         <div id="sv-body-records-wrap" style="display:none">
           <div id="sv-body-score-card" style="margin-bottom:14px"></div>
@@ -11766,6 +11767,45 @@ function renderSvBody() {
       +'</div></td>'
       +'</tr>';
   }).join('');
+}
+function recoverSvBodyRecords() {
+  // Find body_composition records whose customer_id doesn't belong to any known customer/coach/walkin
+  var knownIds = new Set(
+    (D.customers||[]).map(function(c){return c.id;})
+    .concat((D.coaches||[]).map(function(c){return c.id;}))
+    .concat((D.walkins||[]).map(function(w){return w.id;}))
+  );
+  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  if (op.sv_body_id) knownIds.add(op.sv_body_id); // already linked
+  // Group orphaned records by customer_id
+  var orphanGroups = {};
+  (D.body||[]).forEach(function(b){
+    if (!knownIds.has(b.customer_id)) {
+      if (!orphanGroups[b.customer_id]) orphanGroups[b.customer_id] = [];
+      orphanGroups[b.customer_id].push(b);
+    }
+  });
+  var groupKeys = Object.keys(orphanGroups);
+  if (!groupKeys.length) {
+    showToast('No orphaned records found. If records were added on another device, make sure you are connected to the same Supabase project.', 'error');
+    return;
+  }
+  var lines = groupKeys.map(function(id, i){
+    var recs = orphanGroups[id];
+    var name = recs[0].customer_name || '(no name)';
+    var dates = recs.map(function(r){return r.date;}).sort();
+    return (i+1)+'. '+name+' — '+recs.length+' record(s) from '+dates[0]+' to '+dates[dates.length-1];
+  }).join('\n');
+  var choice = prompt('Found these unlinked profiles:\n\n'+lines+'\n\nEnter the number to link as your profile (or Cancel):');
+  if (!choice) return;
+  var idx = parseInt(choice) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= groupKeys.length) { showToast('Invalid selection','error'); return; }
+  var selectedId = groupKeys[idx];
+  op.sv_body_id = selectedId;
+  localStorage.setItem('ownerProfile', JSON.stringify(op));
+  OWNER_PROFILE = op;
+  showToast('Profile linked! Loading records…', 'success');
+  loadBody();
 }
 async function migrateSvBodyToSupabase() {
   var old = JSON.parse(localStorage.getItem('sv_body_records')||'[]');
