@@ -11818,7 +11818,8 @@ async function recoverSvBodyRecords() {
     localStorage.setItem('ownerProfile', JSON.stringify(op));
     OWNER_PROFILE = op;
     showToast('Profile linked! Loading records…', 'success');
-    loadBody();
+    await loadBody();
+    renderSvBody();
   } catch(e) {
     showToast('Error: ' + e.message, 'error');
   }
