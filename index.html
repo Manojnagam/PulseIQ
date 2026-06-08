@@ -1742,7 +1742,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
             <div class="fg"><label>Center Name</label><input type="text" id="prof-center-name" placeholder="e.g. Dharani Wellness Center"></div>
             <div class="fg"><label>Center Location</label><input type="text" id="prof-center-location" placeholder="City, Area"></div>
           </div>
-          <div class="fg"><label>🔐 Your PIN (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="prof-master-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 1234" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1"><button type="button" onclick="togglePinVis('prof-master-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Your personal PIN to access your center + all downline centers. Only needed when others (like your brother) also use this app.</div></div>
+          <div class="fg"><label>🔐 Your PIN (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="prof-master-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 1234" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1"><button type="button" onclick="togglePinVis('prof-master-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Supervisors: this becomes the master PIN (access all centers). Center owners: this becomes your center PIN (access your center + your downlines).</div></div>
         </div>
         <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:16px">
           <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:12px">🏅 Business Level / Promotion</div>
@@ -4149,21 +4149,41 @@ function saveOwnerProfile() {
     master_pin: (document.getElementById('prof-master-pin').value||'').trim() || OWNER_PROFILE.master_pin || null
   };
   var mpVal = (document.getElementById('prof-master-pin').value||'').trim();
-  if(mpVal && !/^\d{4}$/.test(mpVal)) { showToast('Master PIN must be exactly 4 digits','error'); return; }
+  if(mpVal && !/^\d{4}$/.test(mpVal)) { showToast('PIN must be exactly 4 digits','error'); return; }
   if (!p.name) { showToast('Name is required', 'error'); return; }
   OWNER_PROFILE = p;
   localStorage.setItem('ownerProfile', JSON.stringify(p));
-  // If master PIN is set, auto-grant supervisor access for this session
-  if(p.master_pin) {
-    _centerAuth = { type: 'master' };
-    sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
-    updateCenterSwitcher();
+
+  // Route PIN to the right place based on who is saving
+  var isCenterUser = _centerAuth.type === 'center' && _centerAuth.centerId;
+  if (isCenterUser) {
+    // Center owner — save PIN to wellness_centers.center_pin for their own center
+    if (mpVal) saveCenterPinToDB(_centerAuth.centerId, mpVal);
+  } else {
+    // Supervisor — save to app_settings as master PIN and grant master access
+    if(p.master_pin) {
+      _centerAuth = { type: 'master' };
+      sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
+      updateCenterSwitcher();
+    }
+    saveSupervisorPinToDB(p.master_pin || '');
   }
+
   updateCoachSelects();
   renderProfileCard();
-  // Save master PIN to Supabase app_settings so it works on ALL devices
-  saveSupervisorPinToDB(p.master_pin || '');
   showToast('Profile saved!', 'success');
+}
+
+async function saveCenterPinToDB(centerId, pinValue) {
+  try {
+    getCredentials();
+    if (!getActiveSbUrl() || !getActiveSbKey()) return;
+    await dbUpdate('wellness_centers', centerId, { center_pin: pinValue });
+    _DB_PINS[centerId] = pinValue;
+    // Update _centerAuth so new PIN is recognised in this session
+    _centerAuth.pin = pinValue;
+    sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
+  } catch(e) { console.warn('Could not save center PIN to DB:', e); }
 }
 
 async function saveSupervisorPinToDB(pinValue) {
