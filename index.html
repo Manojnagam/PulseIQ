@@ -11666,7 +11666,7 @@ function switchBodyTab(name, el) {
   document.querySelectorAll('#sec-body .tab-btn').forEach(function(b){b.classList.remove('active');});
   el.classList.add('active');
   if (name==='recheck') renderRecheckList();
-  if (name==='myprofile') { loadSvProfile(); renderSvBody(); }
+  if (name==='myprofile') { loadSvProfile(); renderSvBody(); autoRecoverSvBodyIfNeeded(); }
 }
 // ── SUPERVISOR BODY COMPOSITION ──
 function saveSvProfile() {
@@ -11767,6 +11767,57 @@ function renderSvBody() {
       +'</div></td>'
       +'</tr>';
   }).join('');
+}
+async function autoRecoverSvBodyIfNeeded() {
+  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  if (op.sv_body_id) return; // already linked, nothing to do
+  getCredentials();
+  if (!getActiveSbUrl() || !(SB_KEY || CENTER_SB_KEY)) return;
+  try {
+    var knownIds = new Set(
+      (D.customers||[]).map(function(c){return c.id;})
+      .concat((D.coaches||[]).map(function(c){return c.id;}))
+      .concat((D.walkins||[]).map(function(w){return w.id;}))
+    );
+    var url = getActiveSbUrl() + '/rest/v1/body_composition?order=date.asc&limit=1000';
+    var res = await fetch(url, {
+      headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
+    });
+    var allRecs = await res.json();
+    if (!Array.isArray(allRecs)) return;
+    var orphanGroups = {};
+    allRecs.forEach(function(b){
+      if (!knownIds.has(b.customer_id)) {
+        if (!orphanGroups[b.customer_id]) orphanGroups[b.customer_id] = [];
+        orphanGroups[b.customer_id].push(b);
+      }
+    });
+    var groupKeys = Object.keys(orphanGroups);
+    if (!groupKeys.length) return;
+    var selectedId;
+    if (groupKeys.length === 1) {
+      // Only one orphan group — auto-link silently
+      selectedId = groupKeys[0];
+    } else {
+      // Multiple — prompt user to pick
+      var lines = groupKeys.map(function(id, i){
+        var recs = orphanGroups[id];
+        var name = recs[0].customer_name || '(no name)';
+        var dates = recs.map(function(r){return r.date;}).sort();
+        return (i+1)+'. '+name+' — '+recs.length+' record(s), '+dates[0]+' to '+dates[dates.length-1];
+      }).join('\n');
+      var choice = prompt('Multiple unlinked profiles found. Which is yours?\n\n'+lines+'\n\nEnter number (or Cancel):');
+      if (!choice) return;
+      var idx = parseInt(choice) - 1;
+      if (isNaN(idx) || idx < 0 || idx >= groupKeys.length) return;
+      selectedId = groupKeys[idx];
+    }
+    op.sv_body_id = selectedId;
+    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    OWNER_PROFILE = op;
+    await loadBody();
+    renderSvBody();
+  } catch(e) { /* silent fail — user can use manual Recover button */ }
 }
 async function recoverSvBodyRecords() {
   getCredentials();
