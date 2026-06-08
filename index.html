@@ -11768,44 +11768,60 @@ function renderSvBody() {
       +'</tr>';
   }).join('');
 }
-function recoverSvBodyRecords() {
-  // Find body_composition records whose customer_id doesn't belong to any known customer/coach/walkin
+async function recoverSvBodyRecords() {
+  getCredentials();
+  if (!getActiveSbUrl() || !(SB_KEY || CENTER_SB_KEY)) {
+    showToast('Not connected to Supabase', 'error'); return;
+  }
+  showToast('Scanning Supabase for unlinked records…', 'success');
+  // Build set of all known IDs (customers + coaches + walkins + current sv_body_id)
   var knownIds = new Set(
     (D.customers||[]).map(function(c){return c.id;})
     .concat((D.coaches||[]).map(function(c){return c.id;}))
     .concat((D.walkins||[]).map(function(w){return w.id;}))
   );
   var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-  if (op.sv_body_id) knownIds.add(op.sv_body_id); // already linked
-  // Group orphaned records by customer_id
-  var orphanGroups = {};
-  (D.body||[]).forEach(function(b){
-    if (!knownIds.has(b.customer_id)) {
-      if (!orphanGroups[b.customer_id]) orphanGroups[b.customer_id] = [];
-      orphanGroups[b.customer_id].push(b);
+  if (op.sv_body_id) knownIds.add(op.sv_body_id);
+  // Fetch ALL body_composition records directly (no customer_id filter)
+  try {
+    var url = getActiveSbUrl() + '/rest/v1/body_composition?order=date.asc&limit=1000';
+    var res = await fetch(url, {
+      headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
+    });
+    var allRecs = await res.json();
+    if (!Array.isArray(allRecs)) { showToast('Could not fetch records from Supabase', 'error'); return; }
+    // Group by customer_id, keeping only those not in knownIds
+    var orphanGroups = {};
+    allRecs.forEach(function(b){
+      if (!knownIds.has(b.customer_id)) {
+        if (!orphanGroups[b.customer_id]) orphanGroups[b.customer_id] = [];
+        orphanGroups[b.customer_id].push(b);
+      }
+    });
+    var groupKeys = Object.keys(orphanGroups);
+    if (!groupKeys.length) {
+      showToast('No unlinked records found in Supabase. Records may have been deleted or are already linked.', 'error');
+      return;
     }
-  });
-  var groupKeys = Object.keys(orphanGroups);
-  if (!groupKeys.length) {
-    showToast('No orphaned records found. If records were added on another device, make sure you are connected to the same Supabase project.', 'error');
-    return;
+    var lines = groupKeys.map(function(id, i){
+      var recs = orphanGroups[id];
+      var name = recs[0].customer_name || '(no name)';
+      var dates = recs.map(function(r){return r.date;}).sort();
+      return (i+1)+'. '+name+' — '+recs.length+' record(s), '+dates[0]+' to '+dates[dates.length-1];
+    }).join('\n');
+    var choice = prompt('Found these unlinked profiles:\n\n'+lines+'\n\nEnter the number to link as your My Profile (or Cancel):');
+    if (!choice) return;
+    var idx = parseInt(choice) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= groupKeys.length) { showToast('Invalid selection','error'); return; }
+    var selectedId = groupKeys[idx];
+    op.sv_body_id = selectedId;
+    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    OWNER_PROFILE = op;
+    showToast('Profile linked! Loading records…', 'success');
+    loadBody();
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
   }
-  var lines = groupKeys.map(function(id, i){
-    var recs = orphanGroups[id];
-    var name = recs[0].customer_name || '(no name)';
-    var dates = recs.map(function(r){return r.date;}).sort();
-    return (i+1)+'. '+name+' — '+recs.length+' record(s) from '+dates[0]+' to '+dates[dates.length-1];
-  }).join('\n');
-  var choice = prompt('Found these unlinked profiles:\n\n'+lines+'\n\nEnter the number to link as your profile (or Cancel):');
-  if (!choice) return;
-  var idx = parseInt(choice) - 1;
-  if (isNaN(idx) || idx < 0 || idx >= groupKeys.length) { showToast('Invalid selection','error'); return; }
-  var selectedId = groupKeys[idx];
-  op.sv_body_id = selectedId;
-  localStorage.setItem('ownerProfile', JSON.stringify(op));
-  OWNER_PROFILE = op;
-  showToast('Profile linked! Loading records…', 'success');
-  loadBody();
 }
 async function migrateSvBodyToSupabase() {
   var old = JSON.parse(localStorage.getItem('sv_body_records')||'[]');
