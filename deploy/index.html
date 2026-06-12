@@ -744,6 +744,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
         <button class="nav-item nav-supervisor-only" onclick="goTo('pintracker',this)"><span class="ic">🏅</span><span data-t="nav_pintracker">Pin Tracker</span></button>
         <button class="nav-item" onclick="goTo('goals',this)"><span class="ic">🎯</span><span data-t="nav_goals">Goal Setting</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('orgtree',this)"><span class="ic">🌳</span><span data-t="nav_orgtree">Org Tree</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('planmgmt',this)"><span class="ic">💎</span><span>Plan Management</span></button>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-setup')"><span data-t="nav_setup">Setup</span><span class="nav-arrow">▾</span></div>
       <div id="g-setup" style="display:none">
@@ -1658,6 +1659,13 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
       <div class="tcard"><div class="ttoolbar"><input class="search" id="payment-search" placeholder="🔍 Search..." oninput="renderPayments()"/></div>
         <div class="twrap"><table><thead><tr><th>Person</th><th>Description</th><th>Total</th><th>Paid</th><th>Balance</th><th>Progress</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="payment-body"></tbody></table></div>
       </div>
+    </div>
+
+    <!-- PLAN MANAGEMENT -->
+    <div class="sec" id="sec-planmgmt">
+      <div class="ph"><div><div class="pt">Plan Management</div><div class="ps">Upgrade or downgrade center plans — one click, no SQL needed</div></div><button class="btn-p" onclick="renderPlanMgmt()">🔄 Refresh</button></div>
+      <div class="stats" id="planmgmt-stats"></div>
+      <div class="tcard"><div class="twrap"><table><thead><tr><th>Center</th><th>Owner</th><th>Days Active</th><th>Current Plan</th><th>Change Plan</th><th>Action</th></tr></thead><tbody id="planmgmt-body"></tbody></table></div></div>
     </div>
 
     <!-- ORG TREE -->
@@ -3640,6 +3648,22 @@ function getCenterById(id) {
   if (!id) return '';
   var c = (D.centers||[]).find(function(x){return x.id===id;}); return c?c.name:'';
 }
+function isGrowthPlan() {
+  if (!isCenterSession() && !ACTIVE_CENTER) return true; // supervisor always has full access
+  var c = (D.centers||[]).find(function(x){return x.id===ACTIVE_CENTER;});
+  var plan = c ? (c.plan_type||'free') : 'free';
+  return plan==='growth'||plan==='elite'||plan==='president';
+}
+function planLockHtml(feature, desc) {
+  return '<div style="text-align:center;padding:48px 24px">'
+    +'<div style="font-size:40px;margin-bottom:12px">🔒</div>'
+    +'<div style="font-size:18px;font-weight:700;color:#7c3aed;margin-bottom:8px">'+feature+' — Growth Plan</div>'
+    +'<div style="font-size:13px;color:#6b7280;margin-bottom:20px;max-width:340px;margin-left:auto;margin-right:auto">'+desc+'</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#7c3aed;margin-bottom:4px">₹499<span style="font-size:13px;font-weight:400">/month</span></div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:16px">Growth Plan</div>'
+    +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Growth plan (₹499/month) to unlock '+feature+'. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:10px 24px;background:#7c3aed;border-color:#7c3aed">💬 Request Upgrade via WhatsApp</a>'
+    +'</div>';
+}
 
 // ── Data Export Pack ──
 function _expDateRange() {
@@ -4897,7 +4921,7 @@ function isSupervisor() {
 }
 
 function goTo(name, el) {
-  if (!isSupervisor() && ['orgtree','pintracker','bizanalyst'].indexOf(name) > -1) {
+  if (!isSupervisor() && ['orgtree','pintracker','bizanalyst','planmgmt'].indexOf(name) > -1) {
     showToast('This section is for supervisors only', 'error'); return;
   }
   document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active')});
@@ -4912,6 +4936,7 @@ function goTo(name, el) {
   if (name==='coupons')   setTimeout(function(){ renderCouponView(); updateCouponCoachSelects(); }, 80);
   if (name==='payments')  setTimeout(function(){ renderPayments(); updatePaymentPersonSelect(); }, 80);
   if (name==='orgtree')   setTimeout(renderOrgTree, 80);
+  if (name==='planmgmt')  setTimeout(renderPlanMgmt, 80);
   if (name==='pintracker') setTimeout(initPinTracker, 80);
   if (name==='bizanalyst') setTimeout(initBizAnalyst, 80);
   if (name==='profile')   setTimeout(function(){ renderProfileCard(); updateProfileCoachSelect(); renderSvDietPlan(); }, 80);
@@ -9200,6 +9225,14 @@ async function saveCustomer() {
   payload.external_referrer_phone  = refPhone || null;
   payload.coach_id                 = document.getElementById('customer-assigned-coach').value || null;
   if (!payload.name) { showToast('Customer name is required','error'); return; }
+  if (!id) {
+    var _custCount = filterByCenter(D.customers).length;
+    var _custLimit = isGrowthPlan() ? 200 : 20;
+    if (_custCount >= _custLimit) {
+      showToast(isGrowthPlan() ? 'Customer limit of 200 reached. Contact support to upgrade to Elite.' : 'Free plan limit of 20 customers reached. Upgrade to Growth (₹499/mo) to add up to 200 customers.', 'error');
+      return;
+    }
+  }
   try {
     var savedRecords;
     if(id) { await dbUpdate('customers',id,payload); auditLog('Updated','Customer',payload.name+(payload.pack_type?' — '+payload.pack_type:'')); }
@@ -10177,6 +10210,11 @@ function destroyChart(id) { if(_charts[id]){_charts[id].destroy();delete _charts
 
 function renderAnalytics() {
   if (!D.customers) return;
+  if (isCenterSession() && !isGrowthPlan()) {
+    var kpiEl = document.getElementById('analytics-kpis');
+    if (kpiEl) kpiEl.innerHTML = planLockHtml('Analytics Dashboard', 'Unlock retention charts, revenue trends, customer activity, and business insights.');
+    return;
+  }
 
   // ── Read all slicers ──
   var periodMonths = parseInt(document.getElementById('slicer-from')?.dataset?.customActive === '1' ? '-1' : (document.querySelector('.slicer-chip.active[data-slicer="period"]')?.dataset?.val || '3'));
@@ -12563,6 +12601,11 @@ function renderPinTracker() {
 // ══════════════════════════════════════════════
 function initBizAnalyst() {
   var sel = document.getElementById('biz-month'); if(!sel) return;
+  if (isCenterSession() && !isGrowthPlan()) {
+    var el = document.getElementById('biz-org-summary');
+    if (el) el.innerHTML = planLockHtml('Business Analyst', 'Get AI-powered analysis of every coach\'s business performance and multi-center reports.');
+    return;
+  }
   var now = new Date();
   sel.innerHTML = '';
   for(var i=0;i<6;i++){
@@ -12771,6 +12814,56 @@ async function generateBizAIReport() {
   } finally {
     _bizAiInFlight = false;
     if(btn) btn.textContent = '✨ AI Report';
+  }
+}
+
+// ══════════════════════════════════════════════
+// PLAN MANAGEMENT (supervisor only)
+// ══════════════════════════════════════════════
+var PLAN_LABELS = { free:'Free', growth:'Growth ₹499', elite:'Elite ₹999', president:'President' };
+var PLAN_COLORS = { free:'#6b7280', growth:'#7c3aed', elite:'#b45309', president:'#1d4ed8' };
+
+function renderPlanMgmt() {
+  var tb = document.getElementById('planmgmt-body'); if (!tb) return;
+  var centers = (D.centers||[]).slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
+  if (!centers.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="ei">💎</div><p>No centers found.</p></div></td></tr>'; return; }
+  var today = Date.now();
+  var growthCount = centers.filter(function(c){ return c.plan_type==='growth'||c.plan_type==='elite'||c.plan_type==='president'; }).length;
+  var statsEl = document.getElementById('planmgmt-stats');
+  if (statsEl) statsEl.innerHTML =
+    '<div class="stat"><div class="stat-l">Total Centers</div><div class="stat-v">'+centers.length+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Free</div><div class="stat-v">'+(centers.length-growthCount)+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Paid</div><div class="stat-v" style="color:#7c3aed">'+growthCount+'</div></div>';
+  tb.innerHTML = centers.map(function(c) {
+    var plan = c.plan_type || 'free';
+    var days = c.created_at ? Math.floor((today - new Date(c.created_at).getTime()) / 86400000) : '—';
+    var color = PLAN_COLORS[plan] || '#6b7280';
+    var opts = Object.keys(PLAN_LABELS).map(function(k){
+      return '<option value="'+k+'"'+(k===plan?' selected':'')+'>'+PLAN_LABELS[k]+'</option>';
+    }).join('');
+    return '<tr>'
+      +'<td><strong>'+c.name+'</strong></td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+(c.owner_name||c.owner_email||'—')+'</td>'
+      +'<td>'+days+' days</td>'
+      +'<td><span style="font-weight:700;color:'+color+'">'+PLAN_LABELS[plan]+'</span></td>'
+      +'<td><select id="plan-sel-'+c.id+'" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px">'+opts+'</select></td>'
+      +'<td><button class="btn-p" style="font-size:11px;padding:4px 12px" onclick="saveCenterPlan(\''+c.id+'\')">Save</button></td>'
+      +'</tr>';
+  }).join('');
+}
+
+async function saveCenterPlan(centerId) {
+  var sel = document.getElementById('plan-sel-'+centerId); if (!sel) return;
+  var newPlan = sel.value;
+  var center = (D.centers||[]).find(function(c){ return c.id===centerId; });
+  if (!center) return;
+  try {
+    await dbUpdate('wellness_centers', centerId, { plan_type: newPlan });
+    center.plan_type = newPlan;
+    showToast((center.name||'Center')+' upgraded to '+PLAN_LABELS[newPlan]+'!', 'success');
+    renderPlanMgmt();
+  } catch(e) {
+    showToast('Failed to update plan: '+(e&&e.message?e.message:String(e)), 'error');
   }
 }
 
@@ -15279,6 +15372,7 @@ async function viewMealCompliance(custId, custName) {
 
 // ── BULK DIET PLAN GENERATOR ──
 async function bulkGenerateDietPlans() {
+  if (isCenterSession() && !isGrowthPlan()) { showToast('AI Diet Plans are a Growth plan feature (₹499/mo). Request upgrade via WhatsApp.', 'error'); return; }
   if(_dietInFlight){ showToast('Already generating a plan...','error'); return; }
   var groqKey = getGroqKey();
   if(!groqKey){ showToast('Set your Groq API key in SQL/Config section first','error'); return; }
