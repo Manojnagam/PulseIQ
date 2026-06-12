@@ -13100,7 +13100,7 @@ function renderPayments(){
   var allPayments=(D.payments||[]);
   if(ACTIVE_CENTER){
     var _pCustIds=filterByCenter(D.customers).map(function(c){return c.id;});
-    var _pCoachIds=D.coaches.filter(function(co){return D.centers.some(function(ct){return ct.id===ACTIVE_CENTER&&ct.owner_id===co.id;});}).map(function(co){return co.id;});
+    var _pCoachIds=filterByCenter(D.coaches).map(function(co){return co.id;});
     var _pPersonIds=_pCustIds.concat(_pCoachIds);
     allPayments=allPayments.filter(function(p){return _pPersonIds.indexOf(p.person_id)>-1;});
   }

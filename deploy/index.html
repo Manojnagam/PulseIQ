@@ -1309,6 +1309,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
           <div style="font-size:38px;margin-bottom:10px">👤</div>
           <p style="font-size:15px;font-weight:600;color:var(--text)">No records yet</p>
           <p style="font-size:13px;margin-top:4px">Click "+ Add My Record" to log your first scan</p>
+          <p style="font-size:12px;margin-top:12px;color:var(--muted)">Had records before? <button class="btn-c" style="font-size:12px;padding:4px 12px" onclick="recoverSvBodyRecords()">Recover Records</button></p>
         </div>
         <div id="sv-body-records-wrap" style="display:none">
           <div id="sv-body-score-card" style="margin-bottom:14px"></div>
@@ -1741,7 +1742,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
             <div class="fg"><label>Center Name</label><input type="text" id="prof-center-name" placeholder="e.g. Dharani Wellness Center"></div>
             <div class="fg"><label>Center Location</label><input type="text" id="prof-center-location" placeholder="City, Area"></div>
           </div>
-          <div class="fg"><label>🔐 Your PIN (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="prof-master-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 1234" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1"><button type="button" onclick="togglePinVis('prof-master-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Your personal PIN to access your center + all downline centers. Only needed when others (like your brother) also use this app.</div></div>
+          <div class="fg"><label>🔐 Your PIN (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="prof-master-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 1234" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1"><button type="button" onclick="togglePinVis('prof-master-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Supervisors: this becomes the master PIN (access all centers). Center owners: this becomes your center PIN (access your center + your downlines).</div></div>
         </div>
         <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:16px">
           <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:12px">🏅 Business Level / Promotion</div>
@@ -3726,6 +3727,20 @@ var _DB_SUPERVISOR_PIN = ''; // from app_settings key='supervisor_pin'
 var _centerAuth = JSON.parse(sessionStorage.getItem('centerAuth') || '{}');
 var _pendingSwitchCenter = '';
 
+// Returns array of centerId + all recursive downline center IDs via upline_center_id
+function getOrgCenterIds(rootId) {
+  var ids = [rootId];
+  var i = 0;
+  while (i < ids.length) {
+    var parent = ids[i];
+    D.centers.forEach(function(c) {
+      if (c.upline_center_id === parent && ids.indexOf(c.id) === -1) ids.push(c.id);
+    });
+    i++;
+  }
+  return ids;
+}
+
 function switchActiveCenter(centerId) {
   var hasPins = _DB_SUPERVISOR_PIN || Object.keys(_DB_PINS).length > 0;
 
@@ -3741,10 +3756,13 @@ function switchActiveCenter(centerId) {
     return;
   }
 
-  // Already authenticated for this specific center
-  if(centerId && _centerAuth.type === 'center' && _centerAuth.centerId === centerId) {
-    _applySwitch(centerId);
-    return;
+  // Center-PIN user: allow switching to own center or any downline center without re-entering PIN
+  if(centerId && _centerAuth.type === 'center') {
+    var orgIds = getOrgCenterIds(_centerAuth.centerId);
+    if(orgIds.indexOf(centerId) !== -1) {
+      _applySwitch(centerId);
+      return;
+    }
   }
 
   // Need PIN verification
@@ -3851,11 +3869,12 @@ function updateCenterSwitcher() {
   var noPins = !_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0;
   // Build options: non-master users only see their authenticated center
   var opts = '';
+  var orgIds = (_centerAuth.type === 'center') ? getOrgCenterIds(_centerAuth.centerId) : null;
   if(isMaster || noPins) {
     opts = '<option value="">All Centers</option>';
   }
   D.centers.forEach(function(c){
-    if(isMaster || noPins || (_centerAuth.type==='center' && _centerAuth.centerId===c.id)) {
+    if(isMaster || noPins || (orgIds && orgIds.indexOf(c.id) !== -1)) {
       opts += '<option value="'+c.id+'"'+(c.id===prev?' selected':'')+'>'+c.name+'</option>';
     }
   });
@@ -4130,21 +4149,41 @@ function saveOwnerProfile() {
     master_pin: (document.getElementById('prof-master-pin').value||'').trim() || OWNER_PROFILE.master_pin || null
   };
   var mpVal = (document.getElementById('prof-master-pin').value||'').trim();
-  if(mpVal && !/^\d{4}$/.test(mpVal)) { showToast('Master PIN must be exactly 4 digits','error'); return; }
+  if(mpVal && !/^\d{4}$/.test(mpVal)) { showToast('PIN must be exactly 4 digits','error'); return; }
   if (!p.name) { showToast('Name is required', 'error'); return; }
   OWNER_PROFILE = p;
   localStorage.setItem('ownerProfile', JSON.stringify(p));
-  // If master PIN is set, auto-grant supervisor access for this session
-  if(p.master_pin) {
-    _centerAuth = { type: 'master' };
-    sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
-    updateCenterSwitcher();
+
+  // Route PIN to the right place based on who is saving
+  var isCenterUser = _centerAuth.type === 'center' && _centerAuth.centerId;
+  if (isCenterUser) {
+    // Center owner — save PIN to wellness_centers.center_pin for their own center
+    if (mpVal) saveCenterPinToDB(_centerAuth.centerId, mpVal);
+  } else {
+    // Supervisor — save to app_settings as master PIN and grant master access
+    if(p.master_pin) {
+      _centerAuth = { type: 'master' };
+      sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
+      updateCenterSwitcher();
+    }
+    saveSupervisorPinToDB(p.master_pin || '');
   }
+
   updateCoachSelects();
   renderProfileCard();
-  // Save master PIN to Supabase app_settings so it works on ALL devices
-  saveSupervisorPinToDB(p.master_pin || '');
   showToast('Profile saved!', 'success');
+}
+
+async function saveCenterPinToDB(centerId, pinValue) {
+  try {
+    getCredentials();
+    if (!getActiveSbUrl() || !getActiveSbKey()) return;
+    await dbUpdate('wellness_centers', centerId, { center_pin: pinValue });
+    _DB_PINS[centerId] = pinValue;
+    // Update _centerAuth so new PIN is recognised in this session
+    _centerAuth.pin = pinValue;
+    sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
+  } catch(e) { console.warn('Could not save center PIN to DB:', e); }
 }
 
 async function saveSupervisorPinToDB(pinValue) {
@@ -11665,7 +11704,7 @@ function switchBodyTab(name, el) {
   document.querySelectorAll('#sec-body .tab-btn').forEach(function(b){b.classList.remove('active');});
   el.classList.add('active');
   if (name==='recheck') renderRecheckList();
-  if (name==='myprofile') { loadSvProfile(); renderSvBody(); }
+  if (name==='myprofile') { loadSvProfile(); renderSvBody(); autoRecoverSvBodyIfNeeded(); }
 }
 // ── SUPERVISOR BODY COMPOSITION ──
 function saveSvProfile() {
@@ -11766,6 +11805,113 @@ function renderSvBody() {
       +'</div></td>'
       +'</tr>';
   }).join('');
+}
+async function autoRecoverSvBodyIfNeeded() {
+  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  if (op.sv_body_id) return; // already linked, nothing to do
+  getCredentials();
+  if (!getActiveSbUrl() || !(SB_KEY || CENTER_SB_KEY)) return;
+  try {
+    var knownIds = new Set(
+      (D.customers||[]).map(function(c){return c.id;})
+      .concat((D.coaches||[]).map(function(c){return c.id;}))
+      .concat((D.walkins||[]).map(function(w){return w.id;}))
+    );
+    var url = getActiveSbUrl() + '/rest/v1/body_composition?order=date.asc&limit=1000';
+    var res = await fetch(url, {
+      headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
+    });
+    var allRecs = await res.json();
+    if (!Array.isArray(allRecs)) return;
+    var orphanGroups = {};
+    allRecs.forEach(function(b){
+      if (!knownIds.has(b.customer_id)) {
+        if (!orphanGroups[b.customer_id]) orphanGroups[b.customer_id] = [];
+        orphanGroups[b.customer_id].push(b);
+      }
+    });
+    var groupKeys = Object.keys(orphanGroups);
+    if (!groupKeys.length) return;
+    var selectedId;
+    if (groupKeys.length === 1) {
+      // Only one orphan group — auto-link silently
+      selectedId = groupKeys[0];
+    } else {
+      // Multiple — prompt user to pick
+      var lines = groupKeys.map(function(id, i){
+        var recs = orphanGroups[id];
+        var name = recs[0].customer_name || '(no name)';
+        var dates = recs.map(function(r){return r.date;}).sort();
+        return (i+1)+'. '+name+' — '+recs.length+' record(s), '+dates[0]+' to '+dates[dates.length-1];
+      }).join('\n');
+      var choice = prompt('Multiple unlinked profiles found. Which is yours?\n\n'+lines+'\n\nEnter number (or Cancel):');
+      if (!choice) return;
+      var idx = parseInt(choice) - 1;
+      if (isNaN(idx) || idx < 0 || idx >= groupKeys.length) return;
+      selectedId = groupKeys[idx];
+    }
+    op.sv_body_id = selectedId;
+    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    OWNER_PROFILE = op;
+    await loadBody();
+    renderSvBody();
+  } catch(e) { /* silent fail — user can use manual Recover button */ }
+}
+async function recoverSvBodyRecords() {
+  getCredentials();
+  if (!getActiveSbUrl() || !(SB_KEY || CENTER_SB_KEY)) {
+    showToast('Not connected to Supabase', 'error'); return;
+  }
+  showToast('Scanning Supabase for unlinked records…', 'success');
+  // Build set of all known IDs (customers + coaches + walkins + current sv_body_id)
+  var knownIds = new Set(
+    (D.customers||[]).map(function(c){return c.id;})
+    .concat((D.coaches||[]).map(function(c){return c.id;}))
+    .concat((D.walkins||[]).map(function(w){return w.id;}))
+  );
+  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  if (op.sv_body_id) knownIds.add(op.sv_body_id);
+  // Fetch ALL body_composition records directly (no customer_id filter)
+  try {
+    var url = getActiveSbUrl() + '/rest/v1/body_composition?order=date.asc&limit=1000';
+    var res = await fetch(url, {
+      headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
+    });
+    var allRecs = await res.json();
+    if (!Array.isArray(allRecs)) { showToast('Could not fetch records from Supabase', 'error'); return; }
+    // Group by customer_id, keeping only those not in knownIds
+    var orphanGroups = {};
+    allRecs.forEach(function(b){
+      if (!knownIds.has(b.customer_id)) {
+        if (!orphanGroups[b.customer_id]) orphanGroups[b.customer_id] = [];
+        orphanGroups[b.customer_id].push(b);
+      }
+    });
+    var groupKeys = Object.keys(orphanGroups);
+    if (!groupKeys.length) {
+      showToast('No unlinked records found in Supabase. Records may have been deleted or are already linked.', 'error');
+      return;
+    }
+    var lines = groupKeys.map(function(id, i){
+      var recs = orphanGroups[id];
+      var name = recs[0].customer_name || '(no name)';
+      var dates = recs.map(function(r){return r.date;}).sort();
+      return (i+1)+'. '+name+' — '+recs.length+' record(s), '+dates[0]+' to '+dates[dates.length-1];
+    }).join('\n');
+    var choice = prompt('Found these unlinked profiles:\n\n'+lines+'\n\nEnter the number to link as your My Profile (or Cancel):');
+    if (!choice) return;
+    var idx = parseInt(choice) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= groupKeys.length) { showToast('Invalid selection','error'); return; }
+    var selectedId = groupKeys[idx];
+    op.sv_body_id = selectedId;
+    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    OWNER_PROFILE = op;
+    showToast('Profile linked! Loading records…', 'success');
+    await loadBody();
+    renderSvBody();
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 async function migrateSvBodyToSupabase() {
   var old = JSON.parse(localStorage.getItem('sv_body_records')||'[]');
@@ -11973,7 +12119,7 @@ async function delSvBody(id) {
 function updateBodyCustSelect() {
   var sel = document.getElementById('body-cust-select'); if(!sel) return;
   var prev = sel.value;
-  var custOpts = D.customers.map(function(c){return '<option value="'+c.id+'">'+c.name+(c.pack_type?' ('+c.pack_type+')':'')+'</option>';}).join('');
+  var custOpts = D.customers.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
   var coachOpts = D.coaches.length ? '<optgroup label="── Coaches ──">'+D.coaches.map(function(c){return '<option value="'+c.id+'">'+c.name+' 👨‍🏫</option>';}).join('')+'</optgroup>' : '';
   var _wl = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER; });
   var walkinOpts = _wl.length ? '<optgroup label="── Walk-ins ──">'+_wl.map(function(w){return '<option value="walkin__'+w.id+'">'+w.name+' 🚶 ('+(w.date||'')+')</option>';}).join('')+'</optgroup>' : '';
@@ -12954,7 +13100,7 @@ function renderPayments(){
   var allPayments=(D.payments||[]);
   if(ACTIVE_CENTER){
     var _pCustIds=filterByCenter(D.customers).map(function(c){return c.id;});
-    var _pCoachIds=D.coaches.filter(function(co){return D.centers.some(function(ct){return ct.id===ACTIVE_CENTER&&ct.owner_id===co.id;});}).map(function(co){return co.id;});
+    var _pCoachIds=filterByCenter(D.coaches).map(function(co){return co.id;});
     var _pPersonIds=_pCustIds.concat(_pCoachIds);
     allPayments=allPayments.filter(function(p){return _pPersonIds.indexOf(p.person_id)>-1;});
   }
