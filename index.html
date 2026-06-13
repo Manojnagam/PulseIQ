@@ -3315,7 +3315,7 @@ async function startApp() {
     if (authEl) authEl.textContent = '● ' + _authUser.email;
 
     // Check if this is super admin
-    var settingsRes = await fetch(CENTER_SB_URL + '/rest/v1/app_settings?key=eq.super_admin_email&select=value', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY } });
+    var settingsRes = await fetch(CENTER_SB_URL + '/rest/v1/app_settings?key=eq.super_admin_email&select=value', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + _authSession.access_token } });
     var settingsData = await settingsRes.json();
     var superAdminEmail = settingsData[0] ? settingsData[0].value : '';
     var isSuperAdmin = (_authUser.user_metadata && _authUser.user_metadata.role === 'super_admin') || _authUser.email === superAdminEmail;
