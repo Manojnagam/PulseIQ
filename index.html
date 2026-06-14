@@ -12873,7 +12873,7 @@ async function generateBizAIReport() {
 // ══════════════════════════════════════════════
 // PLAN MANAGEMENT (supervisor only)
 // ══════════════════════════════════════════════
-var PLAN_LABELS = { free:'Free', growth:'Growth ₹499', elite:'Elite ₹999', president:"Founder's Deal ₹299" };
+var PLAN_LABELS = { free:'Free', growth:'Growth ₹499', elite:'Elite ₹999', president:"Founder's Deal ₹499" };
 var PLAN_COLORS = { free:'#6b7280', growth:'#7c3aed', elite:'#b45309', president:'#0f766e' };
 
 function renderPlanMgmt() {
@@ -12911,7 +12911,17 @@ async function saveCenterPlan(centerId) {
   var center = (D.centers||[]).find(function(c){ return c.id===centerId; });
   if (!center) return;
   try {
-    await dbUpdate('wellness_centers', centerId, { plan_type: newPlan });
+    var res = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?id=eq.' + centerId, {
+      method: 'PATCH',
+      headers: {
+        'apikey': CENTER_SB_KEY,
+        'Authorization': 'Bearer ' + (_authSession && _authSession.access_token ? _authSession.access_token : CENTER_SB_KEY),
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ plan_type: newPlan })
+    });
+    if (!res.ok) { var err = await res.json(); throw new Error(err.message || 'HTTP ' + res.status); }
     center.plan_type = newPlan;
     showToast((center.name||'Center')+' upgraded to '+PLAN_LABELS[newPlan]+'!', 'success');
     renderPlanMgmt();

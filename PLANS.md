@@ -51,7 +51,7 @@ Last updated: 2026-06-14
 
 ---
 
-## 4. FOUNDER'S DEAL — ₹299/month (lifetime, price locked forever)
+## 4. FOUNDER'S DEAL — ₹499/month (lifetime, price locked forever)
 *Goal: Reward early adopters who trusted PulseZen from the beginning.*
 
 ### Who gets it
@@ -59,7 +59,7 @@ Last updated: 2026-06-14
 - Price is locked forever — never increases regardless of future plan changes
 
 ### Core Benefits
-- **Everything in Elite**, at ₹299/month forever:
+- **Everything in Elite**, at ₹499/month forever:
 - Unlimited Customers
 - AI Diet Plans
 - AI Health Insights & Churn Risk Alerts
@@ -70,7 +70,7 @@ Last updated: 2026-06-14
 
 ### How to assign
 - Go to **Plan Management** in the supervisor dashboard
-- Change center plan to **Founder's Deal ₹299**
+- Change center plan to **Founder's Deal ₹499**
 - Save — center instantly gets all Elite features
 
 ---
@@ -79,7 +79,7 @@ Last updated: 2026-06-14
 
 | Feature | Free | Growth | Elite | Founder's Deal |
 |---|---|---|---|---|
-| Price | ₹0 | ₹499/mo | ₹999/mo | ₹299/mo (locked) |
+| Price | ₹0 | ₹499/mo | ₹999/mo | ₹499/mo (locked) |
 | Customers | 20 | 200 | Unlimited | Unlimited |
 | Attendance | ✅ | ✅ | ✅ | ✅ |
 | Invite Link | ✅ | ✅ | ✅ | ✅ |
@@ -105,7 +105,7 @@ Last updated: 2026-06-14
 > *"I'm setting you up on PulseZen Growth — ₹499/month. You get your own website at `[centername].pulsezen.in` so customers in your area can find you on Google and message you directly on WhatsApp. Plus attendance, body tracking, finance — everything you need to run your center. I'll set it up for you."*
 
 ### Founder's Deal Pitch
-> *"You're one of the first centers on PulseZen. I'm locking you in at ₹299/month forever — that's the Elite plan with AI, unlimited customers, everything. This price never changes for you no matter what we charge others later. You're getting in at the ground floor."*
+> *"You're one of the first centers on PulseZen. I'm locking you in at ₹499/month forever — that's the Elite plan with AI, unlimited customers, everything. This price never changes for you no matter what we charge others later. You're getting in at the ground floor."*
 
 ### Why 3 Public Tiers + 1 Founder's Deal
 - 3 tiers are simpler to explain publicly
