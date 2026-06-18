@@ -544,14 +544,16 @@ async function handleCheckin(e) {
     
     // 2. Perform client-side matching to cover multiple country codes/formats
     const matchedClients = dbCustomers.filter(c => {
-      if (!c.phone) return false;
-      const cleanDbPhone = c.phone.replace(/[^0-9]/g, '');
+      const dbPhone = c.phone || c.contact;
+      if (!dbPhone) return false;
+      const cleanDbPhone = dbPhone.replace(/[^0-9]/g, '');
       return cleanDbPhone.endsWith(phone) || phone.endsWith(cleanDbPhone);
     });
 
     const matchedCoaches = dbCoaches.filter(c => {
-      if (!c.phone) return false;
-      const cleanDbPhone = c.phone.replace(/[^0-9]/g, '');
+      const dbPhone = c.phone || c.contact;
+      if (!dbPhone) return false;
+      const cleanDbPhone = dbPhone.replace(/[^0-9]/g, '');
       return cleanDbPhone.endsWith(phone) || phone.endsWith(cleanDbPhone);
     });
 
@@ -604,7 +606,8 @@ function showProfileSelection() {
     if (profile.type === 'coach') {
       role.textContent = profile.data.role ? 'Coach · ' + profile.data.role : 'Wellness Coach';
     } else {
-      role.textContent = profile.data.status === 'active' ? 'Active Member' : 'Inactive Member';
+      const status = (profile.data.status || 'Active').toLowerCase();
+      role.textContent = status === 'active' ? 'Active Member' : 'Inactive Member';
     }
     
     info.appendChild(name);
@@ -654,7 +657,8 @@ async function executeProfileCheckin(profile) {
   
   if (profile.type === 'client') {
     const cust = profile.data;
-    if (cust.status !== 'active') {
+    const status = (cust.status || 'Active').toLowerCase();
+    if (status !== 'active') {
       showMsg("Your membership is currently inactive. Please talk to your coach.", "danger");
       cancelProfileSelection();
       return;
