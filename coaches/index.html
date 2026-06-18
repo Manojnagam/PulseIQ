@@ -7,47 +7,105 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#f5f2ee;--surface:#fff;--surface2:#f0ede8;--primary:#2d5a3d;--primary-light:#3d7a52;--accent:#e8a838;--text:#1a2e1f;--muted:#6b7c6f;--border:#ddd8d0;--danger:#c0392b;--danger-light:#fdf0ef;--success:#27ae60;--success-light:#eafaf1;--shadow:0 2px 12px rgba(45,90,61,.08);--radius:12px;--sw:210px}
+:root{
+  --bg:#f5f2ee;
+  --surface:rgba(255, 255, 255, 0.75);
+  --surface-solid:#ffffff;
+  --surface2:#f0ede8;
+  --primary:#2d5a3d;
+  --primary-light:#3d7a52;
+  --accent:#e8a838;
+  --text:#1a2e1f;
+  --muted:#6b7c6f;
+  --border:rgba(221, 216, 208, 0.45);
+  --border-solid:#ddd8d0;
+  --danger:#c0392b;
+  --danger-light:#fdf0ef;
+  --success:#27ae60;
+  --success-light:#eafaf1;
+  --shadow:0 8px 32px 0 rgba(45, 90, 61, 0.04);
+  --shadow-lg:0 12px 40px rgba(0, 0, 0, 0.08);
+  --radius:16px;
+  --sw:210px;
+  --sidebar-bg:linear-gradient(180deg,#1a3a28 0%,#2d5a3d 100%);
+  --glass-bg:rgba(255, 255, 255, 0.7);
+  --glass-border:rgba(255, 255, 255, 0.45);
+  --glass-blur:blur(16px);
+}
+[data-theme="dark"]{
+  --bg:#0f172a;
+  --surface:rgba(30, 41, 59, 0.7);
+  --surface-solid:#1e293b;
+  --surface2:#334155;
+  --primary:#4ade80;
+  --primary-light:#86efac;
+  --accent:#fbbf24;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:rgba(148, 163, 184, 0.2);
+  --border-solid:#334155;
+  --danger:#ef4444;
+  --danger-light:#2d1212;
+  --success:#22c55e;
+  --success-light:#052e16;
+  --shadow:0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  --shadow-lg:0 16px 48px rgba(0, 0, 0, 0.45);
+  --sidebar-bg:linear-gradient(180deg,#090d16 0%,#111827 100%);
+  --glass-bg:rgba(15, 23, 42, 0.65);
+  --glass-border:rgba(255, 255, 255, 0.08);
+  --glass-blur:blur(20px);
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background-color .3s, color .3s}
+
+/* Scrollbar styles */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,0.03);border-radius:4px}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12);border-radius:4px}
+[data-theme="dark"] ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15)}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,0.25)}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.25)}
 
 /* ── LOGIN ── */
-#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a28 0%,#2d5a3d 60%,#3d7a52 100%);padding:20px}
-.login-box{background:#fff;border-radius:20px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a28 0%,#2d5a3d 60%,#3d7a52 100%);padding:20px;transition:background-color .3s}
+[data-theme="dark"] #login-screen{background:linear-gradient(135deg,#090d16 0%,#0f172a 60%,#1e293b 100%)}
+.login-box{background:var(--surface-solid);color:var(--text);border-radius:20px;padding:36px 32px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);border:1px solid var(--border);transition:all .3s}
 .login-logo{text-align:center;margin-bottom:28px}
-.login-logo h1{font-size:22px;color:var(--primary);font-weight:700}
-.login-logo p{color:var(--muted);font-size:13px;margin-top:4px}
+.login-logo h1{font-size:22px;color:var(--primary);font-weight:700;transition:color .3s}
+.login-logo p{color:var(--muted);font-size:13px;margin-top:4px;transition:color .3s}
 .login-field{margin-bottom:16px}
-.login-field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-.login-field input,.login-field select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;transition:border .2s}
+.login-field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;transition:color .3s}
+.login-field input,.login-field select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;background:var(--surface-solid);color:var(--text);transition:border .2s, background-color .2s, color .2s}
 .login-field input:focus,.login-field select:focus{border-color:var(--primary)}
-.login-btn{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s}
-.login-btn:hover{background:var(--primary-light)}
+.login-btn{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 4px 12px rgba(45, 90, 61, 0.15)}
+[data-theme="dark"] .login-btn{color:#090d16}
+.login-btn:hover{background:var(--primary-light);transform:translateY(-1px);box-shadow:0 6px 16px rgba(45, 90, 61, 0.25)}
+.login-btn:active{transform:translateY(0)}
 .login-err{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
 .login-step{display:none}
 .login-step.active{display:block}
-.step-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
+.step-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:14px;transition:color .3s}
 
 /* ── APP LAYOUT ── */
 #app{display:none;min-height:100vh}
-#sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:linear-gradient(180deg,#1a3a28 0%,#2d5a3d 100%);display:flex;flex-direction:column;z-index:100;overflow-y:auto}
-.sb-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+#sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:var(--sidebar-bg);display:flex;flex-direction:column;z-index:100;overflow-y:auto;border-right:1px solid var(--border);transition:background-color .3s, border-color .3s}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
 .sb-logo h1{font-size:17px;color:#fff;font-weight:700}
 .sb-logo span{color:var(--accent);font-size:11px;font-weight:600;display:block;margin-top:2px}
-.sb-coach-badge{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px}
+.sb-coach-badge{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
 .sb-coach-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
 .sb-coach-name{color:#fff;font-size:13px;font-weight:600;line-height:1.3}
 .sb-coach-sub{color:rgba(255,255,255,.55);font-size:11px}
 .sb-nav{padding:12px 8px;flex:1}
-.nav-item{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:8px;color:rgba(255,255,255,.75);cursor:pointer;transition:all .18s;font-weight:500;font-size:13px;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
-.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
-.nav-item.active{background:rgba(255,255,255,.18);color:#fff;font-weight:700}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:10px;color:rgba(255,255,255,.75);cursor:pointer;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);font-weight:500;font-size:13px;margin-bottom:4px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;transform:translateX(2px)}
+.nav-item.active{background:rgba(255,255,255,.15);color:#fff;font-weight:700;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1)}
 .nav-item .ic{font-size:16px;width:20px;text-align:center}
-.sb-bottom{padding:10px 12px;border-top:1px solid rgba(255,255,255,.1)}
+.sb-bottom{padding:12px;border-top:1px solid rgba(255,255,255,.08)}
 .sb-bottom-row{display:flex;gap:6px}
-.sb-icon-btn{flex:1;padding:8px 4px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;text-align:center;transition:all .2s}
-.sb-icon-btn:hover{background:rgba(255,255,255,.18);color:#fff}
-#main{margin-left:var(--sw);padding:24px;min-height:100vh}
+.sb-icon-btn{flex:1;padding:9px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer;transition:all .2s}
+.sb-icon-btn:hover{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.2)}
+#main{margin-left:var(--sw);padding:24px;min-height:100vh;transition:padding .3s}
 #sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99}
 #menu-btn{display:none;position:fixed;top:14px;left:14px;z-index:101;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
 
@@ -60,12 +118,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 /* ── STATS ── */
 .stats{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px}
-.stat{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px 18px;flex:1;min-width:130px;box-shadow:var(--shadow)}
-.stat-l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.stat-v{font-size:26px;font-weight:700;color:var(--primary);margin-top:4px}
+.stat{background:var(--surface);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-radius:var(--radius);border:1px solid var(--border);padding:14px 18px;flex:1;min-width:130px;box-shadow:var(--shadow);transition:transform .3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow .3s ease, border-color .3s ease}
+.stat:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--primary-light)}
+.stat-l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;transition:color .3s}
+.stat-v{font-size:26px;font-weight:700;color:var(--primary);margin-top:4px;transition:color .3s}
 
 /* ── CARDS & COMMON ── */
-.tcard{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+.tcard{background:var(--surface);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:20px;margin-bottom:16px;transition:transform .3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow .3s ease, border-color .3s ease}
+.tcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
 .bg{background:var(--success-light);color:var(--success)}
 .br{background:var(--danger-light);color:var(--danger)}
@@ -427,10 +487,117 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
   #sidebar{transform:translateX(-100%);transition:transform .3s}
   #sidebar.open{transform:translateX(0)}
   #sb-overlay.open{display:block}
-  #main{margin-left:0;padding:16px;padding-top:56px}
+  #main{margin-left:0;padding:16px;padding-top:56px;transition:padding .3s}
   #menu-btn{display:block}
   .fg-row{grid-template-columns:1fr}
   .stats .stat{min-width:calc(50% - 6px)}
+}
+
+/* ── DARK MODE OVERRIDES ── */
+[data-theme="dark"] select,
+[data-theme="dark"] textarea,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="tel"],
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="password"],
+[data-theme="dark"] input[type="number"] {
+  background-color: var(--surface2) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] input:focus {
+  border-color: var(--primary) !important;
+}
+[data-theme="dark"] .cust-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+[data-theme="dark"] .att-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+[data-theme="dark"] .att-panel {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] .body-rec {
+  background: var(--surface2) !important;
+  border: 1px solid var(--border);
+}
+[data-theme="dark"] .body-rec-stat {
+  background: var(--surface-solid) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] .body-rec-stat-lbl {
+  color: var(--muted) !important;
+}
+[data-theme="dark"] .body-rec-stat-val {
+  color: var(--primary) !important;
+}
+[data-theme="dark"] .modal {
+  background: var(--surface-solid) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+[data-theme="dark"] .modal-overlay .modal {
+  background: var(--surface-solid) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+[data-theme="dark"] .mh, [data-theme="dark"] .modal-h {
+  border-bottom-color: var(--border-solid) !important;
+}
+[data-theme="dark"] .mf, [data-theme="dark"] .modal-f {
+  border-top-color: var(--border-solid) !important;
+}
+[data-theme="dark"] .mc {
+  color: var(--muted) !important;
+}
+[data-theme="dark"] th {
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+}
+[data-theme="dark"] td {
+  color: var(--text);
+}
+[data-theme="dark"] tr:nth-child(even) {
+  background: rgba(255,255,255,0.02);
+}
+[data-theme="dark"] tr:hover td {
+  background: rgba(255,255,255,0.05)!important;
+}
+
+/* Glassmorphic Cards & Hover transitions */
+.cust-card, .att-card, .att-panel {
+  background: var(--surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: transform .3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow .3s ease, border-color .3s ease;
+}
+.cust-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-light);
+}
+
+/* Button & interactive components micro-animations */
+button, .nav-item, .sb-icon-btn, .login-btn, .btn-p, .btn-e, .btn-d, .btn-c {
+  outline: none;
+}
+button:active, .btn-p:active, .btn-e:active, .btn-d:active, .btn-c:active {
+  transform: scale(0.97);
+}
+.nav-item:active {
+  transform: scale(0.97) translateX(2px);
+}
+.login-btn:active {
+  transform: scale(0.96);
 }
 </style>
 </head>
@@ -511,6 +678,7 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
       <div class="sb-bottom-row">
         <button id="lang-toggle-btn" class="sb-icon-btn" onclick="toggleLang()" title="Toggle Language" style="font-weight:700">తె</button>
         <button id="gender-toggle-btn" class="sb-icon-btn" onclick="toggleGender()" title="Toggle Gender">♂</button>
+        <button id="theme-toggle-btn" class="sb-icon-btn" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
         <button class="sb-icon-btn" onclick="logout()" title="Logout">🚪</button>
       </div>
     </div>
@@ -1284,7 +1452,24 @@ function dbDelete(table, id) { return req(table + '?id=eq.' + id, 'DELETE'); }
 // ══════════════════════════════════════════
 //  AUTH
 // ══════════════════════════════════════════
+// ── THEME LOGIC ──
+function initTheme() {
+  var theme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  var btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  var curr = document.documentElement.getAttribute('data-theme') || 'light';
+  var next = curr === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', next);
+  document.documentElement.setAttribute('data-theme', next);
+  var btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.innerHTML = next === 'dark' ? '☀️' : '🌙';
+}
+
 async function init() {
+  initTheme();
   await resolveCenterParam();
   await loadCoachList();
   if (COACH_ID && COACH_NAME) {
