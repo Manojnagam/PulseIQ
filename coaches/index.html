@@ -1153,8 +1153,8 @@ tbody tr:hover td{background:var(--accent-light)!important;transition:background
 // ══════════════════════════════════════════
 //  GLOBALS
 // ══════════════════════════════════════════
-var SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
-var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+var SB_URL = localStorage.getItem('sb_url') || localStorage.getItem('coach_sb_url') || 'https://erteibdxzdvsaujptxsd.supabase.co';
+var SB_KEY = localStorage.getItem('sb_key') || localStorage.getItem('coach_sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
 var COACH_ID   = localStorage.getItem('coachId')   || '';
 var COACH_NAME = localStorage.getItem('coachName') || '';
 var COACH_GENDER = COACH_ID ? (localStorage.getItem('coachGender_' + COACH_ID) || 'male') : 'male';
