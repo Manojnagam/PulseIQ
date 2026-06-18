@@ -430,6 +430,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div id="diet-body"></div>
     </div>
 
+    <!-- CERTIFICATE MODAL -->
+    <div id="cert-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;padding:16px;overflow-y:auto;backdrop-filter:blur(10px)">
+      <div style="background:#224330;border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:24px;max-width:500px;margin:40px auto;text-align:center;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.3)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <h3 style="margin:0;font-size:18px;font-family:'DM Serif Display',serif;color:#fbbf24">🎖️ Your Achievement Certificate</h3>
+          <button onclick="closeCertModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#9ca3af">✕</button>
+        </div>
+        <canvas id="cert-canvas" width="800" height="600" style="width:100%;max-width:100%;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.4);background:#0f2318;display:block;margin:0 auto 20px;border:1px solid rgba(255,255,255,0.12)"></canvas>
+        <div style="display:flex;gap:12px;justify-content:center">
+          <button onclick="downloadCert()" class="login-btn" style="background:#4ade80;color:#0f2318;font-weight:700;padding:12px 24px;width:auto;border:none;border-radius:10px;cursor:pointer">📥 Download</button>
+          <button onclick="closeCertModal()" class="login-btn" style="background:rgba(255,255,255,0.1);color:#fff;font-weight:700;padding:12px 24px;width:auto;border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:pointer">Close</button>
+        </div>
+      </div>
+    </div>
+
     <!-- FOOD PREFERENCES MODAL -->
     <div id="food-pref-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;padding:16px;overflow-y:auto">
       <div style="background:#fff;border-radius:16px;padding:24px;max-width:480px;margin:0 auto">
@@ -1060,13 +1075,215 @@ function renderStreak() {
             : streak === 1 ? 'Good start — come back tomorrow to keep it going!'
             : streak < 7  ? 'Keep it up — don\'t break the chain!'
             : 'Amazing consistency — you\'re on fire!';
+
+  // Calculate milestone sessions
+  var totalPres = DATA.attendance.filter(function(a){ return a.status === 'present'; }).length;
+  var milestones = [10, 25, 50, 100, 250];
+  var nextMilestone = milestones.find(function(m){ return m > totalPres; }) || null;
+
+  var milestoneHtml = '';
+  if (nextMilestone) {
+    var pct = Math.min(100, Math.round((totalPres / nextMilestone) * 100));
+    milestoneHtml = `
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);text-align:left">
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:6px">
+          <span>🏆 Next Milestone: <strong>${nextMilestone} Sessions</strong></span>
+          <span style="color:var(--primary)">${totalPres} / ${nextMilestone}</span>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;height:8px;overflow:hidden">
+          <div style="background:var(--primary);height:100%;width:${pct}%;border-radius:10px;transition:width .4s ease"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Check unlocked milestones
+  var unlocked = milestones.filter(function(m){ return totalPres >= m; });
+  var certButtonsHtml = '';
+  if (unlocked.length > 0) {
+    var maxUnlocked = unlocked[unlocked.length - 1];
+    certButtonsHtml = `
+      <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px">
+        <button onclick="openCertModal(${maxUnlocked})" class="wa-btn" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#0f2318;font-weight:700;border:none;border-radius:8px;padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+          🎖️ Unlocked: View ${maxUnlocked}x Certificate
+        </button>
+      </div>
+    `;
+  }
+
   el.innerHTML =
     '<div class="streak-card ' + (isHot ? '' : 'cold') + '">' +
-    '<div class="streak-flame">' + flame + '</div>' +
-    '<div><div class="streak-count">' + streak + '</div>' +
-    '<div class="streak-label">Day Streak</div>' +
-    '<div class="streak-sub">' + msg + '</div></div>' +
+    '<div style="display:flex;gap:16px;align-items:center;text-align:left">' +
+      '<div class="streak-flame">' + flame + '</div>' +
+      '<div>' +
+        '<div class="streak-count">' + streak + '</div>' +
+        '<div class="streak-label">Day Streak</div>' +
+        '<div class="streak-sub">' + msg + '</div>' +
+      '</div>' +
+    '</div>' +
+    milestoneHtml +
+    certButtonsHtml +
     '</div>';
+}
+
+// Certificate Modal and drawing helpers
+function openCertModal(milestone) {
+  document.getElementById('cert-modal').style.display = 'block';
+  setTimeout(function() {
+    drawCertificate(CUST.name, milestone, getClientCenterName());
+  }, 100);
+}
+
+function closeCertModal() {
+  document.getElementById('cert-modal').style.display = 'none';
+}
+
+function downloadCert() {
+  var canvas = document.getElementById('cert-canvas');
+  var nameClean = (CUST.name || 'member').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+  var link = document.createElement('a');
+  link.download = 'pulsezen_certificate_' + nameClean + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  toast('Certificate downloaded successfully!', 'success');
+}
+
+function drawCertificate(name, milestone, centerName) {
+  var canvas = document.getElementById('cert-canvas');
+  var ctx = canvas.getContext('2d');
+  
+  // Clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw premium background gradient
+  var grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  grad.addColorStop(0, '#0f2318');
+  grad.addColorStop(0.5, '#153222');
+  grad.addColorStop(1, '#1e4630');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw elegant gold inner border
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+  
+  ctx.strokeStyle = '#b8860b';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+
+  // Corner Ornaments
+  function drawCorner(x, y, rotation) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.fillStyle = '#d4af37';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(25, 0);
+    ctx.lineTo(25, 4);
+    ctx.lineTo(4, 4);
+    ctx.lineTo(4, 25);
+    ctx.lineTo(0, 25);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  drawCorner(35, 35, 0);
+  drawCorner(canvas.width - 35, 35, Math.PI / 2);
+  drawCorner(canvas.width - 35, canvas.height - 35, Math.PI);
+  drawCorner(35, canvas.height - 35, -Math.PI / 2);
+
+  // Title
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 20px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🌿 PULSEZEN WELLNESS NETWORK', canvas.width / 2, 80);
+
+  ctx.fillStyle = '#d4af37';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillText('CERTIFICATE OF MILESTONE ACHIEVEMENT', canvas.width / 2, 120);
+
+  ctx.fillStyle = '#e5e7eb';
+  ctx.font = 'italic 16px sans-serif';
+  ctx.fillText('This certificate is proudly presented to', canvas.width / 2, 180);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 36px serif';
+  ctx.fillText(name, canvas.width / 2, 230);
+
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(canvas.width / 2 - 150, 250);
+  ctx.lineTo(canvas.width / 2 + 150, 250);
+  ctx.stroke();
+
+  ctx.fillStyle = '#e5e7eb';
+  ctx.font = '16px sans-serif';
+  ctx.fillText('for completing an incredible milestone of', canvas.width / 2, 290);
+
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.fillText(milestone + ' FIT-CLUB SESSIONS', canvas.width / 2, 335);
+
+  ctx.fillStyle = '#e5e7eb';
+  ctx.font = '14px sans-serif';
+  ctx.fillText('at ' + centerName, canvas.width / 2, 380);
+
+  var dateStr = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('Awarded on ' + dateStr, canvas.width / 2, 420);
+
+  // Verification Badge
+  ctx.save();
+  ctx.translate(canvas.width / 2, 490);
+  ctx.fillStyle = '#fbbf24';
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (var i = 0; i < 16; i++) {
+    var angle = (i * Math.PI) / 8;
+    var r = (i % 2 === 0) ? 35 : 25;
+    ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  ctx.fillStyle = '#0f2318';
+  ctx.font = 'bold 8px sans-serif';
+  ctx.fillText('VERIFIED', 0, -3);
+  ctx.fillText('HEALTH', 0, 7);
+  ctx.restore();
+
+  ctx.strokeStyle = '#9ca3af';
+  ctx.lineWidth = 1;
+  
+  ctx.beginPath();
+  ctx.moveTo(80, 520);
+  ctx.lineTo(220, 520);
+  ctx.stroke();
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('Wellness Coach', 150, 538);
+  
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'italic 16px serif';
+  ctx.fillText('Official Seal', 150, 510);
+
+  ctx.beginPath();
+  ctx.moveTo(canvas.width - 220, 520);
+  ctx.lineTo(canvas.width - 80, 520);
+  ctx.stroke();
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('PulseZen Lead', canvas.width - 150, 538);
+
+  ctx.fillStyle = '#d4af37';
+  ctx.font = 'italic 16px serif';
+  ctx.fillText('Dharani', canvas.width - 150, 510);
 }
 
 // ── RENEWAL BANNER ──
@@ -1545,6 +1762,32 @@ async function renderReferral() {
     var invites = coupons.filter(function(c){ return c.reason === 'invite'; });
     var packEarns = coupons.filter(function(c){ return c.reason === 'pack_taken'; });
     var totalCoupons = coupons.reduce(function(s,c){ return s + (parseInt(c.quantity)||0); }, 0);
+
+    // Generate WhatsApp invite link pointing to the coach's WhatsApp
+    var shareBtnHtml = '';
+    if (DATA.coach && DATA.coach.contact) {
+      var coachContactClean = DATA.coach.contact.replace(/\D/g, '');
+      var inviteMsg = `Hi! I've been attending ${getClientCenterName()} and having amazing results. Here is a guest pass for a Free Shake, Body Composition scan, and Wellness Consultation on your first day! Tap here to message my coach to schedule your visit: https://wa.me/${COUNTRY_CODE}${coachContactClean}?text=` + encodeURIComponent(`Hi Coach! I would like to schedule my free guest pass consultation at ${getClientCenterName()}. I was referred by ${CUST.name} (${CUST.phone || CUST.contact || ''}).`);
+      
+      var waShareUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(inviteMsg);
+      shareBtnHtml = `
+        <div class="ref-card" style="margin-top: 16px; background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.2); text-align: left">
+          <h3 style="color: var(--primary); margin-bottom: 8px">🎁 Share a Free Guest Pass</h3>
+          <div class="ref-sub" style="margin-bottom: 16px">Invite your friends to try our center! They get a free wellness consultation and shake, and you earn coupons when they join.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a href="${waShareUrl}" target="_blank" style="text-decoration:none;flex:1;min-width:200px">
+              <button class="login-btn" style="background:#25D366;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:10px;cursor:pointer;padding:12px;font-family:inherit">
+                💬 Share on WhatsApp
+              </button>
+            </a>
+            <button onclick="copyReferralText('${inviteMsg.replace(/'/g, "\\'")}')" class="login-btn" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid var(--border);border-radius:10px;cursor:pointer;padding:12px;font-weight:600;font-family:inherit">
+              📋 Copy Text
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
     el.innerHTML =
       '<div class="ref-card">' +
       '<h3>🎟️ Your Referral Rewards</h3>' +
@@ -1554,12 +1797,21 @@ async function renderReferral() {
       '<div class="ref-stat"><div class="ref-stat-val">' + packEarns.length + '</div><div class="ref-stat-lbl">Joined a Pack</div></div>' +
       '<div class="ref-stat"><div class="ref-stat-val">' + totalCoupons + '</div><div class="ref-stat-lbl">Coupons Earned</div></div>' +
       '</div></div>' +
+      shareBtnHtml +
       (invites.length ? '<div class="tcard"><h3>People You Referred</h3>' +
         invites.map(function(c){ return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">👤 ' + (c.referred_person||'—') + '</div>'; }).join('') +
         '</div>' : '<div class="tcard"><div class="empty"><div class="ei">🤝</div>No referrals yet<div style="font-size:13px;margin-top:8px">Refer a friend and earn 1 coupon. If they join a pack, earn 3 more!</div></div></div>');
   } catch(e) {
     el.innerHTML = '<div class="tcard"><div class="empty"><div class="ei">🎟️</div>Referral data not available</div></div>';
   }
+}
+
+function copyReferralText(text) {
+  navigator.clipboard.writeText(text).then(function() {
+    toast('Invite text copied to clipboard!', 'success');
+  }).catch(function() {
+    toast('Failed to copy text', 'error');
+  });
 }
 
 // ── PROTEIN WISHLIST ──
@@ -2380,43 +2632,45 @@ function renderFoodLogTotals() {
       targetPro = Number(plan.target_protein)||0;
     } catch(e){}
   }
+  
+  var targetCarbs = targetCal ? Math.round((targetCal * 0.45) / 4) : 0;
+  var targetFat = targetCal ? Math.round((targetCal * 0.25) / 9) : 0;
 
-  function bar(eaten, target, unit, color) {
-    var pct = target>0 ? Math.min(100, Math.round(eaten/target*100)) : 0;
-    var left = target>0 ? Math.max(0,(target-eaten)).toFixed(unit==='g'?1:0) : '—';
-    var overColor = pct>=100 ? 'var(--danger)' : color;
-    return '<div style="margin-bottom:4px;display:flex;justify-content:space-between;font-size:12px;font-weight:600">'+
-      '<span style="color:'+overColor+'">'+eaten.toFixed(unit==='g'?1:0)+unit+'</span>'+
-      (target>0?'<span style="color:var(--muted)">'+left+unit+' left of '+target+unit+'</span>':'<span style="color:var(--muted)">No target set</span>')+
-      '</div>'+
-      '<div style="background:var(--surface2);border-radius:20px;height:10px;overflow:hidden;margin-bottom:10px">'+
-      '<div style="height:100%;border-radius:20px;background:'+overColor+';width:'+pct+'%;transition:width .4s ease"></div>'+
-      '</div>';
+  function renderRing(label, eaten, target, unit, color) {
+    var pct = target > 0 ? Math.min(100, Math.round((eaten / target) * 100)) : 0;
+    var eatenText = eaten.toFixed(unit === 'g' ? 1 : 0) + unit;
+    var targetText = target > 0 ? target.toFixed(0) + unit : 'No target';
+    return `
+      <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${label}</div>
+          <div style="font-size:20px;font-weight:700;color:#fff">${eatenText}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Target: ${targetText}</div>
+        </div>
+        <div style="position:relative;width:64px;height:64px;flex-shrink:0">
+          <svg viewBox="0 0 36 36" style="width:100%;height:100%;transform:rotate(-90deg)">
+            <path style="fill:none;stroke:rgba(255,255,255,0.06);stroke-width:3.5" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path style="fill:none;stroke:${color};stroke-width:3.5;stroke-dasharray:${pct}, 100;stroke-linecap:round;transition:stroke-dasharray .4s ease" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">${pct}%</div>
+        </div>
+      </div>
+    `;
   }
 
-  el.innerHTML =
-    '<div class="tcard" style="margin-bottom:16px">'+
-    '<div style="font-weight:700;font-size:15px;margin-bottom:14px">📊 Today\'s Nutrition</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px">'+
-    '<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center">'+
-      '<div style="font-family:\'DM Serif Display\',serif;font-size:26px;color:var(--primary)">'+totalCal.toFixed(0)+'</div>'+
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">kcal eaten</div></div>'+
-    '<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center">'+
-      '<div style="font-family:\'DM Serif Display\',serif;font-size:26px;color:var(--success)">'+totalPro.toFixed(1)+'g</div>'+
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">protein</div></div>'+
-    '<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center">'+
-      '<div style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#2563eb">'+totalCarbs.toFixed(1)+'g</div>'+
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">carbs</div></div>'+
-    '<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center">'+
-      '<div style="font-family:\'DM Serif Display\',serif;font-size:26px;color:#b45309">'+totalFat.toFixed(1)+'g</div>'+
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">fat</div></div>'+
-    '</div>'+
-    (targetCal||targetPro ?
-      '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Progress vs Diet Plan</div>'+
-      (targetCal ? '<div style="font-size:12px;color:var(--muted);margin-bottom:2px">Calories</div>'+bar(totalCal,targetCal,'','var(--primary)') : '')+
-      (targetPro ? '<div style="font-size:12px;color:var(--muted);margin-bottom:2px">Protein</div>'+bar(totalPro,targetPro,'g','#16a34a') : '')
-    : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:4px 0">Ask your coach to generate a diet plan to see progress vs target.</div>')+
-    '</div>';
+  el.innerHTML = `
+    <div class="tcard" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="margin:0;font-size:16px;font-weight:700">📊 Today's Nutrition Progress</h3>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        ${renderRing('Calories', totalCal, targetCal, '', 'var(--primary)')}
+        ${renderRing('Protein', totalPro, targetPro, 'g', '#22c55e')}
+        ${renderRing('Carbs', totalCarbs, targetCarbs, 'g', '#3b82f6')}
+        ${renderRing('Fats', totalFat, targetFat, 'g', '#f59e0b')}
+      </div>
+    </div>
+  `;
 }
 
 function renderFoodLogEntries() {
