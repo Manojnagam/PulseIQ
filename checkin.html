@@ -687,18 +687,34 @@ async function executeProfileCheckin(profile) {
       return;
     }
 
-    // Check duplicate check-in today
+    // Check duplicate check-in today based on shake frequency
     const todayAtt = await req('GET', 'attendance', null, `customer_id=eq.${cust.id}&date=eq.${todayStr}`);
-    if (todayAtt && todayAtt.length > 0) {
+    const maxAllowedShakes = cust.shake_frequency === 'twice' ? 2 : 1;
+    if (todayAtt && todayAtt.length >= maxAllowedShakes) {
       showSuccess(cust, 'client', true);
       return;
     }
+
+    // Determine device & browser fingerprint as check-in proof
+    const deviceType = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+    let browserName = 'Browser';
+    const ua = navigator.userAgent;
+    if (ua.includes("Chrome")) browserName = "Chrome";
+    else if (ua.includes("Safari") && !ua.includes("Chrome")) browserName = "Safari";
+    else if (ua.includes("Firefox")) browserName = "Firefox";
+    else if (ua.includes("Edge")) browserName = "Edge";
+    
+    const checkInTime = new Date().toTimeString().slice(0, 5);
+    const qrNotes = `Self check-in via QR (${deviceType}/${browserName})`;
 
     // Mark attendance
     await req('POST', 'attendance', {
       customer_id: cust.id,
       date: todayStr,
-      wellness_center_id: centerId
+      wellness_center_id: centerId,
+      servings: 1,
+      check_in_time: checkInTime,
+      notes: qrNotes
     });
     
     showSuccess(cust, 'client', false);
@@ -763,7 +779,8 @@ function showSuccess(entity, type, alreadyCheckedIn) {
   }
   
   if (alreadyCheckedIn) {
-    document.querySelector('.success-subtitle').textContent = "Already checked in today! 👍";
+    const frequencyText = entity.shake_frequency === 'twice' ? 'twice' : 'today';
+    document.querySelector('.success-subtitle').textContent = `Already checked in ${frequencyText}! 👍`;
   } else {
     document.querySelector('.success-subtitle').textContent = "Check-in Complete! 🎉";
   }
