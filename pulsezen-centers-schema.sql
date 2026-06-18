@@ -216,7 +216,7 @@ create table if not exists lead_followups (
   created_at timestamptz default now()
 );
 alter table lead_followups enable row level security;
-create policy "anon_all" on lead_followups for all to anon using (true) with check (true);
+create policy "allow_all" on lead_followups for all using (true) with check (true);
 
 -- ==========================================
 -- COACH ATTENDANCE
@@ -231,7 +231,7 @@ create table if not exists coach_attendance (
   unique(coach_id, date)
 );
 alter table coach_attendance enable row level security;
-create policy "anon_all" on coach_attendance for all to anon using (true) with check (true);
+create policy "allow_all" on coach_attendance for all using (true) with check (true);
 
 -- ==========================================
 -- DIET PLAN HISTORY
@@ -244,7 +244,7 @@ create table if not exists diet_plan_history (
   created_at timestamptz default now()
 );
 alter table diet_plan_history enable row level security;
-create policy "anon_all" on diet_plan_history for all to anon using (true) with check (true);
+create policy "allow_all" on diet_plan_history for all using (true) with check (true);
 
 -- ==========================================
 -- CUSTOMER NOTES
@@ -257,7 +257,7 @@ create table if not exists customer_notes (
   created_at timestamptz default now()
 );
 alter table customer_notes enable row level security;
-create policy "anon_all" on customer_notes for all to anon using (true) with check (true);
+create policy "allow_all" on customer_notes for all using (true) with check (true);
 
 -- ==========================================
 -- ANNOUNCEMENTS
@@ -271,7 +271,7 @@ create table if not exists announcements (
   created_at timestamptz default now()
 );
 alter table announcements enable row level security;
-create policy "anon_all" on announcements for all to anon using (true) with check (true);
+create policy "allow_all" on announcements for all using (true) with check (true);
 
 -- ==========================================
 -- SAAS PLAN TRACKING & NETWORKS MIGRATIONS
