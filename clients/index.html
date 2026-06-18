@@ -752,6 +752,7 @@ async function doLogin() {
     var cust = null;
     if (results.length === 1) {
       var c = results[0];
+      if (c.dob && !dob) { errEl.textContent = 'Please enter your date of birth to continue.'; return; }
       if (c.dob && dob && c.dob !== dob) { errEl.textContent = 'Date of birth does not match. Contact your coach.'; return; }
       cust = c;
     } else {

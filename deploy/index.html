@@ -727,7 +727,7 @@ tbody tr:hover td{background:#f0f7f2!important;transition:background .12s}
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-portals')"><span>Portals</span><span class="nav-arrow">▾</span></div>
       <div id="g-portals" style="display:none">
         <a class="nav-item" id="nav-coach-portal-link" href="coach.html" target="_blank" rel="noopener" style="text-decoration:none" onclick="updateCoachPortalNavLink()"><span class="ic">👨‍🏫</span><span>Coach Portal ↗</span></a>
-        <a class="nav-item" href="client.html" target="_blank" rel="noopener" style="text-decoration:none"><span class="ic">👤</span><span>Client Portal ↗</span></a>
+        <a class="nav-item" id="nav-client-portal-link" href="https://client.pulsezen.in/" target="_blank" rel="noopener" style="text-decoration:none" onclick="updateClientPortalNavLink()"><span class="ic">👤</span><span>Client Portal ↗</span></a>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-analytics')"><span>Analytics & Reports</span><span class="nav-arrow">▾</span></div>
       <div id="g-analytics" style="display:none">
@@ -2726,7 +2726,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <button class="btn-p" onclick="verifyPinPrompt()" style="width:100%;margin-top:16px;padding:16px;font-size:16px;font-weight:700;border-radius:12px">🔓 Unlock</button>
       <div style="margin-top:14px;padding:10px 14px;background:#f0fdf4;border-radius:10px;font-size:12px;color:#2d5a3d;line-height:1.8;text-align:left">
         <strong>Not a supervisor?</strong><br>
-        👤 Clients → <a href="client.html" target="_blank" style="color:#2d5a3d;font-weight:600">Client Portal</a> &nbsp;
+        👤 Clients → <a href="https://client.pulsezen.in/" target="_blank" style="color:#2d5a3d;font-weight:600">Client Portal</a> &nbsp;
         👨‍🏫 Coaches → <a href="coach.html" target="_blank" style="color:#2d5a3d;font-weight:600">Coach Portal</a>
       </div>
     </div>
@@ -2852,7 +2852,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div style="font-size:11px;color:var(--muted);margin-top:8px">Pack will start <strong>tomorrow</strong>. Today's visit is free and won't count against pack days.</div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Date of Birth 🎂</label><input type="date" id="customer-dob"></div>
+        <div class="fg"><label>Date of Birth 🎂 <span style="color:var(--danger)">*</span></label><input type="date" id="customer-dob" required></div>
         <div class="fg"><label>Pack Price (₹)</label><input type="number" id="customer-pack-price" placeholder="e.g. 2500" oninput="onPackPriceChange()"></div>
       </div>
       <div class="fr">
@@ -3309,16 +3309,35 @@ async function startApp() {
   document.getElementById('app-loading').style.display = 'flex';
   if (window.location.hash) history.replaceState(null, '', window.location.pathname);
 
+  // ── Super admin fast-path: check remembered email even without a real auth session ──
+  var _currentEmail = (_authUser && _authUser.email) || (_authSession && _authSession.user && _authSession.user.email) || localStorage.getItem('pz_remembered_email') || '';
+  var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
+  if (HARDCODED_SUPER_ADMINS.indexOf(_currentEmail) !== -1) {
+    ACTIVE_CENTER = '';
+    localStorage.setItem('activeCenter', '');
+    _centerAuth = { type: 'master' };
+    sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
+    var _opQ = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+    delete _opQ.center_name;
+    localStorage.setItem('ownerProfile', JSON.stringify(_opQ));
+    if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _opQ;
+    try { renderProfileCard(); } catch(e) {}
+  }
+
   // ── Auto-link: match logged-in email to a center if not already linked ──
   if (_authUser) {
     var authEl = document.getElementById('sb-auth-user');
     if (authEl) authEl.textContent = '● ' + _authUser.email;
 
     // Check if this is super admin
-    var settingsRes = await fetch(CENTER_SB_URL + '/rest/v1/app_settings?key=eq.super_admin_email&select=value', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY } });
-    var settingsData = await settingsRes.json();
-    var superAdminEmail = settingsData[0] ? settingsData[0].value : '';
-    var isSuperAdmin = (_authUser.user_metadata && _authUser.user_metadata.role === 'super_admin') || _authUser.email === superAdminEmail;
+    var superAdminEmail = '';
+    try {
+      var settingsRes = await fetch(CENTER_SB_URL + '/rest/v1/app_settings?key=eq.super_admin_email&select=value', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + _authSession.access_token } });
+      var settingsData = await settingsRes.json();
+      superAdminEmail = (Array.isArray(settingsData) && settingsData[0]) ? settingsData[0].value : '';
+    } catch(e) {}
+    var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
+    var isSuperAdmin = (_authUser.user_metadata && _authUser.user_metadata.role === 'super_admin') || _authUser.email === superAdminEmail || HARDCODED_SUPER_ADMINS.indexOf(_authUser.email) !== -1;
 
     if (isSuperAdmin) {
       // Super admin: clear any center lock from previous session
@@ -3600,6 +3619,7 @@ function exportCSV(headers, rows, filename) {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 function exportCustomersCSV() {
+  if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Growth plan feature (₹499/mo).', 'error'); return; }
   var custs = filterByCenter(D.customers);
   exportCSV(
     ['Name','Contact','Email','Pack','Start Date','Days Left','Status','Goal','Coach','Center','Joined'],
@@ -3611,6 +3631,7 @@ function exportCustomersCSV() {
   );
 }
 function exportFinanceCSV() {
+  if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Growth plan feature (₹499/mo).', 'error'); return; }
   var fin = filterFinanceByCenter(D.finance);
   exportCSV(
     ['Type','Description','Amount','Category','Date','Center'],
@@ -3654,6 +3675,12 @@ function isGrowthPlan() {
   var plan = c ? (c.plan_type||'free') : 'free';
   return plan==='growth'||plan==='elite'||plan==='president';
 }
+function isElitePlan() {
+  if (!isCenterSession() && !ACTIVE_CENTER) return true; // supervisor always has full access
+  var c = (D.centers||[]).find(function(x){return x.id===ACTIVE_CENTER;});
+  var plan = c ? (c.plan_type||'free') : 'free';
+  return plan==='elite'||plan==='president';
+}
 function planLockHtml(feature, desc) {
   return '<div style="text-align:center;padding:48px 24px">'
     +'<div style="font-size:40px;margin-bottom:12px">🔒</div>'
@@ -3662,6 +3689,16 @@ function planLockHtml(feature, desc) {
     +'<div style="font-size:22px;font-weight:800;color:#7c3aed;margin-bottom:4px">₹499<span style="font-size:13px;font-weight:400">/month</span></div>'
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:16px">Growth Plan</div>'
     +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Growth plan (₹499/month) to unlock '+feature+'. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:10px 24px;background:#7c3aed;border-color:#7c3aed">💬 Request Upgrade via WhatsApp</a>'
+    +'</div>';
+}
+function planLockHtmlElite(feature, desc) {
+  return '<div style="text-align:center;padding:48px 24px">'
+    +'<div style="font-size:40px;margin-bottom:12px">🔒</div>'
+    +'<div style="font-size:18px;font-weight:700;color:#b45309;margin-bottom:8px">'+feature+' — Elite Plan</div>'
+    +'<div style="font-size:13px;color:#6b7280;margin-bottom:20px;max-width:340px;margin-left:auto;margin-right:auto">'+desc+'</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#b45309;margin-bottom:4px">₹999<span style="font-size:13px;font-weight:400">/month</span></div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:16px">Elite Plan</div>'
+    +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Elite plan (₹999/month) to unlock '+feature+'. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:10px 24px;background:#b45309;border-color:#b45309">💬 Request Upgrade via WhatsApp</a>'
     +'</div>';
 }
 
@@ -3936,6 +3973,8 @@ function getCenterName() {
     var ac = D.centers.find(function(x){ return x.id === ACTIVE_CENTER; });
     if (ac && ac.name) return ac.name;
   }
+  // Master/supervisor mode — no center lock
+  if (_centerAuth && _centerAuth.type === 'master') return 'PulseZen Network';
   var op = (typeof OWNER_PROFILE !== 'undefined') ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile') || '{}');
   if (op && op.center_name) return op.center_name;
   if (D && D.centers && D.centers.length) return D.centers[0].name;
@@ -5055,6 +5094,7 @@ function updateCustSelects() {
 function parsePack(packType) {
   if (!packType) return 30;
   var t = packType.toLowerCase();
+  if (t === 'product user') return 9999; // never expires
   if (/\b26\b/.test(t)) return 26;
   if (/\b3\b/.test(t) && !/\b30\b/.test(t)) return 3;
   return 30;
@@ -5194,6 +5234,7 @@ var _renewalResults = [];
 var _expiringItems  = [];
 
 async function runRenewalAgent() {
+  if (isCenterSession() && !isGrowthPlan()) { showToast('WhatsApp Nudges are a Growth plan feature (₹499/mo). Request upgrade via WhatsApp.', 'error'); return; }
   if (!getGroqKey()) { showToast('Please set your Groq API Key in Config tab first', 'error'); return; }
 
   // Find customers expiring in 0–5 days (within active center filter)
@@ -5409,6 +5450,7 @@ async function regenAgentMsg(i) {
 //  AGENT 1 — 😴 Inactive Re-engagement
 // ══════════════════════════════════════════
 function runInactiveAgent() {
+  if (isCenterSession() && !isGrowthPlan()) { showToast('WhatsApp Nudges are a Growth plan feature (₹499/mo). Request upgrade via WhatsApp.', 'error'); return; }
   var todayStr = new Date().toISOString().split('T')[0];
   var items = filterByCenter(D.customers).filter(function(c){ return getDaysLeft(c).active && isInactive(c); });
   runGenericAgent({
@@ -5626,6 +5668,7 @@ function runWelcomeAgent() {
 //  AGENT 8 — 💹 Finance Analyst
 // ══════════════════════════════════════════
 async function runFinanceAnalystAgent() {
+  if (isCenterSession() && !isElitePlan()) { showToast('Finance AI Analyst is an Elite plan feature (₹999/mo). Request upgrade via WhatsApp.', 'error'); return; }
   if (!getGroqKey()) { showToast('Set Groq API Key in Config tab first', 'error'); return; }
 
   var today       = new Date();
@@ -8231,6 +8274,11 @@ function getArr(curr, prev, rev) {
 
 // ── RENDER BODY ──
 function renderBody() {
+  if (isCenterSession() && !isGrowthPlan()) {
+    var _bodyLock = document.getElementById('body-body');
+    if (_bodyLock) _bodyLock.innerHTML = planLockHtml('Body Composition Tracking', 'Track weight, fat%, muscle%, visceral fat and health scores over time for every customer.');
+    return;
+  }
   var tb = document.getElementById('body-body');
   var profileCard = document.getElementById('body-profile-card');
   var emptyPrompt = document.getElementById('body-empty-prompt');
@@ -8784,6 +8832,11 @@ function _getFinFiltered() {
   });
 }
 function renderFinance() {
+  if (isCenterSession() && !isGrowthPlan()) {
+    var _finLock = document.getElementById('fin-body');
+    if (_finLock) _finLock.innerHTML = '<tr><td colspan="6">'+planLockHtml('Finance Dashboard', 'Track income, expenses, net profit and pending payments for your center.')+'</td></tr>';
+    return;
+  }
   var rows = _getFinFiltered();
   var tb = document.getElementById('fin-body');
   if (!rows.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="ei">💰</div><p>No transactions yet.</p></div></td></tr>'; }
@@ -8989,6 +9042,13 @@ function updateCoachPortalNavLink() {
   var center = ACTIVE_CENTER ? D.centers.find(function(c){ return c.id === ACTIVE_CENTER; }) : null;
   var nid = center && center.network_id ? center.network_id : null;
   el.href = nid ? 'coach.html?center=' + nid : 'coach.html';
+}
+function updateClientPortalNavLink() {
+  var el = document.getElementById('nav-client-portal-link');
+  if (!el) return;
+  var center = ACTIVE_CENTER ? D.centers.find(function(c){ return c.id === ACTIVE_CENTER; }) : null;
+  var nid = center && center.network_id ? center.network_id : null;
+  el.href = nid ? 'https://client.pulsezen.in/?center=' + nid : 'https://client.pulsezen.in/';
 }
 function copyCoachLink(networkId) {
   var link = 'https://app.pulsezen.in/coach.html?center=' + networkId;
@@ -9225,11 +9285,12 @@ async function saveCustomer() {
   payload.external_referrer_phone  = refPhone || null;
   payload.coach_id                 = document.getElementById('customer-assigned-coach').value || null;
   if (!payload.name) { showToast('Customer name is required','error'); return; }
+  if (!_v('customer-dob')) { showToast('Date of birth is required for secure client portal access','error'); return; }
   if (!id) {
     var _custCount = filterByCenter(D.customers).length;
-    var _custLimit = isGrowthPlan() ? 200 : 20;
+    var _custLimit = isElitePlan() ? Infinity : isGrowthPlan() ? 200 : 20;
     if (_custCount >= _custLimit) {
-      showToast(isGrowthPlan() ? 'Customer limit of 200 reached. Contact support to upgrade to Elite.' : 'Free plan limit of 20 customers reached. Upgrade to Growth (₹499/mo) to add up to 200 customers.', 'error');
+      showToast(isGrowthPlan() ? 'Customer limit of 200 reached. Upgrade to Elite (₹999/mo) for unlimited customers.' : 'Free plan limit of 20 customers reached. Upgrade to Growth (₹499/mo) to add up to 200 customers.', 'error');
       return;
     }
   }
@@ -12820,8 +12881,8 @@ async function generateBizAIReport() {
 // ══════════════════════════════════════════════
 // PLAN MANAGEMENT (supervisor only)
 // ══════════════════════════════════════════════
-var PLAN_LABELS = { free:'Free', growth:'Growth ₹499', elite:'Elite ₹999', president:'President' };
-var PLAN_COLORS = { free:'#6b7280', growth:'#7c3aed', elite:'#b45309', president:'#1d4ed8' };
+var PLAN_LABELS = { free:'Free', growth:'Growth ₹499', elite:'Elite ₹999', president:"Founder's Deal ₹499" };
+var PLAN_COLORS = { free:'#6b7280', growth:'#7c3aed', elite:'#b45309', president:'#0f766e' };
 
 function renderPlanMgmt() {
   var tb = document.getElementById('planmgmt-body'); if (!tb) return;
@@ -12858,7 +12919,17 @@ async function saveCenterPlan(centerId) {
   var center = (D.centers||[]).find(function(c){ return c.id===centerId; });
   if (!center) return;
   try {
-    await dbUpdate('wellness_centers', centerId, { plan_type: newPlan });
+    var res = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?id=eq.' + centerId, {
+      method: 'PATCH',
+      headers: {
+        'apikey': CENTER_SB_KEY,
+        'Authorization': 'Bearer ' + (_authSession && _authSession.access_token ? _authSession.access_token : CENTER_SB_KEY),
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ plan_type: newPlan })
+    });
+    if (!res.ok) { var err = await res.json(); throw new Error(err.message || 'HTTP ' + res.status); }
     center.plan_type = newPlan;
     showToast((center.name||'Center')+' upgraded to '+PLAN_LABELS[newPlan]+'!', 'success');
     renderPlanMgmt();
@@ -13018,6 +13089,11 @@ function renderCouponView(){
   }
 }
 function renderCoupons(){
+  if (isCenterSession() && !isGrowthPlan()) {
+    var _cpLock = document.getElementById('coupons-body') || document.querySelector('#sec-coupons .tcard');
+    if (_cpLock) _cpLock.innerHTML = planLockHtml('Coupon & Referral System', 'Auto-earn coupons when customers refer friends. Track and manage all referral rewards.');
+    return;
+  }
   var cid=document.getElementById('coupon-coach-sel')?document.getElementById('coupon-coach-sel').value:'';
   var _centerPersonIds=null;
   if(ACTIVE_CENTER){
@@ -13520,6 +13596,7 @@ function renderCustomers() {
     var refs = D.customers.filter(function(x){return x.referred_by_id===c.id;}).length;
     var refBadge = refs>=2?'<span class="star-cust">⭐ '+refs+'</span>':(refs===1?'<span style="color:var(--muted);font-size:12px">1</span>':'<span style="color:var(--muted);font-size:12px">—</span>');
     var bdayFlag = (c.dob&&c.dob.slice(5,10)===todayMMDD)?' 🎂':'';
+    var noDobBadge = !c.dob ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:#fef3c7;color:#92400e;display:inline-block;margin-left:4px" title="Add DOB so client can log in securely">⚠️ No DOB</span>' : '';
     var wasReferred = c.referred_by_id || c.external_referrer_name;
     var custAttCount = D.attendance.filter(function(a){return a.customer_id===c.id;}).length;
     var freeDay = (wasReferred && custAttCount===0)?' <span class="badge by" style="font-size:9px" title="Free checkup, counselling &amp; shake">🆓 Free 1st Day</span>':'';
@@ -13540,7 +13617,7 @@ function renderCustomers() {
     var riskBadge = risk.label ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;display:block;margin-top:2px;'+(risk.level==='critical'?'background:#fee2e2;color:#b91c1c':'background:#fef9c3;color:#854d0e')+'" title="'+risk.reasons.join(', ')+'">'+risk.label+'</span>' : '';
     var msBadges = getMilestones(c.id).slice(-2).map(function(m){ return '<span class="milestone-badge ms-gold" style="font-size:9px;display:inline-block;margin-top:2px">'+m.icon+' '+m.label+'</span>'; }).join('');
     return '<tr>'
-      +'<td><strong>'+c.name+bdayFlag+'</strong>'+freeDay+sharedBadge+memberBadge+coachBadge+riskBadge+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
+      +'<td><strong>'+c.name+bdayFlag+'</strong>'+noDobBadge+freeDay+sharedBadge+memberBadge+coachBadge+riskBadge+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
       +'<td>'+(c.contact||'—')+'</td>'
       +'<td>'+(c.pack_owner_id ? '↗ shared' : (c.pack_type||'—'))+'</td>'
       +'<td>'+(c.pack_owner_id ? '—' : (c.pack_start_date||'—'))+'</td>'
@@ -15372,7 +15449,7 @@ async function viewMealCompliance(custId, custName) {
 
 // ── BULK DIET PLAN GENERATOR ──
 async function bulkGenerateDietPlans() {
-  if (isCenterSession() && !isGrowthPlan()) { showToast('AI Diet Plans are a Growth plan feature (₹499/mo). Request upgrade via WhatsApp.', 'error'); return; }
+  if (isCenterSession() && !isElitePlan()) { showToast('AI Diet Plans are an Elite plan feature (₹999/mo). Request upgrade via WhatsApp.', 'error'); return; }
   if(_dietInFlight){ showToast('Already generating a plan...','error'); return; }
   var groqKey = getGroqKey();
   if(!groqKey){ showToast('Set your Groq API key in SQL/Config section first','error'); return; }

@@ -266,8 +266,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div id="login-screen" style="display:none">
   <div class="login-box">
     <div class="login-logo">
-      <h1>🌿 Dharani's</h1>
-      <p>Client Dashboard — Enter your details to continue</p>
+      <h1 id="login-center-name">🌿 Client Portal</h1>
+      <p id="login-center-sub">Client Dashboard — Enter your details to continue</p>
     </div>
     <div class="login-field">
       <label>Mobile Number</label>
@@ -616,6 +616,7 @@ var COUNTRY_CODE = '91';
 
 var CUST = null;
 var DATA = { attendance:[], body:[], packs:[], coach:null, payment:null, centerName:'' };
+var CENTER_ID = '';   // resolved from ?center= URL param
 var MEAL_LOGS = {}; // { "2026-04-19": { breakfast: true, mid_morning: false, ... } }
 var _attYear = null, _attMonth = null, _bodyChart = null;
 
@@ -714,6 +715,25 @@ function initials(name) {
   return (name || '?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
 }
 
+// ── CENTER PARAM ──
+async function resolveCenterParam() {
+  var param = new URLSearchParams(window.location.search).get('center');
+  if (!param) return;
+  try {
+    var centers = await req('GET', 'wellness_centers', null, 'network_id=eq.' + encodeURIComponent(param));
+    if (!centers.length) centers = await req('GET', 'wellness_centers', null, 'id=eq.' + encodeURIComponent(param));
+    if (centers.length) {
+      CENTER_ID = centers[0].id;
+      document.getElementById('login-center-name').textContent = '🌿 ' + centers[0].name;
+      document.getElementById('login-center-sub').textContent = (centers[0].network_id || '') + ' · Client Dashboard';
+    } else {
+      document.getElementById('login-center-sub').textContent = 'Center not found — contact your coach';
+    }
+  } catch(e) {
+    // silently skip — show default
+  }
+}
+
 // ── LOGIN ──
 async function doLogin() {
   var mobile = document.getElementById('login-mobile').value.trim();
@@ -722,15 +742,17 @@ async function doLogin() {
   errEl.textContent = '';
   if (mobile.length < 10) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
   try {
-    var results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent(mobile));
+    var centerFilter = CENTER_ID ? '&wellness_center_id=eq.' + encodeURIComponent(CENTER_ID) : '';
+    var results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent(mobile) + centerFilter);
     if (!results.length) {
-      results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent('91' + mobile));
+      results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent('91' + mobile) + centerFilter);
     }
     if (!results.length) { errEl.textContent = 'No client found with this number. Contact your coach.'; return; }
 
     var cust = null;
     if (results.length === 1) {
       var c = results[0];
+      if (c.dob && !dob) { errEl.textContent = 'Please enter your date of birth to continue.'; return; }
       if (c.dob && dob && c.dob !== dob) { errEl.textContent = 'Date of birth does not match. Contact your coach.'; return; }
       cust = c;
     } else {
@@ -1151,18 +1173,30 @@ function changeMonth(dir) {
 }
 
 // ── PROGRESS ──
-function calcHealthScore(bmi, fatPct, vfKg, musclePct) {
+function calcHealthScore(bmi, fatPct, vfKg, musclePct, gender, weight) {
+  var g = (gender || '').toLowerCase();
+  var isMale = g === 'male', isFemale = g === 'female';
+  var fatLo = isMale ? 10 : isFemale ? 20 : 10;
+  var fatHi = isMale ? 20 : isFemale ? 26 : 25;
+  var musIdealKg = isMale ? 30 : 22, musMinKg = isMale ? 10 : 8;
   var score = 0, total = 0;
   if (bmi) { total += 25; if (bmi >= 18.5 && bmi <= 24.9) score += 25; else if (bmi < 18.5) score += Math.max(0, 25-(18.5-bmi)*4); else score += Math.max(0, 25-(bmi-24.9)*3); }
-  if (fatPct) { total += 30; if (fatPct >= 8 && fatPct <= 25) score += 30; else if (fatPct < 8) score += Math.max(0, 30-(8-fatPct)*3); else score += Math.max(0, 30-(fatPct-25)*1.8); }
+  if (fatPct) { total += 30; if (fatPct >= fatLo && fatPct <= fatHi) score += 30; else if (fatPct < fatLo) score += Math.max(0, 30-(fatLo-fatPct)*3); else score += Math.max(0, 30-(fatPct-fatHi)*1.8); }
   if (vfKg > 0) { total += 20; if (vfKg <= 2) score += 20; else if (vfKg <= 4) score += 12; else if (vfKg <= 6) score += 5; }
-  if (musclePct) { total += 25; score += Math.min(25, Math.max(0, (musclePct - 15) / 20 * 25)); }
+  if (musclePct) { total += 25; var mkg = weight > 0 ? weight * musclePct / 100 : 0; score += mkg > 0 ? Math.min(25, Math.max(0, (mkg-musMinKg)/(musIdealKg-musMinKg)*25)) : Math.min(25, Math.max(0, (musclePct-15)/20*25)); }
   if (total === 0) return null;
   return Math.round((score / total) * 100);
 }
-function buildHealthScoreCard(bmi, fatPct, vfKg, date, musclePct) {
+function buildHealthScoreCard(bmi, fatPct, vfKg, date, musclePct, weight, gender) {
   var musV = parseFloat(musclePct)||0;
-  var score = calcHealthScore(parseFloat(bmi)||0, parseFloat(fatPct)||0, parseFloat(vfKg)||0, musV||null);
+  var g = (gender || (typeof CUST !== 'undefined' ? CUST.gender : '') || '').toLowerCase();
+  var isMale = g === 'male', isFemale = g === 'female';
+  var fatIdealLo = isMale ? 10 : isFemale ? 20 : 10;
+  var fatIdealHi = isMale ? 20 : isFemale ? 26 : 25;
+  var musIdealKg = isMale ? 30 : 22;
+  var weightV = parseFloat(weight) || 0;
+  var muscleKg = (weightV > 0 && musV > 0) ? parseFloat((weightV * musV / 100).toFixed(1)) : 0;
+  var score = calcHealthScore(parseFloat(bmi)||0, parseFloat(fatPct)||0, parseFloat(vfKg)||0, musV||null, g, weightV);
   if (score === null) return '';
   var color = score >= 80 ? '#27ae60' : score >= 55 ? '#e8a838' : '#c0392b';
   var maxDash = 157.08, offset = maxDash * (1 - score / 100);
@@ -1173,9 +1207,9 @@ function buildHealthScoreCard(bmi, fatPct, vfKg, date, musclePct) {
             :               {t:'Critical',bg:'rgba(254,226,226,.3)',c:'#fca5a5'};
   var bmiV = parseFloat(bmi)||0, fatV = parseFloat(fatPct)||0;
   var bmiLbl = bmiV ? (bmiV < 18.5 ? '⬇️ Underweight' : bmiV <= 24.9 ? '✅ Normal' : bmiV <= 29.9 ? '⚠️ Overweight' : '🔴 Obese') : '—';
-  var fatLbl = fatV ? (fatV <= 25 ? '✅ Ideal' : fatV <= 32 ? '⚠️ High' : '🔴 Very High') : '—';
+  var fatLbl = fatV ? (fatV >= fatIdealLo && fatV <= fatIdealHi ? '✅ Ideal' : fatV <= fatIdealHi + 6 ? '⚠️ High' : '🔴 Very High') : '—';
   var vfLbl  = vfKg > 0 ? (vfKg <= 2 ? '✅ Low' : vfKg <= 4 ? '⚠️ Moderate' : '🔴 High') : '—';
-  var musLbl = musV ? (musV >= 35 ? '✅ Excellent' : musV >= 30 ? '✅ Good' : musV >= 25 ? '⚠️ Average' : '🔴 Low') : '—';
+  var musLbl = muscleKg > 0 ? (muscleKg >= musIdealKg ? '✅ Excellent' : muscleKg >= musIdealKg*0.85 ? '✅ Good' : muscleKg >= musIdealKg*0.65 ? '⚠️ Average' : '🔴 Low') : musV ? '⚠️ Average' : '—';
   var uid = 'hs-' + Date.now();
   return '<div class="hs-card">' +
     '<div class="hs-gauge"><svg viewBox="0 0 120 72" width="120" height="72">' +
@@ -1195,9 +1229,9 @@ function buildHealthScoreCard(bmi, fatPct, vfKg, date, musclePct) {
         '<div style="font-weight:700;color:#fff;margin-bottom:10px">How Health Score is calculated</div>' +
         '<div style="display:flex;flex-direction:column;gap:6px">' +
           '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">BMI (25 pts)</span><span style="color:#fff;font-size:12px">'+bmiV+' — '+bmiLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: 18.5–24.9</span></div>' +
-          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Body Fat % (30 pts)</span><span style="color:#fff;font-size:12px">'+fatV+'% — '+fatLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: 8–25%</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Body Fat % (30 pts)</span><span style="color:#fff;font-size:12px">'+fatV+'% — '+fatLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: '+fatIdealLo+'–'+fatIdealHi+'%</span></div>' +
           '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Visceral Fat (20 pts)</span><span style="color:#fff;font-size:12px">'+(vfKg||'—')+' kg — '+vfLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: ≤ 2 kg</span></div>' +
-          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Muscle % (25 pts)</span><span style="color:#fff;font-size:12px">'+(musV||'—')+'% — '+musLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: ≥ 35%</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="color:#fff;font-weight:700;min-width:155px;font-size:12px">Muscle Mass (25 pts)</span><span style="color:#fff;font-size:12px">'+(muscleKg > 0 ? muscleKg+' kg' : (musV||'—')+'%')+' — '+musLbl+'</span><span style="color:rgba(255,255,255,.5);font-size:11px">Ideal: ≥ '+musIdealKg+' kg</span></div>' +
         '</div>' +
         '<div class="hs-grade-row" style="margin-top:10px">' +
           '<div class="hs-grade-pip" style="background:#d1fae5;color:#065f46">85–100 Excellent</div>' +
@@ -1224,7 +1258,7 @@ function renderProgress() {
   var latestVfKg = parseFloat(latest.visceral_fat) || 0;
   var latestFatKg = (latest.fat_percentage && lw) ? ((parseFloat(latest.fat_percentage)/100)*lw).toFixed(1) : null;
   var latestMusKg = (latest.muscle_percentage && lw) ? ((parseFloat(latest.muscle_percentage)/100)*lw).toFixed(1) : null;
-  document.getElementById('prog-score-card').innerHTML = buildHealthScoreCard(latest.bmi, latest.fat_percentage, latestVfKg, latest.date, latest.muscle_percentage);
+  document.getElementById('prog-score-card').innerHTML = buildHealthScoreCard(latest.bmi, latest.fat_percentage, latestVfKg, latest.date, latest.muscle_percentage, lw, typeof CUST !== 'undefined' ? CUST.gender : '');
   document.getElementById('prog-stats').innerHTML =
     '<div class="stat"><div class="stat-l">Weight</div><div class="stat-v">' + (latest.weight || '—') + '<span style="font-size:14px;font-family:DM Sans"> kg</span></div></div>' +
     (latestFatKg ? '<div class="stat"><div class="stat-l">Body Fat</div><div class="stat-v" style="color:var(--danger)">' + latestFatKg + '<span style="font-size:14px;font-family:DM Sans"> kg</span></div></div>' : '') +
@@ -2442,6 +2476,7 @@ function logout() {
 // ── BOOT ──
 window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('login-screen').style.display = 'flex';
+  resolveCenterParam();
 });
 </script>
 </body>
