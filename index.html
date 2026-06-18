@@ -17070,10 +17070,6 @@ function shareGroceryListWA() {
   var url = 'https://wa.me/' + (window.COUNTRY_CODE || '91') + _currentGroceryPhone.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent(text);
   window.open(url, '_blank');
 }
-
-// Reload customers so diet_plan fields reflect what the edge function saved
-  loadCustomers().catch(function(){});
-}
 </script>
 
 
