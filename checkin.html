@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseZen — Self Check-In</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-gradient: linear-gradient(135deg, #0f2318 0%, #1c3d2a 60%, #2d5a3d 100%);
+  --surface: rgba(255, 255, 255, 0.08);
+  --surface-solid: #224330;
+  --border: rgba(255, 255, 255, 0.12);
+  --primary: #4ade80;
+  --accent: #fbbf24;
+  --text: #f3f4f6;
+  --text-muted: #9ca3af;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-x: hidden;
+}
+
+.kiosk-card {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kiosk-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.08) 0%, transparent 75%);
+  pointer-events: none;
+}
+
+.logo-section {
+  margin-bottom: 32px;
+}
+
+.logo-icon {
+  font-size: 44px;
+  display: inline-block;
+  margin-bottom: 12px;
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.logo-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.logo-tagline {
+  font-size: 13px;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.center-welcome {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.center-welcome span {
+  color: var(--primary);
+}
+
+.form-group {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.input-wrapper input:focus {
+  border-color: var(--primary);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.15);
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary);
+  color: #0d1f14;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.2);
+}
+
+.btn-submit:hover {
+  background: #22c55e;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(74, 222, 128, 0.35);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+.loader {
+  display: none;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  margin: 10px auto 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.msg-box {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  display: none;
+}
+
+.msg-box.success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+}
+
+.msg-box.danger {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+/* Success View */
+.success-view {
+  display: none;
+  animation: scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.success-icon {
+  width: 72px;
+  height: 72px;
+  background: var(--success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+  animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes pop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+.success-icon svg {
+  width: 36px;
+  height: 36px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.success-name {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.success-subtitle {
+  font-size: 15px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.pack-info {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+}
+
+.pack-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.pack-days {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.pack-days span {
+  color: var(--accent);
+}
+
+.quote-box {
+  font-style: italic;
+  font-size: 14px;
+  color: var(--text-muted);
+  border-left: 3px solid var(--primary);
+  padding-left: 14px;
+  text-align: left;
+  margin-top: 16px;
+  line-height: 1.5;
+}
+
+.footer {
+  margin-top: 32px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.footer a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<div class="kiosk-card" id="kiosk-container">
+  <!-- Check-in Form View -->
+  <div id="checkin-view">
+    <div class="logo-section">
+      <div class="logo-icon">🌿</div>
+      <div class="logo-text">PulseZen</div>
+      <div class="logo-tagline">Self Check-In</div>
+    </div>
+    
+    <div class="center-welcome" id="welcome-text">
+      Welcome! Please enter your phone number to check in today.
+    </div>
+    
+    <form id="checkin-form" onsubmit="handleCheckin(event)">
+      <div class="form-group">
+        <label for="phone-input">Phone Number</label>
+        <div class="input-wrapper">
+          <input type="tel" id="phone-input" placeholder="e.g. 9876543210" required autocomplete="tel">
+        </div>
+      </div>
+      
+      <button type="submit" class="btn-submit" id="btn-submit-text">Check In Now</button>
+      <div class="loader" id="checkin-loader"></div>
+      <div class="msg-box" id="checkin-msg"></div>
+    </form>
+    
+    <div class="footer">
+      Powered by <a href="https://pulsezen.in" target="_blank" rel="noopener">PulseZen Wellness</a>
+    </div>
+  </div>
+
+  <!-- Success View -->
+  <div id="success-view" class="success-view">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    
+    <div class="success-name" id="success-cust-name">Name</div>
+    <div class="success-subtitle">Check-in Complete! 🎉</div>
+    
+    <div class="pack-info">
+      <div class="pack-title">Membership Status</div>
+      <div class="pack-days" id="success-pack-status">Loading pack info...</div>
+    </div>
+
+    <div class="quote-box" id="success-quote">
+      "Your health is an investment, not an expense."
+    </div>
+    
+    <button class="btn-submit" style="margin-top:24px; background:rgba(255,255,255,0.15); color:#fff; box-shadow:none" onclick="resetForm()">Done</button>
+  </div>
+</div>
+
+<script>
+// Get query parameters
+const params = new URLSearchParams(window.location.search);
+const centerId = params.get('center');
+const sbUrl = params.get('url');
+const sbKey = params.get('key');
+
+// Fallback to defaults if not in query parameters
+const SB_URL = sbUrl || 'https://erteibdxzdvsaujptxsd.supabase.co';
+const SB_KEY = sbKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
+
+const HEALTH_QUOTES = [
+  "A healthy outside starts from the inside.",
+  "Every workout is a step closer to a stronger version of yourself.",
+  "Hydrate, nourish, and move your body today.",
+  "Consistency beats perfection. Welcome back today!",
+  "Your fitness journey is a marathon, not a sprint.",
+  "Eat clean. Drink water. Stay active.",
+  "Great things take time. Your daily presence is proof of your commitment!"
+];
+
+// Low-level fetch wrapper matching project architecture
+async function req(method, table, body, queryParams) {
+  const url = SB_URL + '/rest/v1/' + table + (queryParams ? '?' + queryParams : '');
+  const opts = {
+    method: method,
+    headers: { 
+      'apikey': SB_KEY, 
+      'Authorization': 'Bearer ' + SB_KEY, 
+      'Content-Type': 'application/json', 
+      'Prefer': 'return=representation' 
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(await r.text());
+  const text = await r.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// Set up center name on load
+async function loadCenterInfo() {
+  if (!centerId) {
+    showMsg("Error: Missing wellness center identifier in URL.", "danger");
+    document.getElementById('btn-submit-text').disabled = true;
+    return;
+  }
+  try {
+    const centers = await req('GET', 'wellness_centers', null, 'id=eq.' + centerId);
+    if (centers && centers.length > 0) {
+      document.getElementById('welcome-text').innerHTML = `Welcome to <span>${centers[0].name}</span>!<br>Please enter your phone number to check in.`;
+    }
+  } catch (e) {
+    console.error("Failed to load center details", e);
+  }
+}
+
+function showMsg(text, type) {
+  const msg = document.getElementById('checkin-msg');
+  msg.textContent = text;
+  msg.className = 'msg-box ' + type;
+  msg.style.display = 'block';
+}
+
+function clearMsg() {
+  const msg = document.getElementById('checkin-msg');
+  msg.style.display = 'none';
+}
+
+async function handleCheckin(e) {
+  e.preventDefault();
+  clearMsg();
+  
+  let phone = document.getElementById('phone-input').value.trim();
+  if (!phone) return;
+  
+  // Clean phone number (remove spaces, symbols)
+  phone = phone.replace(/[^0-9]/g, '');
+  // Normalize length (for India, if 10 digits, add country code or matching)
+  if (phone.length === 10) {
+    // Check both with country code or without
+  }
+
+  const loader = document.getElementById('checkin-loader');
+  const submitText = document.getElementById('btn-submit-text');
+  loader.style.display = 'block';
+  submitText.style.display = 'none';
+
+  try {
+    // 1. Search for active customer by phone in this center
+    let customers = await req('GET', 'customers', null, `wellness_center_id=eq.${centerId}&status=eq.active`);
+    
+    // Client-side phone match to be robust to country codes
+    let matchedCustomer = customers.find(c => {
+      if (!c.phone) return false;
+      const cleanDbPhone = c.phone.replace(/[^0-9]/g, '');
+      return cleanDbPhone.endsWith(phone) || phone.endsWith(cleanDbPhone);
+    });
+
+    if (!matchedCustomer) {
+      // Try search in inactive or walk-ins just in case
+      customers = await req('GET', 'customers', null, `wellness_center_id=eq.${centerId}`);
+      matchedCustomer = customers.find(c => {
+        if (!c.phone) return false;
+        const cleanDbPhone = c.phone.replace(/[^0-9]/g, '');
+        return cleanDbPhone.endsWith(phone) || phone.endsWith(cleanDbPhone);
+      });
+      
+      if (matchedCustomer && matchedCustomer.status !== 'active') {
+        showMsg("Your membership is currently inactive. Please talk to your coach.", "danger");
+        loader.style.display = 'none';
+        submitText.style.display = 'block';
+        return;
+      }
+
+      showMsg("Phone number not found. Please verify with your coach.", "danger");
+      loader.style.display = 'none';
+      submitText.style.display = 'block';
+      return;
+    }
+
+    // 2. Prevent duplicate check-in today
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayAtt = await req('GET', 'attendance', null, `customer_id=eq.${matchedCustomer.id}&date=eq.${todayStr}`);
+    
+    if (todayAtt && todayAtt.length > 0) {
+      // Already checked in today, but let's show success anyway so they know
+      showSuccess(matchedCustomer, true);
+      return;
+    }
+
+    // 3. Mark attendance
+    await req('POST', 'attendance', {
+      customer_id: matchedCustomer.id,
+      date: todayStr,
+      wellness_center_id: centerId
+    });
+
+    showSuccess(matchedCustomer, false);
+
+  } catch (error) {
+    console.error("Check-in error:", error);
+    showMsg("Unable to check in. Please check your connection and try again.", "danger");
+  } finally {
+    loader.style.display = 'none';
+    submitText.style.display = 'block';
+  }
+}
+
+// Calculate days remaining on membership pack
+function calculateDaysRemaining(cust) {
+  if (!cust.join_date || !cust.pack_days) return "No active pack";
+  
+  const joinDate = new Date(cust.join_date);
+  const expiryDate = new Date(joinDate.getTime() + cust.pack_days * 24 * 60 * 60 * 1000);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const diffTime = expiryDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return "Expired pack ⚠️";
+  return `<span>${diffDays}</span> days remaining`;
+}
+
+function showSuccess(cust, alreadyCheckedIn) {
+  document.getElementById('success-cust-name').textContent = cust.name;
+  
+  const packDaysText = calculateDaysRemaining(cust);
+  document.getElementById('success-pack-status').innerHTML = packDaysText;
+
+  // Set random health quote
+  const randomQuote = HEALTH_QUOTES[Math.floor(Math.random() * HEALTH_QUOTES.length)];
+  document.getElementById('success-quote').textContent = `"${randomQuote}"`;
+  
+  if (alreadyCheckedIn) {
+    document.querySelector('.success-subtitle').textContent = "Already checked in today! 👍";
+  } else {
+    document.querySelector('.success-subtitle').textContent = "Check-in Complete! 🎉";
+  }
+
+  // Toggle views
+  document.getElementById('checkin-view').style.display = 'none';
+  document.getElementById('success-view').style.display = 'block';
+}
+
+function resetForm() {
+  document.getElementById('phone-input').value = '';
+  clearMsg();
+  document.getElementById('checkin-view').style.display = 'block';
+  document.getElementById('success-view').style.display = 'none';
+}
+
+// Run on load
+loadCenterInfo();
+</script>
+
+</body>
+</html>

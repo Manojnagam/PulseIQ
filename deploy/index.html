@@ -1289,14 +1289,18 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
     <div class="sec" id="sec-attendance">
       <div class="ph">
         <div><div class="pt" data-t="pt_attendance">Attendance</div><div class="ps" data-t="ps_attendance">Track customer visit history</div></div>
-        <button class="btn-e" onclick="sendDailySummaryWA()" style="background:#25D366;color:#fff;border-color:#25D366;font-weight:600">📊 Daily Summary</button>
-        <button class="btn-p" onclick="openBackfillModal()" style="background:var(--accent);border-color:var(--accent)">📅 Backfill Past Days</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-p" onclick="openQrKioskModal()" style="background:#5865F2;border-color:#5865F2;color:#fff;font-weight:600">📱 QR Kiosk</button>
+          <button class="btn-e" onclick="sendDailySummaryWA()" style="background:#25D366;color:#fff;border-color:#25D366;font-weight:600">📊 Daily Summary</button>
+          <button class="btn-p" onclick="openBackfillModal()" style="background:var(--accent);border-color:var(--accent)">📅 Backfill Past Days</button>
+        </div>
       </div>
       <div class="stats" id="att-stats"><div class="stat"><div class="stat-l">Today's Present</div><div class="stat-v" style="color:var(--success)">0</div></div><div class="stat"><div class="stat-l">Not Yet</div><div class="stat-v" style="color:var(--danger)">0</div></div></div>
       <div class="tabs">
         <button class="tab-btn active" id="tab-daily" onclick="switchAttTab(&#39;daily&#39;)">Daily Check-in</button>
         <button class="tab-btn" id="tab-monthly" onclick="switchAttTab(&#39;monthly&#39;)">Monthly Grid</button>
         <button class="tab-btn" id="tab-coach-att" onclick="switchAttTab(&#39;coach&#39;)">👨‍🏫 Coach Check-in</button>
+        <button class="tab-btn" id="tab-nudges" onclick="switchAttTab(&#39;nudges&#39;)">🚨 Absence Nudges</button>
       </div>
       <!-- WhatsApp prompt bar (shown after marking attendance) -->
       <div id="att-wa-bar" style="display:none;background:#e6f9ee;border:1.5px solid #25D366;border-radius:10px;padding:12px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
@@ -1352,12 +1356,23 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
           </div>
         </div>
       </div>
+      <!-- Absence Nudges View -->
+      <div id="att-nudges-view" style="display:none">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;margin-top:16px;">🚨 Absence Recovery & Retention (Growth)</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Nudge active customers who haven't attended the wellness center in the last 3 days.</p>
+        <div class="tcard" id="att-nudges-list" style="padding:16px">
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">No nudges to display. Check back later!</div>
+        </div>
+      </div>
     </div>
     <!-- BODY -->
     <div class="sec" id="sec-body">
       <div class="ph">
         <div><div class="pt" data-t="pt_body">Body Composition</div><div class="ps" data-t="ps_body">Select a customer to view their health journey</div></div>
-        <button class="btn-p" onclick="openModal('body')">+ Add Record</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-p" id="btn-body-share-card" onclick="openShareCardModal()" style="display:none;background:#ff6b6b;border-color:#ff6b6b;color:#fff;font-weight:600">🎨 Share Card</button>
+          <button class="btn-p" onclick="openModal('body')">+ Add Record</button>
+        </div>
       </div>
       <div class="tabs">
         <button class="tab-btn active" id="body-tab-records" onclick="switchBodyTab('records',this)">📋 Records</button>
@@ -7637,9 +7652,11 @@ function switchAttTab(tab) {
   document.getElementById('tab-daily').classList.toggle('active', tab==='daily');
   document.getElementById('tab-monthly').classList.toggle('active', tab==='monthly');
   document.getElementById('tab-coach-att').classList.toggle('active', tab==='coach');
+  document.getElementById('tab-nudges').classList.toggle('active', tab==='nudges');
   document.getElementById('att-daily-view').style.display = tab==='daily' ? 'block' : 'none';
   document.getElementById('att-monthly-view').style.display = tab==='monthly' ? 'block' : 'none';
   document.getElementById('att-coach-view').style.display = tab==='coach' ? 'block' : 'none';
+  document.getElementById('att-nudges-view').style.display = tab==='nudges' ? 'block' : 'none';
   if(tab==='monthly' && !document.getElementById('att-month-picker').value) {
     document.getElementById('att-month-picker').value = new Date().toISOString().substring(0,7);
     renderAttGrid();
@@ -7650,6 +7667,8 @@ function switchAttTab(tab) {
     if (!monEl.value) monEl.value = new Date().toISOString().substring(0,7);
     renderCoachAttendance();
     renderCoachAttSummary();
+  } else if(tab==='nudges') {
+    renderAbsenceNudges();
   } else renderAttendance();
 }
 // ══════════════════════════════════════════
@@ -8490,6 +8509,8 @@ function renderBody() {
     emptyPrompt.style.display = 'block';
     recordsWrap.style.display = 'none';
     if (tb) tb.innerHTML = '';
+    var btnShare = document.getElementById('btn-body-share-card');
+    if (btnShare) btnShare.style.display = 'none';
     return;
   }
 
@@ -8567,6 +8588,9 @@ function renderBody() {
   // Show records
   emptyPrompt.style.display = 'none';
   recordsWrap.style.display = 'block';
+
+  var btnShare = document.getElementById('btn-body-share-card');
+  if (btnShare) btnShare.style.display = sorted.length >= 2 ? 'inline-block' : 'none';
 
   if (!sorted.length) {
     tb.innerHTML = '<tr><td colspan="10"><div class="empty"><div class="ei">⚖️</div><p>No scans recorded yet. Click + Add Record!</p></div></td></tr>';
@@ -13171,7 +13195,60 @@ function renderOrgTree(){
     return html;
   }
 
-  var html='<div style="display:flex;flex-wrap:wrap;gap:30px;justify-content:center">';
+  var currentMonthStr = new Date().toISOString().substring(0,7);
+  var networkRevenue = 0;
+  var expiringCount = 0;
+  var avgPackPrice = 1200;
+  
+  var allIncomes = (D.finance||[]).filter(function(f){ return f.type === 'income' && Number(f.amount) > 0; });
+  if(allIncomes.length) {
+    var totalInc = allIncomes.reduce(function(s,f){ return s + Number(f.amount); }, 0);
+    avgPackPrice = totalInc / allIncomes.length;
+  }
+  
+  centers.forEach(function(center) {
+    var centerRev = (D.finance||[]).filter(function(f){
+      return f.type==='income' && f.wellness_center_id===center.id && (f.date||'').startsWith(currentMonthStr);
+    }).reduce(function(s,f){ return s+Number(f.amount); },0);
+    networkRevenue += centerRev;
+    
+    var centerCusts = (D.customers||[]).filter(function(c) { return c.wellness_center_id === center.id && c.status === 'active'; });
+    centerCusts.forEach(function(c) {
+      if(c.join_date && c.pack_days) {
+        var joinD = new Date(c.join_date);
+        var expD = new Date(joinD.getTime() + c.pack_days * 24 * 60 * 60 * 1000);
+        var today = new Date();
+        today.setHours(0,0,0,0);
+        var diffTime = expD - today;
+        var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if(diffDays >= 0 && diffDays <= 15) {
+          expiringCount++;
+        }
+      }
+    });
+  });
+  
+  var projectedRevenue = networkRevenue + (expiringCount * avgPackPrice * 0.85);
+  
+  var forecastHtml = '<div style="margin-bottom:16px; background:linear-gradient(135deg, rgba(74, 222, 128, 0.08) 0%, rgba(9, 131, 239, 0.08) 100%); border-left:4px solid var(--accent); border-radius:12px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px; padding:16px 20px; width:100%">' +
+    '<div style="text-align:left">' +
+      '<div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted)">📈 Network Performance & Renewal Forecasting (Elite)</div>' +
+      '<div style="font-size:18px; font-weight:700; color:var(--text); margin-top:4px">Network Revenue Forecast</div>' +
+      '<div style="font-size:12px; color:var(--muted); margin-top:2px">Assumes 85% renewal probability on ' + expiringCount + ' packages expiring in next 15 days (Avg price: ₹' + Math.round(avgPackPrice) + ')</div>' +
+    '</div>' +
+    '<div style="display:flex; gap:24px; flex-wrap:wrap; text-align:left">' +
+      '<div>' +
+        '<div style="font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase;">Current Month (Actual)</div>' +
+        '<div style="font-size:22px; font-weight:800; color:var(--primary); margin-top:2px">₹' + Math.round(networkRevenue).toLocaleString('en-IN') + '</div>' +
+      '</div>' +
+      '<div>' +
+        '<div style="font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase;">Next Month (Projected)</div>' +
+        '<div style="font-size:22px; font-weight:800; color:var(--accent); margin-top:2px">₹' + Math.round(projectedRevenue).toLocaleString('en-IN') + '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  var html= forecastHtml + '<div style="display:flex;flex-wrap:wrap;gap:30px;justify-content:center;width:100%">';
   roots.forEach(function(r){html+=buildCenterNode(r,0);});
   var orphans=centers.filter(function(c){return c.upline_center_id&&!centers.find(function(x){return x.id===c.upline_center_id;});});
   if(orphans.length){
@@ -15560,6 +15637,7 @@ async function viewDietHistory(custId, custName) {
       +   '<div>'
       +     '<span style="font-weight:700;font-size:13px">'+(isLatest?'⭐ Latest — ':'')+label+'</span>'
       +     '<span style="font-size:11px;color:var(--muted);margin-left:10px">'+calories+' kcal · '+protein+'g protein · '+days.length+' days</span>'
+      +     '<button class="btn-p" style="font-size:10px;padding:2px 6px;margin-left:12px;background:#0369a1;border-color:#0369a1;color:#fff" onclick="event.stopPropagation();generateGroceryList(\''+custId+'\')">🛒 AI Grocery List</button>'
       +   '</div>'
       +   '<span style="font-size:12px;color:var(--muted)">'+(collapsed?'▼ Expand':'▲ Collapse')+'</span>'
       + '</div>'
@@ -16397,6 +16475,8 @@ function openContestDetail(id) {
         var change = curV ? (curV - startV) : null;
         var changeDisp = change!==null ? (change>0?'+':'')+change.toFixed(1)+cfg.unit : '—';
         var changeColor= change===null ? 'var(--muted)' : (cfg.dir===1?(change>0?'var(--success)':'var(--danger)'):(change<0?'var(--success)':'var(--danger)'));
+        var hasProgress = change !== null && ((cfg.dir === -1 && change < 0) || (cfg.dir === 1 && change > 0));
+        var certBtn = hasProgress ? '<button class="btn-p" style="font-size:11px;padding:3.5px 7px;background:#6366f1;border-color:#6366f1;color:#fff" onclick="generateContestCertificate(\''+p.id+'\')">🎓 Cert</button>' : '';
         return '<tr>' +
           '<td style="font-size:16px;text-align:center">'+medal+'</td>' +
           '<td><div style="font-weight:600">'+p.customer_name+'</div></td>' +
@@ -16404,6 +16484,7 @@ function openContestDetail(id) {
           '<td>'+(curV||'—')+(curV?cfg.unit:'')+'</td>' +
           '<td style="font-weight:700;color:'+changeColor+'">'+changeDisp+'</td>' +
           '<td><div style="display:flex;gap:4px">' +
+            certBtn +
             '<button class="btn-e" onclick="openUpdateProgressModal(\''+p.id+'\')">📊 Update</button>' +
             '<button class="btn-d" onclick="removeContestParticipant(\''+p.id+'\')">🗑</button>' +
           '</div></td>' +
@@ -16530,6 +16611,469 @@ async function removeContestParticipant(pid) {
   } catch(e) { showToast('Error: '+e.message, 'error'); }
 }
 
+// ==========================================
+// LEAD ENGINEER ADDITIONS
+// ==========================================
+
+// --- QR Check-in Kiosk ---
+function openQrKioskModal() {
+  var centerId = ACTIVE_CENTER;
+  if(!centerId && D.centers.length === 1) centerId = D.centers[0].id;
+  if(!centerId) {
+    showToast('Please select a wellness center first.', 'error');
+    return;
+  }
+  var centerName = getCenterName();
+  var baseUrl = window.location.origin + '/checkin.html';
+  var qrUrl = baseUrl + '?center=' + encodeURIComponent(centerId) + '&url=' + encodeURIComponent(SB_URL || '') + '&key=' + encodeURIComponent(SB_KEY || '');
+  
+  document.getElementById('qr-kiosk-center-name').textContent = centerName;
+  document.getElementById('qr-kiosk-url').textContent = qrUrl;
+  document.getElementById('qr-kiosk-img').src = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(qrUrl);
+  
+  openModal('qr-kiosk');
+}
+
+function copyQrKioskUrl() {
+  var urlText = document.getElementById('qr-kiosk-url').textContent;
+  navigator.clipboard.writeText(urlText).then(function() {
+    showToast('Kiosk URL copied to clipboard!', 'success');
+  }).catch(function() {
+    showToast('Failed to copy URL.', 'error');
+  });
+}
+
+// --- Absence Recovery Nudges ---
+function renderAbsenceNudges() {
+  var activeCenter = ACTIVE_CENTER;
+  var customers = (D.customers||[]).filter(function(c) {
+    if(c.status !== 'active') return false;
+    if(activeCenter && c.wellness_center_id !== activeCenter) return false;
+    return true;
+  });
+  
+  var now = new Date();
+  now.setHours(0,0,0,0);
+  
+  var nudgeData = [];
+  
+  customers.forEach(function(c) {
+    var att = (D.attendance||[]).filter(function(a) { return a.customer_id === c.id; })
+                          .sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+    var lastPresent = att[0] ? new Date(att[0].date) : null;
+    var daysAbsent = lastPresent ? Math.floor((now - lastPresent) / 86400000) : 999;
+    
+    if(daysAbsent >= 3) {
+      nudgeData.push({
+        customer: c,
+        lastPresentDate: lastPresent ? att[0].date : 'Never',
+        daysAbsent: daysAbsent
+      });
+    }
+  });
+  
+  nudgeData.sort(function(a,b) { return b.daysAbsent - a.daysAbsent; });
+  
+  var html = '';
+  if(nudgeData.length === 0) {
+    html = '<div style="color:var(--muted);font-size:13px;padding:30px;text-align:center;">Everyone is attending regularly! 🎉</div>';
+  } else {
+    html = '<div class="twrap"><table>' +
+      '<thead><tr><th>Name</th><th>Phone</th><th>Last Visit</th><th>Days Absent</th><th>Action</th></tr></thead>' +
+      '<tbody>' +
+      nudgeData.map(function(item) {
+        var c = item.customer;
+        var text = 'Hi ' + c.name + '! We missed you at the center. Hope everything is fine. Your consistency is key to your health goals. Hope to see you tomorrow! 💪';
+        var waUrl = c.phone ? 'https://wa.me/' + (c.phone.startsWith(COUNTRY_CODE) ? '' : COUNTRY_CODE) + c.phone.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent(text) : '#';
+        return '<tr>' +
+          '<td><strong>' + c.name + '</strong></td>' +
+          '<td>' + (c.phone || '—') + '</td>' +
+          '<td>' + item.lastPresentDate + '</td>' +
+          '<td><span class="badge" style="background:' + (item.daysAbsent >= 7 ? 'var(--danger)' : 'var(--accent)') + ';color:#fff;border-radius:20px;padding:2px 8px;font-size:11px">' + (item.daysAbsent === 999 ? 'Never visited' : item.daysAbsent + ' days') + '</span></td>' +
+          '<td>' + (c.phone ? '<a href="' + waUrl + '" target="_blank" class="btn-p" style="background:#25D366;color:#fff;border-color:#25D366;text-decoration:none;font-size:11px;padding:4px 8px;display:inline-block;border-radius:6px;font-weight:700" onclick="document.getElementById(\'att-nudges-view\').style.display=\'block\'">💬 Nudge</a>' : '<button class="btn-c" disabled style="font-size:11px;padding:4px 8px">No Phone</button>') + '</td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody></table></div>';
+  }
+  document.getElementById('att-nudges-list').innerHTML = html;
+}
+
+// --- Branded Progress Card (Social Share) ---
+var _selectedCardCust = null;
+var _selectedCardBase = null;
+var _selectedCardComp = null;
+
+function openShareCardModal() {
+  if(!_selectedBodyCustId) return;
+  var cust = D.customers.find(function(x){ return x.id === _selectedBodyCustId; })
+    || D.coaches.find(function(x){ return x.id === _selectedBodyCustId; });
+  if(!cust) return;
+  
+  _selectedCardCust = cust;
+  
+  var sorted = D.body
+    .filter(function(b){ return b.customer_id === _selectedBodyCustId; })
+    .sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+    
+  if(sorted.length < 2) {
+    showToast('At least 2 body scans are required to generate a progress card.', 'error');
+    return;
+  }
+  
+  var fromSel = document.getElementById('share-scan-from');
+  var toSel = document.getElementById('share-scan-to');
+  
+  fromSel.innerHTML = sorted.map(function(b, idx) {
+    return '<option value="' + b.id + '"' + (idx === 0 ? ' selected' : '') + '>' + b.date + ' (' + b.weight + ' kg)</option>';
+  }).join('');
+  
+  toSel.innerHTML = sorted.map(function(b, idx) {
+    return '<option value="' + b.id + '"' + (idx === sorted.length - 1 ? ' selected' : '') + '>' + b.date + ' (' + b.weight + ' kg)</option>';
+  }).join('');
+  
+  document.getElementById('share-card-title').value = cust.name + "'s Progress";
+  
+  openModal('share-card');
+  drawProgressCard();
+}
+
+function drawProgressCard() {
+  var canvas = document.getElementById('progress-card-canvas');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  
+  var sorted = D.body.filter(function(b){ return b.customer_id === _selectedBodyCustId; });
+  var baseId = document.getElementById('share-scan-from').value;
+  var toId = document.getElementById('share-scan-to').value;
+  
+  var base = sorted.find(function(b){ return b.id === baseId; }) || sorted[0];
+  var comp = sorted.find(function(b){ return b.id === toId; }) || sorted[sorted.length-1];
+  
+  var title = document.getElementById('share-card-title').value || "Health Journey";
+  var theme = document.getElementById('share-card-theme').value;
+  
+  var grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+  if(theme === 'midnight') {
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(1, '#1e293b');
+  } else if(theme === 'sunset') {
+    grad.addColorStop(0, '#2d1c08');
+    grad.addColorStop(1, '#452a0a');
+  } else { 
+    grad.addColorStop(0, '#0d1f14');
+    grad.addColorStop(1, '#1a3a28');
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1080, 1080);
+  
+  ctx.strokeStyle = theme === 'sunset' ? '#f59e0b' : '#4ade80';
+  ctx.lineWidth = 14;
+  ctx.strokeRect(30, 30, 1020, 1020);
+  
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('PULSEZEN WELLNESS CENTER', 540, 100);
+  
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 56px Georgia, serif';
+  ctx.fillText(title, 540, 180);
+  
+  function drawStatCol(x, title, scan) {
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(x - 200, 260, 400, 420, 20);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.fillStyle = theme === 'sunset' ? '#f59e0b' : '#4ade80';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText(title.toUpperCase(), x, 315);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = '20px sans-serif';
+    ctx.fillText(scan ? scan.date : '—', x, 350);
+    
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath();
+    ctx.moveTo(x - 160, 375);
+    ctx.lineTo(x + 160, 375);
+    ctx.stroke();
+    
+    var items = [
+      { lbl: 'WEIGHT', val: scan ? scan.weight + ' kg' : '—' },
+      { lbl: 'BODY FAT', val: scan && scan.fat_percentage ? scan.fat_percentage + '%' : '—' },
+      { lbl: 'MUSCLE', val: scan && scan.muscle_percentage ? scan.muscle_percentage + '%' : '—' }
+    ];
+    
+    items.forEach(function(item, idx) {
+      var y = 430 + (idx * 80);
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText(item.lbl, x, y);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText(item.val, x, y + 40);
+    });
+  }
+  
+  drawStatCol(300, 'Initial Scan', base);
+  drawStatCol(780, 'Latest Scan', comp);
+  
+  ctx.fillStyle = theme === 'sunset' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(74, 222, 128, 0.15)';
+  ctx.beginPath();
+  ctx.arc(540, 470, 70, 0, 2*Math.PI);
+  ctx.fill();
+  ctx.fillStyle = theme === 'sunset' ? '#f59e0b' : '#4ade80';
+  ctx.font = 'bold 48px sans-serif';
+  ctx.fillText('➔', 540, 480);
+  
+  var wDiff = comp && base ? Number(comp.weight) - Number(base.weight) : 0;
+  var fDiff = comp && base && comp.fat_percentage && base.fat_percentage ? Number(comp.fat_percentage) - Number(base.fat_percentage) : 0;
+  
+  var resultText = "";
+  var badgeColor = '#4ade80';
+  if(wDiff < 0) {
+    resultText = "LOST " + Math.abs(wDiff).toFixed(1) + " KG!";
+    badgeColor = '#4ade80';
+  } else if(wDiff > 0) {
+    resultText = "GAINED " + wDiff.toFixed(1) + " KG!";
+    badgeColor = '#fbbf24';
+  } else {
+    resultText = "MAINTAINED WEIGHT!";
+    badgeColor = '#38bdf8';
+  }
+  
+  ctx.fillStyle = badgeColor;
+  ctx.beginPath();
+  ctx.roundRect(140, 740, 800, 160, 24);
+  ctx.fill();
+  
+  ctx.fillStyle = '#0d1f14';
+  ctx.font = 'bold 52px sans-serif';
+  ctx.fillText(resultText, 540, 840);
+  
+  if(fDiff < 0) {
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText("AND REDUCED BODY FAT BY " + Math.abs(fDiff).toFixed(1) + "%!", 540, 875);
+    ctx.font = 'bold 44px sans-serif';
+    ctx.fillText(resultText, 540, 825);
+  }
+  
+  var centerName = getCenterName();
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText('Coached at ' + centerName.toUpperCase(), 540, 960);
+  ctx.fillStyle = theme === 'sunset' ? '#f59e0b' : '#4ade80';
+  ctx.fillText('www.pulsezen.in', 540, 995);
+}
+
+function downloadProgressCard() {
+  var canvas = document.getElementById('progress-card-canvas');
+  var link = document.createElement('a');
+  link.download = _selectedCardCust.name + '-progress-card.png';
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+function copyProgressCardToClipboard() {
+  var canvas = document.getElementById('progress-card-canvas');
+  canvas.toBlob(function(blob) {
+    var item = new ClipboardItem({ 'image/png': blob });
+    navigator.clipboard.write([item]).then(function() {
+      showToast('Progress card copied to clipboard!', 'success');
+    }).catch(function() {
+      showToast('Clipboard copy failed. Try downloading instead.', 'error');
+    });
+  });
+}
+
+// --- Milestone Certificate Generator ---
+var _selectedCertificateData = null;
+
+function generateContestCertificate(participantId) {
+  var p = (D.contestParticipants||[]).find(function(x){ return x.id === participantId; });
+  if(!p) {
+    showToast('Participant not found', 'error');
+    return;
+  }
+  var c = (D.contests||[]).find(function(x){ return x.id === p.contest_id; });
+  if(!c) {
+    showToast('Contest not found', 'error');
+    return;
+  }
+  var cfg = CONTEST_CONFIG[c.type] || CONTEST_CONFIG.weight_loss;
+  var startV = parseFloat(p[cfg.startField]||0);
+  var curV   = parseFloat(p[cfg.field]||0);
+  var change = curV ? (curV - startV) : null;
+  if(change === null) {
+    showToast('No progress recorded for certificate.', 'error');
+    return;
+  }
+  
+  var changeDisp = (change>0?'+':'') + change.toFixed(1) + cfg.unit;
+  var centerName = getCenterName();
+  
+  openModal('certificate');
+  
+  var canvas = document.getElementById('certificate-canvas');
+  var ctx = canvas.getContext('2d');
+  
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  
+  var grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  grad.addColorStop(0, '#112217'); 
+  grad.addColorStop(1, '#08130e'); 
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  
+  ctx.strokeStyle = '#d4af37'; 
+  ctx.lineWidth = 20;
+  ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+  
+  ctx.strokeStyle = '#f3e5ab'; 
+  ctx.lineWidth = 2;
+  ctx.strokeRect(35, 35, canvas.width - 70, canvas.height - 70);
+  
+  ctx.fillStyle = '#d4af37';
+  ctx.fillRect(35, 35, 50, 6);
+  ctx.fillRect(35, 35, 6, 50);
+  ctx.fillRect(canvas.width - 85, 35, 50, 6);
+  ctx.fillRect(canvas.width - 41, 35, 6, 50);
+  ctx.fillRect(35, canvas.height - 41, 50, 6);
+  ctx.fillRect(35, canvas.height - 85, 6, 50);
+  ctx.fillRect(canvas.width - 85, canvas.height - 41, 50, 6);
+  ctx.fillRect(canvas.width - 41, canvas.height - 85, 6, 50);
+  
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  ctx.font = 'bold 36px Georgia, serif';
+  ctx.fillStyle = '#d4af37';
+  ctx.fillText('CERTIFICATE OF ACHIEVEMENT', canvas.width/2, 160);
+  
+  ctx.font = 'italic 20px sans-serif';
+  ctx.fillStyle = '#f3e5ab';
+  ctx.fillText('This certificate is proudly presented to', canvas.width/2, 230);
+  
+  ctx.font = 'bold 44px Georgia, serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(p.customer_name.toUpperCase(), canvas.width/2, 300);
+  
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(canvas.width/2 - 150, 360);
+  ctx.lineTo(canvas.width/2 + 150, 360);
+  ctx.stroke();
+  
+  ctx.font = '22px sans-serif';
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('for outstanding performance and dedication in the', canvas.width/2, 420);
+  
+  ctx.font = 'bold 30px Georgia, serif';
+  ctx.fillStyle = '#fbbf24'; 
+  ctx.fillText(c.name, canvas.width/2, 480);
+  
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillStyle = '#4ade80'; 
+  var verb = cfg.dir === -1 ? 'reducing' : 'gaining';
+  ctx.fillText('by successfully ' + verb + ' ' + changeDisp.replace('+', '') + '!', canvas.width/2, 545);
+  
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(80, 620);
+  ctx.lineTo(canvas.width - 80, 620);
+  ctx.stroke();
+  
+  ctx.textAlign = 'left';
+  ctx.font = '16px sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  var dateStr = new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
+  ctx.fillText('Date: ' + dateStr, 100, 660);
+  
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 18px Georgia, serif';
+  ctx.fillStyle = '#f3e5ab';
+  ctx.fillText(centerName, canvas.width - 100, 660);
+  ctx.font = '13px sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('Certified Wellness Center', canvas.width - 100, 690);
+  
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#d4af37';
+  ctx.beginPath();
+  ctx.arc(canvas.width/2, 630, 45, 0, 2*Math.PI);
+  ctx.fill();
+  ctx.fillStyle = '#112217';
+  ctx.beginPath();
+  ctx.arc(canvas.width/2, 630, 40, 0, 2*Math.PI);
+  ctx.fill();
+  ctx.fillStyle = '#d4af37';
+  ctx.font = 'bold 24px serif';
+  ctx.fillText('⭐', canvas.width/2, 625);
+  
+  _selectedCertificateData = p.customer_name;
+}
+
+function downloadCertificate() {
+  var canvas = document.getElementById('certificate-canvas');
+  var link = document.createElement('a');
+  link.download = (_selectedCertificateData || 'participant') + '-certificate.png';
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+// --- AI Grocery List & Meal Prep Assistant ---
+var _groceryInFlight = false;
+var _currentGroceryText = ""; 
+var _currentGroceryCustName = "";
+var _currentGroceryPhone = "";
+
+async function generateGroceryList(custId) {
+  var c = D.customers.find(function(x){ return x.id === custId; });
+  if(!c || !c.diet_plan) {
+    showToast('Generate a diet plan first.', 'error');
+    return;
+  }
+  
+  if(_groceryInFlight) return;
+  _groceryInFlight = true;
+  
+  document.getElementById('grocery-list-cust-info').textContent = 'Generating for ' + c.name + '...';
+  document.getElementById('grocery-list-content').innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">AI is compiling your weekly grocery list & cooking prep instructions... 🥕</div>';
+  openModal('grocery-list');
+  
+  _currentGroceryCustName = c.name;
+  _currentGroceryPhone = c.phone || c.contact || '';
+  
+  var userPrompt = "Create a weekly grocery list (with estimated quantities) and 3 meal prep tips for this 7-day Indian meal plan:\n\n" + c.diet_plan + "\n\nFormat your response as clean HTML. Use checkboxes for grocery items like: <label style='display:block;margin-bottom:6px;'><input type='checkbox'> Item name (qty)</label> and group them under beautiful headings. Avoid outer HTML tags like <html> or <body>, start directly with headers. Add 3 prep tips in an ordered list.";
+  
+  try {
+    var text = await callGroq("You are a helpful wellness coach and meal prep assistant.", userPrompt, { temperature: 0.3, maxTokens: 800 });
+    _currentGroceryText = text.replace(/<[^>]*>/g, ''); 
+    document.getElementById('grocery-list-cust-info').textContent = 'Weekly Grocery List & Prep Guide for ' + c.name;
+    document.getElementById('grocery-list-content').innerHTML = text;
+  } catch(e) {
+    document.getElementById('grocery-list-content').innerHTML = '<div style="color:var(--danger);text-align:center;padding:24px;">Error: ' + e.message + '</div>';
+    showToast('Failed to generate grocery list.', 'error');
+  } finally {
+    _groceryInFlight = false;
+  }
+}
+
+function shareGroceryListWA() {
+  if(!_currentGroceryText) return;
+  var text = "Hi " + _currentGroceryCustName + "! Here is your AI Grocery List & Meal Prep Guide for this week:\n\n" + _currentGroceryText.trim().substring(0, 1500) + "\n\nLet's stay consistent! 💪";
+  var url = 'https://wa.me/' + (window.COUNTRY_CODE || '91') + _currentGroceryPhone.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent(text);
+  window.open(url, '_blank');
+}
+
+// Reload customers so diet_plan fields reflect what the edge function saved
+  loadCustomers().catch(function(){});
+}
 </script>
 
 
@@ -17042,6 +17586,119 @@ async function removeContestParticipant(pid) {
         <button class="btn-p" style="background:#25D366;border-color:#25D366;font-size:12px;padding:6px 14px" onclick="sendBroadcastAll()">💬 Send to All (opens one by one)</button>
       </div>
       <div id="bc-list" style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     LEAD ENGINEER ADDED MODALS
+     ========================================== -->
+
+<!-- QR Check-in Kiosk Modal -->
+<div class="overlay" id="modal-qr-kiosk">
+  <div class="modal" style="max-width:420px; text-align:center;">
+    <div class="mh">
+      <div class="mt">📱 Self Check-In QR Kiosk</div>
+      <button class="mc" onclick="closeModal('qr-kiosk')">✕</button>
+    </div>
+    <div class="mb">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+        Instruct clients to scan this QR code on their phones to check in.
+      </p>
+      <div style="background:#fff; padding:20px; border-radius:12px; display:inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom:16px;">
+        <img id="qr-kiosk-img" style="width:220px; height:220px; display:block;" src="" alt="Check-In QR Code">
+      </div>
+      <div style="font-size:14px; font-weight:700; margin-bottom:12px;" id="qr-kiosk-center-name">Center Name</div>
+      <div style="background:var(--surface2); border-radius:8px; padding:10px; font-size:12px; word-break:break-all; font-family:monospace; margin-bottom:16px; text-align:left;" id="qr-kiosk-url">
+        URL
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-p" style="flex:1" onclick="copyQrKioskUrl()">📋 Copy Link</button>
+        <button class="btn-c" onclick="closeModal('qr-kiosk')">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Share Progress Card Modal -->
+<div class="overlay" id="modal-share-card">
+  <div class="modal" style="max-width:700px; width:100%;">
+    <div class="mh">
+      <div class="mt">🎨 Generate Progress Share Card</div>
+      <button class="mc" onclick="closeModal('share-card')">✕</button>
+    </div>
+    <div class="mb" style="display:flex; gap:20px; flex-wrap:wrap; text-align:left;">
+      <div style="flex:1; min-width:260px; display:flex; flex-direction:column; gap:12px;">
+        <div class="fg">
+          <label>Compare From (Initial Scan)</label>
+          <select id="share-scan-from" onchange="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:#fff"></select>
+        </div>
+        <div class="fg">
+          <label>Compare To (Latest Scan)</label>
+          <select id="share-scan-to" onchange="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:#fff"></select>
+        </div>
+        <div class="fg">
+          <label>Journey Title</label>
+          <input type="text" id="share-card-title" value="My Health Journey" oninput="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+        </div>
+        <div class="fg">
+          <label>Card Theme</label>
+          <select id="share-card-theme" onchange="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="emerald">Forest Emerald</option>
+            <option value="midnight">Midnight Onyx</option>
+            <option value="sunset">Sunset Gold</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button class="btn-p" style="flex:1; background:var(--success); border-color:var(--success); font-weight:700" onclick="downloadProgressCard()">⬇️ Download PNG</button>
+          <button class="btn-p" style="flex:1; background:var(--accent); border-color:var(--accent); color:#1a2e1f; font-weight:700" onclick="copyProgressCardToClipboard()">📋 Copy Image</button>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:center; align-items:center; background:#f0ede8; border-radius:12px; padding:10px; width:320px; height:320px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.05); margin:0 auto;">
+        <canvas id="progress-card-canvas" width="1080" height="1080" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Certificate Modal -->
+<div class="overlay" id="modal-certificate">
+  <div class="modal" style="max-width:850px; width:100%; border-top:4px solid #d4af37">
+    <div class="mh">
+      <div class="mt">🏆 Milestone Certificate</div>
+      <button class="mc" onclick="closeModal('certificate')">✕</button>
+    </div>
+    <div class="mb" style="text-align:center;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+        Milestone achieved! Download this certificate and send it to your client via WhatsApp.
+      </p>
+      <div style="background:#f0ede8; border-radius:12px; padding:10px; display:inline-block; box-shadow:inset 0 2px 6px rgba(0,0,0,0.05); margin-bottom:16px; max-width:100%; overflow-x:auto;">
+        <canvas id="certificate-canvas" width="800" height="740" style="max-width:100%; height:auto; display:block; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></canvas>
+      </div>
+      <div style="display:flex; gap:8px; max-width:400px; margin:0 auto;">
+        <button class="btn-p" style="flex:1; background:#d4af37; border-color:#d4af37; color:#112217; font-weight:bold" onclick="downloadCertificate()">⬇️ Download PNG</button>
+        <button class="btn-c" onclick="closeModal('certificate')">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Grocery List & Prep Guide Modal -->
+<div class="overlay" id="modal-grocery-list">
+  <div class="modal" style="max-width:580px; max-height:87vh; overflow-y:auto">
+    <div class="mh">
+      <div class="mt">🛒 AI Grocery List & Meal Prep Guide</div>
+      <button class="mc" onclick="closeModal('grocery-list')">✕</button>
+    </div>
+    <div class="mb" style="text-align:left;">
+      <div id="grocery-list-cust-info" style="font-size:14px; font-weight:700; color:var(--primary); margin-bottom:12px;"></div>
+      <div id="grocery-list-content" style="font-size:13px; line-height:1.6; color:var(--text);">
+        <!-- AI content goes here -->
+      </div>
+      <div style="display:flex; gap:8px; margin-top:20px;">
+        <button class="btn-p" style="flex:1; background:#25D366; border-color:#25D366; color:#fff; font-weight:700" onclick="shareGroceryListWA()">💬 Share on WhatsApp</button>
+        <button class="btn-c" onclick="closeModal('grocery-list')">Close</button>
+      </div>
     </div>
   </div>
 </div>
