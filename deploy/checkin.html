@@ -395,6 +395,13 @@ body {
           <input type="tel" id="phone-input" placeholder="e.g. 9876543210" required autocomplete="tel">
         </div>
       </div>
+
+      <div class="form-group">
+        <label for="dob-input">Date of Birth (Security Check)</label>
+        <div class="input-wrapper">
+          <input type="date" id="dob-input" required>
+        </div>
+      </div>
       
       <button type="submit" class="btn-submit" id="btn-submit-text">Check In Now</button>
       <div class="loader" id="checkin-loader"></div>
@@ -569,11 +576,27 @@ async function handleCheckin(e) {
       return;
     }
 
-    if (_matchingProfiles.length === 1) {
+    // 3. Filter matched profiles by DOB (confidential security check)
+    const dobInput = document.getElementById('dob-input').value; // YYYY-MM-DD
+    const finalMatched = _matchingProfiles.filter(profile => {
+      const dbDob = profile.data.dob;
+      if (!dbDob) return true; // Allow legacy profiles without DOB
+      return dbDob === dobInput;
+    });
+
+    if (finalMatched.length === 0) {
+      showMsg("Incorrect Date of Birth. Please verify with your coach.", "danger");
+      loader.style.display = 'none';
+      submitText.style.display = 'block';
+      return;
+    }
+
+    if (finalMatched.length === 1) {
       // Direct check-in
-      await executeProfileCheckin(_matchingProfiles[0]);
+      await executeProfileCheckin(finalMatched[0]);
     } else {
       // Show profile selection screen
+      _matchingProfiles = finalMatched;
       showProfileSelection();
     }
 
@@ -730,6 +753,11 @@ function showSuccess(entity, type, alreadyCheckedIn) {
     const packDaysText = calculateDaysRemaining(entity);
     document.getElementById('success-pack-status').innerHTML = packDaysText;
     
+    // Add warning for missing DOB on success view
+    if (!entity.dob) {
+      document.getElementById('success-pack-status').innerHTML += `<div style="font-size:11px;color:var(--accent);margin-top:8px;font-weight:600">⚠️ Secure your profile: Ask your coach to add your Date of Birth.</div>`;
+    }
+    
     const randomQuote = HEALTH_QUOTES[Math.floor(Math.random() * HEALTH_QUOTES.length)];
     document.getElementById('success-quote').textContent = `"${randomQuote}"`;
   }
@@ -748,6 +776,7 @@ function showSuccess(entity, type, alreadyCheckedIn) {
 
 function resetForm() {
   document.getElementById('phone-input').value = '';
+  document.getElementById('dob-input').value = '';
   clearMsg();
   document.getElementById('checkin-view').style.display = 'block';
   document.getElementById('profile-select-view').style.display = 'none';
