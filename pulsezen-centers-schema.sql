@@ -203,3 +203,80 @@ create policy "anon_all" on leads for all to anon using (true) with check (true)
 create policy "anon_all" on expenses for all to anon using (true) with check (true);
 create policy "anon_all" on foods for all to anon using (true) with check (true);
 create policy "anon_all" on contests for all to anon using (true) with check (true);
+
+-- ==========================================
+-- LEAD FOLLOWUPS
+-- ==========================================
+create table if not exists lead_followups (
+  id uuid primary key default gen_random_uuid(),
+  lead_id uuid references leads(id) on delete cascade,
+  called_at date not null,
+  note text,
+  next_followup_date date,
+  created_at timestamptz default now()
+);
+alter table lead_followups enable row level security;
+create policy "anon_all" on lead_followups for all to anon using (true) with check (true);
+
+-- ==========================================
+-- COACH ATTENDANCE
+-- ==========================================
+create table if not exists coach_attendance (
+  id uuid primary key default gen_random_uuid(),
+  coach_id uuid references coaches(id) on delete cascade,
+  date date not null default current_date,
+  status text default 'present',
+  wellness_center_id uuid references wellness_centers(id),
+  created_at timestamptz default now(),
+  unique(coach_id, date)
+);
+alter table coach_attendance enable row level security;
+create policy "anon_all" on coach_attendance for all to anon using (true) with check (true);
+
+-- ==========================================
+-- DIET PLAN HISTORY
+-- ==========================================
+create table if not exists diet_plan_history (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid references customers(id) on delete cascade,
+  plan_json text not null,
+  generated_at date not null default current_date,
+  created_at timestamptz default now()
+);
+alter table diet_plan_history enable row level security;
+create policy "anon_all" on diet_plan_history for all to anon using (true) with check (true);
+
+-- ==========================================
+-- CUSTOMER NOTES
+-- ==========================================
+create table if not exists customer_notes (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid references customers(id) on delete cascade,
+  note text not null,
+  follow_up_date date,
+  created_at timestamptz default now()
+);
+alter table customer_notes enable row level security;
+create policy "anon_all" on customer_notes for all to anon using (true) with check (true);
+
+-- ==========================================
+-- ANNOUNCEMENTS
+-- ==========================================
+create table if not exists announcements (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  message text not null,
+  target_center_id uuid references wellness_centers(id),
+  expires_at date,
+  created_at timestamptz default now()
+);
+alter table announcements enable row level security;
+create policy "anon_all" on announcements for all to anon using (true) with check (true);
+
+-- ==========================================
+-- SAAS PLAN TRACKING & NETWORKS MIGRATIONS
+-- ==========================================
+alter table wellness_centers add column if not exists plan_type text default 'free';
+alter table wellness_centers add column if not exists network_id text;
+alter table wellness_centers add column if not exists distributor_id text;
+
