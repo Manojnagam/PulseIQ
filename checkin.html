@@ -176,6 +176,63 @@ body {
   transform: translateY(0);
 }
 
+.profile-btn {
+  width: 100%;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.profile-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--primary);
+}
+
+.profile-btn-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-btn-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.profile-btn-role {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.profile-btn-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.profile-btn-badge.coach {
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: var(--accent);
+}
+
+.profile-btn-badge.client {
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: var(--primary);
+}
+
 .loader {
   display: none;
   border: 3px solid rgba(255, 255, 255, 0.1);
@@ -349,6 +406,20 @@ body {
     </div>
   </div>
 
+  <!-- Profile Selection View -->
+  <div id="profile-select-view" style="display:none; text-align:left;">
+    <div style="font-size: 20px; font-weight: 700; margin-bottom: 8px; color: #fff; text-align:center; font-family:'Playfair Display', serif;">
+      Multiple Profiles Found
+    </div>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:24px; text-align:center;">
+      Please select your name to complete check-in:
+    </p>
+    <div id="profile-buttons-container" style="display:grid; gap:12px;">
+      <!-- Dynamic Profile Buttons -->
+    </div>
+    <button class="btn-submit" style="margin-top:24px; background:rgba(255,255,255,0.12); color:#fff; box-shadow:none; border:1px solid rgba(255,255,255,0.15);" onclick="cancelProfileSelection()">Back</button>
+  </div>
+
   <!-- Success View -->
   <div id="success-view" class="success-view">
     <div class="success-icon">
@@ -361,7 +432,7 @@ body {
     <div class="success-subtitle">Check-in Complete! 🎉</div>
     
     <div class="pack-info">
-      <div class="pack-title">Membership Status</div>
+      <div class="pack-title" id="success-pack-title">Membership Status</div>
       <div class="pack-days" id="success-pack-status">Loading pack info...</div>
     </div>
 
@@ -442,6 +513,9 @@ function clearMsg() {
   msg.style.display = 'none';
 }
 
+// Global matches buffer
+let _matchingProfiles = [];
+
 async function handleCheckin(e) {
   e.preventDefault();
   clearMsg();
@@ -451,9 +525,9 @@ async function handleCheckin(e) {
   
   // Clean phone number (remove spaces, symbols)
   phone = phone.replace(/[^0-9]/g, '');
-  // Normalize length (for India, if 10 digits, add country code or matching)
-  if (phone.length === 10) {
-    // Check both with country code or without
+  if (phone.length < 5) {
+    showMsg("Please enter a valid phone number.", "danger");
+    return;
   }
 
   const loader = document.getElementById('checkin-loader');
@@ -462,56 +536,44 @@ async function handleCheckin(e) {
   submitText.style.display = 'none';
 
   try {
-    // 1. Search for active customer by phone in this center
-    let customers = await req('GET', 'customers', null, `wellness_center_id=eq.${centerId}&status=eq.active`);
+    // 1. Fetch ALL clients & coaches for this center
+    const [dbCustomers, dbCoaches] = await Promise.all([
+      req('GET', 'customers', null, `wellness_center_id=eq.${centerId}`),
+      req('GET', 'coaches', null, `wellness_center_id=eq.${centerId}`)
+    ]);
     
-    // Client-side phone match to be robust to country codes
-    let matchedCustomer = customers.find(c => {
+    // 2. Perform client-side matching to cover multiple country codes/formats
+    const matchedClients = dbCustomers.filter(c => {
       if (!c.phone) return false;
       const cleanDbPhone = c.phone.replace(/[^0-9]/g, '');
       return cleanDbPhone.endsWith(phone) || phone.endsWith(cleanDbPhone);
     });
 
-    if (!matchedCustomer) {
-      // Try search in inactive or walk-ins just in case
-      customers = await req('GET', 'customers', null, `wellness_center_id=eq.${centerId}`);
-      matchedCustomer = customers.find(c => {
-        if (!c.phone) return false;
-        const cleanDbPhone = c.phone.replace(/[^0-9]/g, '');
-        return cleanDbPhone.endsWith(phone) || phone.endsWith(cleanDbPhone);
-      });
-      
-      if (matchedCustomer && matchedCustomer.status !== 'active') {
-        showMsg("Your membership is currently inactive. Please talk to your coach.", "danger");
-        loader.style.display = 'none';
-        submitText.style.display = 'block';
-        return;
-      }
+    const matchedCoaches = dbCoaches.filter(c => {
+      if (!c.phone) return false;
+      const cleanDbPhone = c.phone.replace(/[^0-9]/g, '');
+      return cleanDbPhone.endsWith(phone) || phone.endsWith(cleanDbPhone);
+    });
 
+    // Merge matching profiles
+    _matchingProfiles = [];
+    matchedClients.forEach(c => _matchingProfiles.push({ type: 'client', data: c }));
+    matchedCoaches.forEach(c => _matchingProfiles.push({ type: 'coach', data: c }));
+
+    if (_matchingProfiles.length === 0) {
       showMsg("Phone number not found. Please verify with your coach.", "danger");
       loader.style.display = 'none';
       submitText.style.display = 'block';
       return;
     }
 
-    // 2. Prevent duplicate check-in today
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayAtt = await req('GET', 'attendance', null, `customer_id=eq.${matchedCustomer.id}&date=eq.${todayStr}`);
-    
-    if (todayAtt && todayAtt.length > 0) {
-      // Already checked in today, but let's show success anyway so they know
-      showSuccess(matchedCustomer, true);
-      return;
+    if (_matchingProfiles.length === 1) {
+      // Direct check-in
+      await executeProfileCheckin(_matchingProfiles[0]);
+    } else {
+      // Show profile selection screen
+      showProfileSelection();
     }
-
-    // 3. Mark attendance
-    await req('POST', 'attendance', {
-      customer_id: matchedCustomer.id,
-      date: todayStr,
-      wellness_center_id: centerId
-    });
-
-    showSuccess(matchedCustomer, false);
 
   } catch (error) {
     console.error("Check-in error:", error);
@@ -519,6 +581,120 @@ async function handleCheckin(e) {
   } finally {
     loader.style.display = 'none';
     submitText.style.display = 'block';
+  }
+}
+
+function showProfileSelection() {
+  const container = document.getElementById('profile-buttons-container');
+  container.innerHTML = '';
+  
+  _matchingProfiles.forEach((profile, index) => {
+    const btn = document.createElement('button');
+    btn.className = 'profile-btn';
+    
+    const info = document.createElement('div');
+    info.className = 'profile-btn-info';
+    
+    const name = document.createElement('span');
+    name.className = 'profile-btn-name';
+    name.textContent = profile.data.name;
+    
+    const role = document.createElement('span');
+    role.className = 'profile-btn-role';
+    if (profile.type === 'coach') {
+      role.textContent = profile.data.role ? 'Coach · ' + profile.data.role : 'Wellness Coach';
+    } else {
+      role.textContent = profile.data.status === 'active' ? 'Active Member' : 'Inactive Member';
+    }
+    
+    info.appendChild(name);
+    info.appendChild(role);
+    
+    const badge = document.createElement('span');
+    badge.className = 'profile-btn-badge ' + profile.type;
+    badge.textContent = profile.type;
+    
+    btn.appendChild(info);
+    btn.appendChild(badge);
+    
+    btn.onclick = () => selectProfile(index);
+    container.appendChild(btn);
+  });
+  
+  document.getElementById('checkin-view').style.display = 'none';
+  document.getElementById('profile-select-view').style.display = 'block';
+}
+
+function cancelProfileSelection() {
+  document.getElementById('checkin-view').style.display = 'block';
+  document.getElementById('profile-select-view').style.display = 'none';
+}
+
+async function selectProfile(index) {
+  const profile = _matchingProfiles[index];
+  
+  const selectView = document.getElementById('profile-select-view');
+  // Temporary loading state
+  selectView.style.pointerEvents = 'none';
+  selectView.style.opacity = '0.6';
+  
+  try {
+    await executeProfileCheckin(profile);
+  } catch(e) {
+    showMsg("Failed to check in profile.", "danger");
+    cancelProfileSelection();
+  } finally {
+    selectView.style.pointerEvents = 'all';
+    selectView.style.opacity = '1';
+  }
+}
+
+async function executeProfileCheckin(profile) {
+  const todayStr = new Date().toISOString().split('T')[0];
+  
+  if (profile.type === 'client') {
+    const cust = profile.data;
+    if (cust.status !== 'active') {
+      showMsg("Your membership is currently inactive. Please talk to your coach.", "danger");
+      cancelProfileSelection();
+      return;
+    }
+
+    // Check duplicate check-in today
+    const todayAtt = await req('GET', 'attendance', null, `customer_id=eq.${cust.id}&date=eq.${todayStr}`);
+    if (todayAtt && todayAtt.length > 0) {
+      showSuccess(cust, 'client', true);
+      return;
+    }
+
+    // Mark attendance
+    await req('POST', 'attendance', {
+      customer_id: cust.id,
+      date: todayStr,
+      wellness_center_id: centerId
+    });
+    
+    showSuccess(cust, 'client', false);
+
+  } else if (profile.type === 'coach') {
+    const coach = profile.data;
+    
+    // Check duplicate coach check-in today
+    const todayAtt = await req('GET', 'coach_attendance', null, `coach_id=eq.${coach.id}&date=eq.${todayStr}`);
+    if (todayAtt && todayAtt.length > 0) {
+      showSuccess(coach, 'coach', true);
+      return;
+    }
+
+    // Mark coach attendance
+    await req('POST', 'coach_attendance', {
+      coach_id: coach.id,
+      date: todayStr,
+      status: 'present',
+      wellness_center_id: centerId
+    });
+    
+    showSuccess(coach, 'coach', false);
   }
 }
 
@@ -538,15 +714,21 @@ function calculateDaysRemaining(cust) {
   return `<span>${diffDays}</span> days remaining`;
 }
 
-function showSuccess(cust, alreadyCheckedIn) {
-  document.getElementById('success-cust-name').textContent = cust.name;
+function showSuccess(entity, type, alreadyCheckedIn) {
+  document.getElementById('success-cust-name').textContent = entity.name;
   
-  const packDaysText = calculateDaysRemaining(cust);
-  document.getElementById('success-pack-status').innerHTML = packDaysText;
-
-  // Set random health quote
-  const randomQuote = HEALTH_QUOTES[Math.floor(Math.random() * HEALTH_QUOTES.length)];
-  document.getElementById('success-quote').textContent = `"${randomQuote}"`;
+  if (type === 'coach') {
+    document.getElementById('success-pack-title').textContent = "Profile Status";
+    document.getElementById('success-pack-status').innerHTML = `Verified Coach 👨‍🏫<div style="font-size:12px;color:var(--text-muted);margin-top:4px">${entity.role || 'Wellness Lead'}</div>`;
+    document.getElementById('success-quote').textContent = `"A coach is someone who tells you what you don't want to hear, so you can be who you've always known you could be."`;
+  } else {
+    document.getElementById('success-pack-title').textContent = "Membership Status";
+    const packDaysText = calculateDaysRemaining(entity);
+    document.getElementById('success-pack-status').innerHTML = packDaysText;
+    
+    const randomQuote = HEALTH_QUOTES[Math.floor(Math.random() * HEALTH_QUOTES.length)];
+    document.getElementById('success-quote').textContent = `"${randomQuote}"`;
+  }
   
   if (alreadyCheckedIn) {
     document.querySelector('.success-subtitle').textContent = "Already checked in today! 👍";
@@ -556,6 +738,7 @@ function showSuccess(cust, alreadyCheckedIn) {
 
   // Toggle views
   document.getElementById('checkin-view').style.display = 'none';
+  document.getElementById('profile-select-view').style.display = 'none';
   document.getElementById('success-view').style.display = 'block';
 }
 
@@ -563,6 +746,7 @@ function resetForm() {
   document.getElementById('phone-input').value = '';
   clearMsg();
   document.getElementById('checkin-view').style.display = 'block';
+  document.getElementById('profile-select-view').style.display = 'none';
   document.getElementById('success-view').style.display = 'none';
 }
 
