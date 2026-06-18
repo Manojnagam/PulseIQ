@@ -6,6 +6,8 @@
     { "src": "/client.html", "dest": "/client.html" },
     { "src": "/register.html", "dest": "/register.html" },
     { "src": "/register", "dest": "/register.html" },
+    { "src": "/checkin.html", "dest": "/checkin.html" },
+    { "src": "/checkin", "dest": "/checkin.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "headers": [
