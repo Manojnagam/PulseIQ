@@ -7660,35 +7660,86 @@ async function renderCoachAttendance() {
   var el = document.getElementById('coach-att-list'); if (!el) return;
   var coaches = filterByCenter(D.coaches).filter(function(c){ return (c.status||'Active')==='Active'; });
   if (!coaches.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center">No active coaches found</div>'; return; }
-  // Load today's coach attendance records
+  
+  // Load today's coach attendance records using correct PostgREST parameters
   var recs = [];
   try {
-    recs = await dbGet('coach_attendance', { date: 'eq.' + date });
+    recs = await dbGet('coach_attendance', 'date', 'date=eq.' + date);
   } catch(e) { recs = []; }
+
+  // Load today's customer check-ins to see if any coach checked in as a customer/client
+  var custAtts = [];
+  try {
+    custAtts = await dbGet('attendance', 'date', 'date=eq.' + date);
+  } catch(e) { custAtts = []; }
+
+  var centerId = ACTIVE_CENTER || null;
+  var autoCheckedInAny = false;
+
+  // Auto check-in coaches if they already checked in as customers
+  for (var k = 0; k < coaches.length; k++) {
+    var c = coaches[k];
+    var rec = recs.find(function(r){ return r.coach_id === c.id; });
+    
+    if (!rec) {
+      var cust = (D.customers || []).find(function(cust) {
+        return (c.phone && cust.phone && cust.phone.replace(/\D/g,'') === c.phone.replace(/\D/g,''))
+            || (c.email && cust.email && cust.email.toLowerCase().trim() === c.email.toLowerCase().trim())
+            || (c.name.toLowerCase().trim() === cust.name.toLowerCase().trim());
+      });
+      var custCheckedIn = cust ? custAtts.some(function(a) { return a.customer_id === cust.id; }) : false;
+      if (custCheckedIn) {
+        try {
+          var newRecs = await dbInsert('coach_attendance', { coach_id: c.id, date: date, status: 'present', wellness_center_id: centerId });
+          if (newRecs && newRecs[0]) {
+            recs.push(newRecs[0]);
+            autoCheckedInAny = true;
+          }
+        } catch(err) {
+          console.error('Failed to auto check-in coach: ' + c.name, err);
+        }
+      }
+    }
+  }
+
+  if (autoCheckedInAny) {
+    renderCoachAttSummary();
+  }
+
   el.innerHTML = coaches.map(function(c) {
     var rec = recs.find(function(r){ return r.coach_id === c.id; });
     var status = rec ? rec.status : null;
-    var recId = rec ? rec.id : null;
     var isPresent = status === 'present';
     var isAbsent = status === 'absent';
     return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);margin-bottom:8px">'
       + '<div><div style="font-weight:600;font-size:14px">'+c.name+'</div><div style="font-size:11px;color:var(--muted)">'+( c.center_name||getCenterName())+'</div></div>'
       + '<div style="display:flex;gap:6px">'
-      + '<button onclick="toggleCoachAtt(\''+c.id+'\',\''+c.name+'\',\''+date+'\','+(recId?'\''+recId+'\'':'null')+',\'present\')" style="padding:6px 14px;border-radius:8px;border:1.5px solid '+(isPresent?'var(--success)':'var(--border)')+';background:'+(isPresent?'var(--success)':'var(--surface2)')+';color:'+(isPresent?'#fff':'var(--muted)')+';font-weight:600;font-size:12px;cursor:pointer;font-family:inherit">✅ Present</button>'
-      + '<button onclick="toggleCoachAtt(\''+c.id+'\',\''+c.name+'\',\''+date+'\','+(recId?'\''+recId+'\'':'null')+',\'absent\')" style="padding:6px 14px;border-radius:8px;border:1.5px solid '+(isAbsent?'var(--danger)':'var(--border)')+';background:'+(isAbsent?'var(--danger)':'var(--surface2)')+';color:'+(isAbsent?'#fff':'var(--muted)')+';font-weight:600;font-size:12px;cursor:pointer;font-family:inherit">❌ Absent</button>'
+      + '<button onclick="toggleCoachAtt(\''+c.id+'\',\''+c.name+'\',\''+date+'\',\'present\')" style="padding:6px 14px;border-radius:8px;border:1.5px solid '+(isPresent?'var(--success)':'var(--border)')+';background:'+(isPresent?'var(--success)':'var(--surface2)')+';color:'+(isPresent?'#fff':'var(--muted)')+';font-weight:600;font-size:12px;cursor:pointer;font-family:inherit">✅ Present</button>'
+      + '<button onclick="toggleCoachAtt(\''+c.id+'\',\''+c.name+'\',\''+date+'\',\'absent\')" style="padding:6px 14px;border-radius:8px;border:1.5px solid '+(isAbsent?'var(--danger)':'var(--border)')+';background:'+(isAbsent?'var(--danger)':'var(--surface2)')+';color:'+(isAbsent?'#fff':'var(--muted)')+';font-weight:600;font-size:12px;cursor:pointer;font-family:inherit">❌ Absent</button>'
       + '</div></div>';
   }).join('');
 }
 
-async function toggleCoachAtt(coachId, coachName, date, existingId, newStatus) {
+async function toggleCoachAtt(coachId, coachName, date, newStatus) {
   var centerId = ACTIVE_CENTER || null;
   try {
-    if (existingId) {
-      await dbUpdate('coach_attendance', existingId, { status: newStatus });
+    // Query existing record dynamically to avoid static state mismatch in the DOM
+    var recs = await dbGet('coach_attendance', 'date', 'coach_id=eq.' + coachId + '&date=eq.' + date);
+    var existingRec = recs && recs.find(function(r) { return r.coach_id === coachId && r.date === date; });
+
+    if (existingRec) {
+      if (existingRec.status === newStatus) {
+        // Untoggle / delete if clicking the same status again
+        await dbDelete('coach_attendance', existingRec.id);
+        showToast(coachName + ' attendance cleared', 'success');
+      } else {
+        await dbUpdate('coach_attendance', existingRec.id, { status: newStatus });
+        showToast(coachName + ' marked ' + newStatus, newStatus === 'present' ? 'success' : 'error');
+      }
     } else {
       await dbInsert('coach_attendance', { coach_id: coachId, date: date, status: newStatus, wellness_center_id: centerId });
+      showToast(coachName + ' marked ' + newStatus, newStatus === 'present' ? 'success' : 'error');
     }
-    showToast(coachName + ' marked ' + newStatus, newStatus === 'present' ? 'success' : 'error');
     renderCoachAttendance();
     renderCoachAttSummary();
   } catch(e) {
@@ -7701,8 +7752,12 @@ async function renderCoachAttSummary() {
   var el = document.getElementById('coach-att-summary'); if (!el || !month) return;
   var coaches = filterByCenter(D.coaches).filter(function(c){ return (c.status||'Active')==='Active'; });
   if (!coaches.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center">No active coaches</div>'; return; }
+  
   var recs = [];
-  try { recs = await dbGet('coach_attendance', { date: 'gte.' + month + '-01', 'date.lte': month + '-31' }); } catch(e) { recs = []; }
+  try { 
+    recs = await dbGet('coach_attendance', 'date', 'date=gte.' + month + '-01&date=lte.' + month + '-31'); 
+  } catch(e) { recs = []; }
+  
   // Count working days in month up to today
   var today = new Date().toISOString().split('T')[0];
   var daysInMonth = 0;
