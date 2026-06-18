@@ -3774,13 +3774,15 @@ function getCenterById(id) {
 }
 function isGrowthPlan() {
   if (!isCenterSession() && !ACTIVE_CENTER) return true; // supervisor always has full access
-  var c = (D.centers||[]).find(function(x){return x.id===ACTIVE_CENTER;});
+  var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
+  var c = (D.centers||[]).find(function(x){return x.id===targetId;});
   var plan = c ? (c.plan_type||'free') : 'free';
   return plan==='growth'||plan==='elite'||plan==='president';
 }
 function isElitePlan() {
   if (!isCenterSession() && !ACTIVE_CENTER) return true; // supervisor always has full access
-  var c = (D.centers||[]).find(function(x){return x.id===ACTIVE_CENTER;});
+  var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
+  var c = (D.centers||[]).find(function(x){return x.id===targetId;});
   var plan = c ? (c.plan_type||'free') : 'free';
   return plan==='elite'||plan==='president';
 }
@@ -3894,6 +3896,9 @@ var _pendingSwitchCenter = '';
 // Returns array of centerId + all recursive downline center IDs via upline_center_id
 function getOrgCenterIds(rootId) {
   var ids = [rootId];
+  if (isCenterSession() && !isElitePlan()) {
+    return ids;
+  }
   var i = 0;
   while (i < ids.length) {
     var parent = ids[i];
@@ -4044,9 +4049,22 @@ function updateCenterSwitcher() {
   });
   sel.innerHTML = opts;
   if(prev && !D.centers.some(function(c){return c.id===prev;})) { ACTIVE_CENTER=''; localStorage.removeItem('activeCenter'); }
-  // Hide supervisor-only nav items for center-PIN users
+  // Hide supervisor-only nav items for center-PIN users, with plan overrides
   var isSuper = isSupervisor();
-  document.querySelectorAll('.nav-supervisor-only').forEach(function(el){ el.style.display = isSuper ? '' : 'none'; });
+  var isElite = isElitePlan();
+  var isGrowth = isGrowthPlan();
+  document.querySelectorAll('.nav-supervisor-only').forEach(function(el){
+    var onclickAttr = el.getAttribute('onclick') || '';
+    if (onclickAttr.indexOf('planmgmt') !== -1 || onclickAttr.indexOf('pintracker') !== -1 || onclickAttr.indexOf('centers') !== -1 || onclickAttr.indexOf('sql') !== -1 || onclickAttr.indexOf('profile') !== -1) {
+      el.style.display = isSuper ? '' : 'none';
+    } else if (onclickAttr.indexOf('orgtree') !== -1 || onclickAttr.indexOf('bizanalyst') !== -1) {
+      el.style.display = (isSuper || isElite) ? '' : 'none';
+    } else if (onclickAttr.indexOf('export') !== -1) {
+      el.style.display = (isSuper || isGrowth) ? '' : 'none';
+    } else {
+      el.style.display = isSuper ? '' : 'none';
+    }
+  });
 }
 
 // Helper: filter array by wellness_center_id matching ACTIVE_CENTER
@@ -5063,8 +5081,15 @@ function isSupervisor() {
 }
 
 function goTo(name, el) {
-  if (!isSupervisor() && ['orgtree','pintracker','bizanalyst','planmgmt'].indexOf(name) > -1) {
+  var isSuper = isSupervisor();
+  if (!isSuper && ['planmgmt', 'pintracker', 'centers', 'sql', 'profile'].indexOf(name) > -1) {
     showToast('This section is for supervisors only', 'error'); return;
+  }
+  if (!isSuper && ['orgtree', 'bizanalyst'].indexOf(name) > -1 && !isElitePlan()) {
+    showToast('This section is an Elite plan feature. Upgrade to unlock.', 'error'); return;
+  }
+  if (!isSuper && ['export'].indexOf(name) > -1 && !isGrowthPlan()) {
+    showToast('Data Export is a Growth plan feature. Upgrade to unlock.', 'error'); return;
   }
   document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active')});
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
@@ -6502,28 +6527,38 @@ function renderOverview() {
   rightHtml += '</div></div>';
 
   // ── Churn Risk ──
-  var riskList = _custs.map(function(c){ return { c:c, r:getChurnRisk(c.id) }; })
-    .filter(function(x){ return x.r.level !== 'healthy'; })
-    .sort(function(a,b){ return b.r.score - a.r.score; });
-  var critCount = riskList.filter(function(x){ return x.r.level==='critical'; }).length;
-  var atRiskCount = riskList.filter(function(x){ return x.r.level==='at-risk'; }).length;
-  rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid '+(critCount?'var(--danger)':'var(--accent)')+'"><div class="ov-card-h"><h3>⚠️ Churn Risk</h3><span class="ov-count" style="background:'+(critCount?'#fee2e2':'#fef9c3')+';color:'+(critCount?'#b91c1c':'#854d0e')+'">'+riskList.length+'</span></div><div class="ov-card-body">';
-  if(!riskList.length) { rightHtml += '<div class="ov-empty">All active customers are engaged!</div>'; }
-  else {
-    if(critCount||atRiskCount) rightHtml += '<div style="display:flex;gap:12px;margin-bottom:10px;font-size:12px">'+(critCount?'<span style="background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:20px;font-weight:700">🔴 '+critCount+' Critical</span>':'')+(atRiskCount?'<span style="background:#fef9c3;color:#854d0e;padding:3px 10px;border-radius:20px;font-weight:700">🟡 '+atRiskCount+' At Risk</span>':'')+'</div>';
-    rightHtml += riskList.slice(0,8).map(function(x){
-      var phone = (x.c.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
-      var msg = encodeURIComponent('Hi '+x.c.name+'! We noticed you haven\'t visited us recently. Your health journey matters — come back and let\'s pick up where we left off! 💪');
-      return '<div class="ov-row"><div class="ov-row-info">'
-        +'<div class="ov-row-name">'+x.c.name+'</div>'
-        +'<div class="ov-row-sub">'+x.r.reasons.join(' · ')+'</div>'
-        +'</div><div class="ov-row-actions">'
-        +(phone?'<button class="wa-btn" style="font-size:11px;padding:3px 8px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+msg+'\',\'_blank\')">💬</button>':'')
-        +'</div></div>';
-    }).join('');
-    if(riskList.length>8) rightHtml += '<div style="text-align:center;padding-top:8px"><span class="ov-link" onclick="goTo(\'customers\',document.querySelector(\'[onclick*=customers]\'))">View all '+riskList.length+' at-risk →</span></div>';
+  if (isCenterSession() && !isElitePlan()) {
+    rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid var(--border)">'
+      +'<div class="ov-card-h"><h3>⚠️ Churn Risk</h3><span class="ov-count" style="background:var(--border);color:var(--muted)">🔒</span></div>'
+      +'<div class="ov-card-body" style="text-align:center;padding:20px 10px">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">AI Churn Risk Alerts</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.4">Elite plan monitors attendance trends to predict and prevent customer churn.</div>'
+        +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Elite plan (₹999/month) to unlock AI Churn Risk Alerts. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="font-size:11px;padding:6px 14px;background:#b45309;border-color:#b45309;text-decoration:none;display:inline-block">Upgrade to Elite</a>'
+      +'</div></div>';
+  } else {
+    var riskList = _custs.map(function(c){ return { c:c, r:getChurnRisk(c.id) }; })
+      .filter(function(x){ return x.r.level !== 'healthy'; })
+      .sort(function(a,b){ return b.r.score - a.r.score; });
+    var critCount = riskList.filter(function(x){ return x.r.level==='critical'; }).length;
+    var atRiskCount = riskList.filter(function(x){ return x.r.level==='at-risk'; }).length;
+    rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid '+(critCount?'var(--danger)':'var(--accent)')+'"><div class="ov-card-h"><h3>⚠️ Churn Risk</h3><span class="ov-count" style="background:'+(critCount?'#fee2e2':'#fef9c3')+';color:'+(critCount?'#b91c1c':'#854d0e')+'">'+riskList.length+'</span></div><div class="ov-card-body">';
+    if(!riskList.length) { rightHtml += '<div class="ov-empty">All active customers are engaged!</div>'; }
+    else {
+      if(critCount||atRiskCount) rightHtml += '<div style="display:flex;gap:12px;margin-bottom:10px;font-size:12px">'+(critCount?'<span style="background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:20px;font-weight:700">🔴 '+critCount+' Critical</span>':'')+(atRiskCount?'<span style="background:#fef9c3;color:#854d0e;padding:3px 10px;border-radius:20px;font-weight:700">🟡 '+atRiskCount+' At Risk</span>':'')+'</div>';
+      rightHtml += riskList.slice(0,8).map(function(x){
+        var phone = (x.c.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
+        var msg = encodeURIComponent('Hi '+x.c.name+'! We noticed you haven\'t visited us recently. Your health journey matters — come back and let\'s pick up where we left off! 💪');
+        return '<div class="ov-row"><div class="ov-row-info">'
+          +'<div class="ov-row-name">'+x.c.name+'</div>'
+          +'<div class="ov-row-sub">'+x.r.reasons.join(' · ')+'</div>'
+          +'</div><div class="ov-row-actions">'
+          +(phone?'<button class="wa-btn" style="font-size:11px;padding:3px 8px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+msg+'\',\'_blank\')">💬</button>':'')
+          +'</div></div>';
+      }).join('');
+      if(riskList.length>8) rightHtml += '<div style="text-align:center;padding-top:8px"><span class="ov-link" onclick="goTo(\'customers\',document.querySelector(\'[onclick*=customers]\'))">View all '+riskList.length+' at-risk →</span></div>';
+    }
+    rightHtml += '</div></div>';
   }
-  rightHtml += '</div></div>';
 
   // Coaches Summary
   var _coaches = filterByCenter(D.coaches);
@@ -12932,6 +12967,7 @@ function renderBizAnalyst() {
 
 var _bizAiInFlight = false;
 async function generateBizAIReport() {
+  if (isCenterSession() && !isElitePlan()) { showToast('AI Business Analyst report is an Elite plan feature (₹999/mo). Upgrade to unlock. 🙏', 'error'); return; }
   if(_bizAiInFlight) return;
   if(!getGroqKey()) { showToast('Add your Groq API key in SQL/Config to use AI Report','error'); return; }
   var month = (document.getElementById('biz-month')||{}).value || new Date().toISOString().substring(0,7);
