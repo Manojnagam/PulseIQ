@@ -1291,22 +1291,58 @@ button:active, .btn-p:active, .btn-e:active, .btn-d:active, .btn-c:active {
         </div>
 
         <div class="fg" style="margin-top:10px;">
-          <label>Energy Levels & Habits *</label>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <label style="margin:0;">Energy Levels & Habits *</label>
+            <select onchange="document.getElementById('ws-energy').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
+              <option value="">-- Quick Select Preset --</option>
+              <option value="Wakes up tired, heavy tea/coffee drinker, 4 PM energy crash">Fatigue & caffeine crashes</option>
+              <option value="Good morning energy, minor afternoon slump, 2 cups of tea/day">Moderate energy & minor slumps</option>
+              <option value="Consistent energy throughout the day, no crashes, low caffeine">Optimal energy level</option>
+              <option value="Insomnia, wakes up fatigued, relies on caffeine for focus">Poor sleep & dependency</option>
+            </select>
+          </div>
           <textarea id="ws-energy" style="width:100%;height:60px;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff" placeholder="e.g., Wakes up tired, heavy tea drinker, 4 PM energy crash"></textarea>
         </div>
 
         <div class="fg" style="margin-top:10px;">
-          <label>Diet & Hydration Habits *</label>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <label style="margin:0;">Diet & Hydration Habits *</label>
+            <select onchange="document.getElementById('ws-diet').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
+              <option value="">-- Quick Select Preset --</option>
+              <option value="Skips breakfast, eats heavy dinners late at night, only 1.5L water/day">Skip breakfast & late dinners</option>
+              <option value="Three balanced meals daily, snacks in between, 2.5L water/day">Balanced meals & hydration</option>
+              <option value="Irregular meal timings, eats heavy junk food/processed snacks, low hydration (<1.5L/day)">Unhealthy pattern & low hydration</option>
+              <option value="High protein intake, clean home-cooked food, high hydration (3L+ water/day)">High protein & high hydration</option>
+            </select>
+          </div>
           <textarea id="ws-diet" style="width:100%;height:60px;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff" placeholder="e.g., Skips breakfast, eats heavy dinners, 1.5L water/day"></textarea>
         </div>
 
         <div class="fg" style="margin-top:10px;">
-          <label>Digestion & Health Issues *</label>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <label style="margin:0;">Digestion & Health Issues *</label>
+            <select onchange="document.getElementById('ws-digestion').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
+              <option value="">-- Quick Select Preset --</option>
+              <option value="Frequent bloating, mild acidity after meals, no major medical issues">Bloating & mild acidity</option>
+              <option value="No digestive issues, healthy bowel movements, no major complaints">Healthy digestion</option>
+              <option value="Frequent constipation, gas, indigestion, mild acid reflux">Constipation & indigestion</option>
+              <option value="Lactose sensitivity, frequent bloating, gas after dairy/heavy meals">Food sensitivity & bloating</option>
+            </select>
+          </div>
           <textarea id="ws-digestion" style="width:100%;height:60px;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff" placeholder="e.g., Frequent bloating, mild acidity after tea"></textarea>
         </div>
 
         <div class="fg" style="margin-top:10px; margin-bottom:20px;">
-          <label>Primary Goal *</label>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <label style="margin:0;">Primary Goal *</label>
+            <select onchange="document.getElementById('ws-goal').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
+              <option value="">-- Quick Select Preset --</option>
+              <option value="Weight loss and fat reduction">Weight loss & fat reduction</option>
+              <option value="Muscle gain and metabolic health improvement">Muscle gain & strength</option>
+              <option value="Improve energy levels and reduce digestive issues">Energy & gut health</option>
+              <option value="Healthy lifestyle maintenance and active aging">General wellness</option>
+            </select>
+          </div>
           <input type="text" id="ws-goal" placeholder="e.g., Weight loss and fat reduction" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
         </div>
 
