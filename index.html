@@ -2827,17 +2827,17 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <div style="border-top:1px solid var(--border);padding-top:14px">
         <div style="font-weight:700;font-size:13px;margin-bottom:10px">+ Add New Recurring Expense</div>
         <div class="fr" style="grid-template-columns:1fr 1fr;gap:10px">
-          <div><label>Name</label><input type="text" id="rec-name" placeholder="e.g. Rent, Electricity"></div>
-          <div><label>Amount (₹)</label><input type="number" id="rec-amount" placeholder="5000" min="0"></div>
-          <div><label>Day of Month</label><input type="number" id="rec-day" value="1" min="1" max="28"></div>
-          <div><label>Category</label>
+          <div><label for="rec-name">Name</label><input type="text" id="rec-name" placeholder="e.g. Rent, Electricity"></div>
+          <div><label for="rec-amount">Amount (₹)</label><input type="number" id="rec-amount" placeholder="5000" min="0"></div>
+          <div><label for="rec-day">Day of Month</label><input type="number" id="rec-day" value="1" min="1" max="28"></div>
+          <div><label for="rec-cat">Category</label>
             <select id="rec-cat">
               <option>Operational</option><option>Rent</option><option>Utilities</option>
               <option>Salaries</option><option>Marketing</option><option>Miscellaneous</option>
             </select>
           </div>
         </div>
-        <div style="margin-top:6px"><label>Center</label>
+        <div style="margin-top:6px"><label for="rec-center">Center</label>
           <select id="rec-center"><option value="">— All / Default —</option></select>
         </div>
         <button class="btn-p" style="margin-top:12px;width:100%" onclick="saveRecurring()">+ Add Recurring Expense</button>
@@ -2854,15 +2854,15 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
   <div class="modal">
     <div class="mh"><div class="mt">📢 Post Announcement</div><button class="mc" onclick="closeModal('announcement')">✕</button></div>
     <div class="mb">
-      <label>Title</label>
+      <label for="ann-title">Title</label>
       <input type="text" id="ann-title" placeholder="e.g. Holiday closure on Sunday" maxlength="100">
-      <label>Message</label>
+      <label for="ann-message">Message</label>
       <textarea id="ann-message" rows="4" placeholder="Full announcement text..." style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text);resize:vertical"></textarea>
-      <label>Target Center (leave blank = all centers)</label>
+      <label for="ann-center">Target Center (leave blank = all centers)</label>
       <select id="ann-center">
         <option value="">— All Centers —</option>
       </select>
-      <label>Expires On (optional)</label>
+      <label for="ann-expires">Expires On (optional)</label>
       <input type="date" id="ann-expires">
     </div>
     <div class="mf">
@@ -2877,11 +2877,11 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mh"><div class="mt">🟣 Onboard ₹1999 Customer</div><button class="mc" onclick="closeModal('onboard-customer')">✕</button></div>
     <div class="mb">
       <p style="font-size:13px;color:var(--muted);margin-bottom:16px">This adds the center to the <strong>paying customers database</strong> (separate from your family centers). They will use <strong>app.pulsezen.in</strong> + their PIN to access the dashboard.</p>
-      <div class="fg"><label>Center Name *</label><input type="text" id="oc-name" placeholder="e.g. Ravi's Wellness Center"></div>
-      <div class="fg"><label>Owner Name</label><input type="text" id="oc-owner" placeholder="e.g. Ravi Kumar"></div>
-      <div class="fg"><label>WhatsApp Number</label><input type="text" id="oc-phone" placeholder="e.g. 9876543210"></div>
-      <div class="fg"><label>Location</label><input type="text" id="oc-location" placeholder="e.g. Kurnool, AP"></div>
-      <div class="fg"><label>🔐 Dashboard PIN (4 digits) *</label>
+      <div class="fg"><label for="oc-name">Center Name *</label><input type="text" id="oc-name" placeholder="e.g. Ravi's Wellness Center"></div>
+      <div class="fg"><label for="oc-owner">Owner Name</label><input type="text" id="oc-owner" placeholder="e.g. Ravi Kumar"></div>
+      <div class="fg"><label for="oc-phone">WhatsApp Number</label><input type="text" id="oc-phone" placeholder="e.g. 9876543210"></div>
+      <div class="fg"><label for="oc-location">Location</label><input type="text" id="oc-location" placeholder="e.g. Kurnool, AP"></div>
+      <div class="fg"><label for="oc-pin">🔐 Dashboard PIN (4 digits) *</label>
         <div style="display:flex;align-items:center;gap:8px;max-width:260px">
           <input type="password" id="oc-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 4321" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit">
           <button type="button" onclick="togglePinVis('oc-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px">👁️</button>
@@ -2903,20 +2903,20 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mb">
       <input type="hidden" id="center-id">
       <div class="fr">
-        <div class="fg"><label>Center Name *</label><input type="text" id="center-name" placeholder="e.g. Green Wellness"></div>
-        <div class="fg"><label>Type</label><select id="center-type" onchange="onCenterTypeChange()"><option value="main">Main Center</option><option value="branch">Branch</option><option value="downline">Downline Center</option></select></div>
+        <div class="fg"><label for="center-name">Center Name *</label><input type="text" id="center-name" placeholder="e.g. Green Wellness"></div>
+        <div class="fg"><label for="center-type">Type</label><select id="center-type" onchange="onCenterTypeChange()"><option value="main">Main Center</option><option value="branch">Branch</option><option value="downline">Downline Center</option></select></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Location</label><input type="text" id="center-location" placeholder="City, Area"></div>
-        <div class="fg"><label>Contact</label><input type="text" id="center-contact" placeholder="Phone number"></div>
+        <div class="fg"><label for="center-location">Location</label><input type="text" id="center-location" placeholder="City, Area"></div>
+        <div class="fg"><label for="center-contact">Contact</label><input type="text" id="center-contact" placeholder="Phone number"></div>
       </div>
       <div class="fr">
-        <div class="fg" id="center-network-id-row" style="display:none"><label>PulseZen Network ID</label><input type="text" id="center-network-id" readonly style="background:var(--surface2);color:var(--muted);font-family:monospace;font-size:13px;letter-spacing:1px"><div style="font-size:11px;color:var(--muted);margin-top:4px">Auto-generated. Your unique identity on PulseZen.</div></div>
-        <div class="fg"><label>Distributor ID <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input type="text" id="center-herbalife-id" placeholder="e.g. IN1234567"><div style="font-size:11px;color:var(--muted);margin-top:4px">For your own records only — not shared or used by PulseZen.</div></div>
+        <div class="fg" id="center-network-id-row" style="display:none"><label for="center-network-id">PulseZen Network ID</label><input type="text" id="center-network-id" readonly style="background:var(--surface2);color:var(--muted);font-family:monospace;font-size:13px;letter-spacing:1px"><div style="font-size:11px;color:var(--muted);margin-top:4px">Auto-generated. Your unique identity on PulseZen.</div></div>
+        <div class="fg"><label for="center-herbalife-id">Distributor ID <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input type="text" id="center-herbalife-id" placeholder="e.g. IN1234567"><div style="font-size:11px;color:var(--muted);margin-top:4px">For your own records only — not shared or used by PulseZen.</div></div>
       </div>
-      <div class="fg"><label>Center Owner (Coach)</label><select id="center-owner"><option value="">— No owner assigned —</option></select></div>
-      <div class="fg"><label>🚫 Unavailable Foods in this Area</label><input type="text" id="center-unavailable-foods" placeholder="e.g. Fish, Tofu, Rajma (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:4px">AI will avoid these foods for ALL customers in this center when generating diet plans.</div></div>
-      <div class="fg" id="center-pin-row"><label>🔐 Center PIN for this person (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="center-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 5678" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1"><button type="button" onclick="togglePinVis('center-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">This person will enter this PIN to access only their center's data.</div></div>
+      <div class="fg"><label for="center-owner">Center Owner (Coach)</label><select id="center-owner"><option value="">— No owner assigned —</option></select></div>
+      <div class="fg"><label for="center-unavailable-foods">🚫 Unavailable Foods in this Area</label><input type="text" id="center-unavailable-foods" placeholder="e.g. Fish, Tofu, Rajma (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:4px">AI will avoid these foods for ALL customers in this center when generating diet plans.</div></div>
+      <div class="fg" id="center-pin-row"><label for="center-pin">🔐 Center PIN for this person (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="center-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 5678" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1"><button type="button" onclick="togglePinVis('center-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">This person will enter this PIN to access only their center's data.</div></div>
       <div class="mf"><button class="btn-c" onclick="closeModal(&#39;center&#39;)">Cancel</button><button class="btn-p" onclick="saveCenter()">Save Center</button></div>
     </div>
   </div>
@@ -2927,7 +2927,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mh"><div class="mt" id="pin-prompt-title">🔐 Enter PIN</div></div>
     <div class="mb" style="text-align:center;padding:20px">
       <p id="pin-prompt-msg" style="font-size:13px;color:var(--muted);margin-bottom:20px">Enter your center PIN or supervisor PIN.</p>
-      <input type="tel" id="pin-prompt-input" maxlength="6" placeholder="Enter PIN" autocomplete="off"
+      <input aria-label="Enter PIN" type="tel" id="pin-prompt-input" maxlength="6" placeholder="Enter PIN" autocomplete="off"
         style="-webkit-text-security:disc;text-security:disc;text-align:center;font-size:28px;padding:14px 12px;width:100%;box-sizing:border-box;border:2px solid var(--primary);border-radius:12px;font-family:inherit;display:block;background:var(--success-light);color:var(--text);font-weight:700;letter-spacing:6px"
         onkeyup="if(event.key==='Enter')verifyPinPrompt()">
       <div id="pin-prompt-error" style="color:var(--danger);font-size:13px;margin-top:10px;font-weight:600;display:none">❌ Incorrect PIN. Try again.</div>
@@ -2946,16 +2946,16 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mh"><div class="mt" id="food-modal-title">Add Food</div><button class="mc" onclick="closeModal('food')">✕</button></div>
     <div class="mb">
       <input type="hidden" id="food-id">
-      <div class="fg"><label>Food Name *</label><input type="text" id="food-name" placeholder="e.g. Brown Rice" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      <div class="fg"><label for="food-name">Food Name *</label><input type="text" id="food-name" placeholder="e.g. Brown Rice" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">
-        <div class="fg"><label>Type</label>
+        <div class="fg"><label for="food-type">Type</label>
           <select id="food-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             <option value="veg">Veg</option>
             <option value="non-veg">Non-Veg</option>
             <option value="both">Both</option>
           </select>
         </div>
-        <div class="fg"><label>Best For Meal</label>
+        <div class="fg"><label for="food-meal-time">Best For Meal</label>
           <select id="food-meal-time" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             <option value="any">Any</option>
             <option value="breakfast">Breakfast</option>
@@ -2964,7 +2964,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
             <option value="snack">Snack</option>
           </select>
         </div>
-        <div class="fg"><label>Goal Tag</label>
+        <div class="fg"><label for="food-goal">Goal Tag</label>
           <select id="food-goal" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             <option value="both">Both Goals</option>
             <option value="weight_loss">Weight Loss</option>
@@ -2973,11 +2973,11 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px">
-        <div class="fg"><label>Calories/100g</label><input type="number" id="food-calories" placeholder="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-        <div class="fg"><label>Protein/100g</label><input type="number" id="food-protein" placeholder="0" min="0" step="0.1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-        <div class="fg"><label>Carbs/100g</label><input type="number" id="food-carbs" placeholder="0" min="0" step="0.1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-        <div class="fg"><label>Fiber/100g</label><input type="number" id="food-fiber" placeholder="0" min="0" step="0.1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-        <div class="fg"><label>Fat/100g</label><input type="number" id="food-fat" placeholder="0" min="0" step="0.1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="food-calories">Calories/100g</label><input type="number" id="food-calories" placeholder="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="food-protein">Protein/100g</label><input type="number" id="food-protein" placeholder="0" min="0" step="0.1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="food-carbs">Carbs/100g</label><input type="number" id="food-carbs" placeholder="0" min="0" step="0.1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="food-fiber">Fiber/100g</label><input type="number" id="food-fiber" placeholder="0" min="0" step="0.1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="food-fat">Fat/100g</label><input type="number" id="food-fat" placeholder="0" min="0" step="0.1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       </div>
     </div>
     <div class="mf">
@@ -2993,54 +2993,54 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mb">
       <input type="hidden" id="customer-id">
       <div class="fr">
-        <div class="fg"><label>Full Name *</label><input type="text" id="customer-name" placeholder="Customer name"></div>
-        <div class="fg"><label>Contact</label><input type="text" id="customer-contact" placeholder="Phone"></div>
+        <div class="fg"><label for="customer-name">Full Name *</label><input type="text" id="customer-name" placeholder="Customer name"></div>
+        <div class="fg"><label for="customer-contact">Contact</label><input type="text" id="customer-contact" placeholder="Phone"></div>
       </div>
       <div class="fr" style="grid-template-columns:1fr 1fr 1fr">
-        <div class="fg"><label>Age</label><input type="number" id="customer-age" placeholder="Age"></div>
-        <div class="fg"><label>Gender</label><select id="customer-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
-        <div class="fg"><label>Height (cm)</label><input type="number" id="customer-height" placeholder="cm"></div>
+        <div class="fg"><label for="customer-age">Age</label><input type="number" id="customer-age" placeholder="Age"></div>
+        <div class="fg"><label for="customer-gender">Gender</label><select id="customer-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+        <div class="fg"><label for="customer-height">Height (cm)</label><input type="number" id="customer-height" placeholder="cm"></div>
       </div>
-      <div class="fg"><label>Address</label><input type="text" id="customer-address" placeholder="Full address"></div>
-      <div class="fg"><label>Shares Pack With</label><select id="customer-pack-owner" onchange="onPackOwnerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— Own Pack (not shared) —</option></select></div>
+      <div class="fg"><label for="customer-address">Address</label><input type="text" id="customer-address" placeholder="Full address"></div>
+      <div class="fg"><label for="customer-pack-owner">Shares Pack With</label><select id="customer-pack-owner" onchange="onPackOwnerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— Own Pack (not shared) —</option></select></div>
       <div id="shared-pack-info" style="display:none;background:linear-gradient(135deg,#edf3ff,#f0f4ff);border:1px solid #bfcfff;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:#2b5ce6"></div>
       <div id="own-pack-fields">
       <div class="fr">
-        <div class="fg"><label>Pack Type</label><select id="customer-pack"><option value="">Select pack</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option><option>Custom</option></select></div>
-        <div class="fg"><label>Goal</label><select id="customer-goal"><option value="">Select Goal</option><option>Weight Loss</option><option>Weight Gain</option><option>General Wellness</option></select></div>
+        <div class="fg"><label for="customer-pack">Pack Type</label><select id="customer-pack"><option value="">Select pack</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option><option>Custom</option></select></div>
+        <div class="fg"><label for="customer-goal">Goal</label><select id="customer-goal"><option value="">Select Goal</option><option>Weight Loss</option><option>Weight Gain</option><option>General Wellness</option></select></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Diet Preference</label><select id="customer-diet-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="veg">Veg</option><option value="non-veg">Non-Veg</option></select></div>
-        <div class="fg"><label>Activity Level</label><select id="customer-activity-level" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="sedentary">Sedentary (no exercise)</option><option value="light" selected>Light (walks, light work)</option><option value="moderate">Moderate (regular exercise)</option><option value="active">Active (intense daily work)</option></select></div>
+        <div class="fg"><label for="customer-diet-type">Diet Preference</label><select id="customer-diet-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="veg">Veg</option><option value="non-veg">Non-Veg</option></select></div>
+        <div class="fg"><label for="customer-activity-level">Activity Level</label><select id="customer-activity-level" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="sedentary">Sedentary (no exercise)</option><option value="light" selected>Light (walks, light work)</option><option value="moderate">Moderate (regular exercise)</option><option value="active">Active (intense daily work)</option></select></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Training Type</label><select id="customer-training-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="dumbbell">🏋️ Dumbbell Training</option><option value="bodyweight">🤸 Bodyweight / Fitness Exercises</option><option value="walking">🚶 Walking Only (10k steps)</option><option value="dumbbell+walking">🏋️+🚶 Dumbbell + Walking</option><option value="bodyweight+walking">🤸+🚶 Bodyweight + Walking</option></select></div>
-        <div class="fg"><label>Protein Ratio (per kg bodyweight)</label><select id="customer-protein-ratio" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="1.6">1.6g/kg — Standard Muscle Gain</option><option value="2.0" selected>2.0g/kg — Aggressive Muscle Building</option><option value="2.2">2.2g/kg — Maximum (Athletes)</option></select></div>
+        <div class="fg"><label for="customer-training-type">Training Type</label><select id="customer-training-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="dumbbell">🏋️ Dumbbell Training</option><option value="bodyweight">🤸 Bodyweight / Fitness Exercises</option><option value="walking">🚶 Walking Only (10k steps)</option><option value="dumbbell+walking">🏋️+🚶 Dumbbell + Walking</option><option value="bodyweight+walking">🤸+🚶 Bodyweight + Walking</option></select></div>
+        <div class="fg"><label for="customer-protein-ratio">Protein Ratio (per kg bodyweight)</label><select id="customer-protein-ratio" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="1.6">1.6g/kg — Standard Muscle Gain</option><option value="2.0" selected>2.0g/kg — Aggressive Muscle Building</option><option value="2.2">2.2g/kg — Maximum (Athletes)</option></select></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Shake Frequency</label><select id="customer-shake-freq" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="once" selected>1x per day (morning only)</option><option value="twice">2x per day (morning + post-workout)</option></select></div>
+        <div class="fg"><label for="customer-shake-freq">Shake Frequency</label><select id="customer-shake-freq" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="once" selected>1x per day (morning only)</option><option value="twice">2x per day (morning + post-workout)</option></select></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>✅ Can Get These Foods <span style="font-weight:400;color:var(--muted)">(overrides center restriction)</span></label><input type="text" id="customer-food-override" placeholder="e.g. Fish, Tofu (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:3px">Foods this client can access even if unavailable at their center.</div></div>
-        <div class="fg"><label>🚫 Personal Food Restrictions</label><input type="text" id="customer-food-restrict" placeholder="e.g. Almonds, Paneer (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:3px">Allergies or foods this client personally avoids.</div></div>
+        <div class="fg"><label for="customer-food-override">✅ Can Get These Foods <span style="font-weight:400;color:var(--muted)">(overrides center restriction)</span></label><input type="text" id="customer-food-override" placeholder="e.g. Fish, Tofu (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:3px">Foods this client can access even if unavailable at their center.</div></div>
+        <div class="fg"><label for="customer-food-restrict">🚫 Personal Food Restrictions</label><input type="text" id="customer-food-restrict" placeholder="e.g. Almonds, Paneer (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:3px">Allergies or foods this client personally avoids.</div></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Wellness Center</label><select id="customer-center"><option value="">Select center</option><option value="c1fb6027-fbda-4640-b97e-bd1f086479e8">Dharani's wellness center</option></select></div>
-        <div class="fg"><label>Referred By</label><div id="ref-search-wrap"><input type="text" id="ref-search-input" placeholder="Type to search referrer..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><input type="hidden" id="customer-coach"></div></div>
+        <div class="fg"><label for="customer-center">Wellness Center</label><select id="customer-center"><option value="">Select center</option><option value="c1fb6027-fbda-4640-b97e-bd1f086479e8">Dharani's wellness center</option></select></div>
+        <div class="fg"><label for="ref-search-input">Referred By</label><div id="ref-search-wrap"><input type="text" id="ref-search-input" placeholder="Type to search referrer..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><input type="hidden" id="customer-coach"></div></div>
       </div>
       <div class="fg">
-        <label>Assign to Coach <span style="font-weight:400;color:var(--muted);font-size:11px">— customer will appear in this coach's portal</span></label>
+        <label for="customer-assigned-coach">Assign to Coach <span style="font-weight:400;color:var(--muted);font-size:11px">— customer will appear in this coach's portal</span></label>
         <select id="customer-assigned-coach" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="">— Not assigned —</option>
         </select>
       </div>
       <div class="fr" id="other-ref-row" style="display:none; background:rgba(0,0,0,0.03); padding:12px; border-radius:8px; margin-top:0px;">
-        <div class="fg"><label>Referrer Name</label><input type="text" id="customer-ref-name" placeholder="John Doe"></div>
-        <div class="fg"><label>Referrer Phone</label><input type="text" id="customer-ref-phone" placeholder="Phone number"></div>
+        <div class="fg"><label for="customer-ref-name">Referrer Name</label><input type="text" id="customer-ref-name" placeholder="John Doe"></div>
+        <div class="fg"><label for="customer-ref-phone">Referrer Phone</label><input type="text" id="customer-ref-phone" placeholder="Phone number"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Join Date</label><input type="date" id="customer-join"></div>
-        <div class="fg"><label>Pack Start Date</label><input type="date" id="customer-start"></div>
+        <div class="fg"><label for="customer-join">Join Date</label><input type="date" id="customer-join"></div>
+        <div class="fg"><label for="customer-start">Pack Start Date</label><input type="date" id="customer-start"></div>
       </div>
       <!-- Complementary Day -->
       <div id="comp-day-section" style="display:none;background:linear-gradient(135deg,#eafaf1,#f0fdf4);border:1px solid #82c99a;border-radius:10px;padding:14px 16px;margin:10px 0">
@@ -3060,12 +3060,12 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div style="font-size:11px;color:var(--muted);margin-top:8px">Pack will start <strong>tomorrow</strong>. Today's visit is free and won't count against pack days.</div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Date of Birth 🎂 <span style="color:var(--danger)">*</span></label><input type="date" id="customer-dob" required></div>
-        <div class="fg"><label>Pack Price (₹)</label><input type="number" id="customer-pack-price" placeholder="e.g. 2500" oninput="onPackPriceChange()"></div>
+        <div class="fg"><label for="customer-dob">Date of Birth 🎂 <span style="color:var(--danger)">*</span></label><input type="date" id="customer-dob" required></div>
+        <div class="fg"><label for="customer-pack-price">Pack Price (₹)</label><input type="number" id="customer-pack-price" placeholder="e.g. 2500" oninput="onPackPriceChange()"></div>
       </div>
       <div class="fr">
         <div class="fg">
-          <label>🌐 WhatsApp Language</label>
+          <label for="customer-lang">🌐 WhatsApp Language</label>
           <select id="customer-lang" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             <option value="">Default (use center setting)</option>
             <option value="English">English</option>
@@ -3077,12 +3077,12 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <!-- Photo Upload -->
       <div class="fr" style="margin-top:4px">
         <div class="fg">
-          <label>📸 Before Photo</label>
+          <label for="customer-photo-before">📸 Before Photo</label>
           <input type="file" id="customer-photo-before" accept="image/*" style="width:100%;font-size:12px;padding:4px" onchange="previewCustPhoto('before')">
           <div id="cust-before-preview"></div>
         </div>
         <div class="fg" id="cust-after-photo-wrap">
-          <label>📸 After Photo (transformation)</label>
+          <label for="customer-photo-after">📸 After Photo (transformation)</label>
           <input type="file" id="customer-photo-after" accept="image/*" style="width:100%;font-size:12px;padding:4px" onchange="previewCustPhoto('after')">
           <div id="cust-after-preview"></div>
         </div>
@@ -3092,7 +3092,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">💰 Payment</div>
         <div class="fr">
           <div class="fg">
-            <label>Payment Mode</label>
+            <label for="customer-pay-mode">Payment Mode</label>
             <select id="customer-pay-mode" onchange="onCustomerPayModeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
               <option value="full">✅ Full Payment — paid in full</option>
               <option value="partial">⏳ Partial — paying in installments</option>
@@ -3100,16 +3100,16 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
             </select>
           </div>
           <div class="fg">
-            <label>Payment Date</label>
+            <label for="customer-pay-date">Payment Date</label>
             <input type="date" id="customer-pay-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           </div>
         </div>
         <div class="fr" id="cust-paid-now-row" style="display:none">
           <div class="fg" id="cust-paid-now-box">
-            <label>Paid So Far (₹)</label>
+            <label for="customer-paid-now">Paid So Far (₹)</label>
             <input type="number" id="customer-paid-now" placeholder="e.g. 1000" oninput="updateCustBalancePreview()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           </div>
-          <div class="fg"><label>Balance Due By</label><input type="date" id="customer-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg"><label for="customer-due-date">Balance Due By</label><input type="date" id="customer-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
         </div>
         <div id="cust-due-row" style="display:none">
           <div id="cust-balance-preview" style="padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:13px;margin-top:6px">Balance: <strong style="color:var(--danger)">₹0</strong></div>
@@ -3146,7 +3146,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">Set the % of pack price paid to coaches for new enrollments and renewals they manage.</p>
       <div style="display:grid;gap:12px">
         <div style="display:flex;align-items:center;gap:10px">
-          <label style="flex:1;font-size:13px;font-weight:600">Default rate (all packs)</label>
+          <label for="comm-rate-default" style="flex:1;font-size:13px;font-weight:600">Default rate (all packs)</label>
           <div style="display:flex;align-items:center;gap:4px">
             <input type="number" id="comm-rate-default" min="0" max="100" step="0.5" value="10" style="width:70px;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;text-align:right">
             <span style="font-size:13px;color:var(--muted)">%</span>
@@ -3185,18 +3185,18 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mb">
       <input type="hidden" id="att-id">
       <div class="fr">
-        <div class="fg"><label>Customer *</label><select id="att-customer" onchange="onAttCustomerChange()"><option value="">Select customer</option><option value="cc66fa97-08f8-49b0-891b-88cd42f82f63">Manoj Nagam</option></select></div>
-        <div class="fg"><label>Date *</label><input type="date" id="att-date"></div>
+        <div class="fg"><label for="att-customer">Customer *</label><select id="att-customer" onchange="onAttCustomerChange()"><option value="">Select customer</option><option value="cc66fa97-08f8-49b0-891b-88cd42f82f63">Manoj Nagam</option></select></div>
+        <div class="fg"><label for="att-date">Date *</label><input type="date" id="att-date"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Status</label><select id="att-status"><option value="present">Present</option><option value="absent">Absent</option><option value="late">Late</option><option value="complementary">🎁 Complementary</option></select></div>
-        <div class="fg"><label>Servings</label><input type="number" id="att-servings" min="1" max="10" value="1" placeholder="1" style="width:80px"></div>
-        <div class="fg"><label>Notes</label><input type="text" id="att-notes" placeholder="Optional"></div>
+        <div class="fg"><label for="att-status">Status</label><select id="att-status"><option value="present">Present</option><option value="absent">Absent</option><option value="late">Late</option><option value="complementary">🎁 Complementary</option></select></div>
+        <div class="fg"><label for="att-servings">Servings</label><input type="number" id="att-servings" min="1" max="10" value="1" placeholder="1" style="width:80px"></div>
+        <div class="fg"><label for="att-notes">Notes</label><input type="text" id="att-notes" placeholder="Optional"></div>
       </div>
       <div style="background:var(--accent-light);border-radius:10px;padding:12px 14px;margin-top:4px">
         <div style="font-size:12px;font-weight:600;color:var(--primary);margin-bottom:10px">🥤 Shake Tracking</div>
         <div class="fr">
-          <div class="fg"><label>Morning Shake</label>
+          <div class="fg"><label for="att-morning-shake">Morning Shake</label>
             <select id="att-morning-shake" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
               <option value="center">✅ Had it — At Center</option>
               <option value="home">🏠 Had it — At Home</option>
@@ -3204,7 +3204,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
             </select>
           </div>
           <div class="fg" id="att-postworkout-row">
-            <label>Post-Workout Shake</label>
+            <label for="att-postworkout-shake">Post-Workout Shake</label>
             <select id="att-postworkout-shake" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
               <option value="center">✅ Had it — At Center</option>
               <option value="home">🏠 Had it — At Home</option>
@@ -3225,18 +3225,18 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mb">
       <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Use this when a customer joined mid-pack. Select their pack start date as "From" and today as "To" — all days in that range will be marked present, skipping any dates already recorded.</p>
       <div class="fg" style="margin-bottom:12px">
-        <label>Customer *</label>
+        <label for="bf-customer">Customer *</label>
         <select id="bf-customer" onchange="onBackfillCustomerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="">Select customer</option>
         </select>
       </div>
       <div class="fr">
-        <div class="fg"><label>From Date (Pack Start) *</label><input type="date" id="bf-from"></div>
-        <div class="fg"><label>To Date *</label><input type="date" id="bf-to"></div>
+        <div class="fg"><label for="bf-from">From Date (Pack Start) *</label><input type="date" id="bf-from"></div>
+        <div class="fg"><label for="bf-to">To Date *</label><input type="date" id="bf-to"></div>
       </div>
       <div class="fr">
         <div class="fg">
-          <label>Status to apply</label>
+          <label for="bf-status">Status to apply</label>
           <select id="bf-status" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             <option value="present">Present</option>
             <option value="absent">Absent</option>
@@ -3279,17 +3279,17 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         </div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Customer *</label><select id="body-customer"><option value="">Select person</option></select></div>
-        <div class="fg"><label>Date *</label><input type="date" id="body-date"></div>
+        <div class="fg"><label for="body-customer">Customer *</label><select id="body-customer"><option value="">Select person</option></select></div>
+        <div class="fg"><label for="body-date">Date *</label><input type="date" id="body-date"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Height (cm)</label><input type="number" step="0.1" id="body-height" placeholder="170" oninput="calcBody()"></div>
-        <div class="fg"><label>Age</label><input type="number" id="body-age-field" placeholder="30"></div>
+        <div class="fg"><label for="body-height">Height (cm)</label><input type="number" step="0.1" id="body-height" placeholder="170" oninput="calcBody()"></div>
+        <div class="fg"><label for="body-age-field">Age</label><input type="number" id="body-age-field" placeholder="30"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="body-weight" placeholder="60.3" oninput="calcBody()"></div>
+        <div class="fg"><label for="body-weight">Weight (kg)</label><input type="number" step="0.1" id="body-weight" placeholder="60.3" oninput="calcBody()"></div>
         <div class="fg">
-          <label>Fat (%) <span style="color:var(--accent);font-size:11px">enter %</span></label>
+          <label for="body-fat">Fat (%) <span style="color:var(--accent);font-size:11px">enter %</span></label>
           <input type="number" step="0.01" id="body-fat" placeholder="e.g. 22.5" oninput="calcBody()">
           <div id="body-fat-kg-display" style="font-size:11px;color:var(--primary);font-weight:600;margin-top:4px;min-height:16px;"></div>
           <div id="body-fat-hint"></div>
@@ -3297,29 +3297,29 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       </div>
       <div class="fr">
         <div class="fg">
-          <label>Visceral Fat (kg) <span style="color:var(--accent);font-size:11px">auto-calculated</span></label>
+          <label for="body-visceral">Visceral Fat (kg) <span style="color:var(--accent);font-size:11px">auto-calculated</span></label>
           <input type="number" step="0.01" id="body-visceral" placeholder="auto" readonly="" style="background:var(--surface2);color:var(--primary);font-weight:600;">
           <div id="body-visceral-hint"></div>
         </div>
-        <div class="fg"><label>BMR</label><input type="number" id="body-bmr" placeholder="1483"></div>
+        <div class="fg"><label for="body-bmr">BMR</label><input type="number" id="body-bmr" placeholder="1483"></div>
       </div>
       <div class="fr">
         <div class="fg">
-          <label>BMI <span style="color:var(--accent);font-size:11px">(auto)</span></label>
+          <label for="body-bmi">BMI <span style="color:var(--accent);font-size:11px">(auto)</span></label>
           <input type="number" step="0.1" id="body-bmi" placeholder="auto" oninput="this.dataset.manual=this.value?'1':'';calcBody()">
           <div id="body-bmi-hint"></div>
         </div>
-        <div class="fg"><label>Body Age</label><input type="number" id="body-age" placeholder="25"></div>
+        <div class="fg"><label for="body-age">Body Age</label><input type="number" id="body-age" placeholder="25"></div>
       </div>
       <div class="fr">
         <div class="fg">
-          <label>Subcutaneous Fat (%) <span style="color:var(--accent);font-size:11px">enter %</span></label>
+          <label for="body-subfat">Subcutaneous Fat (%) <span style="color:var(--accent);font-size:11px">enter %</span></label>
           <input type="number" step="0.01" id="body-subfat" placeholder="e.g. 15.0" oninput="calcBody()">
           <div id="body-subfat-kg-display" style="font-size:11px;color:var(--primary);font-weight:600;margin-top:4px;min-height:16px;"></div>
         </div>
-        <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="body-muscle" placeholder="e.g. 35.0"></div>
+        <div class="fg"><label for="body-muscle">Muscle (%)</label><input type="number" step="0.1" id="body-muscle" placeholder="e.g. 35.0"></div>
       </div>
-      <div class="fg"><label>Notes</label><textarea id="body-notes" placeholder="Any observations..."></textarea></div>
+      <div class="fg"><label for="body-notes">Notes</label><textarea id="body-notes" placeholder="Any observations..."></textarea></div>
       <div class="mf"><button class="btn-c" onclick="closeModal('body')">Cancel</button><button class="btn-p" onclick="saveBody()">Save Record</button></div>
     </div>
   </div>
@@ -3331,15 +3331,15 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mb">
       <input type="hidden" id="fin-id">
       <div class="fr">
-        <div class="fg"><label>Type *</label><select id="fin-type" onchange="onFinTypeChange()"><option value="income">Income</option><option value="expense">Expense</option></select></div>
-        <div class="fg"><label>Amount (₹) *</label><input type="number" id="fin-amount" placeholder="2500"></div>
+        <div class="fg"><label for="fin-type">Type *</label><select id="fin-type" onchange="onFinTypeChange()"><option value="income">Income</option><option value="expense">Expense</option></select></div>
+        <div class="fg"><label for="fin-amount">Amount (₹) *</label><input type="number" id="fin-amount" placeholder="2500"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Category</label><select id="fin-cat"></select></div>
-        <div class="fg"><label>Date *</label><input type="date" id="fin-date"></div>
+        <div class="fg"><label for="fin-cat">Category</label><select id="fin-cat"></select></div>
+        <div class="fg"><label for="fin-date">Date *</label><input type="date" id="fin-date"></div>
       </div>
-      <div class="fg"><label>Description</label><input type="text" id="fin-desc" placeholder="Brief description"></div>
-      <div class="fg"><label>Wellness Center</label><select id="fin-center"><option value="">All Centers</option></select></div>
+      <div class="fg"><label for="fin-desc">Description</label><input type="text" id="fin-desc" placeholder="Brief description"></div>
+      <div class="fg"><label for="fin-center">Wellness Center</label><select id="fin-center"><option value="">All Centers</option></select></div>
       <div class="mf"><button class="btn-c" onclick="closeModal(&#39;finance&#39;)">Cancel</button><button class="btn-p" onclick="saveFinance()">Save Transaction</button></div>
     </div>
   </div>
@@ -3378,13 +3378,13 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <div id="ws-form-view">
         <div class="fr">
           <div class="fg">
-            <label>Select Customer (Optional)</label>
+            <label for="ws-customer-select">Select Customer (Optional)</label>
             <select id="ws-customer-select" onchange="onWsCustomerSelectChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
               <option value="">-- Manual Entry / New Client --</option>
             </select>
           </div>
           <div class="fg">
-            <label>Gender *</label>
+            <label for="ws-gender">Gender *</label>
             <select id="ws-gender" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
               <option value="Male">Male</option>
               <option value="Female">Female</option>
@@ -3394,33 +3394,33 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 
         <div class="fr">
           <div class="fg">
-            <label>Age *</label>
+            <label for="ws-age">Age *</label>
             <input type="number" id="ws-age" placeholder="24" min="1" max="120" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
           </div>
           <div class="fg">
-            <label>Weight (kg) *</label>
+            <label for="ws-weight">Weight (kg) *</label>
             <input type="number" step="0.1" id="ws-weight" placeholder="85.0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
           </div>
         </div>
 
         <div class="fr">
           <div class="fg">
-            <label>BMI *</label>
+            <label for="ws-bmi">BMI *</label>
             <input type="number" step="0.1" id="ws-bmi" placeholder="28.5" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
           </div>
           <div class="fg">
-            <label>Body Fat % *</label>
+            <label for="ws-body-fat">Body Fat % *</label>
             <input type="number" step="0.1" id="ws-body-fat" placeholder="32.0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
           </div>
         </div>
 
         <div class="fr">
           <div class="fg">
-            <label>Visceral Fat Level *</label>
+            <label for="ws-visceral">Visceral Fat Level *</label>
             <input type="number" id="ws-visceral" placeholder="11" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
           </div>
           <div class="fg">
-            <label>Muscle Mass Profile *</label>
+            <label for="ws-muscle-mass">Muscle Mass Profile *</label>
             <select id="ws-muscle-mass" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
               <option value="Low">Low</option>
               <option value="Average">Average</option>
@@ -3431,8 +3431,8 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 
         <div class="fg" style="margin-top:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <label style="margin:0;">Energy Levels & Habits *</label>
-            <select onchange="document.getElementById('ws-energy').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
+            <label for="ws-energy" style="margin:0;">Energy Levels & Habits *</label>
+            <select aria-label="Quick Select Energy Preset" onchange="document.getElementById('ws-energy').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
               <option value="">-- Quick Select Preset --</option>
               <option value="Wakes up tired, heavy tea/coffee drinker, 4 PM energy crash">Fatigue & caffeine crashes</option>
               <option value="Good morning energy, minor afternoon slump, 2 cups of tea/day">Moderate energy & minor slumps</option>
@@ -3445,8 +3445,8 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 
         <div class="fg" style="margin-top:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <label style="margin:0;">Diet & Hydration Habits *</label>
-            <select onchange="document.getElementById('ws-diet').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
+            <label for="ws-diet" style="margin:0;">Diet & Hydration Habits *</label>
+            <select aria-label="Quick Select Diet Preset" onchange="document.getElementById('ws-diet').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
               <option value="">-- Quick Select Preset --</option>
               <option value="Skips breakfast, eats heavy dinners late at night, only 1.5L water/day">Skip breakfast & late dinners</option>
               <option value="Three balanced meals daily, snacks in between, 2.5L water/day">Balanced meals & hydration</option>
@@ -3459,8 +3459,8 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 
         <div class="fg" style="margin-top:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <label style="margin:0;">Digestion & Health Issues *</label>
-            <select onchange="document.getElementById('ws-digestion').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
+            <label for="ws-digestion" style="margin:0;">Digestion & Health Issues *</label>
+            <select aria-label="Quick Select Digestion Preset" onchange="document.getElementById('ws-digestion').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
               <option value="">-- Quick Select Preset --</option>
               <option value="Frequent bloating, mild acidity after meals, no major medical issues">Bloating & mild acidity</option>
               <option value="No digestive issues, healthy bowel movements, no major complaints">Healthy digestion</option>
@@ -3473,8 +3473,8 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 
         <div class="fg" style="margin-top:10px; margin-bottom:20px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <label style="margin:0;">Primary Goal *</label>
-            <select onchange="document.getElementById('ws-goal').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
+            <label for="ws-goal" style="margin:0;">Primary Goal *</label>
+            <select aria-label="Quick Select Goal Preset" onchange="document.getElementById('ws-goal').value=this.value; this.value='';" style="width:auto; padding:3px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); background:#fff; cursor:pointer;">
               <option value="">-- Quick Select Preset --</option>
               <option value="Weight loss and fat reduction">Weight loss & fat reduction</option>
               <option value="Muscle gain and metabolic health improvement">Muscle gain & strength</option>
@@ -17557,10 +17557,10 @@ function shareGroceryListWA() {
   <div class="modal" style="max-width:420px">
     <div class="mh"><div class="mt">🎟️ Add Coupon</div><button class="mc" onclick="closeModal('add-coupon')">✕</button></div>
     <div class="mb">
-      <div class="fr"><div class="fg"><label>Person *</label><input type="hidden" id="coupon-coach-id"><input type="text" id="coupon-person-input" placeholder="Type to search..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div><div class="fg"><label>Qty *</label><input type="number" id="coupon-qty" min="1" value="1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
-      <div class="fg" style="margin-top:12px"><label>Reason</label><select id="coupon-reason" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="invite">New Person Invited (+1)</option><option value="pack_taken">Person Took Monthly Pack (+3)</option><option value="manual">Manual</option></select></div>
-      <div class="fg" style="margin-top:12px"><label>Referred Person</label><input type="hidden" id="coupon-ref-person-id"><input type="text" id="coupon-ref-input" placeholder="Type to search person..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-      <div class="fg" style="margin-top:12px"><label>Date</label><input type="date" id="coupon-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+      <div class="fr"><div class="fg"><label for="coupon-person-input">Person *</label><input type="hidden" id="coupon-coach-id"><input type="text" id="coupon-person-input" placeholder="Type to search..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div><div class="fg"><label for="coupon-qty">Qty *</label><input type="number" id="coupon-qty" min="1" value="1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
+      <div class="fg" style="margin-top:12px"><label for="coupon-reason">Reason</label><select id="coupon-reason" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="invite">New Person Invited (+1)</option><option value="pack_taken">Person Took Monthly Pack (+3)</option><option value="manual">Manual</option></select></div>
+      <div class="fg" style="margin-top:12px"><label for="coupon-ref-input">Referred Person</label><input type="hidden" id="coupon-ref-person-id"><input type="text" id="coupon-ref-input" placeholder="Type to search person..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      <div class="fg" style="margin-top:12px"><label for="coupon-date">Date</label><input type="date" id="coupon-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       <div class="mf"><button class="btn-c" onclick="closeModal('add-coupon')">Cancel</button><button class="btn-p" onclick="saveCoupon()">Save</button></div>
     </div>
   </div>
@@ -17571,14 +17571,14 @@ function shareGroceryListWA() {
   <div class="modal" style="max-width:440px">
     <div class="mh"><div class="mt">🎟️ Renew with Coupons</div><button class="mc" onclick="closeModal('coupon-renew')">✕</button></div>
     <div class="mb">
-      <div class="fg"><label>Person *</label><input type="hidden" id="cr-coach"><input type="text" id="renew-person-input" placeholder="Type to search..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      <div class="fg"><label for="renew-person-input">Person *</label><input type="hidden" id="cr-coach"><input type="text" id="renew-person-input" placeholder="Type to search..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       <div class="fr" style="margin-top:12px">
-        <div class="fg"><label>Pack Price (₹) *</label><input type="number" id="cr-price" placeholder="5600" oninput="calcCouponRenewal()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
-        <div class="fg"><label>Pack Days</label><input type="number" id="cr-days" value="26" oninput="calcCouponRenewal()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+        <div class="fg"><label for="cr-price">Pack Price (₹) *</label><input type="number" id="cr-price" placeholder="5600" oninput="calcCouponRenewal()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+        <div class="fg"><label for="cr-days">Pack Days</label><input type="number" id="cr-days" value="26" oninput="calcCouponRenewal()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       </div>
-      <div class="fg" style="margin-top:12px"><label>Coupons to Use</label><input type="number" id="cr-use" min="0" value="0" oninput="calcCouponRenewal()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+      <div class="fg" style="margin-top:12px"><label for="cr-use">Coupons to Use</label><input type="number" id="cr-use" min="0" value="0" oninput="calcCouponRenewal()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       <div id="cr-breakdown" style="margin-top:12px;padding:14px;background:var(--accent-light);border-radius:10px;font-size:13px;display:none"></div>
-      <div class="fg" style="margin-top:12px"><label>New Start Date *</label><input type="date" id="cr-start" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+      <div class="fg" style="margin-top:12px"><label for="cr-start">New Start Date *</label><input type="date" id="cr-start" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       <div class="mf"><button class="btn-c" onclick="closeModal('coupon-renew')">Cancel</button><button class="btn-p" onclick="saveCouponRenewal()">💾 Save</button></div>
     </div>
   </div>
@@ -17589,11 +17589,11 @@ function shareGroceryListWA() {
   <div class="modal" style="max-width:400px">
     <div class="mh"><div class="mt">🥤 Redeem Shakes</div><button class="mc" onclick="closeModal('shake-redeem')">✕</button></div>
     <div class="mb">
-      <div class="fg"><label>Person *</label><input type="hidden" id="sr-person-id"><input type="text" id="shake-person-input" placeholder="Type to search..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      <div class="fg"><label for="shake-person-input">Person *</label><input type="hidden" id="sr-person-id"><input type="text" id="shake-person-input" placeholder="Type to search..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       <div id="sr-balance-info"></div>
       <div class="fr" style="margin-top:12px">
-        <div class="fg"><label>Shakes (Coupons)</label><input type="number" id="sr-qty" min="1" value="1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
-        <div class="fg"><label>Date *</label><input type="date" id="sr-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+        <div class="fg"><label for="sr-qty">Shakes (Coupons)</label><input type="number" id="sr-qty" min="1" value="1" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+        <div class="fg"><label for="sr-date">Date *</label><input type="date" id="sr-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       </div>
       <div style="padding:10px 12px;background:#f0fdf4;border-radius:8px;font-size:12px;color:#166534;margin-top:12px;line-height:1.6">1 coupon = 1 free shake. Will appear in Attendance as 🥤 and a WhatsApp will be sent.</div>
       <div class="mf"><button class="btn-c" onclick="closeModal('shake-redeem')">Cancel</button><button class="btn-p" style="background:#25D366;border-color:#25D366" onclick="saveShakeRedemption()">🥤 Redeem</button></div>
@@ -17607,11 +17607,11 @@ function shareGroceryListWA() {
     <div class="mh"><div class="mt" id="payment-modal-title">💳 Add Payment</div><button class="mc" onclick="closeModal('payment')">✕</button></div>
     <div class="mb">
       <input type="hidden" id="payment-id"/>
-      <div class="fr"><div class="fg"><label>Person *</label><select id="payment-person" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">Select</option></select></div><div class="fg"><label>Description *</label><input type="text" id="payment-desc" placeholder="e.g. Monthly pack" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
-      <div class="fr" style="margin-top:12px"><div class="fg"><label>Total (₹) *</label><input type="number" id="payment-total" placeholder="2500" oninput="calcBalance()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div><div class="fg"><label>Paid Now (₹) *</label><input type="number" id="payment-paid" placeholder="1000" oninput="calcBalance()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
+      <div class="fr"><div class="fg"><label for="payment-person">Person *</label><select id="payment-person" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">Select</option></select></div><div class="fg"><label for="payment-desc">Description *</label><input type="text" id="payment-desc" placeholder="e.g. Monthly pack" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
+      <div class="fr" style="margin-top:12px"><div class="fg"><label for="payment-total">Total (₹) *</label><input type="number" id="payment-total" placeholder="2500" oninput="calcBalance()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div><div class="fg"><label for="payment-paid">Paid Now (₹) *</label><input type="number" id="payment-paid" placeholder="1000" oninput="calcBalance()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
       <div style="margin-top:8px;padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:13px">Balance: <strong id="payment-balance-preview" style="color:var(--danger)">₹0</strong></div>
-      <div class="fr" style="margin-top:12px"><div class="fg"><label>Payment Date *</label><input type="date" id="payment-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div><div class="fg"><label>Balance Due Date</label><input type="date" id="payment-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
-      <div class="fg" style="margin-top:12px"><label>Notes</label><input type="text" id="payment-notes" placeholder="Optional" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+      <div class="fr" style="margin-top:12px"><div class="fg"><label for="payment-date">Payment Date *</label><input type="date" id="payment-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div><div class="fg"><label for="payment-due-date">Balance Due Date</label><input type="date" id="payment-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
+      <div class="fg" style="margin-top:12px"><label for="payment-notes">Notes</label><input type="text" id="payment-notes" placeholder="Optional" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       <div class="mf"><button class="btn-c" onclick="closeModal('payment')">Cancel</button><button class="btn-p" onclick="savePayment()">Save</button></div>
     </div>
   </div>
@@ -17626,7 +17626,7 @@ function shareGroceryListWA() {
       <div id="cps-info" style="padding:12px 14px;background:var(--surface2);border-radius:8px;margin-bottom:14px;font-size:13px"></div>
       <div class="fr">
         <div class="fg">
-          <label>Payment Mode</label>
+          <label for="cps-pay-mode">Payment Mode</label>
           <select id="cps-pay-mode" onchange="onCpsPayModeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             <option value="full">✅ Full Payment — paid in full</option>
             <option value="partial">⏳ Partial — paying in installments</option>
@@ -17634,16 +17634,16 @@ function shareGroceryListWA() {
           </select>
         </div>
         <div class="fg" id="cps-paid-now-box" style="display:none">
-          <label>Paid So Far (₹)</label>
+          <label for="cps-paid-now">Paid So Far (₹)</label>
           <input type="number" id="cps-paid-now" placeholder="e.g. 2000" oninput="updateCpsPreview()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
         </div>
       </div>
       <div class="fr" id="cps-due-row" style="display:none">
-        <div class="fg"><label>Balance Due By</label><input type="date" id="cps-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="cps-due-date">Balance Due By</label><input type="date" id="cps-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
         <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:2px"><div id="cps-balance-preview" style="padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:13px;width:100%">Balance: <strong style="color:var(--danger)">₹0</strong></div></div>
       </div>
       <div class="fg" style="margin-top:10px">
-        <label>Payment Date</label>
+        <label for="cps-date">Payment Date</label>
         <input type="date" id="cps-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
       </div>
       <div style="margin-top:12px;font-size:12px;color:var(--muted);padding:8px 12px;background:#e8f4fd;border-radius:6px">A finance income entry will also be created for the amount paid.</div>
@@ -17660,11 +17660,11 @@ function shareGroceryListWA() {
       <input type="hidden" id="inst-payment-id">
       <div id="inst-info" style="padding:12px 14px;background:var(--surface2);border-radius:8px;margin-bottom:14px;font-size:13px"></div>
       <div class="fr">
-        <div class="fg"><label>Amount Received (₹) *</label><input type="number" id="inst-amount" placeholder="e.g. 1000" oninput="updateInstPreview()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-        <div class="fg"><label>Date *</label><input type="date" id="inst-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="inst-amount">Amount Received (₹) *</label><input type="number" id="inst-amount" placeholder="e.g. 1000" oninput="updateInstPreview()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="inst-date">Date *</label><input type="date" id="inst-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       </div>
       <div id="inst-balance-preview" style="margin-top:8px;padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:13px;display:none"></div>
-      <div class="fg" style="margin-top:10px"><label>Notes</label><input type="text" id="inst-notes" placeholder="e.g. Cash received" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      <div class="fg" style="margin-top:10px"><label for="inst-notes">Notes</label><input type="text" id="inst-notes" placeholder="e.g. Cash received" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       <div style="margin-top:12px;font-size:12px;color:var(--muted);padding:8px 12px;background:#e8f4fd;border-radius:6px">Finance income entry will be auto-created for this amount.</div>
       <div class="mf"><button class="btn-c" onclick="closeModal('installment')">Cancel</button><button class="btn-p" onclick="saveInstallment()">Save Payment</button></div>
     </div>
@@ -17678,12 +17678,12 @@ function shareGroceryListWA() {
     <div class="mb">
       <input type="hidden" id="contest-id">
       <div class="fg">
-        <label>Contest Name *</label>
+        <label for="contest-name">Contest Name *</label>
         <input type="text" id="contest-name" placeholder="e.g. Summer Transformation Challenge">
       </div>
       <div class="fr">
         <div class="fg">
-          <label>Type *</label>
+          <label for="contest-type">Type *</label>
           <select id="contest-type">
             <option value="weight_loss">⬇️ Weight Loss</option>
             <option value="weight_gain">⬆️ Weight Gain</option>
@@ -17692,7 +17692,7 @@ function shareGroceryListWA() {
           </select>
         </div>
         <div class="fg">
-          <label>Duration</label>
+          <label for="contest-duration">Duration</label>
           <select id="contest-duration">
             <option value="21">21 Days</option>
             <option value="30">30 Days</option>
@@ -17703,26 +17703,26 @@ function shareGroceryListWA() {
       </div>
       <div class="fr">
         <div class="fg">
-          <label>Start Date *</label>
+          <label for="contest-start">Start Date *</label>
           <input type="date" id="contest-start">
         </div>
         <div class="fg">
-          <label>Entry Fee per Person (₹)</label>
+          <label for="contest-entry-fee">Entry Fee per Person (₹)</label>
           <input type="number" id="contest-entry-fee" placeholder="e.g. 500">
         </div>
       </div>
       <div class="fr">
         <div class="fg">
-          <label>Prize Amount (₹)</label>
+          <label for="contest-prize">Prize Amount (₹)</label>
           <input type="number" id="contest-prize" placeholder="e.g. 1000">
         </div>
         <div class="fg">
-          <label>Amount to Send Senior (₹)</label>
+          <label for="contest-senior-amount">Amount to Send Senior (₹)</label>
           <input type="number" id="contest-senior-amount" placeholder="e.g. 400">
         </div>
       </div>
       <div class="fg">
-        <label>Description (optional)</label>
+        <label for="contest-desc">Description (optional)</label>
         <textarea id="contest-desc" placeholder="Rules, eligibility, reward details..."></textarea>
       </div>
       <div class="mf">
@@ -17741,17 +17741,17 @@ function shareGroceryListWA() {
       <input type="hidden" id="cp-contest-id">
       <input type="hidden" id="cp-participant-id">
       <div class="fg">
-        <label>Customer *</label>
+        <label for="cp-customer">Customer *</label>
         <select id="cp-customer"></select>
       </div>
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;margin-top:4px">Starting Measurements</div>
       <div class="fr">
-        <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="cp-start-weight" placeholder="65.0"></div>
-        <div class="fg"><label>Body Fat (%)</label><input type="number" step="0.1" id="cp-start-fat" placeholder="25.0"></div>
+        <div class="fg"><label for="cp-start-weight">Weight (kg)</label><input type="number" step="0.1" id="cp-start-weight" placeholder="65.0"></div>
+        <div class="fg"><label for="cp-start-fat">Body Fat (%)</label><input type="number" step="0.1" id="cp-start-fat" placeholder="25.0"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="cp-start-muscle" placeholder="35.0"></div>
-        <div class="fg"><label>BMI</label><input type="number" step="0.1" id="cp-start-bmi" placeholder="22.3"></div>
+        <div class="fg"><label for="cp-start-muscle">Muscle (%)</label><input type="number" step="0.1" id="cp-start-muscle" placeholder="35.0"></div>
+        <div class="fg"><label for="cp-start-bmi">BMI</label><input type="number" step="0.1" id="cp-start-bmi" placeholder="22.3"></div>
       </div>
       <div class="mf">
         <button class="btn-c" onclick="closeModal('contest-participant')">Cancel</button>
@@ -17770,12 +17770,12 @@ function shareGroceryListWA() {
       <div id="cpp-start-summary" style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--muted)"></div>
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Current Measurements</div>
       <div class="fr">
-        <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="cpp-weight" placeholder="63.0"></div>
-        <div class="fg"><label>Body Fat (%)</label><input type="number" step="0.1" id="cpp-fat" placeholder="23.0"></div>
+        <div class="fg"><label for="cpp-weight">Weight (kg)</label><input type="number" step="0.1" id="cpp-weight" placeholder="63.0"></div>
+        <div class="fg"><label for="cpp-fat">Body Fat (%)</label><input type="number" step="0.1" id="cpp-fat" placeholder="23.0"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="cpp-muscle" placeholder="36.0"></div>
-        <div class="fg"><label>BMI</label><input type="number" step="0.1" id="cpp-bmi" placeholder="21.8"></div>
+        <div class="fg"><label for="cpp-muscle">Muscle (%)</label><input type="number" step="0.1" id="cpp-muscle" placeholder="36.0"></div>
+        <div class="fg"><label for="cpp-bmi">BMI</label><input type="number" step="0.1" id="cpp-bmi" placeholder="21.8"></div>
       </div>
       <div class="mf">
         <button class="btn-c" onclick="closeModal('contest-progress')">Cancel</button>
@@ -17801,12 +17801,12 @@ function shareGroceryListWA() {
           <div id="promote-coach-info" style="font-size:14px;font-weight:600"></div>
         </div>
         <div class="fr">
-          <div class="fg"><label>New Center Name *</label><input type="text" id="promote-center-name" placeholder="e.g. Prasanna's Wellness Center" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-          <div class="fg"><label>City / Location *</label><input type="text" id="promote-center-location" placeholder="e.g. Nandyal" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg"><label for="promote-center-name">New Center Name *</label><input type="text" id="promote-center-name" placeholder="e.g. Prasanna's Wellness Center" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg"><label for="promote-center-location">City / Location *</label><input type="text" id="promote-center-location" placeholder="e.g. Nandyal" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
         </div>
         <div class="fr">
-          <div class="fg"><label>Contact</label><input type="tel" id="promote-center-contact" placeholder="Center phone" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-          <div class="fg"><label>Center PIN (4 digits)</label><input type="text" id="promote-center-pin" maxlength="4" placeholder="Optional" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg"><label for="promote-center-contact">Contact</label><input type="tel" id="promote-center-contact" placeholder="Center phone" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg"><label for="promote-center-pin">Center PIN (4 digits)</label><input type="text" id="promote-center-pin" maxlength="4" placeholder="Optional" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
         </div>
       </div>
       <!-- Step 2 -->
@@ -17844,14 +17844,14 @@ function shareGroceryListWA() {
       <input type="hidden" id="walkin-id">
       <input type="hidden" id="walkin-finance-id">
       <div class="fr">
-        <div class="fg"><label>Date</label><input type="date" id="walkin-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-        <div class="fg"><label>Full Name *</label><input type="text" id="walkin-name" placeholder="Visitor name" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="walkin-date">Date</label><input type="date" id="walkin-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="walkin-name">Full Name *</label><input type="text" id="walkin-name" placeholder="Visitor name" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Phone</label><input type="tel" id="walkin-phone" placeholder="Mobile number" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-        <div class="fg"><label>Pincode</label><input type="text" id="walkin-pincode" placeholder="Area pincode" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="walkin-phone">Phone</label><input type="tel" id="walkin-phone" placeholder="Mobile number" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="walkin-pincode">Pincode</label><input type="text" id="walkin-pincode" placeholder="Area pincode" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       </div>
-      <div class="fg"><label>How did they find us?</label>
+      <div class="fg"><label for="walkin-source">How did they find us?</label>
         <select id="walkin-source" onchange="onWalkinSourceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="">Select source</option>
           <option value="google">🔍 Google</option>
@@ -17862,14 +17862,14 @@ function shareGroceryListWA() {
         </select>
       </div>
       <div class="fg" id="walkin-referred-wrap" style="display:none">
-        <label>Referred By (who sent them?)</label>
+        <label for="sd-walkin-ref-input">Referred By (who sent them?)</label>
         <div class="sd-wrap" id="sd-walkin-ref" style="position:relative">
           <input class="sd-input" id="sd-walkin-ref-input" placeholder="Search customer or coach..." autocomplete="off" oninput="sdRender('walkin-ref')" onfocus="sdRender('walkin-ref')" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box">
           <div class="sd-list" id="sd-walkin-ref-list" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:0 0 8px 8px;max-height:160px;overflow-y:auto;z-index:50;display:none"></div>
         </div>
         <input type="hidden" id="walkin-referred-by-id">
       </div>
-      <div class="fg"><label>Outcome</label>
+      <div class="fg"><label for="walkin-outcome">Outcome</label>
         <select id="walkin-outcome" onchange="onWalkinOutcomeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="">Select outcome</option>
           <option value="checkup">🔬 Only Checkup (Free)</option>
@@ -17880,11 +17880,11 @@ function shareGroceryListWA() {
       </div>
       <div id="walkin-amount-wrap" style="display:none">
         <div class="fr">
-          <div class="fg"><label>Amount Received (₹)</label><input type="number" id="walkin-amount" placeholder="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-          <div class="fg" id="walkin-product-wrap"><label>Product / Details</label><input type="text" id="walkin-product" placeholder="What did they buy?" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg"><label for="walkin-amount">Amount Received (₹)</label><input type="number" id="walkin-amount" placeholder="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg" id="walkin-product-wrap"><label for="walkin-product">Product / Details</label><input type="text" id="walkin-product" placeholder="What did they buy?" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
         </div>
       </div>
-      <div class="fg"><label>Notes</label><input type="text" id="walkin-notes" placeholder="Any additional notes..." style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      <div class="fg"><label for="walkin-notes">Notes</label><input type="text" id="walkin-notes" placeholder="Any additional notes..." style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
     </div>
     <div class="mf"><button class="btn-c" onclick="closeModal('walkin')">Cancel</button><button class="btn-p" onclick="saveWalkin()">💾 Save Walk-in</button></div>
   </div>
@@ -17897,12 +17897,12 @@ function shareGroceryListWA() {
     <div class="mb">
       <input type="hidden" id="lead-id">
       <div class="fr">
-        <div class="fg"><label>Name *</label><input type="text" id="lead-name" placeholder="Full name"></div>
-        <div class="fg"><label>Mobile *</label><input type="text" id="lead-mobile" placeholder="Phone number" maxlength="15"></div>
+        <div class="fg"><label for="lead-name">Name *</label><input type="text" id="lead-name" placeholder="Full name"></div>
+        <div class="fg"><label for="lead-mobile">Mobile *</label><input type="text" id="lead-mobile" placeholder="Phone number" maxlength="15"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Center</label><select id="lead-center-sel" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">Select center</option></select></div>
-        <div class="fg"><label>Status</label>
+        <div class="fg"><label for="lead-center-sel">Center</label><select id="lead-center-sel" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">Select center</option></select></div>
+        <div class="fg"><label for="lead-status">Status</label>
           <select id="lead-status" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             <option value="New">New</option>
             <option value="Contacted">Contacted</option>
@@ -17913,10 +17913,10 @@ function shareGroceryListWA() {
         </div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Source</label><input type="text" id="lead-source" placeholder="e.g. Walk-in, WhatsApp, Referral"></div>
-        <div class="fg"><label>Next Follow-up Date</label><input type="date" id="lead-next-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="lead-source">Source</label><input type="text" id="lead-source" placeholder="e.g. Walk-in, WhatsApp, Referral"></div>
+        <div class="fg"><label for="lead-next-date">Next Follow-up Date</label><input type="date" id="lead-next-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       </div>
-      <div class="fg"><label>Notes</label><textarea id="lead-notes" rows="2" placeholder="Any details about this lead..." style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical"></textarea></div>
+      <div class="fg"><label for="lead-notes">Notes</label><textarea id="lead-notes" rows="2" placeholder="Any details about this lead..." style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical"></textarea></div>
       <div class="mf"><button class="btn-c" onclick="closeModal('lead')">Cancel</button><button class="btn-p" onclick="saveLead()">💾 Save Lead</button></div>
     </div>
   </div>
@@ -17929,9 +17929,9 @@ function shareGroceryListWA() {
     <div class="mb">
       <input type="hidden" id="fu-lead-id">
       <div id="fu-lead-info" style="background:var(--surface2);border-radius:8px;padding:11px 13px;margin-bottom:12px;font-size:13px"></div>
-      <div class="fg"><label>Date of Call *</label><input type="date" id="fu-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-      <div class="fg" style="margin-top:10px"><label>Outcome / Notes</label><textarea id="fu-note" rows="3" placeholder="What did they say? Interested? Want more info? Call back?" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical"></textarea></div>
-      <div class="fg" style="margin-top:10px"><label>Update Status</label>
+      <div class="fg"><label for="fu-date">Date of Call *</label><input type="date" id="fu-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      <div class="fg" style="margin-top:10px"><label for="fu-note">Outcome / Notes</label><textarea id="fu-note" rows="3" placeholder="What did they say? Interested? Want more info? Call back?" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical"></textarea></div>
+      <div class="fg" style="margin-top:10px"><label for="fu-status">Update Status</label>
         <select id="fu-status" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="Contacted">Contacted</option>
           <option value="Interested">Interested</option>
@@ -17943,7 +17943,7 @@ function shareGroceryListWA() {
         Next Follow-up: when should you call again?
       </div>
       <div class="fr" style="margin-top:8px">
-        <div class="fg"><label>Next Call Date</label><input type="date" id="fu-next-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="fu-next-date">Next Call Date</label><input type="date" id="fu-next-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
         <div class="fg" style="display:flex;align-items:flex-end">
           <button class="btn-p" style="width:100%;font-size:12px" onclick="setFuNextDate(7)">+7 days</button>
         </div>
@@ -17973,10 +17973,10 @@ function shareGroceryListWA() {
       <input type="hidden" id="renew-cust-id"/>
       <input type="hidden" id="renew-type" value="customer"/>
       <div style="background:var(--accent-light);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px"><strong id="renew-cust-name"></strong><br/><span style="color:var(--muted);font-size:12px" id="renew-prev-pack"></span></div>
-      <div class="fr"><div class="fg"><label>New Pack *</label><select id="renew-pack-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">Select</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option></select></div><div class="fg"><label>Start Date *</label><input type="date" id="renew-start-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
-      <div class="fg" style="margin-top:12px"><label>Pack Price (₹)</label><input type="number" id="renew-price" placeholder="2500" oninput="onRenewPriceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+      <div class="fr"><div class="fg"><label for="renew-pack-type">New Pack *</label><select id="renew-pack-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">Select</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option></select></div><div class="fg"><label for="renew-start-date">Start Date *</label><input type="date" id="renew-start-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
+      <div class="fg" style="margin-top:12px"><label for="renew-price">Pack Price (₹)</label><input type="number" id="renew-price" placeholder="2500" oninput="onRenewPriceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       <div class="fg" style="margin-top:12px">
-        <label>Payment Status</label>
+        <label for="renew-pay-mode">Payment Status</label>
         <select id="renew-pay-mode" onchange="onRenewPayModeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="full">✅ Paid Full Amount</option>
           <option value="partial">⚡ Paid Partial — Balance Due</option>
@@ -17985,12 +17985,12 @@ function shareGroceryListWA() {
       </div>
       <div id="renew-partial-row" style="display:none;margin-top:10px">
         <div class="fr">
-          <div class="fg"><label>Paid Now (₹)</label><input type="number" id="renew-paid-now" placeholder="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
-          <div class="fg"><label>Balance Due Date</label><input type="date" id="renew-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+          <div class="fg"><label for="renew-paid-now">Paid Now (₹)</label><input type="number" id="renew-paid-now" placeholder="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+          <div class="fg"><label for="renew-due-date">Balance Due Date</label><input type="date" id="renew-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
         </div>
       </div>
       <div id="renew-none-row" style="display:none;margin-top:10px">
-        <div class="fg"><label>Due Date</label><input type="date" id="renew-due-date-none" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+        <div class="fg"><label for="renew-due-date-none">Due Date</label><input type="date" id="renew-due-date-none" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       </div>
       <div class="mf"><button class="btn-c" onclick="closeModal('renew-pack')">Cancel</button><button class="btn-p" onclick="saveRenewal()">💾 Save Renewal</button></div>
     </div>
@@ -18008,10 +18008,10 @@ function shareGroceryListWA() {
         <div style="font-size:12px;color:var(--muted);margin-top:3px" id="refund-curr-pack"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Refund Amount (₹)</label><input type="number" id="refund-amount" min="0" placeholder="0"></div>
-        <div class="fg"><label>Date *</label><input type="date" id="refund-date"></div>
+        <div class="fg"><label for="refund-amount">Refund Amount (₹)</label><input type="number" id="refund-amount" min="0" placeholder="0"></div>
+        <div class="fg"><label for="refund-date">Date *</label><input type="date" id="refund-date"></div>
       </div>
-      <div class="fg"><label>Refund Method</label>
+      <div class="fg"><label for="refund-method">Refund Method</label>
         <select id="refund-method" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="Cash">Cash</option>
           <option value="UPI">UPI / GPay / PhonePe</option>
@@ -18019,7 +18019,7 @@ function shareGroceryListWA() {
           <option value="Adjustment">Adjustment (no cash returned)</option>
         </select>
       </div>
-      <div class="fg"><label>Reason *</label><input type="text" id="refund-reason" placeholder="e.g. Customer request, health issue, relocation..."></div>
+      <div class="fg"><label for="refund-reason">Reason *</label><input type="text" id="refund-reason" placeholder="e.g. Customer request, health issue, relocation..."></div>
       <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:8px">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600">
           <input type="checkbox" id="refund-clear-pack" style="width:15px;height:15px">
@@ -18041,7 +18041,7 @@ function shareGroceryListWA() {
     <div class="mh"><div class="mt">📢 WhatsApp Broadcast</div><button class="mc" onclick="closeModal('broadcast')">✕</button></div>
     <div class="mb">
       <div class="fg">
-        <label>Target Group</label>
+        <label for="bc-group">Target Group</label>
         <select id="bc-group" onchange="buildBroadcastList()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="expiring3">Expiring in ≤3 days</option>
           <option value="expiring7">Expiring in ≤7 days</option>
@@ -18051,7 +18051,7 @@ function shareGroceryListWA() {
         </select>
       </div>
       <div class="fg">
-        <label>Message Template</label>
+        <label for="bc-msg">Message Template</label>
         <textarea id="bc-msg" rows="4" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical"></textarea>
         <div style="font-size:11px;color:var(--muted);margin-top:4px">Use <code>{name}</code> for customer name, <code>{days}</code> for days left</div>
       </div>
@@ -18104,19 +18104,19 @@ function shareGroceryListWA() {
     <div class="mb" style="display:flex; gap:20px; flex-wrap:wrap; text-align:left;">
       <div style="flex:1; min-width:260px; display:flex; flex-direction:column; gap:12px;">
         <div class="fg">
-          <label>Compare From (Initial Scan)</label>
+          <label for="share-scan-from">Compare From (Initial Scan)</label>
           <select id="share-scan-from" onchange="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:#fff"></select>
         </div>
         <div class="fg">
-          <label>Compare To (Latest Scan)</label>
+          <label for="share-scan-to">Compare To (Latest Scan)</label>
           <select id="share-scan-to" onchange="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:#fff"></select>
         </div>
         <div class="fg">
-          <label>Journey Title</label>
+          <label for="share-card-title">Journey Title</label>
           <input type="text" id="share-card-title" value="My Health Journey" oninput="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
         </div>
         <div class="fg">
-          <label>Card Theme</label>
+          <label for="share-card-theme">Card Theme</label>
           <select id="share-card-theme" onchange="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:#fff">
             <option value="emerald">Forest Emerald</option>
             <option value="midnight">Midnight Onyx</option>
