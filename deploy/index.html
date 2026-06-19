@@ -3,7 +3,14 @@
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dharani's — Supervisor Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<meta name="description" content="PulseZen Supervisor Dashboard - Manage wellness centers, track coach performance, consult customers, and monitor revenue dynamically with AI wellness scans.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap">
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap">
+<noscript>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+</noscript>
 <style>
 :root{
   --bg:#f0f5f2;
@@ -16,7 +23,7 @@
   --accent:#e8a838;
   --accent-light:#fef3c7;
   --text:#111827;
-  --muted:#6b7280;
+  --muted:#4b5563;
   --border:rgba(229, 231, 235, 0.45);
   --border-solid:#e5e7eb;
   --danger:#dc2626;
@@ -79,7 +86,7 @@
   --surface-solid:#1e293b;
   --surface2:#334155;
   --text:#f8fafc;
-  --muted:#94a3b8;
+  --muted:#a3b4cc;
   --border:rgba(148, 163, 184, 0.2);
   --border-solid:#334155;
   --danger:#ef4444;
@@ -773,9 +780,8 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
 
 /* ── MEDIA — mobile sidebar ── */
 </style>
-<script src="./index_files/chart.umd.min.js.download"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -935,7 +941,7 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
       </div>
     </div>
     <div class="sb-center-switch">
-      <label data-t="lbl_active_center">Active Center</label>
+      <label for="center-switcher" data-t="lbl_active_center">Active Center</label>
       <select id="center-switcher" onchange="switchActiveCenter(this.value)">
         <option value="">All Centers</option>
       </select>
@@ -2644,7 +2650,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mb">
       <input type="hidden" id="expense-id">
       <div class="fg">
-        <label>Category *</label>
+        <label for="exp-cat">Category *</label>
         <select id="exp-cat">
           <option>Rent</option>
           <option>Electricity</option>
@@ -2661,20 +2667,20 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       </div>
       <div class="fr">
         <div class="fg">
-          <label>Amount (₹) *</label>
+          <label for="exp-amount">Amount (₹) *</label>
           <div style="position:relative">
             <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:700;color:var(--danger);pointer-events:none">₹</span>
             <input type="number" id="exp-amount" placeholder="e.g. 500" min="0" style="padding-left:26px">
           </div>
         </div>
-        <div class="fg"><label>Date *</label><input type="date" id="exp-date"></div>
+        <div class="fg"><label for="exp-date">Date *</label><input type="date" id="exp-date"></div>
       </div>
-      <div class="fg"><label>Description *</label><input type="text" id="exp-desc" placeholder="e.g. Monthly rent payment"></div>
+      <div class="fg"><label for="exp-desc">Description *</label><input type="text" id="exp-desc" placeholder="e.g. Monthly rent payment"></div>
       <div class="fg">
-        <label>Center</label>
+        <label for="exp-center">Center</label>
         <select id="exp-center"><option value="">All / General</option></select>
       </div>
-      <div class="fg"><label>Notes</label><textarea id="exp-notes" rows="2" placeholder="Any extra details..."></textarea></div>
+      <div class="fg"><label for="exp-notes">Notes</label><textarea id="exp-notes" rows="2" placeholder="Any extra details..."></textarea></div>
     </div>
     <div class="mf">
       <button class="btn-c" onclick="closeModal('expense')">Cancel</button>
@@ -2689,24 +2695,24 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mb">
       <input type="hidden" id="coach-id">
       <div class="fr">
-        <div class="fg"><label>Name *</label><input type="text" id="coach-name" placeholder="Coach name"></div>
-        <div class="fg"><label>Contact</label><input type="text" id="coach-contact" placeholder="Phone or email"></div>
+        <div class="fg"><label for="coach-name">Name *</label><input type="text" id="coach-name" placeholder="Coach name"></div>
+        <div class="fg"><label for="coach-contact">Contact</label><input type="text" id="coach-contact" placeholder="Phone or email"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Wellness Center</label><select id="coach-center" onchange="onCoachCenterChange()"><option value="">Select center</option></select></div>
-        <div class="fg"><label>Join Date</label><input type="date" id="coach-date"></div>
+        <div class="fg"><label for="coach-center">Wellness Center</label><select id="coach-center" onchange="onCoachCenterChange()"><option value="">Select center</option></select></div>
+        <div class="fg"><label for="coach-date">Join Date</label><input type="date" id="coach-date"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Status</label><select id="coach-status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
-        <div class="fg"><label>Upline Coach</label><select id="coach-upline-sel" onfocus="updateCoachUplineSelects(document.getElementById('coach-id').value)" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— No upline (Root) —</option></select></div>
+        <div class="fg"><label for="coach-status">Status</label><select id="coach-status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
+        <div class="fg"><label for="coach-upline-sel">Upline Coach</label><select id="coach-upline-sel" onfocus="updateCoachUplineSelects(document.getElementById('coach-id').value)" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— No upline (Root) —</option></select></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Date of Birth</label><input type="date" id="coach-dob"></div>
-        <div class="fg"><label>Gender</label><select id="coach-gender"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select></div>
-        <div class="fg"><label>Goal</label><select id="coach-goal"><option value="Weight Loss">Weight Loss</option><option value="Weight Gain">Weight Gain</option><option value="Maintenance">Maintenance</option></select></div>
+        <div class="fg"><label for="coach-dob">Date of Birth</label><input type="date" id="coach-dob"></div>
+        <div class="fg"><label for="coach-gender">Gender</label><select id="coach-gender"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select></div>
+        <div class="fg"><label for="coach-goal">Goal</label><select id="coach-goal"><option value="Weight Loss">Weight Loss</option><option value="Weight Gain">Weight Gain</option><option value="Maintenance">Maintenance</option></select></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Business Level</label>
+        <div class="fg"><label for="coach-pin">Business Level</label>
           <select id="coach-pin" onchange="showCoachPinTip()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             <option value="">Not specified</option>
             <option>Preferred Customer</option><option>Associate</option><option>Qualified Producer (QP)</option>
@@ -2720,27 +2726,27 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
           <div id="coach-pin-tip-text"></div>
         </div>
       </div>
-      <div class="fg"><label>🔐 Dashboard PIN (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="coach-dashboard-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 1234" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit"><button type="button" onclick="togglePinVis('coach-dashboard-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Coach uses this PIN to log in to their dashboard (coach.html).</div></div>
+      <div class="fg"><label for="coach-dashboard-pin">🔐 Dashboard PIN (4 digits)</label><div style="display:flex;align-items:center;gap:8px;max-width:260px"><input type="password" id="coach-dashboard-pin" maxlength="4" pattern="\d{4}" placeholder="e.g. 1234" style="letter-spacing:6px;text-align:center;font-size:18px;flex:1;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit"><button type="button" onclick="togglePinVis('coach-dashboard-pin',this)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px" title="Show/Hide">👁️</button></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Coach uses this PIN to log in to their dashboard (coach.html).</div></div>
       <div class="fr">
-        <div class="fg"><label>Role</label><select id="coach-role" onchange="onCoachRoleChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="coach">Coach (has pack with you)</option><option value="owner">Center Owner (no pack with you)</option></select></div>
-        <div class="fg"><label>Notes</label><input type="text" id="coach-notes" placeholder="Optional notes..."></div>
+        <div class="fg"><label for="coach-role">Role</label><select id="coach-role" onchange="onCoachRoleChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="coach">Coach (has pack with you)</option><option value="owner">Center Owner (no pack with you)</option></select></div>
+        <div class="fg"><label for="coach-notes">Notes</label><input type="text" id="coach-notes" placeholder="Optional notes..."></div>
       </div>
       <div style="border-top:1px solid var(--border);margin:14px 0;padding-top:14px" id="coach-pack-section">
         <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">📦 Coach Pack <span style="font-weight:400;color:var(--muted)">(skip if Center Owner)</span></div>
-        <div class="fg" style="margin-bottom:10px"><label>Shares Pack With</label><select id="coach-pack-owner" onchange="onCoachPackOwnerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— Own Pack (not shared) —</option></select></div>
+        <div class="fg" style="margin-bottom:10px"><label for="coach-pack-owner">Shares Pack With</label><select id="coach-pack-owner" onchange="onCoachPackOwnerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— Own Pack (not shared) —</option></select></div>
         <div class="fr">
-          <div class="fg"><label>Pack Type</label><select id="coach-pack-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">No pack</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option></select></div>
-          <div class="fg"><label>Start Date</label><input type="date" id="coach-pack-start" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+          <div class="fg"><label for="coach-pack-type">Pack Type</label><select id="coach-pack-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">No pack</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option></select></div>
+          <div class="fg"><label for="coach-pack-start">Start Date</label><input type="date" id="coach-pack-start" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
         </div>
         <div class="fr">
-          <div class="fg"><label>Pack Price (₹)</label><input type="number" id="coach-pack-price" placeholder="5600" oninput="onCoachPackPriceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
+          <div class="fg"><label for="coach-pack-price">Pack Price (₹)</label><input type="number" id="coach-pack-price" placeholder="5600" oninput="onCoachPackPriceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
         </div>
         <!-- Payment section — shown for new coaches with a pack price -->
         <div id="coach-pay-section" style="display:none;border-top:1px solid var(--border);margin-top:14px;padding-top:12px">
           <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">💰 Payment</div>
           <div class="fr">
             <div class="fg">
-              <label>Payment Mode</label>
+              <label for="coach-pay-mode">Payment Mode</label>
               <select id="coach-pay-mode" onchange="onCoachPayModeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
                 <option value="full">✅ Full Payment — paid in full today</option>
                 <option value="partial">⏳ Partial — paying in installments</option>
@@ -2748,12 +2754,12 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
               </select>
             </div>
             <div class="fg" id="coach-paid-now-box" style="display:none">
-              <label>Paid Now (₹)</label>
+              <label for="coach-paid-now">Paid Now (₹)</label>
               <input type="number" id="coach-paid-now" placeholder="e.g. 2000" oninput="updateCoachBalancePreview()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
             </div>
           </div>
           <div class="fr" id="coach-due-row" style="display:none">
-            <div class="fg"><label>Balance Due By</label><input type="date" id="coach-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+            <div class="fg"><label for="coach-due-date">Balance Due By</label><input type="date" id="coach-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
             <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:2px"><div id="coach-balance-preview" style="padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:13px;width:100%">Balance: <strong style="color:var(--danger)">₹0</strong></div></div>
           </div>
         </div>
@@ -2772,9 +2778,9 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
     <div class="mb">
       <div id="notes-history" style="max-height:260px;overflow-y:auto;margin-bottom:14px"></div>
       <div style="border-top:1px solid var(--border);padding-top:14px">
-        <label style="font-size:12px;font-weight:700;color:var(--muted)">Add Note</label>
+        <label for="notes-text" style="font-size:12px;font-weight:700;color:var(--muted)">Add Note</label>
         <textarea id="notes-text" rows="3" placeholder="Health update, follow-up call, goal progress..." style="width:100%;margin-top:6px;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text);resize:vertical"></textarea>
-        <label style="font-size:12px;font-weight:700;color:var(--muted);margin-top:8px;display:block">Follow-up Date (optional)</label>
+        <label for="notes-followup" style="font-size:12px;font-weight:700;color:var(--muted);margin-top:8px;display:block">Follow-up Date (optional)</label>
         <input type="date" id="notes-followup" style="margin-top:4px;width:100%">
       </div>
     </div>

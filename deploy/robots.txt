@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /client.html
+Disallow: /coach.html
+Disallow: /register.html
+Disallow: /checkin.html
+Allow: /

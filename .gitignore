@@ -48,3 +48,4 @@ shakemate.jpeg
 !.env.example
 
 .vercel
+pulseiq.db
