@@ -1,5 +1,18 @@
 
 // ── STATE ──
+function loadScript(src) {
+  return new Promise(function(resolve, reject) {
+    if (document.querySelector('script[src="' + src + '"]')) {
+      resolve();
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
 var SB_URL = null; var SB_KEY = null;
 // Center owners (₹1999) use a separate Supabase project — keeps their data isolated from supervisor's data
 var CENTER_SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
@@ -1481,6 +1494,7 @@ async function loadAll() {
   D.stockIn=[]; D.stockOut=[]; D.dailyUsage=[]; D.currentStock={};
   D.coupons=[]; D.payments=[]; D.packHistory=[];
   try {
+    try { await loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'); } catch(scErr) { console.error(scErr); }
     // Phase 1: centers + customers + coaches first (attendance/body need customer IDs for center-scoped query)
     var _ldMsg = document.getElementById('app-loading-msg'); if(_ldMsg) _ldMsg.textContent = 'Connecting to database…';
     await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
