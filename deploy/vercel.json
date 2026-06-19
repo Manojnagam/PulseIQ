@@ -9,6 +9,7 @@
     { "src": "/checkin.html", "dest": "/checkin.html" },
     { "src": "/checkin", "dest": "/checkin.html" },
     { "src": "/robots.txt", "dest": "/robots.txt" },
+    { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "headers": [
