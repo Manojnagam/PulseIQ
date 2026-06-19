@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+
+reviews:
+  # Review profile: "chill" (broad feedback) or "assertive" (detailed/nitpicky code feedback)
+  profile: "chill"
+  
+  # Auto-generate summaries and reviews for every Pull Request
+  auto_review:
+    enabled: true
+    drafts: false
+    
+  # Enable/disable high level summarizations
+  high_level_summary: true
+  
+  # Exclude temporary, backup, and static media files from code review
+  path_filters:
+    - "!deploy/**"
+    - "!.vercel/**"
+    - "!.wrangler/**"
+    - "!**/*.png"
+    - "!**/*.jpeg"
+    - "!**/*.jpg"
+    - "!**/*.mp4"
+    - "!**/*.sql"
+    - "!**/.git/**"
+
+chat:
+  auto_reply: true
