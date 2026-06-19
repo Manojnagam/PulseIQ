@@ -707,6 +707,70 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
 .sb-greeting{padding:12px 18px 2px;font-size:10.5px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;letter-spacing:.7px}
 .sb-greeting-name{color:rgba(255,255,255,.85);font-size:13px;font-weight:700;margin-top:2px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+/* ── WELLNESS SCAN ANALYST ── */
+.ws-tab-btn {
+  background: none;
+  border: none;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+.ws-tab-btn:hover:not(:disabled) {
+  color: var(--primary);
+}
+.ws-tab-btn.active {
+  color: var(--primary);
+  border-bottom: 2px solid var(--primary);
+}
+.ws-tab-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ws-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.ws-badge.low_protein { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+.ws-badge.breakfast_replacement { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+.ws-badge.calorie_deficit { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+.ws-badge.digestive_soothing { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
+.ws-badge.hydration_boost { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+.ws-badge.cellular_energy { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+
+.ws-copy-btn {
+  background: var(--surface);
+  border: 1px solid var(--border-solid);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  position: relative;
+  line-height: 1.4;
+}
+.ws-copy-btn:hover {
+  background: var(--hover-bg);
+  border-color: var(--primary-light);
+}
+.ws-copy-btn::after {
+  content: '📋 Click to copy';
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.6;
+}
+
 /* ── MEDIA — mobile sidebar ── */
 </style>
 <script src="./index_files/chart.umd.min.js.download"></script>
@@ -1230,6 +1294,12 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
           <div class="agent-desc">Finds customers added today or yesterday. Generates a warm welcome WhatsApp with their pack details and what to expect on day one.</div>
           <button class="agent-run-btn" onclick="runWelcomeAgent()">▶ Run Agent</button>
         </div>
+        <div class="agent-card" style="border-color:#10b981;background:linear-gradient(135deg,#f0fdf4,var(--surface))">
+          <div class="agent-icon">🥗</div>
+          <div class="agent-name" style="color:#065f46">Wellness Scan Analyst</div>
+          <div class="agent-desc">Analyzes client body composition scans and lifestyle habits (energy crashes, digestion, diet/hydration). Generates a structured clinical nutrition report, metabolic risks, and coach communication icebreakers.</div>
+          <button class="agent-run-btn" style="background:linear-gradient(135deg,#047857,#10b981)" onclick="openWellnessScanModal()">▶ Run Agent</button>
+        </div>
         <div class="agent-card" style="border-color:#d97706;background:linear-gradient(135deg,#fffbeb,var(--surface))">
           <div class="agent-icon">💹</div>
           <div class="agent-name" style="color:#92400e">Finance Analyst</div>
@@ -1384,6 +1454,7 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
         <div><div class="pt" data-t="pt_body">Body Composition</div><div class="ps" data-t="ps_body">Select a customer to view their health journey</div></div>
         <div style="display:flex;gap:8px">
           <button class="btn-p" id="btn-body-share-card" onclick="openShareCardModal()" style="display:none;background:#ff6b6b;border-color:#ff6b6b;color:#fff;font-weight:600">🎨 Share Card</button>
+          <button class="btn-p" style="background:linear-gradient(135deg,#047857,#10b981);border-color:#047857;color:#fff;font-weight:600" onclick="openWellnessScanModal()">🥗 Wellness Scan AI</button>
           <button class="btn-p" onclick="openModal('body')">+ Add Record</button>
         </div>
       </div>
@@ -3279,6 +3350,165 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <button class="btn-c" onclick="closeModal(&#39;weekly-ai&#39;)">Close</button>
         <button id="wai-wa-btn" class="btn-p" style="background:#25D366;border-color:#25D366;display:none;color:#fff;font-weight:600" onclick="">💬 Share on WhatsApp</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-wellness-scan">
+  <div class="modal" style="max-width:650px; width:90%; max-height:85vh; display:flex; flex-direction:column;">
+    <div class="mh">
+      <div class="mt">🥗 Wellness Scan & Lifestyle Consultation</div>
+      <button class="mc" onclick="closeModal('wellness-scan')">✕</button>
+    </div>
+    <div class="mb" style="flex:1; overflow-y:auto; padding:20px;">
+      
+      <!-- Tab Selection for Form vs Report -->
+      <div style="display:flex; border-bottom:1px solid var(--border); margin-bottom:20px;">
+        <button id="ws-tab-form" class="ws-tab-btn active" onclick="switchWsTab('form')">1. Interview & Data</button>
+        <button id="ws-tab-report" class="ws-tab-btn" onclick="switchWsTab('report')" disabled>2. AI Consultation Report</button>
+      </div>
+
+      <!-- FORM VIEW -->
+      <div id="ws-form-view">
+        <div class="fr">
+          <div class="fg">
+            <label>Select Customer (Optional)</label>
+            <select id="ws-customer-select" onchange="onWsCustomerSelectChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+              <option value="">-- Manual Entry / New Client --</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Gender *</label>
+            <select id="ws-gender" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fr">
+          <div class="fg">
+            <label>Age *</label>
+            <input type="number" id="ws-age" placeholder="24" min="1" max="120" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+          </div>
+          <div class="fg">
+            <label>Weight (kg) *</label>
+            <input type="number" step="0.1" id="ws-weight" placeholder="85.0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+          </div>
+        </div>
+
+        <div class="fr">
+          <div class="fg">
+            <label>BMI *</label>
+            <input type="number" step="0.1" id="ws-bmi" placeholder="28.5" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+          </div>
+          <div class="fg">
+            <label>Body Fat % *</label>
+            <input type="number" step="0.1" id="ws-body-fat" placeholder="32.0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+          </div>
+        </div>
+
+        <div class="fr">
+          <div class="fg">
+            <label>Visceral Fat Level *</label>
+            <input type="number" id="ws-visceral" placeholder="11" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+          </div>
+          <div class="fg">
+            <label>Muscle Mass Profile *</label>
+            <select id="ws-muscle-mass" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+              <option value="Low">Low</option>
+              <option value="Average">Average</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fg" style="margin-top:10px;">
+          <label>Energy Levels & Habits *</label>
+          <textarea id="ws-energy" style="width:100%;height:60px;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff" placeholder="e.g., Wakes up tired, heavy tea drinker, 4 PM energy crash"></textarea>
+        </div>
+
+        <div class="fg" style="margin-top:10px;">
+          <label>Diet & Hydration Habits *</label>
+          <textarea id="ws-diet" style="width:100%;height:60px;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff" placeholder="e.g., Skips breakfast, eats heavy dinners, 1.5L water/day"></textarea>
+        </div>
+
+        <div class="fg" style="margin-top:10px;">
+          <label>Digestion & Health Issues *</label>
+          <textarea id="ws-digestion" style="width:100%;height:60px;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff" placeholder="e.g., Frequent bloating, mild acidity after tea"></textarea>
+        </div>
+
+        <div class="fg" style="margin-top:10px; margin-bottom:20px;">
+          <label>Primary Goal *</label>
+          <input type="text" id="ws-goal" placeholder="e.g., Weight loss and fat reduction" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+        </div>
+
+        <div class="mf" style="padding:10px 0 0 0;">
+          <button class="btn-c" onclick="closeModal('wellness-scan')">Cancel</button>
+          <button id="ws-submit-btn" class="btn-p" onclick="generateWellnessScanReport()">Generate AI Report</button>
+        </div>
+      </div>
+
+      <!-- REPORT VIEW -->
+      <div id="ws-report-view" style="display:none;">
+        <div id="ws-report-loading" style="text-align:center; padding:40px; display:none;">
+          <div style="border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: var(--primary); animation: spin 1s linear infinite; margin: 0 auto 15px auto;"></div>
+          <div style="font-weight:600; color:var(--text); font-size:16px;">Analyzing Lifestyle & Body Composition...</div>
+          <div style="color:var(--muted); font-size:13px; margin-top:5px;">Acting as an expert clinical nutritionist</div>
+        </div>
+
+        <div id="ws-report-content" style="display:none;">
+          <!-- Premium Health Score Banner -->
+          <div id="ws-report-header" style="background:linear-gradient(135deg, #10b981, #059669); color:white; border-radius:8px; padding:15px; margin-bottom:20px; box-shadow:0 4px 6px rgba(0,0,0,0.05)">
+            <h4 style="margin:0 0 6px 0; font-size:14px; opacity:0.9; text-transform:uppercase; letter-spacing:0.5px; color:#fff">Client Status</h4>
+            <div id="ws-status" style="font-size:16px; font-weight:700; line-height:1.4;"></div>
+            <div style="border-top:1px solid rgba(255,255,255,0.2); margin-top:10px; padding-top:10px;">
+              <span style="font-size:12px; font-weight:700; opacity:0.9; text-transform:uppercase; display:block; margin-bottom:2px; color:#fff">Primary Concern:</span>
+              <span id="ws-concern" style="font-size:14px; font-weight:500;"></span>
+            </div>
+          </div>
+
+          <!-- Nutrient Gaps Badges -->
+          <div style="margin-bottom:20px;">
+            <h4 style="margin:0 0 8px 0; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Recommended Interventions</h4>
+            <div id="ws-nutrient-gaps" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+          </div>
+
+          <!-- Main analysis grids -->
+          <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:25px;">
+            <div class="ws-report-card" style="background:var(--surface2); border-left:4px solid var(--primary); border-radius:6px; padding:15px;">
+              <h5 style="margin:0 0 6px 0; color:var(--primary); font-size:14px; display:flex; align-items:center; gap:6px;">⚖️ Metabolic & Composition Risks</h5>
+              <p id="ws-metabolic-risks" style="margin:0; font-size:13.5px; line-height:1.5; color:var(--text);"></p>
+            </div>
+            
+            <div class="ws-report-card" style="background:var(--surface2); border-left:4px solid #f59e0b; border-radius:6px; padding:15px;">
+              <h5 style="margin:0 0 6px 0; color:#d97706; font-size:14px; display:flex; align-items:center; gap:6px;">⚡ Energy & Fatigue Analysis</h5>
+              <p id="ws-energy-analysis" style="margin:0; font-size:13.5px; line-height:1.5; color:var(--text);"></p>
+            </div>
+
+            <div class="ws-report-card" style="background:var(--surface2); border-left:4px solid #3b82f6; border-radius:6px; padding:15px;">
+              <h5 style="margin:0 0 6px 0; color:#2563eb; font-size:14px; display:flex; align-items:center; gap:6px;">🍀 Digestive & Hydration Interlink</h5>
+              <p id="ws-digestive-analysis" style="margin:0; font-size:13.5px; line-height:1.5; color:var(--text);"></p>
+            </div>
+          </div>
+
+          <!-- Communication & Icebreakers -->
+          <div style="background:linear-gradient(135deg, #f5f3ff, #ede9fe); border:1px solid #ddd6fe; border-radius:8px; padding:15px;">
+            <h5 style="margin:0 0 8px 0; color:#6d28d9; font-size:14px; display:flex; align-items:center; gap:6px;">🗣️ Coach Communication Strategy</h5>
+            <div style="font-size:12.5px; margin-bottom:12px; color:#5b21b6; line-height:1.4;">
+              <strong>Recommended Tone:</strong> <span id="ws-tone"></span>
+            </div>
+            <div style="font-size:12.5px; font-weight:700; color:#5b21b6; margin-bottom:8px;">Suggested Icebreakers (click to copy):</div>
+            <div id="ws-icebreakers" style="display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+
+          <div class="mf" style="padding:15px 0 0 0; margin-top:20px; border-top:1px solid var(--border); display:flex; justify-content:space-between;">
+            <button class="btn-c" onclick="switchWsTab('form')">← Edit Input</button>
+            <button class="btn-p" onclick="closeModal('wellness-scan')">Close Report</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -5948,11 +6178,204 @@ function _finCard(label, value, color, bg, border) {
   '</div>';
 }
 
-function _copyFinanceReport() {
-  if (!window._finReportText) return;
-  navigator.clipboard.writeText(window._finReportText)
-    .then(function(){ showToast('Report copied to clipboard!','success'); })
-    .catch(function(){ showToast('Copy failed','error'); });
+// 🥗 WELLNESS SCAN ANALYST AGENT
+function openWellnessScanModal() {
+  // Clear fields
+  document.getElementById('ws-customer-select').value = '';
+  document.getElementById('ws-gender').value = 'Male';
+  document.getElementById('ws-age').value = '';
+  document.getElementById('ws-weight').value = '';
+  document.getElementById('ws-bmi').value = '';
+  document.getElementById('ws-body-fat').value = '';
+  document.getElementById('ws-visceral').value = '';
+  document.getElementById('ws-muscle-mass').value = 'Average';
+  document.getElementById('ws-energy').value = '';
+  document.getElementById('ws-diet').value = '';
+  document.getElementById('ws-digestion').value = '';
+  document.getElementById('ws-goal').value = '';
+
+  // Populating Customer dropdown
+  var sel = document.getElementById('ws-customer-select');
+  sel.innerHTML = '<option value="">-- Manual Entry / New Client --</option>';
+  
+  // Sort customers alphabetically
+  var custs = (D.customers || []).slice().sort(function(a,b){
+    return (a.name || '').localeCompare(b.name || '');
+  });
+  custs.forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name + (c.phone ? ' (' + c.phone + ')' : '');
+    sel.appendChild(opt);
+  });
+
+  // Switch to form tab
+  switchWsTab('form');
+  document.getElementById('ws-tab-report').disabled = true;
+
+  openModal('wellness-scan');
+}
+
+function onWsCustomerSelectChange() {
+  var cid = document.getElementById('ws-customer-select').value;
+  if (!cid) return;
+
+  var c = D.customers.find(function(x){ return x.id === cid; });
+  if (c) {
+    if (c.gender) {
+      document.getElementById('ws-gender').value = c.gender;
+    }
+    if (c.goal) {
+      document.getElementById('ws-goal').value = c.goal;
+    }
+  }
+
+  // Find latest body record
+  var recs = (D.body || []).filter(function(b){ return b.customer_id === cid && b.weight; })
+                           .sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
+  if (recs.length) {
+    var latest = recs[0];
+    if (latest.age) document.getElementById('ws-age').value = latest.age;
+    if (latest.weight) document.getElementById('ws-weight').value = latest.weight;
+    if (latest.bmi) document.getElementById('ws-bmi').value = latest.bmi;
+    if (latest.fat_percentage) document.getElementById('ws-body-fat').value = latest.fat_percentage;
+    if (latest.visceral_fat) document.getElementById('ws-visceral').value = latest.visceral_fat;
+    
+    // Attempt to match muscle mass percentage
+    if (latest.muscle_percentage) {
+      var m = Number(latest.muscle_percentage);
+      if (m < 28) document.getElementById('ws-muscle-mass').value = 'Low';
+      else if (m > 38) document.getElementById('ws-muscle-mass').value = 'High';
+      else document.getElementById('ws-muscle-mass').value = 'Average';
+    }
+    
+    if (latest.notes) {
+      document.getElementById('ws-digestion').value = latest.notes;
+    }
+  }
+}
+
+function switchWsTab(tab) {
+  var formTab = document.getElementById('ws-tab-form');
+  var reportTab = document.getElementById('ws-tab-report');
+  var formView = document.getElementById('ws-form-view');
+  var reportView = document.getElementById('ws-report-view');
+
+  if (tab === 'form') {
+    formTab.classList.add('active');
+    reportTab.classList.remove('active');
+    formView.style.display = 'block';
+    reportView.style.display = 'none';
+  } else {
+    reportTab.classList.add('active');
+    formTab.classList.remove('active');
+    formView.style.display = 'none';
+    reportView.style.display = 'block';
+  }
+}
+
+async function generateWellnessScanReport() {
+  var age = document.getElementById('ws-age').value;
+  var weight = document.getElementById('ws-weight').value;
+  var bmi = document.getElementById('ws-bmi').value;
+  var bodyFat = document.getElementById('ws-body-fat').value;
+  var visceralFat = document.getElementById('ws-visceral').value;
+  
+  var energy = document.getElementById('ws-energy').value.trim();
+  var diet = document.getElementById('ws-diet').value.trim();
+  var digestion = document.getElementById('ws-digestion').value.trim();
+  var goal = document.getElementById('ws-goal').value.trim();
+
+  if (!age || !weight || !bmi || !bodyFat || !visceralFat || !energy || !diet || !digestion || !goal) {
+    showToast('Please fill in all required fields!', 'error');
+    return;
+  }
+
+  // Switch to report tab and show loading
+  switchWsTab('report');
+  document.getElementById('ws-tab-report').disabled = false;
+  document.getElementById('ws-report-loading').style.display = 'block';
+  document.getElementById('ws-report-content').style.display = 'none';
+
+  try {
+    var payload = {
+      age: Number(age),
+      gender: document.getElementById('ws-gender').value,
+      weight: Number(weight),
+      bmi: Number(bmi),
+      bodyFat: Number(bodyFat),
+      visceralFat: Number(visceralFat),
+      muscleMass: document.getElementById('ws-muscle-mass').value,
+      energyLevels: energy,
+      dietHydration: diet,
+      digestionIssues: digestion,
+      primaryGoal: goal
+    };
+
+    var res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    var report = await res.json();
+    if (!res.ok) throw new Error(report.error || 'Failed to generate report');
+
+    // Populate Report Content
+    document.getElementById('ws-status').textContent = report.client_summary?.status || 'Unknown Status';
+    document.getElementById('ws-concern').textContent = report.client_summary?.primary_concern || 'None Identified';
+    
+    document.getElementById('ws-metabolic-risks').textContent = report.health_risk_report?.metabolic_risks || 'No metabolic risks identified.';
+    document.getElementById('ws-energy-analysis').textContent = report.health_risk_report?.energy_and_fatigue_analysis || 'No energy analysis details.';
+    document.getElementById('ws-digestive-analysis').textContent = report.health_risk_report?.digestive_analysis || 'No digestive analysis details.';
+    document.getElementById('ws-tone').textContent = report.empathic_communication_strategy?.recommended_tone || 'Encouraging & informative';
+
+    // Nutrient Gaps Badges
+    var gapContainer = document.getElementById('ws-nutrient-gaps');
+    gapContainer.innerHTML = '';
+    var gaps = report.nutrient_gaps || [];
+    if (gaps.length === 0) {
+      gapContainer.innerHTML = '<span style="color:var(--muted); font-size:12px;">No specific gaps identified.</span>';
+    } else {
+      gaps.forEach(function(tag) {
+        var badge = document.createElement('span');
+        badge.className = 'ws-badge ' + tag;
+        badge.textContent = tag.replace(/_/g, ' ');
+        gapContainer.appendChild(badge);
+      });
+    }
+
+    // Icebreaker Phrases
+    var iceContainer = document.getElementById('ws-icebreakers');
+    iceContainer.innerHTML = '';
+    var icebreakers = report.empathic_communication_strategy?.icebreaker_phrases || [];
+    if (icebreakers.length === 0) {
+      iceContainer.innerHTML = '<div style="color:var(--muted); font-size:12px;">No icebreakers suggested.</div>';
+    } else {
+      icebreakers.forEach(function(phrase) {
+        var btn = document.createElement('button');
+        btn.className = 'ws-copy-btn';
+        btn.textContent = phrase;
+        btn.onclick = function() {
+          navigator.clipboard.writeText(phrase).then(function() {
+            showToast('Icebreaker copied!', 'success');
+          }).catch(function() {
+            showToast('Copy failed', 'error');
+          });
+        };
+        iceContainer.appendChild(btn);
+      });
+    }
+
+    // Show Report
+    document.getElementById('ws-report-loading').style.display = 'none';
+    document.getElementById('ws-report-content').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('ws-report-loading').style.display = 'none';
+    showToast('AI analysis error: ' + e.message, 'error');
+    switchWsTab('form');
+  }
 }
 
 // ── FINANCE AI INSIGHTS ──
