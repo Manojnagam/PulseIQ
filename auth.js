@@ -27,11 +27,10 @@ var _centerAuth = null;
 var ACTIVE_CENTER = '';
 var OWNER_PROFILE = null;
 
-function initAuthClient() {
+async function initAuthClient() {
   if (_sbAuth) return;
   if (!window.supabase) {
-    console.error('Supabase library not loaded yet!');
-    return;
+    await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2');
   }
   _sbAuth = window.supabase.createClient(CENTER_SB_URL, CENTER_SB_KEY, {
     auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
@@ -39,7 +38,7 @@ function initAuthClient() {
 }
 
 async function checkExistingSession() {
-  initAuthClient();
+  await initAuthClient();
   if (!_sbAuth) return false;
   var d = await _sbAuth.auth.getSession();
   if (d.data && d.data.session) {
@@ -89,6 +88,7 @@ function showCodeErr(msg) {
 }
 
 async function signOut() {
+  await initAuthClient();
   if (_sbAuth) await _sbAuth.auth.signOut();
   _authUser = null; _authSession = null;
   window._authUser = null; window._authSession = null;
@@ -99,7 +99,7 @@ async function signOut() {
 }
 
 async function sendOtpCode() {
-  initAuthClient();
+  await initAuthClient();
   if (!_sbAuth) return;
   var email = (document.getElementById('login-email').value || '').trim();
   if (!email) { showLoginErr('Please enter your email address.'); return; }
@@ -144,6 +144,7 @@ async function sendOtpCode() {
 }
 
 async function verifyOtpCode() {
+  await initAuthClient();
   var email = (document.getElementById('login-email').value || '').trim();
   var token = (document.getElementById('login-otp').value || '').trim();
   if (!token || token.length < 6) { showCodeErr('Please enter the login code.'); return; }
@@ -203,20 +204,24 @@ async function loadAndStartDashboard() {
 
 window.onload = async function() {
   try {
-    initAuthClient();
-    if (!_sbAuth) return;
+    var hasTokens = localStorage.getItem('pz_session_tokens') || localStorage.getItem('sb-erteibdxzdvsaujptxsd-auth-token');
+    if (hasTokens) {
+      await initAuthClient();
+    }
     
-    _sbAuth.auth.onAuthStateChange(function(event, session) {
-      if (event === 'TOKEN_REFRESHED' && session) {
-        _authSession = session;
-        window._authSession = session;
-        localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
-      }
-      if (event === 'SIGNED_IN' && session) {
-        _authSession = session;
-        window._authSession = session;
-      }
-    });
+    if (_sbAuth) {
+      _sbAuth.auth.onAuthStateChange(function(event, session) {
+        if (event === 'TOKEN_REFRESHED' && session) {
+          _authSession = session;
+          window._authSession = session;
+          localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
+        }
+        if (event === 'SIGNED_IN' && session) {
+          _authSession = session;
+          window._authSession = session;
+        }
+      });
+    }
 
     var SIXTY_DAYS = 60 * 24 * 60 * 60 * 1000;
     var rememberedEmail = localStorage.getItem('pz_remembered_email');
@@ -224,7 +229,10 @@ window.onload = async function() {
     var deviceTrusted = rememberedEmail && (Date.now() - loginTs) < SIXTY_DAYS;
 
     if (!deviceTrusted) {
-      var sessionRestored = await checkExistingSession();
+      var sessionRestored = false;
+      if (hasTokens) {
+        sessionRestored = await checkExistingSession();
+      }
       if (sessionRestored) {
         if (_authUser && _authUser.email) {
           localStorage.setItem('pz_remembered_email', _authUser.email);
