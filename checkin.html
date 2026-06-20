@@ -710,8 +710,9 @@ async function executeProfileCheckin(profile) {
     // Mark attendance
     await req('POST', 'attendance', {
       customer_id: cust.id,
+      customer_name: cust.name,
       date: todayStr,
-      wellness_center_id: centerId,
+      status: 'present',
       servings: 1,
       check_in_time: checkInTime,
       notes: qrNotes

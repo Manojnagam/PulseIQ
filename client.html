@@ -2941,8 +2941,9 @@ async function executeClientCheckin() {
     
     await req('POST', 'attendance', {
       customer_id: CUST.id,
+      customer_name: CUST.name,
       date: todayStr,
-      wellness_center_id: centerId,
+      status: 'present',
       servings: 1,
       check_in_time: checkInTime,
       notes: qrNotes
