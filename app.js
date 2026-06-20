@@ -13,7 +13,7 @@ function loadScript(src) {
     document.head.appendChild(s);
   });
 }
-var SB_URL = null; var SB_KEY = null;
+var SB_URL = window.SB_URL || null; var SB_KEY = window.SB_KEY || null;
 // Center owners (₹1999) use a separate Supabase project — keeps their data isolated from supervisor's data
 var CENTER_SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
 var CENTER_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
@@ -25,9 +25,9 @@ var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
 var WA_LANG = localStorage.getItem('waLang') || 'English';
 
 // ── AUTH ──
-var _sbAuth = null;
-var _authUser = null;
-var _authSession = null;
+var _sbAuth = window._sbAuth || null;
+var _authUser = window._authUser || null;
+var _authSession = window._authSession || null;
 
 function initAuthClient() {
   if (_sbAuth) return;
@@ -1401,7 +1401,7 @@ function saveWaLang() {
   WA_LANG = lang;
   showToast('Default WhatsApp language set to: ' + lang, 'success');
 }
-window.onload = async function() {
+async function bootDashboard() {
   try {
     // ── STEP 1: Auth check ──
     initAuthClient();
@@ -1477,7 +1477,12 @@ window.onload = async function() {
       + '<button onclick="location.reload()" style="background:#1a3a28;color:#fff;border:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🔄 Reload App</button>'
       + '</div>';
   }
-};
+}
+
+window.bootDashboard = bootDashboard;
+if (!window.authSplitActive) {
+  window.onload = bootDashboard;
+}
 
 // ── REFRESH BUTTON ──
 async function refreshDashboard() {
