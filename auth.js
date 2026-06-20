@@ -171,6 +171,13 @@ async function verifyOtpCode() {
 }
 
 async function loadAndStartDashboard() {
+  var temp = document.getElementById('dashboard-template');
+  if (temp) {
+    var clone = temp.content.cloneNode(true);
+    document.body.appendChild(clone);
+    temp.remove();
+  }
+
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-loading').style.display = 'flex';
   
