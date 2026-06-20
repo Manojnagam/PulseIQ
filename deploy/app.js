@@ -5334,7 +5334,7 @@ function gridServAdj(delta) {
 async function gridServSave(id, name, date) {
   var v = parseInt(document.getElementById('grid-serv-val').textContent) || 1;
   document.getElementById('grid-cell-popup').style.display = 'none';
-  getCredentials(); if(!SB_URL||!SB_KEY) return;
+  getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()) return;
   var existing = D.attendance.find(function(a){return a.customer_id===id && a.date===date;});
   try {
     if(existing) { await dbUpdate('attendance', existing.id, {status:'present', servings:v}); }
@@ -9367,7 +9367,7 @@ function editSvBody(id) {
 }
 async function delSvBody(id) {
   if(!confirm('Delete this record?')) return;
-  getCredentials(); if(!SB_URL||!SB_KEY) return;
+  getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()) return;
   try { await dbDelete('body_composition', id); await loadBody(); renderSvBody(); }
   catch(e) { showToast('Error: '+e.message,'error'); }
 }
@@ -9627,7 +9627,7 @@ function sendLoyaltyWA(cid){
   window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
 async function loadPackHistory(){
-  getCredentials();if(!SB_URL||!SB_KEY)return;
+  getCredentials();if(!getActiveSbUrl()||!getActiveSbKey())return;
   try{var r=await dbGet('pack_history','start_date', _custIdsFilter());D.packHistory=Array.isArray(r)?r:[];}
   catch(e){D.packHistory=[];}
 }
@@ -10205,7 +10205,7 @@ function renderOrgTree(){
 // COUPONS
 // ══════════════════════════════════════════════
 async function loadCoupons(){
-  getCredentials();if(!SB_URL||!SB_KEY)return;
+  getCredentials();if(!getActiveSbUrl()||!getActiveSbKey())return;
   try{var r=await dbGet('coupons','created_at');D.coupons=Array.isArray(r)?r:[];}
   catch(e){D.coupons=[];}
 }
@@ -10458,7 +10458,7 @@ async function saveShakeRedemption(){
 // PARTIAL PAYMENTS
 // ══════════════════════════════════════════════
 async function loadPayments(){
-  getCredentials();if(!SB_URL||!SB_KEY)return;
+  getCredentials();if(!getActiveSbUrl()||!getActiveSbKey())return;
   try{var r=await dbGet('payments','payment_date');D.payments=Array.isArray(r)?r:[];}
   catch(e){D.payments=[];}
   renderPayments();checkOverduePayments();
@@ -11199,7 +11199,7 @@ async function executePromotion() {
   var coach = D.coaches.find(function(c){return c.id===_promoteCoachId;});
   if(!coach) return;
   getCredentials();
-  if(!SB_URL||!SB_KEY){showToast('Supabase not configured','error');return;}
+  if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Supabase not configured','error');return;}
   var centerName=document.getElementById('promote-center-name').value.trim();
   var location=document.getElementById('promote-center-location').value.trim();
   var contact=document.getElementById('promote-center-contact').value.trim();
@@ -11374,7 +11374,7 @@ async function saveWalkin(){
     notes:(document.getElementById('walkin-notes').value||'').trim(),
     wellness_center_id:ACTIVE_CENTER||null
   };
-  getCredentials(); if(!SB_URL||!SB_KEY){showToast('Supabase not configured','error');return;}
+  getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Supabase not configured','error');return;}
   var existingFinanceId = document.getElementById('walkin-finance-id') ? document.getElementById('walkin-finance-id').value : '';
   var hasAmount = data.outcome === 'product_sale' && data.amount_received > 0;
   var finDesc = 'Walk-in product sale — ' + name + (data.product_details ? ' (' + data.product_details + ')' : '');
