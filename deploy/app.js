@@ -1891,6 +1891,74 @@ function toggleNavGroup(id) {
   lbl.classList.toggle('collapsed', !isCollapsed);
 }
 
+function autofillBodyHeightAge(custId) {
+  var el_h = document.getElementById('body-height');
+  var el_a = document.getElementById('body-age-field');
+  if (!el_h || !el_a) return;
+
+  if (!custId) {
+    el_h.value = '';
+    el_a.value = '';
+    return;
+  }
+
+  // 1. Supervisor (Myself)
+  if (custId === '__sv__') {
+    var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+    var svId = op.sv_body_id;
+    var lastRec = svId ? (D.body||[]).filter(function(b){return b.customer_id===svId;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0] : null;
+    if (lastRec) {
+      if (lastRec.height) el_h.value = lastRec.height;
+      if (lastRec.age)    el_a.value = lastRec.age;
+    } else {
+      var p = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+      if (p.height) el_h.value = p.height;
+      if (p.age)    el_a.value = p.age;
+    }
+    return;
+  }
+
+  // 2. Resolve walkin vs customer/coach
+  var isWalkin = custId.startsWith('walkin__');
+  var resolvedId = isWalkin ? custId.slice(8) : custId;
+
+  // Find latest record in body composition
+  var lastRec = (D.body||[]).filter(function(b){return b.customer_id === resolvedId;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0];
+  
+  var heightVal = '';
+  var ageVal = '';
+
+  if (lastRec) {
+    if (lastRec.height) heightVal = lastRec.height;
+    if (lastRec.age)    ageVal = lastRec.age;
+  }
+
+  // If latest scan record doesn't have height or age, fallback to profile info
+  if (!heightVal || !ageVal) {
+    var person = null;
+    if (isWalkin) {
+      person = (D.walkins||[]).find(function(w){return w.id === resolvedId;});
+    } else {
+      person = D.customers.find(function(c){return c.id === resolvedId;})
+            || D.coaches.find(function(c){return c.id === resolvedId;});
+    }
+
+    if (person) {
+      if (!heightVal && person.height) heightVal = person.height;
+      if (!ageVal) {
+        if (person.age) {
+          ageVal = person.age;
+        } else if (person.dob) {
+          ageVal = Math.floor((new Date() - new Date(person.dob)) / (365.25 * 24 * 3600 * 1000));
+        }
+      }
+    }
+  }
+
+  el_h.value = heightVal;
+  el_a.value = ageVal;
+}
+
 // ── MODALS ──
 function openModal(type) {
   document.getElementById('modal-'+type).classList.add('open');
@@ -1913,11 +1981,14 @@ function openModal(type) {
     }
   }
   // Auto-fill customer in body modal from the selected customer in body section
-  if(type==='body' && _selectedBodyCustId) {
+  if(type==='body') {
     var bodyCust = document.getElementById('body-customer');
     if(bodyCust && !document.getElementById('body-id').value) {
-      var _isWalkin = (D.walkins||[]).some(function(w){ return w.id === _selectedBodyCustId; });
-      bodyCust.value = _isWalkin ? 'walkin__' + _selectedBodyCustId : _selectedBodyCustId;
+      if(_selectedBodyCustId) {
+        var _isWalkin = (D.walkins||[]).some(function(w){ return w.id === _selectedBodyCustId; });
+        bodyCust.value = _isWalkin ? 'walkin__' + _selectedBodyCustId : _selectedBodyCustId;
+      }
+      autofillBodyHeightAge(bodyCust.value);
     }
   }
 }
@@ -6752,19 +6823,8 @@ function editAttendance(id) {
 }
 
 // ── SAVE BODY ──
-document.getElementById('body-customer').addEventListener('change', async function() {
-  const custId = this.value;
-  if (!custId || !getActiveSbUrl() || !getActiveSbKey()) return;
-  const res = await fetch(getActiveSbUrl() + '/rest/v1/customers?id=eq.' + custId, {
-    headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
-  });
-  const data = await res.json();
-  if (data && data[0]) {
-    const el_h = document.getElementById('body-height');
-    const el_a = document.getElementById('body-age-field');
-    if (el_h && data[0].height) el_h.value = data[0].height;
-    if (el_a && data[0].age) el_a.value = data[0].age;
-  }
+document.getElementById('body-customer').addEventListener('change', function() {
+  autofillBodyHeightAge(this.value);
 });
 
 function calcBody() {
