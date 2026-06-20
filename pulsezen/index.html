@@ -10,7 +10,12 @@
   <title>PulseZen — Get Your Wellness Center Online</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  </noscript>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <style>
     :root {
       --primary: #1a3a28;
@@ -25,7 +30,7 @@
       --border: #e5e7eb;
       --white: #ffffff;
       --success: #16a34a;
-      --wa: #25D366;
+      --wa: #128266;
       --shadow-sm: 0 1px 4px rgba(0,0,0,.06);
       --shadow-md: 0 4px 20px rgba(0,0,0,.09);
       --shadow-lg: 0 12px 40px rgba(0,0,0,.12);
@@ -488,14 +493,14 @@
     footer { background: #030a05; padding: 44px 24px; text-align: center; }
     .footer-inner { max-width: 700px; margin: 0 auto; }
     .footer-brand { font-family: 'DM Serif Display', serif; font-size: 24px; color: #fff; margin-bottom: 4px; }
-    .footer-powered { font-size: 11px; color: rgba(255,255,255,.28); margin-bottom: 22px; }
-    .footer-powered a { color: rgba(255,255,255,.42); text-decoration: none; }
+    .footer-powered { font-size: 11px; color: rgba(255,255,255,.62); margin-bottom: 22px; }
+    .footer-powered a { color: rgba(255,255,255,.85); text-decoration: underline; }
     .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 22px; flex-wrap: wrap; }
-    .footer-links a { font-size: 13px; color: rgba(255,255,255,.38); text-decoration: none; transition: color .2s; }
-    .footer-links a:hover { color: rgba(255,255,255,.7); }
+    .footer-links a { font-size: 13px; color: rgba(255,255,255,.72); text-decoration: underline; transition: color .2s; }
+    .footer-links a:hover { color: rgba(255,255,255,1); text-decoration: underline; }
     .footer-divider { height: 1px; background: rgba(255,255,255,.06); margin-bottom: 20px; }
-    .footer-copy { font-size: 11px; color: rgba(255,255,255,.2); line-height: 1.6; }
-    .footer-disclaimer { font-size: 10px; color: rgba(255,255,255,.14); margin-top: 8px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+    .footer-copy { font-size: 11px; color: rgba(255,255,255,.5); line-height: 1.6; }
+    .footer-disclaimer { font-size: 10px; color: rgba(255,255,255,.48); margin-top: 8px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5; }
 
     /* ── REGISTER SECTION ── */
     .reg-wrap { max-width: 600px; margin: 0 auto; background: var(--white); border-radius: 24px; padding: 44px 40px; box-shadow: 0 8px 40px rgba(0,0,0,.1); text-align: left; }
