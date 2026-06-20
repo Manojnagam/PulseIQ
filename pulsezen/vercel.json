@@ -8,5 +8,19 @@
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "^/$", "dest": "/api/router" },
     { "src": "/(.*)", "dest": "/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=3600, stale-while-revalidate=600" }
+      ]
+    },
+    {
+      "source": "/(.*).html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=3600, stale-while-revalidate=600" }
+      ]
+    }
   ]
 }
