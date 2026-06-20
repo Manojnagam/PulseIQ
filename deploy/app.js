@@ -1467,6 +1467,8 @@ async function bootDashboard() {
     ['att-date','body-date','fin-date','inv-in-date','inv-out-date','inv-sum-date','inv-usage-date'].forEach(function(id){
       var el = document.getElementById(id); if(el) el.value = today;
     });
+    // Start live check-in polling (every 15s)
+    setInterval(pollQrCheckins, 15000);
   } catch(e) {
     console.error('startup crash:', e);
     document.body.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8faf8;padding:32px;text-align:center">'
@@ -13555,6 +13557,83 @@ async function removeContestParticipant(pid) {
 // LEAD ENGINEER ADDITIONS
 // ==========================================
 
+// --- Chime Sound & Real-time Check-in Polling ---
+function playChimeSound() {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    var now = ctx.currentTime;
+    osc.type = 'sine';
+    
+    // Note 1: E5
+    osc.frequency.setValueAtTime(659.25, now);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    
+    // Note 2: A5
+    osc.frequency.setValueAtTime(880.00, now + 0.15);
+    gain.gain.setValueAtTime(0.15, now + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    
+    osc.start(now);
+    osc.stop(now + 0.6);
+  } catch(e) {
+    console.error("Failed to play chime:", e);
+  }
+}
+
+async function pollQrCheckins() {
+  if (!getActiveSbUrl() || !getActiveSbKey()) return;
+  var todayStr = new Date().toISOString().split('T')[0];
+  try {
+    // Only query today's attendance records to keep payload tiny
+    var todayAtt = await dbGet('attendance', 'date', '&date=eq.' + todayStr);
+    var todayCoachAtt = await dbGet('coach_attendance', 'date', '&date=eq.' + todayStr);
+    
+    var hasNew = false;
+    
+    if (Array.isArray(todayAtt)) {
+      todayAtt.forEach(function(att) {
+        var exists = D.attendance.some(function(a) { return a.id === att.id; });
+        if (!exists) {
+          D.attendance.push(att);
+          hasNew = true;
+          showToast('🌿 ' + att.customer_name + ' checked in via QR kiosk!', 'success');
+          playChimeSound();
+        }
+      });
+    }
+    
+    if (Array.isArray(todayCoachAtt)) {
+      todayCoachAtt.forEach(function(att) {
+        if (typeof D.coachAttendance === 'undefined') D.coachAttendance = [];
+        var exists = D.coachAttendance.some(function(a) { return a.id === att.id; });
+        if (!exists) {
+          D.coachAttendance.push(att);
+          var coach = D.coaches.find(function(c) { return c.id === att.coach_id; });
+          var coachName = coach ? coach.name : 'Coach';
+          showToast('👨‍🏫 Coach ' + coachName + ' checked in via QR kiosk!', 'success');
+          playChimeSound();
+          hasNew = true;
+        }
+      });
+    }
+    
+    if (hasNew) {
+      _daysLeftCache = {};
+      renderOverview();
+      renderAttendance();
+    }
+  } catch(e) {
+    console.error("Polling error:", e);
+  }
+}
+
 // --- QR Check-in Kiosk ---
 function openQrKioskModal() {
   var centerId = ACTIVE_CENTER;
@@ -13564,8 +13643,7 @@ function openQrKioskModal() {
     return;
   }
   var centerName = getCenterName();
-  var baseUrl = window.location.origin + '/checkin.html';
-  var qrUrl = baseUrl + '?center=' + encodeURIComponent(centerId) + '&url=' + encodeURIComponent(SB_URL || '') + '&key=' + encodeURIComponent(SB_KEY || '');
+  var qrUrl = window.location.origin + '/client.html?center=' + encodeURIComponent(centerId) + '&action=checkin';
   
   document.getElementById('qr-kiosk-center-name').textContent = centerName;
   document.getElementById('qr-kiosk-url').textContent = qrUrl;

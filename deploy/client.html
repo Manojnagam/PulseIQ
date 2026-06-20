@@ -604,6 +604,18 @@ button:active {
       <div id="diet-body"></div>
     </div>
 
+    <!-- SELF CHECK-IN STATUS MODAL -->
+    <div id="checkin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;padding:16px;overflow-y:auto;backdrop-filter:blur(10px);align-items:center;justify-content:center">
+      <div style="background:#224330;border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:32px 24px;max-width:400px;width:100%;margin:auto;text-align:center;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.5)">
+        <div id="checkin-modal-icon" style="width:64px;height:64px;background:#22c55e;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 20px rgba(34,197,94,0.3)">
+          <span style="font-size:32px">🌿</span>
+        </div>
+        <h3 id="checkin-modal-title" style="margin:0 0 10px;font-size:22px;font-family:'DM Serif Display',serif;color:#fff">Check-in Complete! 🎉</h3>
+        <p id="checkin-modal-msg" style="margin:0 0 20px;font-size:14px;color:#cbd5e1;line-height:1.5">Your attendance has been marked for today.</p>
+        <button onclick="closeCheckinModal()" class="login-btn" style="background:#4ade80;color:#0f2318;font-weight:700;padding:12px 24px;width:100%;border:none;border-radius:10px;cursor:pointer">Done</button>
+      </div>
+    </div>
+
     <!-- CERTIFICATE MODAL -->
     <div id="cert-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;padding:16px;overflow-y:auto;backdrop-filter:blur(10px)">
       <div style="background:#224330;border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:24px;max-width:500px;margin:40px auto;text-align:center;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.3)">
@@ -951,6 +963,7 @@ async function doLogin() {
     }
 
     CUST = cust;
+    localStorage.setItem('clientCustId', cust.id);
     launchApp();
   } catch(e) {
     errEl.textContent = 'Connection error. Try again.';
@@ -969,6 +982,11 @@ async function launchApp() {
   document.getElementById('ov-sub').textContent = 'Loading your dashboard...';
   await loadData();
   renderOverview();
+  
+  if (_pendingAction === 'checkin') {
+    _pendingAction = null;
+    await executeClientCheckin();
+  }
 }
 
 async function loadData() {
@@ -2886,6 +2904,90 @@ document.addEventListener('click', function(evt) {
   }
 });
 
+// ── SELF CHECK-IN LOGIC ──
+var _pendingAction = null;
+var _pendingCenter = null;
+
+async function executeClientCheckin() {
+  var todayStr = new Date().toISOString().split('T')[0];
+  var centerId = _pendingCenter || CUST.wellness_center_id;
+  
+  if (!centerId) {
+    showCheckinModal(false, "Error: Wellness Center not identified. Please ask your coach.");
+    return;
+  }
+  
+  try {
+    // 1. Check if membership is active
+    var status = (CUST.status || 'Active').toLowerCase();
+    if (status !== 'active') {
+      showCheckinModal(false, "Your membership is currently inactive. Please talk to your coach.");
+      return;
+    }
+    
+    // 2. Check duplicate check-in today based on shake frequency
+    var todayAtt = await req('GET', 'attendance', null, 'customer_id=eq.' + CUST.id + '&date=eq.' + todayStr);
+    var maxAllowedShakes = CUST.shake_frequency === 'twice' ? 2 : 1;
+    if (todayAtt && todayAtt.length >= maxAllowedShakes) {
+      var freqText = CUST.shake_frequency === 'twice' ? 'twice' : 'today';
+      showCheckinModal(true, "Already checked in " + freqText + "! 👍");
+      return;
+    }
+    
+    // 3. Mark attendance
+    var deviceType = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+    var checkInTime = new Date().toTimeString().slice(0, 5);
+    var qrNotes = "Self check-in via QR (" + deviceType + "/ClientPortal)";
+    
+    await req('POST', 'attendance', {
+      customer_id: CUST.id,
+      date: todayStr,
+      wellness_center_id: centerId,
+      servings: 1,
+      check_in_time: checkInTime,
+      notes: qrNotes
+    });
+    
+    // Reload dashboard data dynamically to reflect checkin instantly
+    try {
+      await loadData();
+      renderOverview();
+    } catch(err) {}
+    
+    showCheckinModal(true, "Check-in Complete! 🎉");
+  } catch(e) {
+    console.error("Checkin error:", e);
+    showCheckinModal(false, "Failed to complete check-in. Try again.");
+  }
+}
+
+function showCheckinModal(success, msg) {
+  var modal = document.getElementById('checkin-modal');
+  var iconBg = document.getElementById('checkin-modal-icon');
+  var title = document.getElementById('checkin-modal-title');
+  var msgEl = document.getElementById('checkin-modal-msg');
+  
+  if (success) {
+    iconBg.style.background = '#22c55e';
+    iconBg.innerHTML = '<span style="font-size:32px">🌿</span>';
+    title.textContent = 'Check-in Complete! 🎉';
+  } else {
+    iconBg.style.background = '#ef4444';
+    iconBg.innerHTML = '<span style="font-size:32px">⚠️</span>';
+    title.textContent = 'Check-in Failed';
+  }
+  msgEl.textContent = msg;
+  modal.style.display = 'flex';
+}
+
+function closeCheckinModal() {
+  document.getElementById('checkin-modal').style.display = 'none';
+  // Remove the action parameters from URL to avoid repeated check-in on refresh
+  var url = new URL(window.location.href);
+  url.searchParams.delete('action');
+  window.history.replaceState({}, document.title, url.toString());
+}
+
 // ── LOGOUT ──
 function logout() {
   CUST = null;
@@ -2918,10 +3020,52 @@ function toggleTheme() {
 }
 
 // ── BOOT ──
-window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', async function() {
   initTheme();
+  
+  var params = new URLSearchParams(window.location.search);
+  _pendingAction = params.get('action');
+  _pendingCenter = params.get('center');
+  
+  var savedId = localStorage.getItem('clientCustId');
+  if (savedId) {
+    document.getElementById('login-screen').style.display = 'none';
+    
+    // Show temporary spinner
+    var loadingEl = document.createElement('div');
+    loadingEl.id = 'client-auto-loading';
+    loadingEl.style = "position:fixed;inset:0;background:#1a3a28;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:99999;gap:16px;font-family:inherit;";
+    loadingEl.innerHTML = '<div style="font-size:44px;animation:spin 1.5s linear infinite">🌿</div><div style="font-weight:600;font-size:16px;">Loading your profile...</div><style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>';
+    document.body.appendChild(loadingEl);
+    
+    if (_pendingCenter) {
+      CENTER_ID = _pendingCenter;
+    }
+    await resolveCenterParam();
+    
+    try {
+      var results = await req('GET', 'customers', null, 'id=eq.' + encodeURIComponent(savedId));
+      if (results && results.length) {
+        CUST = results[0];
+        await launchApp();
+        if (document.getElementById('client-auto-loading')) {
+          document.getElementById('client-auto-loading').remove();
+        }
+        return;
+      }
+    } catch(e) {
+      console.error("Auto-login failed:", e);
+    }
+    
+    if (document.getElementById('client-auto-loading')) {
+      document.getElementById('client-auto-loading').remove();
+    }
+    localStorage.removeItem('clientCustId');
+  } else {
+    await resolveCenterParam();
+  }
+  
   document.getElementById('login-screen').style.display = 'flex';
-  resolveCenterParam();
 });
 </script>
 </body>
