@@ -272,7 +272,7 @@
       display: flex; align-items: center; justify-content: center; font-size: 17px;
       box-shadow: 0 3px 10px rgba(26,58,40,.18);
     }
-    .about-point-text h4 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .about-point-text h3 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
     .about-point-text p { font-size: 13px; color: var(--muted); line-height: 1.6; }
     .about-location-note {
       margin-top: 14px; font-size: 13px; color: var(--muted); line-height: 1.7;
@@ -548,14 +548,14 @@
     footer { background: #030a05; padding: 44px 24px; text-align: center; }
     .footer-inner { max-width: 700px; margin: 0 auto; }
     .footer-brand { font-family: 'DM Serif Display', serif; font-size: 22px; color: #fff; margin-bottom: 4px; }
-    .footer-powered { font-size: 11px; color: rgba(255,255,255,.28); margin-bottom: 20px; }
-    .footer-powered a { color: rgba(255,255,255,.45); text-decoration: none; }
+    .footer-powered { font-size: 11px; color: rgba(255,255,255,.7); margin-bottom: 20px; }
+    .footer-powered a { color: rgba(255,255,255,.85); text-decoration: underline; }
     .footer-links { display: flex; gap: 22px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
-    .footer-links a { font-size: 13px; color: rgba(255,255,255,.38); text-decoration: none; transition: color .2s; }
-    .footer-links a:hover { color: rgba(255,255,255,.7); }
+    .footer-links a { font-size: 13px; color: rgba(255,255,255,.7); text-decoration: underline; transition: color .2s; }
+    .footer-links a:hover { color: rgba(255,255,255,1); text-decoration: underline; }
     .footer-divider { height: 1px; background: rgba(255,255,255,.06); margin-bottom: 18px; }
-    .footer-copy { font-size: 11px; color: rgba(255,255,255,.2); line-height: 1.6; }
-    .footer-disclaimer { font-size: 10px; color: rgba(255,255,255,.14); margin-top: 8px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+    .footer-copy { font-size: 11px; color: rgba(255,255,255,.6); line-height: 1.6; }
+    .footer-disclaimer { font-size: 10px; color: rgba(255,255,255,.5); margin-top: 8px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5; }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
@@ -678,21 +678,21 @@
           <div class="about-point">
             <div class="about-point-icon">📊</div>
             <div class="about-point-text">
-              <h4>Body Composition Analysis</h4>
+              <h3>Body Composition Analysis</h3>
               <p>Scientific body scanning to track your real progress — not just weight, but fat, muscle and overall health score.</p>
             </div>
           </div>
           <div class="about-point">
             <div class="about-point-icon">🥗</div>
             <div class="about-point-text">
-              <h4>Personalised Meal Plans</h4>
+              <h3>Personalised Meal Plans</h3>
               <p>Custom 7-day meal plans based on your goal, age, and lifestyle — no generic diets.</p>
             </div>
           </div>
           <div class="about-point">
             <div class="about-point-icon">💬</div>
             <div class="about-point-text">
-              <h4>Daily Coach Support</h4>
+              <h3>Daily Coach Support</h3>
               <p>Your coach stays connected with you throughout your journey — guidance, motivation and accountability.</p>
             </div>
           </div>
@@ -1007,6 +1007,7 @@
       <div class="location-map">
         <iframe
           src="https://maps.google.com/maps?q=Dharani's+Wellness+Center&output=embed"
+          title="Google Maps Location"
           allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade">
         </iframe>
       </div>
