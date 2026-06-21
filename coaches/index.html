@@ -1171,7 +1171,7 @@ button:active, .btn-p:active, .btn-e:active, .btn-d:active, .btn-c:active {
       <div class="fg"><label>Gender</label><select id="cust-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Pack Type</label><select id="cust-pack"><option value="">No Pack</option><option value="26 days">26 Days</option><option value="30 days">30 Days</option><option value="3 days">3 Days (Trial)</option></select></div>
+      <div class="fg"><label>Pack Type</label><select id="cust-pack" onchange="onCoachCustPackChange()"><option value="">No Pack</option><option value="Star UMS 90 days">Star UMS 90 days</option><option value="26 days">26 Days</option><option value="30 days">30 Days</option><option value="3 days">3 Days (Trial)</option></select></div>
       <div class="fg"><label>Pack Start Date</label><input type="date" id="cust-pack-start"></div>
     </div>
     <div class="fg"><label>Goal</label><input type="text" id="cust-goal" placeholder="Weight loss, muscle gain..."></div>
@@ -2138,6 +2138,7 @@ function showToast(msg, type) {
 function parsePack(packType) {
   if (!packType) return 30;
   var t = packType.toLowerCase();
+  if (/\b90\b/.test(t)) return 90;
   if (/\b26\b/.test(t)) return 26;
   if (/\b3\b/.test(t) && !/\b30\b/.test(t)) return 3;
   return 30;
@@ -2633,6 +2634,13 @@ function openCustModal(id) {
   openModal('cust');
 }
 
+function onCoachCustPackChange() {
+  var pack = document.getElementById('cust-pack').value;
+  if (pack === 'Star UMS 90 days') {
+    var pr = document.getElementById('cust-pack-price');
+    if (pr) { pr.value = 15000; onCoachPackPriceChange(); }
+  }
+}
 function onCoachPackPriceChange() {
   var price = Number(document.getElementById('cust-pack-price').value) || 0;
   var isNew = !document.getElementById('cust-id').value;

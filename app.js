@@ -953,6 +953,7 @@ var PIN_TIPS = {'Preferred Customer':'Become an Associate to start building your
 
 // ── VP & PIN QUALIFICATION ──
 var VP_PER_PACK = {
+  'Star UMS 90 days': 168,
   'Premium 30 days': 56,
   'Standard 26 days': 48,
   'Hot Drink 30 days': 7.8,
@@ -975,6 +976,7 @@ function getVPForPack(packType) {
   for(var key in VP_PER_PACK) { if(packType.includes(key) || key.includes(packType)) return VP_PER_PACK[key]; }
   // Fuzzy match
   var t = packType.toLowerCase();
+  if(t.includes('star') || t.includes('ums')) return 168;
   if(t.includes('premium') && t.includes('30')) return 56;
   if(t.includes('standard') && t.includes('26')) return 48;
   if(t.includes('hot') || t.includes('drink')) return 7.8;
@@ -2058,6 +2060,7 @@ function parsePack(packType) {
   if (!packType) return 30;
   var t = packType.toLowerCase();
   if (t === 'product user') return 9999; // never expires
+  if (/\b90\b/.test(t)) return 90;
   if (/\b26\b/.test(t)) return 26;
   if (/\b3\b/.test(t) && !/\b30\b/.test(t)) return 3;
   return 30;
@@ -9533,6 +9536,13 @@ function onRenewPayModeChange(){
   document.getElementById('renew-partial-row').style.display = mode==='partial'?'block':'none';
   document.getElementById('renew-none-row').style.display    = mode==='none'?'block':'none';
 }
+function onRenewPackTypeChange() {
+  var pack = document.getElementById('renew-pack-type').value;
+  if (pack === 'Star UMS 90 days') {
+    var pr = document.getElementById('renew-price');
+    if (pr) { pr.value = 15000; onRenewPriceChange(); }
+  }
+}
 function onRenewPriceChange(){
   // reset paid-now if price changes
   var pn=document.getElementById('renew-paid-now'); if(pn) pn.value='';
@@ -10646,6 +10656,13 @@ async function saveCoachPaymentSetup() {
 }
 
 // ── COACH PAYMENT HELPERS ──
+function onCoachPackTypeChange() {
+  var pack = document.getElementById('coach-pack-type').value;
+  if (pack === 'Star UMS 90 days') {
+    var pr = document.getElementById('coach-pack-price');
+    if (pr) { pr.value = 15000; onCoachPackPriceChange(); }
+  }
+}
 function onCoachPackPriceChange() {
   var price = Number(document.getElementById('coach-pack-price').value)||0;
   var isNew = !document.getElementById('coach-id').value;
@@ -10693,6 +10710,13 @@ function openNewCustomerModal() {
   document.getElementById('cust-after-preview').innerHTML  = '';
   document.getElementById('customer-modal-title').textContent='Add Customer';
   openModal('customer');
+}
+function onCustomerPackChange() {
+  var pack = document.getElementById('customer-pack').value;
+  if (pack === 'Star UMS 90 days') {
+    var pr = document.getElementById('customer-pack-price');
+    if (pr) { pr.value = 15000; onPackPriceChange(); }
+  }
 }
 function onPackPriceChange() {
   var price = Number(document.getElementById('customer-pack-price').value)||0;

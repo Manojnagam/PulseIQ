@@ -883,6 +883,7 @@ function goTo(sec, btn) {
 function parsePack(packType) {
   if (!packType) return 30;
   var t = packType.toLowerCase();
+  if (/\b90\b/.test(t)) return 90;
   if (/\b26\b/.test(t)) return 26;
   if (/\b3\b/.test(t) && !/\b30\b/.test(t)) return 3;
   return 30;

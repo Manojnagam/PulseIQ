@@ -1718,7 +1718,7 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
               <input type="date" id="slicer-to" class="slicer-input" style="width:130px" onchange="setSlicer('custom',null)"/>
             </div>
           </div>
-          <div class="slicer-group"><span class="slicer-label">📦 Pack Type</span><select class="slicer-select" id="slicer-pack" onchange="renderAnalytics()"><option value="">All Packs</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option></select></div>
+          <div class="slicer-group"><span class="slicer-label">📦 Pack Type</span><select class="slicer-select" id="slicer-pack" onchange="renderAnalytics()"><option value="">All Packs</option><option>Star UMS 90 days</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option></select></div>
           <div class="slicer-group"><span class="slicer-label">🎯 Goal</span><select class="slicer-select" id="slicer-goal" onchange="renderAnalytics()"><option value="">All Goals</option><option>Weight Loss</option><option>Weight Gain</option><option>General Wellness</option></select></div>
           <div class="slicer-group"><span class="slicer-label">👤 Gender</span><select class="slicer-select" id="slicer-gender" onchange="renderAnalytics()"><option value="">All</option><option>Male</option><option>Female</option><option>Other</option></select></div>
           <div class="slicer-group">
@@ -2740,7 +2740,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">📦 Coach Pack <span style="font-weight:400;color:var(--muted)">(skip if Center Owner)</span></div>
         <div class="fg" style="margin-bottom:10px"><label for="coach-pack-owner">Shares Pack With</label><select id="coach-pack-owner" onchange="onCoachPackOwnerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— Own Pack (not shared) —</option></select></div>
         <div class="fr">
-          <div class="fg"><label for="coach-pack-type">Pack Type</label><select id="coach-pack-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">No pack</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option></select></div>
+          <div class="fg"><label for="coach-pack-type">Pack Type</label><select id="coach-pack-type" onchange="onCoachPackTypeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">No pack</option><option>Star UMS 90 days</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option></select></div>
           <div class="fg"><label for="coach-pack-start">Start Date</label><input type="date" id="coach-pack-start" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
         </div>
         <div class="fr">
@@ -3011,7 +3011,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <div id="shared-pack-info" style="display:none;background:linear-gradient(135deg,#edf3ff,#f0f4ff);border:1px solid #bfcfff;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:#2b5ce6"></div>
       <div id="own-pack-fields">
       <div class="fr">
-        <div class="fg"><label for="customer-pack">Pack Type</label><select id="customer-pack"><option value="">Select pack</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option><option>Custom</option></select></div>
+        <div class="fg"><label for="customer-pack">Pack Type</label><select id="customer-pack" onchange="onCustomerPackChange()"><option value="">Select pack</option><option>Star UMS 90 days</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option><option>Custom</option></select></div>
         <div class="fg"><label for="customer-goal">Goal</label><select id="customer-goal"><option value="">Select Goal</option><option>Weight Loss</option><option>Weight Gain</option><option>General Wellness</option></select></div>
       </div>
       <div class="fr">
@@ -3984,7 +3984,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <input type="hidden" id="renew-cust-id"/>
       <input type="hidden" id="renew-type" value="customer"/>
       <div style="background:var(--accent-light);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px"><strong id="renew-cust-name"></strong><br/><span style="color:var(--muted);font-size:12px" id="renew-prev-pack"></span></div>
-      <div class="fr"><div class="fg"><label for="renew-pack-type">New Pack *</label><select id="renew-pack-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">Select</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option></select></div><div class="fg"><label for="renew-start-date">Start Date *</label><input type="date" id="renew-start-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
+      <div class="fr"><div class="fg"><label for="renew-pack-type">New Pack *</label><select id="renew-pack-type" onchange="onRenewPackTypeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">Select</option><option>Star UMS 90 days</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option></select></div><div class="fg"><label for="renew-start-date">Start Date *</label><input type="date" id="renew-start-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div></div>
       <div class="fg" style="margin-top:12px"><label for="renew-price">Pack Price (₹)</label><input type="number" id="renew-price" placeholder="2500" oninput="onRenewPriceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"/></div>
       <div class="fg" style="margin-top:12px">
         <label for="renew-pay-mode">Payment Status</label>
