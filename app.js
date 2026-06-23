@@ -12983,7 +12983,7 @@ async function seedIndianFoods() {
     {name:'Chana Dal',goal:'weight_loss',category:'veg',calories:364,protein:20,carbs:65,fat:5.3,fiber:17.4,meal_time:'lunch'},
     {name:'Rajma (Kidney Beans)',goal:'both',category:'veg',calories:333,protein:24,carbs:60,fat:1.5,fiber:24.9,meal_time:'lunch'},
     {name:'Chana (Chickpeas)',goal:'both',category:'veg',calories:164,protein:8.9,carbs:27,fat:2.6,fiber:7.6,meal_time:'lunch'},
-    {name:'Paneer',goal:'both',category:'veg',calories:265,protein:18,carbs:1.2,fat:21,fiber:0,meal_time:'any'},
+{name:'Paneer',goal:'both',category:'veg',calories:265,protein:18,carbs:1.2,fat:21,fiber:0,meal_time:'any'},
     {name:'Curd (Homemade)',goal:'weight_loss',category:'veg',calories:61,protein:3.5,carbs:4.7,fat:3.3,fiber:0,meal_time:'any'},
     {name:'Full-fat Milk',goal:'weight_gain',category:'veg',calories:61,protein:3.2,carbs:4.8,fat:3.3,fiber:0,meal_time:'breakfast'},
     {name:'Groundnuts / Peanuts',goal:'both',category:'veg',calories:567,protein:26,carbs:16,fat:49,fiber:8.5,meal_time:'snack'},
@@ -13195,12 +13195,14 @@ async function deleteFood(id, name) {
 
 var _activeContestId = null;
 var _contestTypeFilter = 'all';
+var _activeBtpSubTab = 'weight_loss';
 
 var CONTEST_CONFIG = {
   weight_loss:  { label:'Weight Loss',  icon:'⬇️', color:'#ef4444', gradient:'linear-gradient(135deg,#c0392b,#e74c3c)', metric:'weight',          dir:-1, unit:'kg',  field:'current_weight',  startField:'start_weight' },
   weight_gain:  { label:'Weight Gain',  icon:'⬆️', color:'#2b5ce6', gradient:'linear-gradient(135deg,#1e3a8a,#2b5ce6)', metric:'weight',          dir:1,  unit:'kg',  field:'current_weight',  startField:'start_weight' },
   fat_loss:     { label:'Fat Loss',     icon:'🔥', color:'#f59e0b', gradient:'linear-gradient(135deg,#b45309,#f59e0b)', metric:'fat_percentage',  dir:-1, unit:'%',   field:'current_fat',     startField:'start_fat' },
-  muscle_gain:  { label:'Muscle Gain',  icon:'💪', color:'#27ae60', gradient:'linear-gradient(135deg,#166534,#27ae60)', metric:'muscle_percentage',dir:1,  unit:'%',   field:'current_muscle',  startField:'start_muscle' }
+  muscle_gain:  { label:'Muscle Gain',  icon:'💪', color:'#27ae60', gradient:'linear-gradient(135deg,#166534,#27ae60)', metric:'muscle_percentage',dir:1,  unit:'%',   field:'current_muscle',  startField:'start_muscle' },
+  btp:          { label:'BTP Contest',  icon:'🏆', color:'#10b981', gradient:'linear-gradient(135deg,#047857,#10b981)', metric:'multiple',        dir:1,  unit:'kg',  field:'progress',        startField:'start_weight' }
 };
 
 async function loadContests() {
@@ -13488,14 +13490,34 @@ function renderContests() {
     completedList.innerHTML = completed.map(function(c){
       var cfg = CONTEST_CONFIG[c.type] || CONTEST_CONFIG.weight_loss;
       var pts = D.contestParticipants.filter(function(p){ return p.contest_id===c.id; });
-      var winner = pts.sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); })[0];
+      var winnerHtml = '';
+      if (c.type === 'btp') {
+        var wlWinner = pts.filter(function(p){ return p.category==='weight_loss'; }).sort(function(a,b){ return b.progress - a.progress; })[0];
+        var wgWinner = pts.filter(function(p){ return p.category==='weight_gain'; }).sort(function(a,b){ return b.progress - a.progress; })[0];
+        var flWinner = pts.filter(function(p){ return p.category==='fat_loss'; }).sort(function(a,b){ return b.progress - a.progress; })[0];
+        var mgWinner = pts.filter(function(p){ return p.category==='muscle_gain'; }).sort(function(a,b){ return b.progress - a.progress; })[0];
+        
+        var winners = [];
+        if (wlWinner && wlWinner.progress > 0) winners.push('WL: ' + wlWinner.customer_name);
+        if (wgWinner && wgWinner.progress > 0) winners.push('WG: ' + wgWinner.customer_name);
+        if (flWinner && flWinner.progress > 0) winners.push('FL: ' + flWinner.customer_name);
+        if (mgWinner && mgWinner.progress > 0) winners.push('MG: ' + mgWinner.customer_name);
+        
+        winnerHtml = winners.length > 0 
+          ? '<div style="font-size:11px;font-weight:700;color:var(--accent)">🏆 ' + winners.join(', ') + '</div>'
+          : '<div style="font-size:11px;color:var(--muted)">No winners recorded</div>';
+      } else {
+        var winner = pts.sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); })[0];
+        winnerHtml = winner ? '<div style="font-size:12px;font-weight:700;color:var(--accent)">🥇 '+winner.customer_name+'</div>' : '';
+      }
+
       return '<div class="contest-completed-row" onclick="openContestDetail(\''+c.id+'\')">' +
         '<div>' +
           '<div style="font-weight:700;font-size:14px">'+cfg.icon+' '+c.name+'</div>' +
           '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+c.start_date+' → '+c.end_date+' · '+pts.length+' participants</div>' +
         '</div>' +
         '<div style="text-align:right">' +
-          (winner ? '<div style="font-size:12px;font-weight:700;color:var(--accent)">🥇 '+winner.customer_name+'</div>' : '') +
+          winnerHtml +
           (c.prize_amount > 0 ? '<div style="font-size:11px;color:var(--muted)">₹'+c.prize_amount+' prize</div>' : '') +
         '</div>' +
         '<button class="btn-d" onclick="event.stopPropagation();deleteContest(\''+c.id+'\')">🗑</button>' +
@@ -13514,19 +13536,34 @@ function buildContestCard(c, today) {
   var daysLeft = Math.max(0, totalDays - elapsedDays);
   var pct = Math.round((elapsedDays / totalDays) * 100);
 
-  // Top 3 for preview
-  var ranked = pts.slice().sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); });
-  var topHtml = ranked.slice(0,3).map(function(p,i){
-    var prog = parseFloat(p.progress||0);
-    var medal = i===0?'🥇':i===1?'🥈':'🥉';
-    var sign  = cfg.dir===1 ? (prog>0?'+':'') : (prog<0?'':'+');
-    var disp  = cfg.dir===-1 ? Math.abs(prog).toFixed(1) : prog.toFixed(1);
-    return '<div class="contest-rank-row">' +
-      '<div class="contest-rank-num '+(i===0?'contest-rank-1':i===1?'contest-rank-2':'contest-rank-3')+'">'+medal+'</div>' +
-      '<div style="flex:1;font-weight:600;font-size:13px">'+p.customer_name+'</div>' +
-      '<div style="font-size:12px;font-weight:700;color:'+cfg.color+'">'+(prog?disp+cfg.unit:'—')+'</div>' +
-    '</div>';
-  }).join('');
+  var topHtml = '';
+  if (c.type === 'btp') {
+    var countWL = pts.filter(function(p){ return p.category==='weight_loss'; }).length;
+    var countMG = pts.filter(function(p){ return p.category==='muscle_gain'; }).length;
+    var countFL = pts.filter(function(p){ return p.category==='fat_loss'; }).length;
+    var countWG = pts.filter(function(p){ return p.category==='weight_gain'; }).length;
+    topHtml = 
+      '<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">' +
+        '<strong>Categories Enrollment:</strong><br>' +
+        '⬇️ WL: <strong>'+countWL+'</strong> &nbsp;·&nbsp; ' +
+        '💪 MG: <strong>'+countMG+'</strong> &nbsp;·&nbsp; ' +
+        '🔥 FL: <strong>'+countFL+'</strong> &nbsp;·&nbsp; ' +
+        '⬆️ WG: <strong>'+countWG+'</strong>' +
+      '</div>';
+  } else {
+    var ranked = pts.slice().sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); });
+    topHtml = ranked.slice(0,3).map(function(p,i){
+      var prog = parseFloat(p.progress||0);
+      var medal = i===0?'🥇':i===1?'🥈':'🥉';
+      var sign  = cfg.dir===1 ? (prog>0?'+':'') : (prog<0?'':'+');
+      var disp  = cfg.dir===-1 ? Math.abs(prog).toFixed(1) : prog.toFixed(1);
+      return '<div class="contest-rank-row">' +
+        '<div class="contest-rank-num '+(i===0?'contest-rank-1':i===1?'contest-rank-2':'contest-rank-3')+'">'+medal+'</div>' +
+        '<div style="flex:1;font-weight:600;font-size:13px">'+p.customer_name+'</div>' +
+        '<div style="font-size:12px;font-weight:700;color:'+cfg.color+'">'+(prog?disp+cfg.unit:'—')+'</div>' +
+      '</div>';
+    }).join('');
+  }
 
   return '<div class="contest-card" onclick="openContestDetail(\''+c.id+'\')">' +
     '<div class="contest-card-banner" style="background:'+cfg.gradient+'">' +
@@ -13580,32 +13617,141 @@ function openContestDetail(id) {
       '<div style="height:100%;width:'+pct+'%;background:'+cfg.color+';border-radius:10px;transition:width .6s"></div>' +
     '</div>';
 
-  // Leaderboard
-  var ranked = pts.slice().sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); });
   var lb = document.getElementById('contest-leaderboard');
-  if (!ranked.length) {
-    lb.innerHTML = '<div class="empty"><div class="ei">👥</div><p>No participants yet. Add someone to start!</p></div>';
-  } else {
-    lb.innerHTML = '<div class="tcard" style="padding:0;overflow:hidden">' +
-      '<table><thead><tr>' +
-        '<th style="width:40px">Rank</th><th>Participant</th>' +
-        '<th>Start '+cfg.label.split(' ')[1]+'</th>' +
-        '<th>Current</th><th>Change</th><th>Actions</th>' +
-      '</tr></thead><tbody>' +
-      ranked.map(function(p, i) {
-        var medal  = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
-        var startV = parseFloat(p[cfg.startField]||0);
-        var curV   = parseFloat(p[cfg.field]||0);
-        var change = curV ? (curV - startV) : null;
-        var changeDisp = change!==null ? (change>0?'+':'')+change.toFixed(1)+cfg.unit : '—';
-        var changeColor= change===null ? 'var(--muted)' : (cfg.dir===1?(change>0?'var(--success)':'var(--danger)'):(change<0?'var(--success)':'var(--danger)'));
-        var hasProgress = change !== null && ((cfg.dir === -1 && change < 0) || (cfg.dir === 1 && change > 0));
+
+  if (c.type === 'btp') {
+    if (!_activeBtpSubTab) _activeBtpSubTab = 'weight_loss';
+
+    // Count participants per category
+    var countWL = pts.filter(function(p){ return p.category==='weight_loss'; }).length;
+    var countMG = pts.filter(function(p){ return p.category==='muscle_gain'; }).length;
+    var countFL = pts.filter(function(p){ return p.category==='fat_loss'; }).length;
+    var countWG = pts.filter(function(p){ return p.category==='weight_gain'; }).length;
+
+    var subTabsHtml = 
+      '<div class="btp-subtabs" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;border-bottom:2px solid var(--border);padding-bottom:10px">' +
+        '<button class="btp-subtab '+(_activeBtpSubTab==='weight_loss'?'active':'')+'" onclick="switchBtpSubTab(\'weight_loss\')">⬇️ Weight Loss ('+countWL+')</button>' +
+        '<button class="btp-subtab '+(_activeBtpSubTab==='muscle_gain'?'active':'')+'" onclick="switchBtpSubTab(\'muscle_gain\')">💪 Muscle Gain ('+countMG+')</button>' +
+        '<button class="btp-subtab '+(_activeBtpSubTab==='fat_loss'?'active':'')+'" onclick="switchBtpSubTab(\'fat_loss\')">🔥 Fat Loss ('+countFL+')</button>' +
+        '<button class="btp-subtab '+(_activeBtpSubTab==='weight_gain'?'active':'')+'" onclick="switchBtpSubTab(\'weight_gain\')">⬆️ Weight Gain ('+countWG+')</button>' +
+        '<button class="btp-subtab '+(_activeBtpSubTab==='prize_pool'?'active':'')+'" onclick="switchBtpSubTab(\'prize_pool\')" style="background:#fef3c7;border-color:#fcd34d;color:#d97706;font-weight:700">💰 Prize Distribution</button>' +
+      '</div>';
+
+    if (_activeBtpSubTab === 'prize_pool') {
+      var entryFee = parseFloat(c.entry_fee || 700);
+      var totalPaid = pts.filter(function(p){ return p.fee_paid; }).length;
+      var totalCollected = totalPaid * entryFee;
+      var seniorAmt = parseFloat(c.senior_amount || 0);
+      var totalSeniorShare = totalPaid * seniorAmt;
+      var netPool = totalCollected - totalSeniorShare;
+
+      var getPaidCount = function(cat) { return pts.filter(function(p){ return p.category === cat && p.fee_paid; }).length; };
+      var paidWL = getPaidCount('weight_loss');
+      var paidMG = getPaidCount('muscle_gain');
+      var paidFL = getPaidCount('fat_loss');
+      var paidWG = getPaidCount('weight_gain');
+
+      var poolWL = paidWL * entryFee;
+      var poolMG = paidMG * entryFee;
+      var poolFL = paidFL * entryFee;
+      var poolWG = paidWG * entryFee;
+
+      var netPoolWL = paidWL * (entryFee - seniorAmt);
+      var netPoolMG = paidMG * (entryFee - seniorAmt);
+      var netPoolFL = paidFL * (entryFee - seniorAmt);
+      var netPoolWG = paidWG * (entryFee - seniorAmt);
+
+      var renderCategoryPrizeTable = function(catLabel, catName, count, pool, netPool) {
+        var slots = getBtpSlotShares(catName, count, pool);
+        var netSlots = getBtpSlotShares(catName, count, netPool);
+
+        if (slots.length === 0) {
+          return '<div style="margin-bottom:20px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">' +
+            '<strong>' + catLabel + ':</strong> No participants registered.' +
+            '</div>';
+        }
+
+        var rows = slots.map(function(s, idx) {
+          var netS = netSlots[idx] || s;
+          return '<tr>' +
+            '<td style="text-align:center;font-weight:600">Rank ' + s.rank + '</td>' +
+            '<td>' + s.percent + '%</td>' +
+            '<td style="font-weight:600;color:var(--success)">₹' + s.prize + '</td>' +
+            (seniorAmt > 0 ? '<td style="font-weight:600;color:var(--primary)">₹' + netS.prize + '</td>' : '') +
+            '</tr>';
+        }).join('');
+
+        return '<div style="margin-bottom:24px">' +
+          '<div style="font-size:14px;font-weight:700;margin-bottom:8px">' + catLabel + ' Pool: <span style="color:var(--success)">₹' + pool + '</span>' + 
+            (seniorAmt > 0 ? ' <span style="font-size:12px;color:var(--muted);font-weight:normal">(Net: ₹' + netPool + ' after senior share)</span>' : '') + '</div>' +
+          '<table class="tbl" style="max-width:480px">' +
+            '<thead><tr><th>Slot</th><th>Share %</th><th>Gross Prize</th>' + (seniorAmt > 0 ? '<th>Net Prize</th>' : '') + '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+          '</table>' +
+          '</div>';
+      };
+
+      lb.innerHTML = subTabsHtml + 
+        '<div class="tcard" style="padding:20px">' +
+          '<div style="font-size:18px;font-weight:700;margin-bottom:4px;color:var(--primary)">💰 BTP Prize Money Distribution</div>' +
+          '<div style="font-size:12px;color:var(--muted);margin-bottom:20px">' +
+            'Everyone pays ₹' + entryFee + '. The prize pool for each category is generated from its participants. ' +
+            'Prizes are distributed proportionally among the category winners (Top 10 Weight Loss, Top 3 Muscle Gain, Top 3 Fat Loss, Top 1 Weight Gain).' +
+          '</div>' +
+
+          '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px">' +
+            '<div class="stat"><div class="stat-l">Total Collected</div><div class="stat-v" style="color:var(--success)">₹' + totalCollected + '</div><div style="font-size:10px;color:var(--muted)">' + totalPaid + ' paid of ' + pts.length + ' enrolled</div></div>' +
+            (seniorAmt > 0 ? '<div class="stat"><div class="stat-l">Senior Share</div><div class="stat-v" style="color:var(--danger)">-₹' + totalSeniorShare + '</div><div style="font-size:10px;color:var(--muted)">₹' + seniorAmt + ' per person</div></div>' : '') +
+            (seniorAmt > 0 ? '<div class="stat"><div class="stat-l">Remaining Net Pool</div><div class="stat-v" style="color:var(--primary)">₹' + netPool + '</div><div style="font-size:10px;color:var(--muted)">For winners distribution</div></div>' : '') +
+          '</div>' +
+
+          renderCategoryPrizeTable('⬇️ Weight Loss (Top 10 Slots)', 'weight_loss', countWL, poolWL, netPoolWL) +
+          renderCategoryPrizeTable('💪 Muscle Gain (Top 3 Slots)', 'muscle_gain', countMG, poolMG, netPoolMG) +
+          renderCategoryPrizeTable('🔥 Fat Loss (Top 3 Slots)', 'fat_loss', countFL, poolFL, netPoolFL) +
+          renderCategoryPrizeTable('⬆️ Weight Gain (Top 1 Slot)', 'weight_gain', countWG, poolWG, netPoolWG) +
+        '</div>';
+
+    } else {
+      var catParticipants = pts.filter(function(p){ return p.category === _activeBtpSubTab; });
+      var ranked = catParticipants.map(function(p) {
+        var data = getBtpParticipantData(p, _activeBtpSubTab);
+        return { p: p, data: data };
+      }).sort(function(a, b) {
+        if (a.data.change === null) return 1;
+        if (b.data.change === null) return -1;
+        return b.data.change - a.data.change;
+      });
+
+      var rows = ranked.map(function(item, i) {
+        var p = item.p;
+        var data = item.data;
+        var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+
+        var startMeas = data.startW.toFixed(1)+'kg &nbsp;·&nbsp; '+data.startF.toFixed(1)+'% fat &nbsp;·&nbsp; '+data.startM.toFixed(1)+'% muscle';
+        var finalMeas = data.hasFinal 
+          ? data.curW.toFixed(1)+'kg &nbsp;·&nbsp; '+data.curF.toFixed(1)+'% fat &nbsp;·&nbsp; '+data.curM.toFixed(1)+'% muscle'
+          : '<span style="color:var(--muted)">Pending final checkup</span>';
+
+        var startMetricDisp = data.startVal.toFixed(2)+' kg';
+        var curMetricDisp = data.hasFinal ? data.curVal.toFixed(2)+' kg' : '—';
+        var changeColor = 'var(--muted)';
+        var changeDisp = '—';
+
+        if (data.hasFinal) {
+          changeDisp = (data.change >= 0 ? '+' : '') + data.change.toFixed(2) + ' kg';
+          changeColor = data.change >= 0 ? 'var(--success)' : 'var(--danger)';
+        }
+
+        var hasProgress = data.hasFinal && data.change > 0;
         var certBtn = hasProgress ? '<button class="btn-p" style="font-size:11px;padding:3.5px 7px;background:#6366f1;border-color:#6366f1;color:#fff" onclick="generateContestCertificate(\''+p.id+'\')">🎓 Cert</button>' : '';
+
         return '<tr>' +
           '<td style="font-size:16px;text-align:center">'+medal+'</td>' +
           '<td><div style="font-weight:600">'+p.customer_name+'</div></td>' +
-          '<td>'+(startV||'—')+(startV?cfg.unit:'')+'</td>' +
-          '<td>'+(curV||'—')+(curV?cfg.unit:'')+'</td>' +
+          '<td style="font-size:11px;color:var(--muted)">'+startMeas+'</td>' +
+          '<td style="font-size:11px;font-weight:600">'+finalMeas+'</td>' +
+          '<td>'+startMetricDisp+'</td>' +
+          '<td>'+curMetricDisp+'</td>' +
           '<td style="font-weight:700;color:'+changeColor+'">'+changeDisp+'</td>' +
           '<td><div style="display:flex;gap:4px">' +
             certBtn +
@@ -13613,8 +13759,60 @@ function openContestDetail(id) {
             '<button class="btn-d" onclick="removeContestParticipant(\''+p.id+'\')">🗑</button>' +
           '</div></td>' +
         '</tr>';
-      }).join('') +
-      '</tbody></table></div>';
+      }).join('');
+
+      var headerLabel = _activeBtpSubTab === 'weight_loss' ? 'Weight Loss' : _activeBtpSubTab === 'weight_gain' ? 'Weight Gain' : _activeBtpSubTab === 'fat_loss' ? 'Fat Loss' : 'Muscle Gain';
+      var metricLabel = (_activeBtpSubTab === 'weight_loss' || _activeBtpSubTab === 'weight_gain') ? 'Weight' : _activeBtpSubTab === 'fat_loss' ? 'Fat Mass' : 'Muscle Mass';
+
+      var tableHtml = '<div class="tcard" style="padding:0;overflow:hidden">' +
+        '<table><thead><tr>' +
+          '<th style="width:40px">Rank</th><th>Participant</th>' +
+          '<th>Start Checkup (Day 0)</th>' +
+          '<th>Final Checkup (Day 21)</th>' +
+          '<th>Start ' + metricLabel + '</th>' +
+          '<th>Final ' + metricLabel + '</th>' +
+          '<th>Change (kg)</th><th>Actions</th>' +
+        '</tr></thead><tbody>' +
+        (rows || '<tr><td colspan="8"><div class="empty"><p>No participants in this category yet.</p></div></td></tr>') +
+        '</tbody></table></div>';
+
+      lb.innerHTML = subTabsHtml + tableHtml;
+    }
+  } else {
+    var ranked = pts.slice().sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); });
+    if (!ranked.length) {
+      lb.innerHTML = '<div class="empty"><div class="ei">👥</div><p>No participants yet. Add someone to start!</p></div>';
+    } else {
+      lb.innerHTML = '<div class="tcard" style="padding:0;overflow:hidden">' +
+        '<table><thead><tr>' +
+          '<th style="width:40px">Rank</th><th>Participant</th>' +
+          '<th>Start '+cfg.label.split(' ')[1]+'</th>' +
+          '<th>Current</th><th>Change</th><th>Actions</th>' +
+        '</tr></thead><tbody>' +
+        ranked.map(function(p, i) {
+          var medal  = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+          var startV = parseFloat(p[cfg.startField]||0);
+          var curV   = parseFloat(p[cfg.field]||0);
+          var change = curV ? (curV - startV) : null;
+          var changeDisp = change!==null ? (change>0?'+':'')+change.toFixed(1)+cfg.unit : '—';
+          var changeColor= change===null ? 'var(--muted)' : (cfg.dir===1?(change>0?'var(--success)':'var(--danger)'):(change<0?'var(--success)':'var(--danger)'));
+          var hasProgress = change !== null && ((cfg.dir === -1 && change < 0) || (cfg.dir === 1 && change > 0));
+          var certBtn = hasProgress ? '<button class="btn-p" style="font-size:11px;padding:3.5px 7px;background:#6366f1;border-color:#6366f1;color:#fff" onclick="generateContestCertificate(\''+p.id+'\')">🎓 Cert</button>' : '';
+          return '<tr>' +
+            '<td style="font-size:16px;text-align:center">'+medal+'</td>' +
+            '<td><div style="font-weight:600">'+p.customer_name+'</div></td>' +
+            '<td>'+(startV||'—')+(startV?cfg.unit:'')+'</td>' +
+            '<td>'+(curV||'—')+(curV?cfg.unit:'')+'</td>' +
+            '<td style="font-weight:700;color:'+changeColor+'">'+changeDisp+'</td>' +
+            '<td><div style="display:flex;gap:4px">' +
+              certBtn +
+              '<button class="btn-e" onclick="openUpdateProgressModal(\''+p.id+'\')">📊 Update</button>' +
+              '<button class="btn-d" onclick="removeContestParticipant(\''+p.id+'\')">🗑</button>' +
+            '</div></td>' +
+          '</tr>';
+        }).join('') +
+        '</tbody></table></div>';
+    }
   }
 
   // Reset to leaderboard tab
@@ -13631,12 +13829,24 @@ function closeContestDetail() {
 function openAddParticipantModal(contestId) {
   var id = contestId || _activeContestId;
   if (!id) return;
+  var c = D.contests.find(function(x){ return x.id===id; });
   document.getElementById('cp-contest-id').value   = id;
   document.getElementById('cp-participant-id').value = '';
   document.getElementById('cp-start-weight').value  = '';
   document.getElementById('cp-start-fat').value     = '';
   document.getElementById('cp-start-muscle').value  = '';
   document.getElementById('cp-start-bmi').value     = '';
+
+  var catGroup = document.getElementById('cp-category-group');
+  if (c && c.type === 'btp') {
+    catGroup.style.display = 'block';
+  } else {
+    catGroup.style.display = 'none';
+  }
+
+  var infoEl = document.getElementById('cp-autofill-info');
+  if (infoEl) infoEl.style.display = 'none';
+
   // Populate customer dropdown (exclude already enrolled)
   var enrolled = D.contestParticipants.filter(function(p){ return p.contest_id===id; }).map(function(p){ return p.customer_id; });
   var sel = document.getElementById('cp-customer');
@@ -13655,6 +13865,9 @@ async function saveContestParticipant() {
   var startBmi   = document.getElementById('cp-start-bmi').value;
   if (!custId) { showToast('Select a customer', 'error'); return; }
   var cust = D.customers.find(function(c){ return c.id===custId; });
+  var c = D.contests.find(function(x){ return x.id===contestId; });
+  var category = (c && c.type === 'btp') ? document.getElementById('cp-category').value : c.type;
+
   var payload = {
     contest_id: contestId,
     customer_id: custId,
@@ -13666,7 +13879,9 @@ async function saveContestParticipant() {
     current_weight: startW||null,
     current_fat: startF||null,
     current_muscle: startM||null,
-    progress: 0
+    current_bmi: startBmi||null,
+    progress: 0,
+    category: category
   };
   try {
     var row = await dbInsert('contest_participants', payload);
@@ -13689,12 +13904,19 @@ function openUpdateProgressModal(participantId) {
   document.getElementById('cpp-fat').value     = p.current_fat     || '';
   document.getElementById('cpp-muscle').value  = p.current_muscle  || '';
   document.getElementById('cpp-bmi').value     = p.current_bmi     || '';
+
+  var goalLabel = cfg.label;
+  if (c && c.type === 'btp') {
+    var cat = p.category || 'weight_loss';
+    goalLabel = 'BTP ' + (cat === 'weight_loss' ? 'Weight Loss' : cat === 'weight_gain' ? 'Weight Gain' : cat === 'fat_loss' ? 'Fat Loss' : 'Muscle Gain');
+  }
+
   document.getElementById('cpp-start-summary').innerHTML =
     '<strong>Starting:</strong> ' +
     (p.start_weight  ? 'Weight '+p.start_weight+'kg' : '') +
     (p.start_fat     ? '  ·  Fat '+p.start_fat+'%' : '') +
     (p.start_muscle  ? '  ·  Muscle '+p.start_muscle+'%' : '') +
-    '  <span style="color:var(--primary);font-weight:700">Goal: '+cfg.label+'</span>';
+    '  <span style="color:var(--primary);font-weight:700">Goal: '+goalLabel+'</span>';
   openModal('contest-progress');
 }
 
@@ -13707,12 +13929,40 @@ async function saveContestProgress() {
   var p = D.contestParticipants.find(function(x){ return x.id===pid; });
   if (!p) return;
   var c   = D.contests.find(function(x){ return x.id===p.contest_id; });
-  var cfg = c ? CONTEST_CONFIG[c.type] : CONTEST_CONFIG.weight_loss;
-  // Calculate progress based on contest type
-  var curVal   = parseFloat({ weight_loss:'weight', weight_gain:'weight', fat_loss:'fat', muscle_gain:'muscle' }[c.type]==='weight'?weight:c.type==='fat_loss'?fat:muscle) || 0;
-  var startKey = { weight_loss:'start_weight', weight_gain:'start_weight', fat_loss:'start_fat', muscle_gain:'start_muscle' }[c.type];
-  var startVal = parseFloat(p[startKey]) || 0;
-  var progress = startVal && curVal ? parseFloat((curVal - startVal).toFixed(2)) : 0;
+
+  var progress = 0;
+  if (c && c.type === 'btp') {
+    var category = p.category || 'weight_loss';
+    var startW = parseFloat(p.start_weight) || 0;
+    var startF = parseFloat(p.start_fat) || 0;
+    var startM = parseFloat(p.start_muscle) || 0;
+    var curW = parseFloat(weight) || 0;
+    var curF = parseFloat(fat) || 0;
+    var curM = parseFloat(muscle) || 0;
+
+    if (startW && curW) {
+      if (category === 'weight_loss') {
+        progress = startW - curW;
+      } else if (category === 'weight_gain') {
+        progress = curW - startW;
+      } else if (category === 'fat_loss') {
+        var startFatKg = startW * (startF / 100);
+        var curFatKg = curW * (curF / 100);
+        progress = startFatKg - curFatKg;
+      } else if (category === 'muscle_gain') {
+        var startMuscleKg = startW * (startM / 100);
+        var curMuscleKg = curW * (curM / 100);
+        progress = curMuscleKg - startMuscleKg;
+      }
+    }
+    progress = parseFloat(progress.toFixed(2));
+  } else {
+    var curVal   = parseFloat({ weight_loss:'weight', weight_gain:'weight', fat_loss:'fat', muscle_gain:'muscle' }[c.type]==='weight'?weight:c.type==='fat_loss'?fat:muscle) || 0;
+    var startKey = { weight_loss:'start_weight', weight_gain:'start_weight', fat_loss:'start_fat', muscle_gain:'start_muscle' }[c.type];
+    var startVal = parseFloat(p[startKey]) || 0;
+    progress = startVal && curVal ? parseFloat((curVal - startVal).toFixed(2)) : 0;
+  }
+
   var payload = { current_weight:weight||null, current_fat:fat||null, current_muscle:muscle||null, current_bmi:bmi||null, progress:progress };
   try {
     await dbUpdate('contest_participants', pid, payload);
@@ -13733,6 +13983,138 @@ async function removeContestParticipant(pid) {
     if (_activeContestId) openContestDetail(_activeContestId);
     showToast('Removed', 'info');
   } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
+// ── BTP Helper Functions ──
+function switchBtpSubTab(tab) {
+  _activeBtpSubTab = tab;
+  if (_activeContestId) openContestDetail(_activeContestId);
+}
+
+function handleCpCustomerChange() {
+  var custId = document.getElementById('cp-customer').value;
+  var infoEl = document.getElementById('cp-autofill-info');
+  if (!infoEl) {
+    infoEl = document.createElement('div');
+    infoEl.id = 'cp-autofill-info';
+    infoEl.style.fontSize = '11px';
+    infoEl.style.color = 'var(--primary)';
+    infoEl.style.marginTop = '6px';
+    infoEl.style.fontWeight = '600';
+    infoEl.style.padding = '6px 10px';
+    infoEl.style.background = 'var(--primary-light)';
+    infoEl.style.borderRadius = '6px';
+    var customerSelectGroup = document.getElementById('cp-customer').parentNode;
+    customerSelectGroup.appendChild(infoEl);
+  }
+  infoEl.style.display = 'none';
+  infoEl.textContent = '';
+
+  if (!custId) return;
+
+  var pastParticipants = D.contestParticipants.filter(function(p) {
+    return p.customer_id === custId && (p.current_weight || p.current_fat || p.current_muscle);
+  });
+
+  if (pastParticipants.length > 0) {
+    pastParticipants.sort(function(a, b) {
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    var lastP = pastParticipants[0];
+
+    document.getElementById('cp-start-weight').value = lastP.current_weight || '';
+    document.getElementById('cp-start-fat').value = lastP.current_fat || '';
+    document.getElementById('cp-start-muscle').value = lastP.current_muscle || '';
+    document.getElementById('cp-start-bmi').value = lastP.current_bmi || '';
+
+    infoEl.style.display = 'block';
+    infoEl.textContent = '✨ Day 0 starting measurements auto-filled from previous season\'s Day 21 checkup!';
+  } else {
+    document.getElementById('cp-start-weight').value = '';
+    document.getElementById('cp-start-fat').value = '';
+    document.getElementById('cp-start-muscle').value = '';
+    document.getElementById('cp-start-bmi').value = '';
+  }
+}
+
+function getBtpParticipantData(p, category) {
+  var startW = parseFloat(p.start_weight) || 0;
+  var startF = parseFloat(p.start_fat) || 0;
+  var startM = parseFloat(p.start_muscle) || 0;
+  var curW   = parseFloat(p.current_weight) || 0;
+  var curF   = parseFloat(p.current_fat) || 0;
+  var curM   = parseFloat(p.current_muscle) || 0;
+
+  var startVal = 0;
+  var curVal = 0;
+  var change = 0;
+  var label = '';
+  
+  if (category === 'weight_loss') {
+    startVal = startW;
+    curVal = curW;
+    change = startW - curW;
+    label = 'Weight';
+  } else if (category === 'weight_gain') {
+    startVal = startW;
+    curVal = curW;
+    change = curW - startW;
+    label = 'Weight';
+  } else if (category === 'fat_loss') {
+    startVal = startW * (startF / 100);
+    curVal = curW * (curF / 100);
+    change = startVal - curVal;
+    label = 'Fat mass';
+  } else if (category === 'muscle_gain') {
+    startVal = startW * (startM / 100);
+    curVal = curW * (curM / 100);
+    change = curVal - startVal;
+    label = 'Muscle mass';
+  }
+  
+  var hasFinal = !!(p.current_weight || p.current_fat || p.current_muscle);
+  return {
+    startW: startW, startF: startF, startM: startM,
+    curW: curW, curF: curF, curM: curM,
+    startVal: startVal, curVal: curVal,
+    change: hasFinal ? change : null,
+    label: label,
+    hasFinal: hasFinal
+  };
+}
+
+function getBtpSlotShares(category, count, pool) {
+  var slots = [];
+  if (count === 0 || pool === 0) return slots;
+  
+  var basePercentages = [];
+  if (category === 'weight_loss') {
+    basePercentages = [25, 18, 15, 12, 10, 8, 5, 4, 2, 1];
+  } else if (category === 'muscle_gain' || category === 'fat_loss') {
+    basePercentages = [50, 30, 20];
+  } else if (category === 'weight_gain') {
+    basePercentages = [100];
+  }
+  
+  var numWinners = Math.min(basePercentages.length, count);
+  if (numWinners === 0) return slots;
+  
+  var sumPct = 0;
+  for (var i = 0; i < numWinners; i++) {
+    sumPct += basePercentages[i];
+  }
+  
+  for (var i = 0; i < numWinners; i++) {
+    var pct = (basePercentages[i] / sumPct) * 100;
+    var prize = (pool * pct) / 100;
+    slots.push({
+      rank: i + 1,
+      percent: pct.toFixed(1),
+      prize: Math.round(prize)
+    });
+  }
+  return slots;
 }
 
 // ==========================================
@@ -14103,16 +14485,45 @@ function generateContestCertificate(participantId) {
     showToast('Contest not found', 'error');
     return;
   }
-  var cfg = CONTEST_CONFIG[c.type] || CONTEST_CONFIG.weight_loss;
-  var startV = parseFloat(p[cfg.startField]||0);
-  var curV   = parseFloat(p[cfg.field]||0);
-  var change = curV ? (curV - startV) : null;
-  if(change === null) {
-    showToast('No progress recorded for certificate.', 'error');
-    return;
+  
+  var verb = '';
+  var changeDisp = '';
+  
+  if (c.type === 'btp') {
+    var category = p.category || 'weight_loss';
+    var btpData = getBtpParticipantData(p, category);
+    var change = btpData.change;
+    if (change === null) {
+      showToast('No progress recorded for certificate.', 'error');
+      return;
+    }
+    
+    if (category === 'weight_loss') {
+      verb = 'reducing';
+      changeDisp = change.toFixed(1) + ' kg body weight';
+    } else if (category === 'weight_gain') {
+      verb = 'gaining';
+      changeDisp = change.toFixed(1) + ' kg body weight';
+    } else if (category === 'fat_loss') {
+      verb = 'reducing';
+      changeDisp = change.toFixed(2) + ' kg fat mass';
+    } else if (category === 'muscle_gain') {
+      verb = 'gaining';
+      changeDisp = change.toFixed(2) + ' kg muscle mass';
+    }
+  } else {
+    var cfg = CONTEST_CONFIG[c.type] || CONTEST_CONFIG.weight_loss;
+    var startV = parseFloat(p[cfg.startField]||0);
+    var curV   = parseFloat(p[cfg.field]||0);
+    var change = curV ? (curV - startV) : null;
+    if(change === null) {
+      showToast('No progress recorded for certificate.', 'error');
+      return;
+    }
+    verb = cfg.dir === -1 ? 'reducing' : 'gaining';
+    changeDisp = Math.abs(change).toFixed(1) + cfg.unit;
   }
   
-  var changeDisp = (change>0?'+':'') + change.toFixed(1) + cfg.unit;
   var centerName = getCenterName();
   
   openModal('certificate');
@@ -14178,7 +14589,6 @@ function generateContestCertificate(participantId) {
   
   ctx.font = 'bold 26px sans-serif';
   ctx.fillStyle = '#4ade80'; 
-  var verb = cfg.dir === -1 ? 'reducing' : 'gaining';
   ctx.fillText('by successfully ' + verb + ' ' + changeDisp.replace('+', '') + '!', canvas.width/2, 545);
   
   ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)';

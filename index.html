@@ -594,6 +594,9 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 .contest-detail-tab{padding:7px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s}
 .contest-detail-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .contest-detail-tab:hover:not(.active){border-color:var(--primary);color:var(--primary)}
+.btp-subtab{padding:7px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s}
+.btp-subtab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btp-subtab:hover:not(.active){border-color:var(--primary);color:var(--primary)}
 /* Tracker table */
 .tracker-wrap{overflow-x:auto}
 .tracker-tbl{width:100%;border-collapse:collapse;min-width:700px}
@@ -2510,6 +2513,51 @@ alter table announcements enable row level security;
 create policy "allow all" on announcements for all using (true);
 
 -- ==========================================
+-- 🏆 CONTESTS & PARTICIPANTS (BTP Support)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS contests (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  type text default 'weight_loss',
+  start_date date not null,
+  end_date date not null,
+  duration_days integer default 21,
+  prize_amount numeric default 0,
+  entry_fee numeric default 0,
+  senior_amount numeric default 0,
+  amount_sent_to_senior boolean default false,
+  senior_sent_date date,
+  description text,
+  status text default 'active',
+  wellness_center_id uuid references wellness_centers(id),
+  created_at timestamptz default now()
+);
+alter table contests enable row level security;
+create policy "allow all" on contests for all using (true);
+
+CREATE TABLE IF NOT EXISTS contest_participants (
+  id uuid default gen_random_uuid() primary key,
+  contest_id uuid references contests(id) on delete cascade,
+  customer_id uuid references customers(id) on delete cascade,
+  customer_name text,
+  start_weight numeric,
+  start_fat numeric,
+  start_muscle numeric,
+  start_bmi numeric,
+  current_weight numeric,
+  current_fat numeric,
+  current_muscle numeric,
+  current_bmi numeric,
+  progress numeric default 0,
+  fee_paid boolean default false,
+  video_tracking jsonb default '{}'::jsonb,
+  category text,
+  created_at timestamptz default now()
+);
+alter table contest_participants enable row level security;
+create policy "allow all" on contest_participants for all using (true);
+
+-- ==========================================
 -- 💳 SAAS PLAN TRACKING (Run once)
 -- ==========================================
 ALTER TABLE wellness_centers
@@ -3736,6 +3784,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
             <option value="weight_gain">⬆️ Weight Gain</option>
             <option value="fat_loss">🔥 Fat Loss</option>
             <option value="muscle_gain">💪 Muscle Gain</option>
+            <option value="btp">🏆 BTP (Body Transformation Program)</option>
           </select>
         </div>
         <div class="fg">
@@ -3789,7 +3838,16 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <input type="hidden" id="cp-participant-id">
       <div class="fg">
         <label for="cp-customer">Customer *</label>
-        <select id="cp-customer"></select>
+        <select id="cp-customer" onchange="handleCpCustomerChange()"></select>
+      </div>
+      <div class="fg" id="cp-category-group" style="display:none">
+        <label for="cp-category">BTP Category *</label>
+        <select id="cp-category">
+          <option value="weight_loss">⬇️ Weight Loss</option>
+          <option value="weight_gain">⬆️ Weight Gain</option>
+          <option value="fat_loss">🔥 Fat Loss</option>
+          <option value="muscle_gain">💪 Muscle Gain</option>
+        </select>
       </div>
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;margin-top:4px">Starting Measurements</div>
       <div class="fr">

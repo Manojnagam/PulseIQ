@@ -165,12 +165,40 @@ create table if not exists foods (
 -- CONTESTS
 create table if not exists contests (
   id uuid primary key default gen_random_uuid(),
-  name text,
-  start_date date,
-  end_date date,
-  goal text,
+  name text not null,
+  type text default 'weight_loss',
+  start_date date not null,
+  end_date date not null,
+  duration_days integer default 21,
+  prize_amount numeric default 0,
+  entry_fee numeric default 0,
+  senior_amount numeric default 0,
+  amount_sent_to_senior boolean default false,
+  senior_sent_date date,
+  description text,
   status text default 'active',
   wellness_center_id uuid references wellness_centers(id),
+  created_at timestamptz default now()
+);
+
+-- CONTEST PARTICIPANTS
+create table if not exists contest_participants (
+  id uuid primary key default gen_random_uuid(),
+  contest_id uuid references contests(id) on delete cascade,
+  customer_id uuid references customers(id) on delete cascade,
+  customer_name text,
+  start_weight numeric,
+  start_fat numeric,
+  start_muscle numeric,
+  start_bmi numeric,
+  current_weight numeric,
+  current_fat numeric,
+  current_muscle numeric,
+  current_bmi numeric,
+  progress numeric default 0,
+  fee_paid boolean default false,
+  video_tracking jsonb default '{}'::jsonb,
+  category text,
   created_at timestamptz default now()
 );
 
@@ -188,6 +216,7 @@ alter table leads enable row level security;
 alter table expenses enable row level security;
 alter table foods enable row level security;
 alter table contests enable row level security;
+alter table contest_participants enable row level security;
 
 -- Allow anon access (app PIN system controls isolation)
 create policy "anon_all" on wellness_centers for all to anon using (true) with check (true);
@@ -203,6 +232,7 @@ create policy "anon_all" on leads for all to anon using (true) with check (true)
 create policy "anon_all" on expenses for all to anon using (true) with check (true);
 create policy "anon_all" on foods for all to anon using (true) with check (true);
 create policy "anon_all" on contests for all to anon using (true) with check (true);
+create policy "anon_all" on contest_participants for all to anon using (true) with check (true);
 
 -- ==========================================
 -- LEAD FOLLOWUPS
