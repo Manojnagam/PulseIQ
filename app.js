@@ -6305,12 +6305,53 @@ async function convertToCoach(custId) {
     // 2. Link old customer record to new coach (preserves attendance history)
     if (newCoachId) {
       await dbUpdate('customers', custId, { pack_owner_id: newCoachId });
+
+      // ── MAP BODY COMPOSITION RECORDS ──
+      try {
+        var bodyUrl = getActiveSbUrl() + '/rest/v1/body_composition?customer_id=eq.' + custId;
+        var bodyRes = await fetch(bodyUrl, {
+          headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
+        });
+        var bodyRecs = await bodyRes.json();
+        if (Array.isArray(bodyRecs)) {
+          for (var i = 0; i < bodyRecs.length; i++) {
+            await dbUpdate('body_composition', bodyRecs[i].id, { customer_id: newCoachId });
+          }
+        }
+      } catch(bodyErr) { console.error('Error updating body composition:', bodyErr); }
+
+      // ── UPDATE ATTENDANCE RECORDS ──
+      try {
+        var attUrl = getActiveSbUrl() + '/rest/v1/attendance?customer_id=eq.' + custId;
+        var attRes = await fetch(attUrl, {
+          headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
+        });
+        var attRecs = await attRes.json();
+        if (Array.isArray(attRecs)) {
+          for (var i = 0; i < attRecs.length; i++) {
+            await dbUpdate('attendance', attRecs[i].id, { customer_id: newCoachId, customer_name: c.name });
+          }
+        }
+      } catch(attErr) { console.error('Error updating attendance:', attErr); }
+
+      // ── UPDATE PACK HISTORY RECORDS ──
+      try {
+        var packHistoryUrl = getActiveSbUrl() + '/rest/v1/pack_history?customer_id=eq.' + custId;
+        var phRes = await fetch(packHistoryUrl, {
+          headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
+        });
+        var phRecs = await phRes.json();
+        if (Array.isArray(phRecs)) {
+          for (var i = 0; i < phRecs.length; i++) {
+            await dbUpdate('pack_history', phRecs[i].id, { customer_id: null, coach_id: newCoachId });
+          }
+        }
+      } catch(phErr) { console.error('Error updating pack history:', phErr); }
     }
     auditLog('Converted', 'Customer→Coach', c.name);
     showToast(c.name + ' is now a Coach! Attendance history carried over. Mark attendance under Coach tab.', 'success');
     _daysLeftCache = {};
-    await Promise.all([loadCustomers(), loadCoaches()]);
-    await loadAttendance();
+    await Promise.all([loadCustomers(), loadCoaches(), loadBody(), loadAttendance()]);
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
 }
 function updateCoachPortalNavLink() {
