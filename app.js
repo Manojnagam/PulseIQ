@@ -1773,10 +1773,12 @@ function onPackOwnerChange() {
   var sharedInfo = document.getElementById('shared-pack-info');
   if(ownerId) {
     ownFields.style.display = 'none';
-    var owner = D.customers.find(function(c){return c.id===ownerId;});
+    var owner = D.customers.find(function(c){return c.id===ownerId;})
+             || D.coaches.find(function(c){return c.id===ownerId;});
     if(owner) {
       var st = getDaysLeft(owner);
-      var members = D.customers.filter(function(c){return c.pack_owner_id===ownerId;});
+      var members = D.customers.filter(function(c){return c.pack_owner_id===ownerId;})
+                 .concat(D.coaches.filter(function(c){return c.pack_owner_id===ownerId;}));
       sharedInfo.style.display = 'block';
       sharedInfo.innerHTML = '👥 Sharing <strong>'+owner.name+'\'s</strong> pack ('+owner.pack_type+')<br>'+
         '📊 '+st.days+' servings remaining' +
@@ -1790,11 +1792,13 @@ function onPackOwnerChange() {
 
 function getPackOwner(c) {
   if(!c.pack_owner_id) return c;
-  return D.customers.find(function(x){return x.id===c.pack_owner_id;}) || c;
+  return D.customers.find(function(x){return x.id===c.pack_owner_id;})
+      || D.coaches.find(function(x){return x.id===c.pack_owner_id;}) || c;
 }
 
 function getPackMembers(ownerId) {
-  return D.customers.filter(function(c){return c.pack_owner_id===ownerId;});
+  return D.customers.filter(function(c){return c.pack_owner_id===ownerId;})
+      .concat(D.coaches.filter(function(c){return c.pack_owner_id===ownerId;}));
 }
 
 // ── COMPLEMENTARY DAY ──
@@ -10986,9 +10990,18 @@ function renderCustomers() {
     var waReeng = (isInactive(c.id)&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px;background:#8b5cf6" onclick="sendInactiveWA(\''+c.id+'\')">💬 Re-engage</button> ':'';
     var bodyCount = D.body.filter(function(b){return b.customer_id===c.id;}).length;
     var waWeekly = (bodyCount>=2&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px;background:#0ea5e9" onclick="sendWeeklyProgressWA(\''+c.id+'\')">📊</button> ':'';
+    var isConvertedCoach = c.pack_owner_id && D.coaches.some(function(co){ 
+      return co.id === c.pack_owner_id && (
+        (co.contact && c.contact && co.contact.replace(/\D/g,'') === c.contact.replace(/\D/g,'')) || 
+        (co.name && c.name && co.name.trim().toLowerCase() === c.name.trim().toLowerCase())
+      ); 
+    });
     var sharedBadge = '';
-    if(c.pack_owner_id) {
-      var po = D.customers.find(function(x){return x.id===c.pack_owner_id;});
+    if(isConvertedCoach) {
+      sharedBadge = '<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:9px;display:block;margin-top:2px">⭐ Converted to Coach</span>';
+    } else if(c.pack_owner_id) {
+      var po = D.customers.find(function(x){return x.id===c.pack_owner_id;})
+            || D.coaches.find(function(x){return x.id===c.pack_owner_id;});
       sharedBadge = '<span class="badge bb" style="font-size:9px;display:block;margin-top:2px">👥 On '+(po?po.name:'?')+'\'s pack</span>';
     }
     var members = D.customers.filter(function(x){return x.pack_owner_id===c.id;});
@@ -11016,7 +11029,7 @@ function renderCustomers() {
         +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#7c3aed" onclick="viewDietHistory(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Diet Plan History">📜 History</button> ':'')
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#f59e0b;border-color:#f59e0b" onclick="openNotesModal(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Notes &amp; Follow-ups">📝 Notes</button> '
         +'<button class="btn-e" onclick="editCustomer(\''+c.id+'\')">Edit</button>'
-        +'<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:#fef3c7;color:#92400e;border-color:#fcd34d" title="Convert to Coach">⭐ Make Coach</button>'
+        +(isConvertedCoach ? '' : '<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:#fef3c7;color:#92400e;border-color:#fcd34d" title="Convert to Coach">⭐ Make Coach</button>')
         +'<button class="btn-d" onclick="delRecord(\'customers\',\''+c.id+'\',\'customers\')">Delete</button>'
       +'</div></td></tr>';
   }).join('');
