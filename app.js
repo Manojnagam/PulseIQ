@@ -2056,6 +2056,31 @@ function updateCustSelects() {
 }
 
 // ── NEW LOGIC HELPERS ──
+function getPersonIds(id) {
+  var ids = [id];
+  if (!id) return ids;
+  var cust = D.customers.find(function(x){ return x.id === id; });
+  var coach = D.coaches.find(function(x){ return x.id === id; });
+  if (coach) {
+    D.customers.forEach(function(c) {
+      if (c.pack_owner_id === id && (
+        (c.contact && coach.contact && c.contact.replace(/\D/g,'') === coach.contact.replace(/\D/g,'')) || 
+        (c.name && coach.name && c.name.trim().toLowerCase() === coach.name.trim().toLowerCase())
+      )) {
+        ids.push(c.id);
+      }
+    });
+  } else if (cust) {
+    var co = cust.pack_owner_id ? D.coaches.find(function(x){ return x.id === cust.pack_owner_id; }) : null;
+    if (co && (
+      (cust.contact && co.contact && cust.contact.replace(/\D/g,'') === co.contact.replace(/\D/g,'')) || 
+      (cust.name && co.name && cust.name.trim().toLowerCase() === co.name.trim().toLowerCase())
+    )) {
+      ids.push(co.id);
+    }
+  }
+  return ids;
+}
 function parsePack(packType) {
   if (!packType) return 30;
   var t = packType.toLowerCase();
@@ -2096,7 +2121,8 @@ function getDaysLeft(c) {
 }
 function getStreak(cid) {
   var attsSet = new Set();
-  D.attendance.forEach(function(a){ if(a.customer_id===cid && a.status==='present') attsSet.add(a.date); });
+  var pIds = getPersonIds(cid);
+  D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1 && a.status==='present') attsSet.add(a.date); });
   var atts = Array.from(attsSet).sort().reverse();
   var streak=0, d=new Date();
   for(var i=0; i<atts.length; i++){
@@ -2107,9 +2133,10 @@ function getStreak(cid) {
   return streak;
 }
 function isInactive(c) {
-  if (typeof c === 'string') c = D.customers.find(function(x){return x.id===c;})||{};
+  if (typeof c === 'string') c = D.customers.find(function(x){return x.id===c;})||D.coaches.find(function(x){return x.id===c;})||{};
   var attsSet = new Set();
-  D.attendance.forEach(function(a){ if(a.customer_id===c.id) attsSet.add(a.date); });
+  var pIds = getPersonIds(c.id);
+  D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1) attsSet.add(a.date); });
   var atts = Array.from(attsSet).sort().reverse();
   var diff = 0;
   if(atts.length) diff = Math.floor((new Date() - new Date(atts[0]))/(1000*60*60*24));
@@ -5215,7 +5242,8 @@ async function applyRecurringNow() {
 var _attResetTimer = null;
 async function toggleAtt(cid, cname, date, currentStatus) {
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
-  var existing = D.attendance.find(function(a){return a.customer_id===cid && a.date===date;});
+  var pIds = getPersonIds(cid);
+  var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
   try {
     if(existing && existing.status==='present') {
       var curServ = Number(existing.servings) || 1;
@@ -5236,7 +5264,8 @@ async function toggleAtt(cid, cname, date, currentStatus) {
 }
 async function resetAtt(cid, cname, date) {
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) return;
-  var existing = D.attendance.find(function(a){return a.customer_id===cid && a.date===date;});
+  var pIds = getPersonIds(cid);
+  var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
   if(!existing || existing.status!=='present') return;
   try {
     await dbUpdate('attendance', existing.id, {status:'absent', servings:0});
@@ -5274,7 +5303,8 @@ function sendAttendanceWhatsApp(custId, custName, date) {
   }
 
   var todayServings = 0;
-  D.attendance.forEach(function(a){ if(a.customer_id===custId && a.date===date && a.status==='present') todayServings = Number(a.servings)||1; });
+  var pIds = getPersonIds(custId);
+  D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1 && a.date===date && a.status==='present') todayServings = Number(a.servings)||1; });
   var todayLine = todayServings > 1 ? '🥤 Today\'s servings: *'+todayServings+'*\n' : '';
 
   var displayName = custName.replace(' 👨‍🏫','');
@@ -5325,13 +5355,20 @@ function renderAttGrid() {
   var y=parseInt(parts[0]), m=parseInt(parts[1]);
   var daysInMonth = new Date(y, m, 0).getDate();
   var custRows = filterByCenter(D.customers).filter(function(c){
+    var pIds = getPersonIds(c.id);
+    var isConvertedCoach = pIds.length > 1 && D.coaches.some(function(co){ return co.id === c.pack_owner_id; });
+    if (isConvertedCoach) return false;
+
     var hasAttThisMonth = D.attendance.some(function(a){return a.customer_id===c.id&&a.date&&a.date.startsWith(monthStr);});
     if(hasAttThisMonth) return true; // always show if they actually attended this month
     if(!getDaysLeft(c).active) return false; // expired pack, no attendance — hide
     if(isInactive(c) && !ATT_SHOW_INACTIVE) return false; // inactive, toggle off — hide
     return true;
   }).map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:false}; });
-  var coachRows = filterByCenter(D.coaches).filter(function(c){ return (c.pack_type && c.pack_start_date) || D.attendance.some(function(a){return a.customer_id===c.id&&a.date&&a.date.startsWith(monthStr);}); })
+  var coachRows = filterByCenter(D.coaches).filter(function(c){
+    var pIds = getPersonIds(c.id);
+    return (c.pack_type && c.pack_start_date) || D.attendance.some(function(a){return pIds.indexOf(a.customer_id) !== -1&&a.date&&a.date.startsWith(monthStr);});
+  })
     .map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:true}; });
   var allRows = custRows.concat(coachRows);
 
@@ -5351,7 +5388,8 @@ function renderAttGrid() {
       var presentSet = new Set();
       for(var i=1; i<=daysInMonth; i++) {
         var dStr = monthStr+'-'+(i<10?'0':'')+i;
-        var att = D.attendance.find(function(a){return a.customer_id===p.id && a.date===dStr;});
+        var pIds = getPersonIds(p.id);
+        var att = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===dStr;});
         var st = att ? att.status : '';
         var servCount = att ? (Number(att.servings) || 1) : 0;
         var cls = st==='present' ? 'p' : (st==='absent' ? 'a' : (st==='complementary' ? 'c' : ''));
@@ -5411,7 +5449,8 @@ async function gridServSave(id, name, date) {
   var v = parseInt(document.getElementById('grid-serv-val').textContent) || 1;
   document.getElementById('grid-cell-popup').style.display = 'none';
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()) return;
-  var existing = D.attendance.find(function(a){return a.customer_id===id && a.date===date;});
+  var pIds = getPersonIds(id);
+  var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
   try {
     if(existing) { await dbUpdate('attendance', existing.id, {status:'present', servings:v}); }
     else { await dbInsert('attendance', {customer_id:id, customer_name:name, date:date, status:'present', servings:v}); }
@@ -5432,6 +5471,10 @@ function renderAttendance() {
   var _tn=new Date(); var todayStr=_tn.getFullYear()+'-'+String(_tn.getMonth()+1).padStart(2,'0')+'-'+String(_tn.getDate()).padStart(2,'0');
   
   var activeCusts = filterByCenter(D.customers).filter(function(c){
+    var pIds = getPersonIds(c.id);
+    var isConvertedCoach = pIds.length > 1 && D.coaches.some(function(co){ return co.id === c.pack_owner_id; });
+    if (isConvertedCoach) return false;
+
     var packActive = getDaysLeft(c).active;
     var presentToday = D.attendance.some(function(a){ return a.customer_id===c.id && a.date===todayStr && a.status==='present'; });
     if (!packActive && !presentToday) return false; // hide expired-pack customers unless present today
@@ -5453,7 +5496,8 @@ function renderAttendance() {
     .concat(activeCoaches.map(function(c){ return {id:c.id, name:c.name+' 👨‍🏫', obj:c, isCoach:true}; }));
 
   allPersons.forEach(function(p){
-    var att = D.attendance.find(function(a){return a.customer_id===p.id && a.date===todayStr;});
+    var pIds = getPersonIds(p.id);
+    var att = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===todayStr;});
     var stst = att ? att.status : 'None';
     var servings = att ? (Number(att.servings) || 1) : 0;
     var st = getDaysLeft(p.obj);
@@ -6771,7 +6815,7 @@ async function saveAttendance() {
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('att-id').value;
   var custId = document.getElementById('att-customer').value;
-  var cust = D.customers.find(function(c){return c.id===custId;}) || {};
+  var cust = D.customers.find(function(c){return c.id===custId;}) || D.coaches.find(function(c){return c.id===custId;}) || {};
   var custName = cust.name || '';
   var servings = parseInt(document.getElementById('att-servings').value)||1;
   var morningShake    = document.getElementById('att-morning-shake').value;
@@ -6804,7 +6848,7 @@ async function saveAttendance() {
 }
 function onAttCustomerChange() {
   var custId = document.getElementById('att-customer').value;
-  var cust = D.customers.find(function(c){return c.id===custId;}) || {};
+  var cust = D.customers.find(function(c){return c.id===custId;}) || D.coaches.find(function(c){return c.id===custId;}) || {};
   var isTwice = cust.shake_frequency === 'twice';
   var row = document.getElementById('att-postworkout-row');
   if(row) row.style.display = isTwice ? 'block' : 'none';
