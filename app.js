@@ -13742,12 +13742,25 @@ function openContestDetail(id) {
           changeColor = data.change >= 0 ? 'var(--success)' : 'var(--danger)';
         }
 
+        var vt = p.video_tracking ? (typeof p.video_tracking==='string' ? JSON.parse(p.video_tracking) : p.video_tracking) : {};
+        var videoKeys = ['day0', 'week1', 'week2', 'week3'];
+        var missingVideos = false;
+        videoKeys.forEach(function(k) {
+          if (!vt[k] || !vt[k].received) {
+            missingVideos = true;
+          }
+        });
+        var statusBadge = '';
+        if (missingVideos) {
+          statusBadge += ' <span style="background:#fee2e2;color:#ef4444;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700" title="Missing weight videos">⚠️ Missing Videos</span>';
+        }
+
         var hasProgress = data.hasFinal && data.change > 0;
         var certBtn = hasProgress ? '<button class="btn-p" style="font-size:11px;padding:3.5px 7px;background:#6366f1;border-color:#6366f1;color:#fff" onclick="generateContestCertificate(\''+p.id+'\')">🎓 Cert</button>' : '';
 
         return '<tr>' +
           '<td style="font-size:16px;text-align:center">'+medal+'</td>' +
-          '<td><div style="font-weight:600">'+p.customer_name+'</div></td>' +
+          '<td><div style="font-weight:600">'+p.customer_name + statusBadge + '</div></td>' +
           '<td style="font-size:11px;color:var(--muted)">'+startMeas+'</td>' +
           '<td style="font-size:11px;font-weight:600">'+finalMeas+'</td>' +
           '<td>'+startMetricDisp+'</td>' +
@@ -13797,10 +13810,24 @@ function openContestDetail(id) {
           var changeDisp = change!==null ? (change>0?'+':'')+change.toFixed(1)+cfg.unit : '—';
           var changeColor= change===null ? 'var(--muted)' : (cfg.dir===1?(change>0?'var(--success)':'var(--danger)'):(change<0?'var(--success)':'var(--danger)'));
           var hasProgress = change !== null && ((cfg.dir === -1 && change < 0) || (cfg.dir === 1 && change > 0));
+          
+          var vt = p.video_tracking ? (typeof p.video_tracking==='string' ? JSON.parse(p.video_tracking) : p.video_tracking) : {};
+          var videoKeys = ['week1', 'week2', 'week3'];
+          var missingVideos = false;
+          videoKeys.forEach(function(k) {
+            if (!vt[k] || !vt[k].received) {
+              missingVideos = true;
+            }
+          });
+          var statusBadge = '';
+          if (missingVideos) {
+            statusBadge += ' <span style="background:#fee2e2;color:#ef4444;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700" title="Missing weight videos">⚠️ Missing Videos</span>';
+          }
+          
           var certBtn = hasProgress ? '<button class="btn-p" style="font-size:11px;padding:3.5px 7px;background:#6366f1;border-color:#6366f1;color:#fff" onclick="generateContestCertificate(\''+p.id+'\')">🎓 Cert</button>' : '';
           return '<tr>' +
             '<td style="font-size:16px;text-align:center">'+medal+'</td>' +
-            '<td><div style="font-weight:600">'+p.customer_name+'</div></td>' +
+            '<td><div style="font-weight:600">'+p.customer_name + statusBadge + '</div></td>' +
             '<td>'+(startV||'—')+(startV?cfg.unit:'')+'</td>' +
             '<td>'+(curV||'—')+(curV?cfg.unit:'')+'</td>' +
             '<td style="font-weight:700;color:'+changeColor+'">'+changeDisp+'</td>' +
