@@ -1645,12 +1645,16 @@ input:focus, select:focus, textarea:focus {
         </div>
       </div>
       <div class="tcard" id="att-monthly-view" style="display:none;padding:16px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <label style="font-size:12px;font-weight:600">Month:</label>
-          <input type="month" id="att-month-picker" onchange="renderAttGrid()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-family:inherit">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:10px">
+            <label style="font-size:12px;font-weight:600">Month:</label>
+            <input type="month" id="att-month-picker" onchange="renderAttGrid()" style="padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:inherit;background:var(--surface);color:var(--text)">
+          </div>
+          <button class="btn-p" onclick="downloadMonthlyAttendanceCSV()" style="font-size:12px;padding:6px 14px;background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer">📥 Download CSV</button>
         </div>
         <div class="att-grid"><table id="att-grid-table"></table></div>
       </div>
+
       <!-- Coach Attendance View -->
       <div id="att-coach-view" style="display:none">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">

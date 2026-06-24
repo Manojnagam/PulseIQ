@@ -5433,6 +5433,111 @@ function renderAttGrid() {
   document.getElementById('att-grid-table').innerHTML = html;
 }
 
+async function downloadMonthlyAttendanceCSV() {
+  var monthStr = document.getElementById('att-month-picker').value;
+  if(!monthStr) { showToast('Please select a month first', 'error'); return; }
+  
+  showToast('Preparing download...', 'info');
+  
+  var coachRecs = [];
+  try {
+    getCredentials();
+    if (getActiveSbUrl() && getActiveSbKey()) {
+      coachRecs = await dbGet('coach_attendance', 'date', 'date=gte.' + monthStr + '-01&date=lte.' + monthStr + '-31');
+    }
+  } catch(e) {
+    console.warn("Could not fetch coach attendance:", e);
+  }
+  
+  var parts = monthStr.split('-');
+  var y=parseInt(parts[0]), m=parseInt(parts[1]);
+  var daysInMonth = new Date(y, m, 0).getDate();
+  
+  var csvRows = [
+    ['Date', 'Day of Week', 'Customers Count', 'Customer Names', 'Coaches Count', 'Coach Names', 'Total Present']
+  ];
+  
+  var dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  
+  for(var i=1; i<=daysInMonth; i++) {
+    var dayNum = i < 10 ? '0' + i : '' + i;
+    var dStr = monthStr + '-' + dayNum;
+    
+    var dateObj = new Date(y, m - 1, i);
+    var dayName = dayNames[dateObj.getDay()];
+    
+    var dayAtts = D.attendance.filter(function(a) {
+      return a.date === dStr && (a.status === 'present' || a.status === 'complementary' || a.status === 'coupon_shake');
+    });
+    
+    var uniqueCusts = [];
+    var seenCustIds = new Set();
+    dayAtts.forEach(function(a) {
+      var cid = a.customer_id;
+      if (!seenCustIds.has(cid)) {
+        seenCustIds.add(cid);
+        var name = a.customer_name || 'Unknown';
+        var cust = D.customers.find(function(c){return c.id===cid;}) || D.coaches.find(function(c){return c.id===cid;});
+        if (cust) name = cust.name;
+        uniqueCusts.push(name);
+      }
+    });
+    
+    var uniqueCoaches = [];
+    var seenCoachIds = new Set();
+    var dayCoaches = coachRecs.filter(function(r) {
+      return r.date === dStr && r.status === 'present';
+    });
+    dayCoaches.forEach(function(r) {
+      var cid = r.coach_id;
+      if (!seenCoachIds.has(cid)) {
+        seenCoachIds.add(cid);
+        var name = 'Coach';
+        var coach = D.coaches.find(function(c){return c.id===cid;});
+        if (coach) name = coach.name;
+        uniqueCoaches.push(name);
+      }
+    });
+    
+    var totalPresent = uniqueCusts.length + uniqueCoaches.length;
+    
+    csvRows.push([
+      dStr,
+      dayName,
+      uniqueCusts.length,
+      uniqueCusts.join('; '),
+      uniqueCoaches.length,
+      uniqueCoaches.join('; '),
+      totalPresent
+    ]);
+  }
+  
+  var csvContent = csvRows.map(function(row) {
+    return row.map(function(field) {
+      var str = String(field);
+      str = str.replace(/"/g, '""');
+      if (str.indexOf(',') !== -1 || str.indexOf('"') !== -1 || str.indexOf('\n') !== -1) {
+        str = '"' + str + '"';
+      }
+      return str;
+    }).join(',');
+  }).join('\n');
+  
+  var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement("a");
+  if (link.download !== undefined) {
+    var url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "daily_attendance_" + monthStr + ".csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+  showToast('CSV downloaded successfully!', 'success');
+}
+
+
 function gridCellClick(id, name, date, currentStatus, currentServings) {
   if(currentStatus !== 'present') {
     // Not yet marked — just mark present
