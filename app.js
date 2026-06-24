@@ -3620,10 +3620,10 @@ function renderOverview() {
       .sort(function(a,b){ return b.r.score - a.r.score; });
     var critCount = riskList.filter(function(x){ return x.r.level==='critical'; }).length;
     var atRiskCount = riskList.filter(function(x){ return x.r.level==='at-risk'; }).length;
-    rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid '+(critCount?'var(--danger)':'var(--accent)')+'"><div class="ov-card-h"><h3>⚠️ Churn Risk</h3><span class="ov-count" style="background:'+(critCount?'#fee2e2':'#fef9c3')+';color:'+(critCount?'#b91c1c':'#854d0e')+'">'+riskList.length+'</span></div><div class="ov-card-body">';
+    rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid '+(critCount?'var(--danger)':'var(--accent)')+'"><div class="ov-card-h"><h3>⚠️ Churn Risk</h3><span class="ov-count" style="background:'+(critCount?'var(--danger-light)':'var(--warning-light)')+';color:'+(critCount?'var(--text-danger)':'var(--warning-text)')+'">'+riskList.length+'</span></div><div class="ov-card-body">';
     if(!riskList.length) { rightHtml += '<div class="ov-empty">All active customers are engaged!</div>'; }
     else {
-      if(critCount||atRiskCount) rightHtml += '<div style="display:flex;gap:12px;margin-bottom:10px;font-size:12px">'+(critCount?'<span style="background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:20px;font-weight:700">🔴 '+critCount+' Critical</span>':'')+(atRiskCount?'<span style="background:#fef9c3;color:#854d0e;padding:3px 10px;border-radius:20px;font-weight:700">🟡 '+atRiskCount+' At Risk</span>':'')+'</div>';
+      if(critCount||atRiskCount) rightHtml += '<div style="display:flex;gap:12px;margin-bottom:10px;font-size:12px">'+(critCount?'<span style="background:var(--danger-light);color:var(--text-danger);padding:3px 10px;border-radius:20px;font-weight:700">🔴 '+critCount+' Critical</span>':'')+(atRiskCount?'<span style="background:var(--warning-light);color:var(--warning-text);padding:3px 10px;border-radius:20px;font-weight:700">🟡 '+atRiskCount+' At Risk</span>':'')+'</div>';
       rightHtml += riskList.slice(0,8).map(function(x){
         var phone = (x.c.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
         var msg = encodeURIComponent('Hi '+x.c.name+'! We noticed you haven\'t visited us recently. Your health journey matters — come back and let\'s pick up where we left off! 💪');
@@ -3743,12 +3743,12 @@ function renderOverview() {
     });
     rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid '+(outCount?'var(--danger)':'var(--accent)') + '">'
       + '<div class="ov-card-h"><h3>📦 Inventory Alerts</h3>'
-      + '<span class="ov-count" style="background:'+(outCount?'#fee2e2':'#fef9c3')+';color:'+(outCount?'#b91c1c':'#854d0e')+'">'+(outCount+lowCount+expiryAlerts.length)+'</span></div>'
+      + '<span class="ov-count" style="background:'+(outCount?'var(--danger-light)':'var(--warning-light)')+';color:'+(outCount?'var(--text-danger)':'var(--warning-text)')+'">'+(outCount+lowCount+expiryAlerts.length)+'</span></div>'
       + '<div class="ov-card-body">';
     if (outCount || lowCount) {
-      rightHtml += '<div style="display:flex;gap:10px;margin-bottom:10px;font-size:12px">'
-        + (outCount ? '<span style="background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:20px;font-weight:700">🔴 ' + outCount + ' Out of Stock</span>' : '')
-        + (lowCount ? '<span style="background:#fef9c3;color:#854d0e;padding:3px 10px;border-radius:20px;font-weight:700">🟡 ' + lowCount + ' Low Stock</span>' : '')
+      rightHtml += '<div style="display:flex;gap:10px;margin-bottom:10px;font-size:12px'
+        + (outCount ? ';background:var(--danger-light);color:var(--text-danger);padding:3px 10px;border-radius:20px;font-weight:700">🔴 ' + outCount + ' Out of Stock</span>' : '">')
+        + (lowCount ? '<span style="background:var(--warning-light);color:var(--warning-text);padding:3px 10px;border-radius:20px;font-weight:700">🟡 ' + lowCount + ' Low Stock</span>' : '')
         + '</div>';
     }
     rightHtml += invAlertItems.slice(0, 8).map(function(item) {
@@ -3774,8 +3774,8 @@ function renderOverview() {
     rightHtml += '<div class="ov-card" style="margin-top:16px;border-left:3px solid var(--danger)">'
       + '<div class="ov-card-h"><h3>⚠️ Churn Alerts</h3>'
       + '<div style="display:flex;gap:6px">'
-      + (churnCritical.length ? '<span class="ov-count" style="background:#fee2e2;color:#b91c1c">🔴 '+churnCritical.length+' Critical</span>' : '')
-      + (churnAtRisk.length  ? '<span class="ov-count" style="background:#fef9c3;color:#854d0e">🟡 '+churnAtRisk.length+' At Risk</span>' : '')
+      + (churnCritical.length ? '<span class="ov-count" style="background:var(--danger-light);color:var(--text-danger)">🔴 '+churnCritical.length+' Critical</span>' : '')
+      + (churnAtRisk.length  ? '<span class="ov-count" style="background:var(--warning-light);color:var(--warning-text)">🟡 '+churnAtRisk.length+' At Risk</span>' : '')
       + '</div></div>'
       + '<div class="ov-card-body">'
       + churnAll.slice(0, 6).map(function(entry) {
@@ -3785,7 +3785,7 @@ function renderOverview() {
           var waMsg = encodeURIComponent('Hi '+c.name+'! 🙏 We noticed you haven\'t visited us recently. Your health journey matters to us — please come in this week, we miss you! 💚 — '+getCenterName());
           return '<div class="ov-row">'
             + '<div class="ov-row-info">'
-            +   '<div class="ov-row-name">'+c.name+' <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;'+(risk.level==='critical'?'background:#fee2e2;color:#b91c1c':'background:#fef9c3;color:#854d0e')+'">'+risk.label+'</span></div>'
+            +   '<div class="ov-row-name">'+c.name+' <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;'+(risk.level==='critical'?'background:var(--danger-light);color:var(--text-danger)':'background:var(--warning-light);color:var(--warning-text)')+'">'+risk.label+'</span></div>'
             +   '<div class="ov-row-sub">'+risk.reasons.slice(0,2).join(' · ')+(st.days>0?' · '+st.days+' days left':'')+'</div>'
             + '</div>'
             + (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+waMsg+'" target="_blank" rel="noopener" class="wa-btn" style="font-size:11px;padding:3px 8px;text-decoration:none">💬</a>' : '')
@@ -11002,7 +11002,7 @@ function renderCustomers() {
     var refs = D.customers.filter(function(x){return x.referred_by_id===c.id;}).length;
     var refBadge = refs>=2?'<span class="star-cust">⭐ '+refs+'</span>':(refs===1?'<span style="color:var(--muted);font-size:12px">1</span>':'<span style="color:var(--muted);font-size:12px">—</span>');
     var bdayFlag = (c.dob&&c.dob.slice(5,10)===todayMMDD)?' 🎂':'';
-    var noDobBadge = !c.dob ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:#fef3c7;color:#92400e;display:inline-block;margin-left:4px" title="Add DOB so client can log in securely">⚠️ No DOB</span>' : '';
+    var noDobBadge = !c.dob ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:var(--warning-light);color:var(--warning-text);display:inline-block;margin-left:4px" title="Add DOB so client can log in securely">⚠️ No DOB</span>' : '';
     var wasReferred = c.referred_by_id || c.external_referrer_name;
     var custAttCount = D.attendance.filter(function(a){return a.customer_id===c.id;}).length;
     var freeDay = (wasReferred && custAttCount===0)?' <span class="badge by" style="font-size:9px" title="Free checkup, counselling &amp; shake">🆓 Free 1st Day</span>':'';
@@ -11018,7 +11018,7 @@ function renderCustomers() {
     });
     var sharedBadge = '';
     if(isConvertedCoach) {
-      sharedBadge = '<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:9px;display:block;margin-top:2px">⭐ Converted to Coach</span>';
+      sharedBadge = '<span class="badge" style="background:var(--warning-light);color:var(--warning-text);border:1px solid var(--border-accent);font-size:9px;display:block;margin-top:2px">⭐ Converted to Coach</span>';
     } else if(c.pack_owner_id) {
       var po = D.customers.find(function(x){return x.id===c.pack_owner_id;})
             || D.coaches.find(function(x){return x.id===c.pack_owner_id;});
@@ -11027,9 +11027,9 @@ function renderCustomers() {
     var members = D.customers.filter(function(x){return x.pack_owner_id===c.id;});
     var memberBadge = members.length ? '<span class="badge by" style="font-size:9px;display:block;margin-top:2px">👥 '+members.map(function(m){return m.name;}).join(', ')+'</span>' : '';
     var enrollCoach = c.referred_by_id ? D.coaches.find(function(x){return x.id===c.referred_by_id;}) : null;
-    var coachBadge = enrollCoach ? '<span class="badge" style="background:#eff6ff;color:#1d4ed8;font-size:9px;display:block;margin-top:2px">👨‍🏫 '+enrollCoach.name+'</span>' : '';
+    var coachBadge = enrollCoach ? '<span class="badge" style="background:var(--info-light);color:var(--info-text);font-size:9px;display:block;margin-top:2px">👨‍🏫 '+enrollCoach.name+'</span>' : '';
     var risk = getChurnRisk(c.id);
-    var riskBadge = risk.label ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;display:block;margin-top:2px;'+(risk.level==='critical'?'background:#fee2e2;color:#b91c1c':'background:#fef9c3;color:#854d0e')+'" title="'+risk.reasons.join(', ')+'">'+risk.label+'</span>' : '';
+    var riskBadge = risk.label ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;display:block;margin-top:2px;'+(risk.level==='critical'?'background:var(--danger-light);color:var(--text-danger)':'background:var(--warning-light);color:var(--warning-text)')+'" title="'+risk.reasons.join(', ')+'">'+risk.label+'</span>' : '';
     var msBadges = getMilestones(c.id).slice(-2).map(function(m){ return '<span class="milestone-badge ms-gold" style="font-size:9px;display:inline-block;margin-top:2px">'+m.icon+' '+m.label+'</span>'; }).join('');
     return '<tr>'
       +'<td><strong>'+c.name+bdayFlag+'</strong>'+noDobBadge+freeDay+sharedBadge+memberBadge+coachBadge+riskBadge+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
@@ -11049,7 +11049,7 @@ function renderCustomers() {
         +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#7c3aed" onclick="viewDietHistory(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Diet Plan History">📜 History</button> ':'')
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#f59e0b;border-color:#f59e0b" onclick="openNotesModal(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Notes &amp; Follow-ups">📝 Notes</button> '
         +'<button class="btn-e" onclick="editCustomer(\''+c.id+'\')">Edit</button>'
-        +(isConvertedCoach ? '' : '<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:#fef3c7;color:#92400e;border-color:#fcd34d" title="Convert to Coach">⭐ Make Coach</button>')
+        +(isConvertedCoach ? '' : '<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:var(--warning-light);color:var(--warning-text);border-color:var(--border-accent)" title="Convert to Coach">⭐ Make Coach</button>')
         +'<button class="btn-d" onclick="delRecord(\'customers\',\''+c.id+'\',\'customers\')">Delete</button>'
       +'</div></td></tr>';
   }).join('');
