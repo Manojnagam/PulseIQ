@@ -44,14 +44,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:#0b0f19;backgro
 /* Scrollbar styles */
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:rgba(0,0,0,0.03);border-radius:4px}
-::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12);border-radius:4px}
-[data-theme="dark"] ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15)}
-::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,0.25)}
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.25)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.25)}
 
 /* ── LOGIN ── */
-#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a28 0%,#2d5a3d 60%,#3d7a52 100%);padding:20px;transition:background-color .3s}
-[data-theme="dark"] #login-screen{background:linear-gradient(135deg,#090d16 0%,#0f172a 60%,#1e293b 100%)}
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#090d16 0%,#0f172a 60%,#1e293b 100%);padding:20px;transition:background-color .3s}
 .login-box{background:var(--surface-solid);color:var(--text);border-radius:20px;padding:36px 32px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);border:1px solid var(--border);transition:all .3s}
 .login-logo{text-align:center;margin-bottom:28px}
 .login-logo h1{font-size:22px;color:var(--primary);font-weight:700;transition:color .3s}
@@ -60,8 +57,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:#0b0f19;backgro
 .login-field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;transition:color .3s}
 .login-field input,.login-field select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;background:var(--surface-solid);color:var(--text);transition:border .2s, background-color .2s, color .2s}
 .login-field input:focus,.login-field select:focus{border-color:var(--primary)}
-.login-btn{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 4px 12px rgba(45, 90, 61, 0.15)}
-[data-theme="dark"] .login-btn{color:#090d16}
+.login-btn{width:100%;padding:13px;background:var(--primary);color:#090d16;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 4px 12px rgba(45, 90, 61, 0.15)}
+
 .login-btn:hover{background:var(--primary-light);transform:translateY(-1px);box-shadow:0 6px 16px rgba(45, 90, 61, 0.25)}
 .login-btn:active{transform:translateY(0)}
 .login-err{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;min-height:18px}

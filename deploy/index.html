@@ -76,6 +76,7 @@
   --glass-blur:blur(16px);
   --cyber-blue:#38bdf8;
   --purple:#a78bfa;
+  --sidebar-bg:linear-gradient(180deg,#121a2c 0%,#0b0f19 100%);
   
   /* Zebra rows & hovers */
   --zebra-bg:rgba(255,255,255,.02);
@@ -127,7 +128,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:#0b0f19;backgro
 /* SETUP */
 #setup{min-height:100vh;display:flex;align-items:stretch;justify-content:center;background:var(--bg);color:var(--text)}
 .setup-split{display:flex;width:100%;min-height:100vh}
-.setup-left{flex:1;background:linear-gradient(160deg,#0f2318 0%,#1a3a28 45%,#2d5a3d 100%);display:flex;flex-direction:column;justify-content:center;padding:60px 56px;position:relative;overflow:hidden}
+.setup-left{flex:1;background:linear-gradient(160deg,#090d16 0%,#0f172a 45%,#1e293b 100%);display:flex;flex-direction:column;justify-content:center;padding:60px 56px;position:relative;overflow:hidden}
 .setup-left::before{content:'';position:absolute;top:-80px;right:-80px;width:360px;height:360px;background:rgba(255,255,255,.04);border-radius:50%}
 .setup-left::after{content:'';position:absolute;bottom:-60px;left:-60px;width:280px;height:280px;background:rgba(232,168,56,.06);border-radius:50%}
 .setup-brand{display:flex;align-items:center;gap:14px;margin-bottom:48px}
@@ -157,7 +158,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:#0b0f19;backgro
 @media(max-width:860px){.setup-split{flex-direction:column}.setup-left{padding:40px 28px;min-height:auto}.setup-left::before,.setup-left::after{display:none}.setup-hero-h{font-size:26px}.setup-right{width:100%;padding:32px 22px}.card{max-width:100%}}
 /* APP */
 #app{display:none;min-height:100vh}
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sw);background:linear-gradient(180deg,#0f2318 0%,#1a3a28 40%,#1f4530 100%);display:flex;flex-direction:column;z-index:100;overflow-y:auto;transition:transform .3s;box-shadow:2px 0 20px rgba(0,0,0,.18)}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sw);background:var(--sidebar-bg);display:flex;flex-direction:column;z-index:100;overflow-y:auto;transition:transform .3s;box-shadow:2px 0 20px rgba(0,0,0,.18)}
 .sb-logo{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
 .sb-logo-inner{display:flex;align-items:center;gap:10px;min-width:0}
 .sb-logo-inner>div:last-child{min-width:0;overflow:hidden}
@@ -927,10 +928,10 @@ input:focus, select:focus, textarea:focus {
 <div class="toast" id="toast"></div>
 
 <!-- ── LOGIN SCREEN ── -->
-<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#05120b 0%,#0f2419 35%,#1a3a28 65%,#2d5a3d 100%);align-items:center;justify-content:center;padding:24px;font-family:'DM Sans',sans-serif">
+<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#090d16 0%,#0f172a 60%,#1e293b 100%);align-items:center;justify-content:center;padding:24px;font-family:'DM Sans',sans-serif">
   <div style="background:var(--surface);border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4);border:1px solid var(--border);color:var(--text)">
     <div style="text-align:center;margin-bottom:32px">
-      <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#1a3a28,#3d7a52);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px">🌿</div>
+      <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#00e676,#38bdf8);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px">🌿</div>
       <div style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--primary-mid);line-height:1.2">PulseZen</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Supervisor Dashboard</div>
     </div>
