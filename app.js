@@ -629,17 +629,10 @@ async function exportAllData() {
 }
 
 function toggleDarkMode() {
-  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  var next = isDark ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('svTheme', next);
-  document.getElementById('dark-mode-btn').textContent = next === 'dark' ? '☀️' : '🌙';
+  document.documentElement.setAttribute('data-theme', 'dark');
 }
 (function applyTheme() {
-  var t = localStorage.getItem('svTheme') || 'dark';
-  document.documentElement.setAttribute('data-theme', t);
-  var btn = document.getElementById('dark-mode-btn');
-  if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
+  document.documentElement.setAttribute('data-theme', 'dark');
 })();
 
 // PINs loaded from Supabase — single source of truth, works across all devices

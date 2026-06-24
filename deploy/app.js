@@ -629,17 +629,10 @@ async function exportAllData() {
 }
 
 function toggleDarkMode() {
-  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  var next = isDark ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('svTheme', next);
-  document.getElementById('dark-mode-btn').textContent = next === 'dark' ? '☀️' : '🌙';
+  document.documentElement.setAttribute('data-theme', 'dark');
 }
 (function applyTheme() {
-  var t = localStorage.getItem('svTheme') || 'light';
-  document.documentElement.setAttribute('data-theme', t);
-  var btn = document.getElementById('dark-mode-btn');
-  if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
+  document.documentElement.setAttribute('data-theme', 'dark');
 })();
 
 // PINs loaded from Supabase — single source of truth, works across all devices
@@ -1408,6 +1401,22 @@ async function bootDashboard() {
     // ── STEP 1: Auth check ──
     initAuthClient();
 
+    if (window.Chart) {
+      Chart.defaults.color = '#94a3b8';
+      Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.07)';
+      Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+      Chart.defaults.scale.grid = Chart.defaults.scale.grid || {};
+      Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.07)';
+      var tt = Chart.defaults.plugins.tooltip;
+      tt.backgroundColor = 'rgba(17, 24, 39, 0.95)';
+      tt.titleFont = { family: "'Plus Jakarta Sans', sans-serif", weight: 'bold' };
+      tt.bodyFont = { family: "'Plus Jakarta Sans', sans-serif" };
+      tt.padding = 10;
+      tt.cornerRadius = 8;
+      tt.borderColor = 'rgba(255, 255, 255, 0.07)';
+      tt.borderWidth = 1;
+    }
+
     // Token refresh listener (keeps pz_session_tokens fresh while tab is open)
     _sbAuth.auth.onAuthStateChange(function(event, session) {
       if (event === 'TOKEN_REFRESHED' && session) {
@@ -1773,10 +1782,12 @@ function onPackOwnerChange() {
   var sharedInfo = document.getElementById('shared-pack-info');
   if(ownerId) {
     ownFields.style.display = 'none';
-    var owner = D.customers.find(function(c){return c.id===ownerId;});
+    var owner = D.customers.find(function(c){return c.id===ownerId;})
+             || D.coaches.find(function(c){return c.id===ownerId;});
     if(owner) {
       var st = getDaysLeft(owner);
-      var members = D.customers.filter(function(c){return c.pack_owner_id===ownerId;});
+      var members = D.customers.filter(function(c){return c.pack_owner_id===ownerId;})
+                 .concat(D.coaches.filter(function(c){return c.pack_owner_id===ownerId;}));
       sharedInfo.style.display = 'block';
       sharedInfo.innerHTML = '👥 Sharing <strong>'+owner.name+'\'s</strong> pack ('+owner.pack_type+')<br>'+
         '📊 '+st.days+' servings remaining' +
@@ -1790,11 +1801,13 @@ function onPackOwnerChange() {
 
 function getPackOwner(c) {
   if(!c.pack_owner_id) return c;
-  return D.customers.find(function(x){return x.id===c.pack_owner_id;}) || c;
+  return D.customers.find(function(x){return x.id===c.pack_owner_id;})
+      || D.coaches.find(function(x){return x.id===c.pack_owner_id;}) || c;
 }
 
 function getPackMembers(ownerId) {
-  return D.customers.filter(function(c){return c.pack_owner_id===ownerId;});
+  return D.customers.filter(function(c){return c.pack_owner_id===ownerId;})
+      .concat(D.coaches.filter(function(c){return c.pack_owner_id===ownerId;}));
 }
 
 // ── COMPLEMENTARY DAY ──
@@ -2056,6 +2069,31 @@ function updateCustSelects() {
 }
 
 // ── NEW LOGIC HELPERS ──
+function getPersonIds(id) {
+  var ids = [id];
+  if (!id) return ids;
+  var cust = D.customers.find(function(x){ return x.id === id; });
+  var coach = D.coaches.find(function(x){ return x.id === id; });
+  if (coach) {
+    D.customers.forEach(function(c) {
+      if (c.pack_owner_id === id && (
+        (c.contact && coach.contact && c.contact.replace(/\D/g,'') === coach.contact.replace(/\D/g,'')) || 
+        (c.name && coach.name && c.name.trim().toLowerCase() === coach.name.trim().toLowerCase())
+      )) {
+        ids.push(c.id);
+      }
+    });
+  } else if (cust) {
+    var co = cust.pack_owner_id ? D.coaches.find(function(x){ return x.id === cust.pack_owner_id; }) : null;
+    if (co && (
+      (cust.contact && co.contact && cust.contact.replace(/\D/g,'') === co.contact.replace(/\D/g,'')) || 
+      (cust.name && co.name && cust.name.trim().toLowerCase() === co.name.trim().toLowerCase())
+    )) {
+      ids.push(co.id);
+    }
+  }
+  return ids;
+}
 function parsePack(packType) {
   if (!packType) return 30;
   var t = packType.toLowerCase();
@@ -2096,7 +2134,8 @@ function getDaysLeft(c) {
 }
 function getStreak(cid) {
   var attsSet = new Set();
-  D.attendance.forEach(function(a){ if(a.customer_id===cid && a.status==='present') attsSet.add(a.date); });
+  var pIds = getPersonIds(cid);
+  D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1 && a.status==='present') attsSet.add(a.date); });
   var atts = Array.from(attsSet).sort().reverse();
   var streak=0, d=new Date();
   for(var i=0; i<atts.length; i++){
@@ -2107,9 +2146,10 @@ function getStreak(cid) {
   return streak;
 }
 function isInactive(c) {
-  if (typeof c === 'string') c = D.customers.find(function(x){return x.id===c;})||{};
+  if (typeof c === 'string') c = D.customers.find(function(x){return x.id===c;})||D.coaches.find(function(x){return x.id===c;})||{};
   var attsSet = new Set();
-  D.attendance.forEach(function(a){ if(a.customer_id===c.id) attsSet.add(a.date); });
+  var pIds = getPersonIds(c.id);
+  D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1) attsSet.add(a.date); });
   var atts = Array.from(attsSet).sort().reverse();
   var diff = 0;
   if(atts.length) diff = Math.floor((new Date() - new Date(atts[0]))/(1000*60*60*24));
@@ -5215,7 +5255,8 @@ async function applyRecurringNow() {
 var _attResetTimer = null;
 async function toggleAtt(cid, cname, date, currentStatus) {
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
-  var existing = D.attendance.find(function(a){return a.customer_id===cid && a.date===date;});
+  var pIds = getPersonIds(cid);
+  var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
   try {
     if(existing && existing.status==='present') {
       var curServ = Number(existing.servings) || 1;
@@ -5236,7 +5277,8 @@ async function toggleAtt(cid, cname, date, currentStatus) {
 }
 async function resetAtt(cid, cname, date) {
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) return;
-  var existing = D.attendance.find(function(a){return a.customer_id===cid && a.date===date;});
+  var pIds = getPersonIds(cid);
+  var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
   if(!existing || existing.status!=='present') return;
   try {
     await dbUpdate('attendance', existing.id, {status:'absent', servings:0});
@@ -5274,7 +5316,8 @@ function sendAttendanceWhatsApp(custId, custName, date) {
   }
 
   var todayServings = 0;
-  D.attendance.forEach(function(a){ if(a.customer_id===custId && a.date===date && a.status==='present') todayServings = Number(a.servings)||1; });
+  var pIds = getPersonIds(custId);
+  D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1 && a.date===date && a.status==='present') todayServings = Number(a.servings)||1; });
   var todayLine = todayServings > 1 ? '🥤 Today\'s servings: *'+todayServings+'*\n' : '';
 
   var displayName = custName.replace(' 👨‍🏫','');
@@ -5325,13 +5368,20 @@ function renderAttGrid() {
   var y=parseInt(parts[0]), m=parseInt(parts[1]);
   var daysInMonth = new Date(y, m, 0).getDate();
   var custRows = filterByCenter(D.customers).filter(function(c){
+    var pIds = getPersonIds(c.id);
+    var isConvertedCoach = pIds.length > 1 && D.coaches.some(function(co){ return co.id === c.pack_owner_id; });
+    if (isConvertedCoach) return false;
+
     var hasAttThisMonth = D.attendance.some(function(a){return a.customer_id===c.id&&a.date&&a.date.startsWith(monthStr);});
     if(hasAttThisMonth) return true; // always show if they actually attended this month
     if(!getDaysLeft(c).active) return false; // expired pack, no attendance — hide
     if(isInactive(c) && !ATT_SHOW_INACTIVE) return false; // inactive, toggle off — hide
     return true;
   }).map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:false}; });
-  var coachRows = filterByCenter(D.coaches).filter(function(c){ return (c.pack_type && c.pack_start_date) || D.attendance.some(function(a){return a.customer_id===c.id&&a.date&&a.date.startsWith(monthStr);}); })
+  var coachRows = filterByCenter(D.coaches).filter(function(c){
+    var pIds = getPersonIds(c.id);
+    return (c.pack_type && c.pack_start_date) || D.attendance.some(function(a){return pIds.indexOf(a.customer_id) !== -1&&a.date&&a.date.startsWith(monthStr);});
+  })
     .map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:true}; });
   var allRows = custRows.concat(coachRows);
 
@@ -5351,7 +5401,8 @@ function renderAttGrid() {
       var presentSet = new Set();
       for(var i=1; i<=daysInMonth; i++) {
         var dStr = monthStr+'-'+(i<10?'0':'')+i;
-        var att = D.attendance.find(function(a){return a.customer_id===p.id && a.date===dStr;});
+        var pIds = getPersonIds(p.id);
+        var att = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===dStr;});
         var st = att ? att.status : '';
         var servCount = att ? (Number(att.servings) || 1) : 0;
         var cls = st==='present' ? 'p' : (st==='absent' ? 'a' : (st==='complementary' ? 'c' : ''));
@@ -5411,7 +5462,8 @@ async function gridServSave(id, name, date) {
   var v = parseInt(document.getElementById('grid-serv-val').textContent) || 1;
   document.getElementById('grid-cell-popup').style.display = 'none';
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()) return;
-  var existing = D.attendance.find(function(a){return a.customer_id===id && a.date===date;});
+  var pIds = getPersonIds(id);
+  var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
   try {
     if(existing) { await dbUpdate('attendance', existing.id, {status:'present', servings:v}); }
     else { await dbInsert('attendance', {customer_id:id, customer_name:name, date:date, status:'present', servings:v}); }
@@ -5432,6 +5484,10 @@ function renderAttendance() {
   var _tn=new Date(); var todayStr=_tn.getFullYear()+'-'+String(_tn.getMonth()+1).padStart(2,'0')+'-'+String(_tn.getDate()).padStart(2,'0');
   
   var activeCusts = filterByCenter(D.customers).filter(function(c){
+    var pIds = getPersonIds(c.id);
+    var isConvertedCoach = pIds.length > 1 && D.coaches.some(function(co){ return co.id === c.pack_owner_id; });
+    if (isConvertedCoach) return false;
+
     var packActive = getDaysLeft(c).active;
     var presentToday = D.attendance.some(function(a){ return a.customer_id===c.id && a.date===todayStr && a.status==='present'; });
     if (!packActive && !presentToday) return false; // hide expired-pack customers unless present today
@@ -5453,7 +5509,8 @@ function renderAttendance() {
     .concat(activeCoaches.map(function(c){ return {id:c.id, name:c.name+' 👨‍🏫', obj:c, isCoach:true}; }));
 
   allPersons.forEach(function(p){
-    var att = D.attendance.find(function(a){return a.customer_id===p.id && a.date===todayStr;});
+    var pIds = getPersonIds(p.id);
+    var att = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===todayStr;});
     var stst = att ? att.status : 'None';
     var servings = att ? (Number(att.servings) || 1) : 0;
     var st = getDaysLeft(p.obj);
@@ -6127,11 +6184,11 @@ function renderFinance() {
     _charts['pl'] = new Chart(document.getElementById('chart-pl'),{
       type:'bar',
       data:{ labels:lbls, datasets:[
-        {label:'Income',data:months.map(function(m){return monthMap[m].inc;}),backgroundColor:'rgba(34,197,94,.7)',borderRadius:4},
-        {label:'Expense',data:months.map(function(m){return monthMap[m].exp;}),backgroundColor:'rgba(239,68,68,.7)',borderRadius:4},
-        {label:'Net',data:months.map(function(m){return monthMap[m].inc-monthMap[m].exp;}),type:'line',borderColor:'var(--primary)',backgroundColor:'transparent',tension:0.4,pointRadius:4,borderWidth:2}
+        {label:'Income',data:months.map(function(m){return monthMap[m].inc;}),backgroundColor:'rgba(0, 230, 118, 0.7)',borderRadius:4},
+        {label:'Expense',data:months.map(function(m){return monthMap[m].exp;}),backgroundColor:'rgba(255, 23, 68, 0.7)',borderRadius:4},
+        {label:'Net',data:months.map(function(m){return monthMap[m].inc-monthMap[m].exp;}),type:'line',borderColor:'#00e676',pointBackgroundColor:'#00e676',backgroundColor:'transparent',tension:0.4,pointRadius:4,borderWidth:2}
       ]},
-      options:{responsive:true,plugins:{legend:{labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{font:{size:11},callback:function(v){return '₹'+Number(v).toLocaleString('en-IN');}}}}}
+      options:{responsive:true,plugins:{legend:{labels:{font:{size:11},color:'#94a3b8'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#94a3b8'}},y:{grid:{color:'rgba(255, 255, 255, 0.07)'},ticks:{font:{size:11},color:'#94a3b8',callback:function(v){return '₹'+Number(v).toLocaleString('en-IN');}}}}}
     });
   }
 
@@ -6261,12 +6318,53 @@ async function convertToCoach(custId) {
     // 2. Link old customer record to new coach (preserves attendance history)
     if (newCoachId) {
       await dbUpdate('customers', custId, { pack_owner_id: newCoachId });
+
+      // ── MAP BODY COMPOSITION RECORDS ──
+      try {
+        var bodyUrl = getActiveSbUrl() + '/rest/v1/body_composition?customer_id=eq.' + custId;
+        var bodyRes = await fetch(bodyUrl, {
+          headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
+        });
+        var bodyRecs = await bodyRes.json();
+        if (Array.isArray(bodyRecs)) {
+          for (var i = 0; i < bodyRecs.length; i++) {
+            await dbUpdate('body_composition', bodyRecs[i].id, { customer_id: newCoachId });
+          }
+        }
+      } catch(bodyErr) { console.error('Error updating body composition:', bodyErr); }
+
+      // ── UPDATE ATTENDANCE RECORDS ──
+      try {
+        var attUrl = getActiveSbUrl() + '/rest/v1/attendance?customer_id=eq.' + custId;
+        var attRes = await fetch(attUrl, {
+          headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
+        });
+        var attRecs = await attRes.json();
+        if (Array.isArray(attRecs)) {
+          for (var i = 0; i < attRecs.length; i++) {
+            await dbUpdate('attendance', attRecs[i].id, { customer_id: newCoachId, customer_name: c.name });
+          }
+        }
+      } catch(attErr) { console.error('Error updating attendance:', attErr); }
+
+      // ── UPDATE PACK HISTORY RECORDS ──
+      try {
+        var packHistoryUrl = getActiveSbUrl() + '/rest/v1/pack_history?customer_id=eq.' + custId;
+        var phRes = await fetch(packHistoryUrl, {
+          headers: { 'apikey': SB_KEY || CENTER_SB_KEY, 'Authorization': 'Bearer ' + getActiveSbKey() }
+        });
+        var phRecs = await phRes.json();
+        if (Array.isArray(phRecs)) {
+          for (var i = 0; i < phRecs.length; i++) {
+            await dbUpdate('pack_history', phRecs[i].id, { customer_id: null, coach_id: newCoachId });
+          }
+        }
+      } catch(phErr) { console.error('Error updating pack history:', phErr); }
     }
     auditLog('Converted', 'Customer→Coach', c.name);
     showToast(c.name + ' is now a Coach! Attendance history carried over. Mark attendance under Coach tab.', 'success');
     _daysLeftCache = {};
-    await Promise.all([loadCustomers(), loadCoaches()]);
-    await loadAttendance();
+    await Promise.all([loadCustomers(), loadCoaches(), loadBody(), loadAttendance()]);
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
 }
 function updateCoachPortalNavLink() {
@@ -6771,7 +6869,7 @@ async function saveAttendance() {
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('att-id').value;
   var custId = document.getElementById('att-customer').value;
-  var cust = D.customers.find(function(c){return c.id===custId;}) || {};
+  var cust = D.customers.find(function(c){return c.id===custId;}) || D.coaches.find(function(c){return c.id===custId;}) || {};
   var custName = cust.name || '';
   var servings = parseInt(document.getElementById('att-servings').value)||1;
   var morningShake    = document.getElementById('att-morning-shake').value;
@@ -6804,7 +6902,7 @@ async function saveAttendance() {
 }
 function onAttCustomerChange() {
   var custId = document.getElementById('att-customer').value;
-  var cust = D.customers.find(function(c){return c.id===custId;}) || {};
+  var cust = D.customers.find(function(c){return c.id===custId;}) || D.coaches.find(function(c){return c.id===custId;}) || {};
   var isTwice = cust.shake_frequency === 'twice';
   var row = document.getElementById('att-postworkout-row');
   if(row) row.style.display = isTwice ? 'block' : 'none';
@@ -7610,10 +7708,10 @@ function renderAnalytics() {
   var incMA = movingAvg(incData, 3);
   var expMA = movingAvg(expData, 3);
   var revDatasets = [];
-  if (!revTypeFilter || revTypeFilter==='income')  revDatasets.push({label:'Income', data:incData, backgroundColor:'rgba(39,174,96,0.75)', borderRadius:4, order:2});
-  if (!revTypeFilter || revTypeFilter==='expense') revDatasets.push({label:'Expense',data:expData, backgroundColor:'rgba(192,57,43,0.6)',  borderRadius:4, order:2});
-  if (!revTypeFilter || revTypeFilter==='income')  revDatasets.push({label:'Income 3M Avg', data:incMA, type:'line', borderColor:'#16a34a', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#16a34a', tension:0.3, order:1});
-  if (!revTypeFilter || revTypeFilter==='expense') revDatasets.push({label:'Expense 3M Avg',data:expMA, type:'line', borderColor:'#e74c3c', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#e74c3c', tension:0.3, order:1});
+  if (!revTypeFilter || revTypeFilter==='income')  revDatasets.push({label:'Income', data:incData, backgroundColor:'rgba(0, 230, 118, 0.75)', borderRadius:4, order:2});
+  if (!revTypeFilter || revTypeFilter==='expense') revDatasets.push({label:'Expense',data:expData, backgroundColor:'rgba(255, 23, 68, 0.6)',  borderRadius:4, order:2});
+  if (!revTypeFilter || revTypeFilter==='income')  revDatasets.push({label:'Income 3M Avg', data:incMA, type:'line', borderColor:'#00e676', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#00e676', tension:0.3, order:1});
+  if (!revTypeFilter || revTypeFilter==='expense') revDatasets.push({label:'Expense 3M Avg',data:expMA, type:'line', borderColor:'#ff1744', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#ff1744', tension:0.3, order:1});
   destroyChart('revenue');
   if (document.getElementById('chart-revenue')) {
     _charts['revenue'] = new Chart(document.getElementById('chart-revenue'),{
@@ -7622,10 +7720,13 @@ function renderAnalytics() {
       options:{
         responsive:true,
         plugins:{
-          legend:{position:'bottom'},
+          legend:{position:'bottom', labels:{color:'#94a3b8'}},
           tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': ₹'+Number(ctx.raw||0).toLocaleString('en-IN');}}}
         },
-        scales:{y:{beginAtZero:true, ticks:{callback:function(v){return '₹'+v.toLocaleString('en-IN');}}}}
+        scales:{
+          y:{beginAtZero:true, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8', callback:function(v){return '₹'+v.toLocaleString('en-IN');}}},
+          x:{grid:{display:false}, ticks:{color:'#94a3b8'}}
+        }
       }
     });
   }
@@ -7753,8 +7854,8 @@ function renderAnalytics() {
   destroyChart('attendance');
   if (document.getElementById('chart-attendance')) {
     _charts['attendance'] = new Chart(document.getElementById('chart-attendance'),{
-      type:'bar', data:{labels:days,datasets:[{label:'Check-ins',data:dayCounts,backgroundColor:'rgba(45,90,61,0.75)',borderRadius:4}]},
-      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+      type:'bar', data:{labels:days,datasets:[{label:'Check-ins',data:dayCounts,backgroundColor:'rgba(0, 230, 118, 0.75)',borderRadius:4}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8'}}, x:{grid:{display:false}, ticks:{color:'#94a3b8'}}}}
     });
   }
 
@@ -7772,8 +7873,8 @@ function renderAnalytics() {
   if (document.getElementById('chart-streaks')) {
     _charts['streaks'] = new Chart(document.getElementById('chart-streaks'),{
       type:'doughnut',
-      data:{labels:Object.keys(streakBuckets),datasets:[{data:Object.values(streakBuckets),backgroundColor:['#c0392b','#e8a838','#3d7a52','#2b5ce6','#9333ea'],borderWidth:2}]},
-      options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+      data:{labels:Object.keys(streakBuckets),datasets:[{data:Object.values(streakBuckets),backgroundColor:['#ff1744','#ffd600','#00e676','#38bdf8','#a78bfa'],borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}}}
     });
   }
 
@@ -7801,15 +7902,15 @@ function renderAnalytics() {
   if (document.getElementById('chart-packs')) {
     _charts['packs'] = new Chart(document.getElementById('chart-packs'),{
       type:'pie',
-      data:{labels:Object.keys(packMap),datasets:[{data:Object.values(packMap),backgroundColor:['#2d5a3d','#e8a838','#2b5ce6','#9333ea','#c0392b','#27ae60'],borderWidth:2}]},
-      options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+      data:{labels:Object.keys(packMap),datasets:[{data:Object.values(packMap),backgroundColor:['#00e676','#38bdf8','#ffd600','#a78bfa','#ff1744','#f8fafc'],borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}}}
     });
   }
 
   // ── Body metric trend (filtered, metric switcher) ──
   var metricLabel = {weight:'Weight (kg)', fat:'Body Fat %', muscle:'Muscle %', bmi:'BMI'}[metricFilter] || 'Weight (kg)';
   var metricKey   = {weight:'weight', fat:'fat_percentage', muscle:'muscle_percentage', bmi:'bmi'}[metricFilter] || 'weight';
-  var metricColor = {weight:'#2d5a3d', fat:'#c0392b', muscle:'#2b5ce6', bmi:'#9333ea'}[metricFilter] || '#2d5a3d';
+  var metricColor = {weight:'#38bdf8', fat:'#ff1744', muscle:'#00e676', bmi:'#a78bfa'}[metricFilter] || '#38bdf8';
   var monthsW=[]; var avgMet=[];
   for(var j=numMonths-1;j>=0;j--){
     var dW=new Date(); dW.setDate(1); dW.setMonth(dW.getMonth()-j);
@@ -7823,7 +7924,7 @@ function renderAnalytics() {
     _charts['weightloss'] = new Chart(document.getElementById('chart-weightloss'),{
       type:'line',
       data:{labels:monthsW,datasets:[{label:metricLabel,data:avgMet,borderColor:metricColor,backgroundColor:metricColor+'15',tension:0.35,fill:true,pointBackgroundColor:metricColor,pointRadius:5}]},
-      options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:false}},spanGaps:true}
+      options:{responsive:true,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}, scales:{y:{beginAtZero:false, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8'}}, x:{grid:{display:false}, ticks:{color:'#94a3b8'}}}},spanGaps:true}
     });
   }
 
@@ -7835,7 +7936,7 @@ function renderAnalytics() {
     if (ACTIVE_CENTER || D.centers.length < 2) { compWrap.style.display = 'none'; return; }
     compWrap.style.display = 'block';
     var thisMonth = new Date().toISOString().substring(0, 7);
-    var colors = ['#2d5a3d','#e8a838','#2b5ce6','#9333ea','#c0392b','#27ae60','#e67e22','#16a34a'];
+    var colors = ['#00e676', '#38bdf8', '#ffd600', '#a78bfa', '#ff1744', '#f8fafc', '#a855f7', '#6366f1'];
     var centerLabels = [], revData = [], attData = [], tableRows = [];
     D.centers.forEach(function(center, i) {
       var rev = (D.finance||[]).filter(function(f){
@@ -7857,12 +7958,12 @@ function renderAnalytics() {
     if (crEl) _charts['center-revenue'] = new Chart(crEl, {
       type: 'bar',
       data: { labels: centerLabels, datasets: [{ label: 'Revenue (₹)', data: revData, backgroundColor: colors.slice(0, centerLabels.length), borderRadius: 6 }] },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: function(v){ return '₹'+v.toLocaleString('en-IN'); } } } } }
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return '₹'+v.toLocaleString('en-IN'); } } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
     });
     if (caEl) _charts['center-attendance'] = new Chart(caEl, {
       type: 'bar',
       data: { labels: centerLabels, datasets: [{ label: 'Check-ins', data: attData, backgroundColor: colors.slice(0, centerLabels.length), borderRadius: 6 }] },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
     });
     var tbl = document.getElementById('analytics-center-table');
     if (tbl) tbl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px">'
@@ -8030,12 +8131,12 @@ function renderAnalytics() {
           datasets: [{
             label: 'Renewal Rate %',
             data: rates,
-            borderColor: '#16a34a',
-            backgroundColor: 'rgba(22,163,74,0.12)',
+            borderColor: '#00e676',
+            backgroundColor: 'rgba(0,230,118,0.12)',
             fill: true,
             tension: 0.4,
             pointRadius: 5,
-            pointBackgroundColor: rates.map(function(r){ return r>=70?'#16a34a':r>=40?'#d97706':'#e74c3c'; }),
+            pointBackgroundColor: rates.map(function(r){ return r>=70?'#00e676':r>=40?'#ffd600':'#ff1744'; }),
             borderWidth: 2
           }]
         },
@@ -8043,8 +8144,8 @@ function renderAnalytics() {
           responsive: true,
           plugins: { legend: { display: false } },
           scales: {
-            y: { min: 0, max: 100, ticks: { callback: function(v){ return v+'%'; }, font: { size: 11 } } },
-            x: { ticks: { font: { size: 11 } } }
+            y: { min: 0, max: 100, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return v+'%'; }, font: { size: 11 } } },
+            x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } }
           }
         }
       });
@@ -10901,9 +11002,18 @@ function renderCustomers() {
     var waReeng = (isInactive(c.id)&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px;background:#8b5cf6" onclick="sendInactiveWA(\''+c.id+'\')">💬 Re-engage</button> ':'';
     var bodyCount = D.body.filter(function(b){return b.customer_id===c.id;}).length;
     var waWeekly = (bodyCount>=2&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px;background:#0ea5e9" onclick="sendWeeklyProgressWA(\''+c.id+'\')">📊</button> ':'';
+    var isConvertedCoach = c.pack_owner_id && D.coaches.some(function(co){ 
+      return co.id === c.pack_owner_id && (
+        (co.contact && c.contact && co.contact.replace(/\D/g,'') === c.contact.replace(/\D/g,'')) || 
+        (co.name && c.name && co.name.trim().toLowerCase() === c.name.trim().toLowerCase())
+      ); 
+    });
     var sharedBadge = '';
-    if(c.pack_owner_id) {
-      var po = D.customers.find(function(x){return x.id===c.pack_owner_id;});
+    if(isConvertedCoach) {
+      sharedBadge = '<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:9px;display:block;margin-top:2px">⭐ Converted to Coach</span>';
+    } else if(c.pack_owner_id) {
+      var po = D.customers.find(function(x){return x.id===c.pack_owner_id;})
+            || D.coaches.find(function(x){return x.id===c.pack_owner_id;});
       sharedBadge = '<span class="badge bb" style="font-size:9px;display:block;margin-top:2px">👥 On '+(po?po.name:'?')+'\'s pack</span>';
     }
     var members = D.customers.filter(function(x){return x.pack_owner_id===c.id;});
@@ -10931,7 +11041,7 @@ function renderCustomers() {
         +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#7c3aed" onclick="viewDietHistory(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Diet Plan History">📜 History</button> ':'')
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#f59e0b;border-color:#f59e0b" onclick="openNotesModal(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Notes &amp; Follow-ups">📝 Notes</button> '
         +'<button class="btn-e" onclick="editCustomer(\''+c.id+'\')">Edit</button>'
-        +'<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:#fef3c7;color:#92400e;border-color:#fcd34d" title="Convert to Coach">⭐ Make Coach</button>'
+        +(isConvertedCoach ? '' : '<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:#fef3c7;color:#92400e;border-color:#fcd34d" title="Convert to Coach">⭐ Make Coach</button>')
         +'<button class="btn-d" onclick="delRecord(\'customers\',\''+c.id+'\',\'customers\')">Delete</button>'
       +'</div></td></tr>';
   }).join('');
@@ -12885,7 +12995,7 @@ async function seedIndianFoods() {
     {name:'Chana Dal',goal:'weight_loss',category:'veg',calories:364,protein:20,carbs:65,fat:5.3,fiber:17.4,meal_time:'lunch'},
     {name:'Rajma (Kidney Beans)',goal:'both',category:'veg',calories:333,protein:24,carbs:60,fat:1.5,fiber:24.9,meal_time:'lunch'},
     {name:'Chana (Chickpeas)',goal:'both',category:'veg',calories:164,protein:8.9,carbs:27,fat:2.6,fiber:7.6,meal_time:'lunch'},
-    {name:'Paneer',goal:'both',category:'veg',calories:265,protein:18,carbs:1.2,fat:21,fiber:0,meal_time:'any'},
+{name:'Paneer',goal:'both',category:'veg',calories:265,protein:18,carbs:1.2,fat:21,fiber:0,meal_time:'any'},
     {name:'Curd (Homemade)',goal:'weight_loss',category:'veg',calories:61,protein:3.5,carbs:4.7,fat:3.3,fiber:0,meal_time:'any'},
     {name:'Full-fat Milk',goal:'weight_gain',category:'veg',calories:61,protein:3.2,carbs:4.8,fat:3.3,fiber:0,meal_time:'breakfast'},
     {name:'Groundnuts / Peanuts',goal:'both',category:'veg',calories:567,protein:26,carbs:16,fat:49,fiber:8.5,meal_time:'snack'},
@@ -13097,12 +13207,14 @@ async function deleteFood(id, name) {
 
 var _activeContestId = null;
 var _contestTypeFilter = 'all';
+var _activeBtpSubTab = 'weight_loss';
 
 var CONTEST_CONFIG = {
   weight_loss:  { label:'Weight Loss',  icon:'⬇️', color:'#ef4444', gradient:'linear-gradient(135deg,#c0392b,#e74c3c)', metric:'weight',          dir:-1, unit:'kg',  field:'current_weight',  startField:'start_weight' },
   weight_gain:  { label:'Weight Gain',  icon:'⬆️', color:'#2b5ce6', gradient:'linear-gradient(135deg,#1e3a8a,#2b5ce6)', metric:'weight',          dir:1,  unit:'kg',  field:'current_weight',  startField:'start_weight' },
   fat_loss:     { label:'Fat Loss',     icon:'🔥', color:'#f59e0b', gradient:'linear-gradient(135deg,#b45309,#f59e0b)', metric:'fat_percentage',  dir:-1, unit:'%',   field:'current_fat',     startField:'start_fat' },
-  muscle_gain:  { label:'Muscle Gain',  icon:'💪', color:'#27ae60', gradient:'linear-gradient(135deg,#166534,#27ae60)', metric:'muscle_percentage',dir:1,  unit:'%',   field:'current_muscle',  startField:'start_muscle' }
+  muscle_gain:  { label:'Muscle Gain',  icon:'💪', color:'#27ae60', gradient:'linear-gradient(135deg,#166534,#27ae60)', metric:'muscle_percentage',dir:1,  unit:'%',   field:'current_muscle',  startField:'start_muscle' },
+  btp:          { label:'BTP Contest',  icon:'🏆', color:'#10b981', gradient:'linear-gradient(135deg,#047857,#10b981)', metric:'multiple',        dir:1,  unit:'kg',  field:'progress',        startField:'start_weight' }
 };
 
 async function loadContests() {
@@ -13390,14 +13502,34 @@ function renderContests() {
     completedList.innerHTML = completed.map(function(c){
       var cfg = CONTEST_CONFIG[c.type] || CONTEST_CONFIG.weight_loss;
       var pts = D.contestParticipants.filter(function(p){ return p.contest_id===c.id; });
-      var winner = pts.sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); })[0];
+      var winnerHtml = '';
+      if (c.type === 'btp') {
+        var wlWinner = pts.filter(function(p){ return p.category==='weight_loss'; }).sort(function(a,b){ return b.progress - a.progress; })[0];
+        var wgWinner = pts.filter(function(p){ return p.category==='weight_gain'; }).sort(function(a,b){ return b.progress - a.progress; })[0];
+        var flWinner = pts.filter(function(p){ return p.category==='fat_loss'; }).sort(function(a,b){ return b.progress - a.progress; })[0];
+        var mgWinner = pts.filter(function(p){ return p.category==='muscle_gain'; }).sort(function(a,b){ return b.progress - a.progress; })[0];
+        
+        var winners = [];
+        if (wlWinner && wlWinner.progress > 0) winners.push('WL: ' + wlWinner.customer_name);
+        if (wgWinner && wgWinner.progress > 0) winners.push('WG: ' + wgWinner.customer_name);
+        if (flWinner && flWinner.progress > 0) winners.push('FL: ' + flWinner.customer_name);
+        if (mgWinner && mgWinner.progress > 0) winners.push('MG: ' + mgWinner.customer_name);
+        
+        winnerHtml = winners.length > 0 
+          ? '<div style="font-size:11px;font-weight:700;color:var(--accent)">🏆 ' + winners.join(', ') + '</div>'
+          : '<div style="font-size:11px;color:var(--muted)">No winners recorded</div>';
+      } else {
+        var winner = pts.sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); })[0];
+        winnerHtml = winner ? '<div style="font-size:12px;font-weight:700;color:var(--accent)">🥇 '+winner.customer_name+'</div>' : '';
+      }
+
       return '<div class="contest-completed-row" onclick="openContestDetail(\''+c.id+'\')">' +
         '<div>' +
           '<div style="font-weight:700;font-size:14px">'+cfg.icon+' '+c.name+'</div>' +
           '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+c.start_date+' → '+c.end_date+' · '+pts.length+' participants</div>' +
         '</div>' +
         '<div style="text-align:right">' +
-          (winner ? '<div style="font-size:12px;font-weight:700;color:var(--accent)">🥇 '+winner.customer_name+'</div>' : '') +
+          winnerHtml +
           (c.prize_amount > 0 ? '<div style="font-size:11px;color:var(--muted)">₹'+c.prize_amount+' prize</div>' : '') +
         '</div>' +
         '<button class="btn-d" onclick="event.stopPropagation();deleteContest(\''+c.id+'\')">🗑</button>' +
@@ -13416,19 +13548,34 @@ function buildContestCard(c, today) {
   var daysLeft = Math.max(0, totalDays - elapsedDays);
   var pct = Math.round((elapsedDays / totalDays) * 100);
 
-  // Top 3 for preview
-  var ranked = pts.slice().sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); });
-  var topHtml = ranked.slice(0,3).map(function(p,i){
-    var prog = parseFloat(p.progress||0);
-    var medal = i===0?'🥇':i===1?'🥈':'🥉';
-    var sign  = cfg.dir===1 ? (prog>0?'+':'') : (prog<0?'':'+');
-    var disp  = cfg.dir===-1 ? Math.abs(prog).toFixed(1) : prog.toFixed(1);
-    return '<div class="contest-rank-row">' +
-      '<div class="contest-rank-num '+(i===0?'contest-rank-1':i===1?'contest-rank-2':'contest-rank-3')+'">'+medal+'</div>' +
-      '<div style="flex:1;font-weight:600;font-size:13px">'+p.customer_name+'</div>' +
-      '<div style="font-size:12px;font-weight:700;color:'+cfg.color+'">'+(prog?disp+cfg.unit:'—')+'</div>' +
-    '</div>';
-  }).join('');
+  var topHtml = '';
+  if (c.type === 'btp') {
+    var countWL = pts.filter(function(p){ return p.category==='weight_loss'; }).length;
+    var countMG = pts.filter(function(p){ return p.category==='muscle_gain'; }).length;
+    var countFL = pts.filter(function(p){ return p.category==='fat_loss'; }).length;
+    var countWG = pts.filter(function(p){ return p.category==='weight_gain'; }).length;
+    topHtml = 
+      '<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">' +
+        '<strong>Categories Enrollment:</strong><br>' +
+        '⬇️ WL: <strong>'+countWL+'</strong> &nbsp;·&nbsp; ' +
+        '💪 MG: <strong>'+countMG+'</strong> &nbsp;·&nbsp; ' +
+        '🔥 FL: <strong>'+countFL+'</strong> &nbsp;·&nbsp; ' +
+        '⬆️ WG: <strong>'+countWG+'</strong>' +
+      '</div>';
+  } else {
+    var ranked = pts.slice().sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); });
+    topHtml = ranked.slice(0,3).map(function(p,i){
+      var prog = parseFloat(p.progress||0);
+      var medal = i===0?'🥇':i===1?'🥈':'🥉';
+      var sign  = cfg.dir===1 ? (prog>0?'+':'') : (prog<0?'':'+');
+      var disp  = cfg.dir===-1 ? Math.abs(prog).toFixed(1) : prog.toFixed(1);
+      return '<div class="contest-rank-row">' +
+        '<div class="contest-rank-num '+(i===0?'contest-rank-1':i===1?'contest-rank-2':'contest-rank-3')+'">'+medal+'</div>' +
+        '<div style="flex:1;font-weight:600;font-size:13px">'+p.customer_name+'</div>' +
+        '<div style="font-size:12px;font-weight:700;color:'+cfg.color+'">'+(prog?disp+cfg.unit:'—')+'</div>' +
+      '</div>';
+    }).join('');
+  }
 
   return '<div class="contest-card" onclick="openContestDetail(\''+c.id+'\')">' +
     '<div class="contest-card-banner" style="background:'+cfg.gradient+'">' +
@@ -13482,32 +13629,154 @@ function openContestDetail(id) {
       '<div style="height:100%;width:'+pct+'%;background:'+cfg.color+';border-radius:10px;transition:width .6s"></div>' +
     '</div>';
 
-  // Leaderboard
-  var ranked = pts.slice().sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); });
   var lb = document.getElementById('contest-leaderboard');
-  if (!ranked.length) {
-    lb.innerHTML = '<div class="empty"><div class="ei">👥</div><p>No participants yet. Add someone to start!</p></div>';
-  } else {
-    lb.innerHTML = '<div class="tcard" style="padding:0;overflow:hidden">' +
-      '<table><thead><tr>' +
-        '<th style="width:40px">Rank</th><th>Participant</th>' +
-        '<th>Start '+cfg.label.split(' ')[1]+'</th>' +
-        '<th>Current</th><th>Change</th><th>Actions</th>' +
-      '</tr></thead><tbody>' +
-      ranked.map(function(p, i) {
-        var medal  = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
-        var startV = parseFloat(p[cfg.startField]||0);
-        var curV   = parseFloat(p[cfg.field]||0);
-        var change = curV ? (curV - startV) : null;
-        var changeDisp = change!==null ? (change>0?'+':'')+change.toFixed(1)+cfg.unit : '—';
-        var changeColor= change===null ? 'var(--muted)' : (cfg.dir===1?(change>0?'var(--success)':'var(--danger)'):(change<0?'var(--success)':'var(--danger)'));
-        var hasProgress = change !== null && ((cfg.dir === -1 && change < 0) || (cfg.dir === 1 && change > 0));
+
+  if (c.type === 'btp') {
+    if (!_activeBtpSubTab) _activeBtpSubTab = 'weight_loss';
+
+    // Count participants per category
+    var countWL = pts.filter(function(p){ return p.category==='weight_loss'; }).length;
+    var countMG = pts.filter(function(p){ return p.category==='muscle_gain'; }).length;
+    var countFL = pts.filter(function(p){ return p.category==='fat_loss'; }).length;
+    var countWG = pts.filter(function(p){ return p.category==='weight_gain'; }).length;
+
+    var subTabsHtml = 
+      '<div class="btp-subtabs" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;border-bottom:2px solid var(--border);padding-bottom:10px">' +
+        '<button class="btp-subtab '+(_activeBtpSubTab==='weight_loss'?'active':'')+'" onclick="switchBtpSubTab(\'weight_loss\')">⬇️ Weight Loss ('+countWL+')</button>' +
+        '<button class="btp-subtab '+(_activeBtpSubTab==='muscle_gain'?'active':'')+'" onclick="switchBtpSubTab(\'muscle_gain\')">💪 Muscle Gain ('+countMG+')</button>' +
+        '<button class="btp-subtab '+(_activeBtpSubTab==='fat_loss'?'active':'')+'" onclick="switchBtpSubTab(\'fat_loss\')">🔥 Fat Loss ('+countFL+')</button>' +
+        '<button class="btp-subtab '+(_activeBtpSubTab==='weight_gain'?'active':'')+'" onclick="switchBtpSubTab(\'weight_gain\')">⬆️ Weight Gain ('+countWG+')</button>' +
+        '<button class="btp-subtab '+(_activeBtpSubTab==='prize_pool'?'active':'')+'" onclick="switchBtpSubTab(\'prize_pool\')" style="background:#fef3c7;border-color:#fcd34d;color:#d97706;font-weight:700">💰 Prize Distribution</button>' +
+      '</div>';
+
+    if (_activeBtpSubTab === 'prize_pool') {
+      var entryFee = parseFloat(c.entry_fee || 700);
+      var totalPaid = pts.filter(function(p){ return p.fee_paid; }).length;
+      var totalCollected = totalPaid * entryFee;
+      var seniorAmt = parseFloat(c.senior_amount || 0);
+      var totalSeniorShare = totalPaid * seniorAmt;
+      var netPool = totalCollected - totalSeniorShare;
+
+      var getPaidCount = function(cat) { return pts.filter(function(p){ return p.category === cat && p.fee_paid; }).length; };
+      var paidWL = getPaidCount('weight_loss');
+      var paidMG = getPaidCount('muscle_gain');
+      var paidFL = getPaidCount('fat_loss');
+      var paidWG = getPaidCount('weight_gain');
+
+      var poolWL = paidWL * entryFee;
+      var poolMG = paidMG * entryFee;
+      var poolFL = paidFL * entryFee;
+      var poolWG = paidWG * entryFee;
+
+      var netPoolWL = paidWL * (entryFee - seniorAmt);
+      var netPoolMG = paidMG * (entryFee - seniorAmt);
+      var netPoolFL = paidFL * (entryFee - seniorAmt);
+      var netPoolWG = paidWG * (entryFee - seniorAmt);
+
+      var renderCategoryPrizeTable = function(catLabel, catName, count, pool, netPool) {
+        var slots = getBtpSlotShares(catName, count, pool);
+        var netSlots = getBtpSlotShares(catName, count, netPool);
+
+        if (slots.length === 0) {
+          return '<div style="margin-bottom:20px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">' +
+            '<strong>' + catLabel + ':</strong> No participants registered.' +
+            '</div>';
+        }
+
+        var rows = slots.map(function(s, idx) {
+          var netS = netSlots[idx] || s;
+          return '<tr>' +
+            '<td style="text-align:center;font-weight:600">Rank ' + s.rank + '</td>' +
+            '<td>' + s.percent + '%</td>' +
+            '<td style="font-weight:600;color:var(--success)">₹' + s.prize + '</td>' +
+            (seniorAmt > 0 ? '<td style="font-weight:600;color:var(--primary)">₹' + netS.prize + '</td>' : '') +
+            '</tr>';
+        }).join('');
+
+        return '<div style="margin-bottom:24px">' +
+          '<div style="font-size:14px;font-weight:700;margin-bottom:8px">' + catLabel + ' Pool: <span style="color:var(--success)">₹' + pool + '</span>' + 
+            (seniorAmt > 0 ? ' <span style="font-size:12px;color:var(--muted);font-weight:normal">(Net: ₹' + netPool + ' after senior share)</span>' : '') + '</div>' +
+          '<table class="tbl" style="max-width:480px">' +
+            '<thead><tr><th>Slot</th><th>Share %</th><th>Gross Prize</th>' + (seniorAmt > 0 ? '<th>Net Prize</th>' : '') + '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+          '</table>' +
+          '</div>';
+      };
+
+      lb.innerHTML = subTabsHtml + 
+        '<div class="tcard" style="padding:20px">' +
+          '<div style="font-size:18px;font-weight:700;margin-bottom:4px;color:var(--primary)">💰 BTP Prize Money Distribution</div>' +
+          '<div style="font-size:12px;color:var(--muted);margin-bottom:20px">' +
+            'Everyone pays ₹' + entryFee + '. The prize pool for each category is generated from its participants. ' +
+            'Prizes are distributed proportionally among the category winners (Top 10 Weight Loss, Top 3 Muscle Gain, Top 3 Fat Loss, Top 1 Weight Gain).' +
+          '</div>' +
+
+          '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px">' +
+            '<div class="stat"><div class="stat-l">Total Collected</div><div class="stat-v" style="color:var(--success)">₹' + totalCollected + '</div><div style="font-size:10px;color:var(--muted)">' + totalPaid + ' paid of ' + pts.length + ' enrolled</div></div>' +
+            (seniorAmt > 0 ? '<div class="stat"><div class="stat-l">Senior Share</div><div class="stat-v" style="color:var(--danger)">-₹' + totalSeniorShare + '</div><div style="font-size:10px;color:var(--muted)">₹' + seniorAmt + ' per person</div></div>' : '') +
+            (seniorAmt > 0 ? '<div class="stat"><div class="stat-l">Remaining Net Pool</div><div class="stat-v" style="color:var(--primary)">₹' + netPool + '</div><div style="font-size:10px;color:var(--muted)">For winners distribution</div></div>' : '') +
+          '</div>' +
+
+          renderCategoryPrizeTable('⬇️ Weight Loss (Top 10 Slots)', 'weight_loss', countWL, poolWL, netPoolWL) +
+          renderCategoryPrizeTable('💪 Muscle Gain (Top 3 Slots)', 'muscle_gain', countMG, poolMG, netPoolMG) +
+          renderCategoryPrizeTable('🔥 Fat Loss (Top 3 Slots)', 'fat_loss', countFL, poolFL, netPoolFL) +
+          renderCategoryPrizeTable('⬆️ Weight Gain (Top 1 Slot)', 'weight_gain', countWG, poolWG, netPoolWG) +
+        '</div>';
+
+    } else {
+      var catParticipants = pts.filter(function(p){ return p.category === _activeBtpSubTab; });
+      var ranked = catParticipants.map(function(p) {
+        var data = getBtpParticipantData(p, _activeBtpSubTab);
+        return { p: p, data: data };
+      }).sort(function(a, b) {
+        if (a.data.change === null) return 1;
+        if (b.data.change === null) return -1;
+        return b.data.change - a.data.change;
+      });
+
+      var rows = ranked.map(function(item, i) {
+        var p = item.p;
+        var data = item.data;
+        var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+
+        var startMeas = data.startW.toFixed(1)+'kg &nbsp;·&nbsp; '+data.startF.toFixed(1)+'% fat &nbsp;·&nbsp; '+data.startM.toFixed(1)+'% muscle';
+        var finalMeas = data.hasFinal 
+          ? data.curW.toFixed(1)+'kg &nbsp;·&nbsp; '+data.curF.toFixed(1)+'% fat &nbsp;·&nbsp; '+data.curM.toFixed(1)+'% muscle'
+          : '<span style="color:var(--muted)">Pending final checkup</span>';
+
+        var startMetricDisp = data.startVal.toFixed(2)+' kg';
+        var curMetricDisp = data.hasFinal ? data.curVal.toFixed(2)+' kg' : '—';
+        var changeColor = 'var(--muted)';
+        var changeDisp = '—';
+
+        if (data.hasFinal) {
+          changeDisp = (data.change >= 0 ? '+' : '') + data.change.toFixed(2) + ' kg';
+          changeColor = data.change >= 0 ? 'var(--success)' : 'var(--danger)';
+        }
+
+        var vt = p.video_tracking ? (typeof p.video_tracking==='string' ? JSON.parse(p.video_tracking) : p.video_tracking) : {};
+        var videoKeys = ['day0', 'week1', 'week2', 'week3'];
+        var missingVideos = false;
+        videoKeys.forEach(function(k) {
+          if (!vt[k] || !vt[k].received) {
+            missingVideos = true;
+          }
+        });
+        var statusBadge = '';
+        if (missingVideos) {
+          statusBadge += ' <span style="background:#fee2e2;color:#ef4444;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700" title="Missing weight videos">⚠️ Missing Videos</span>';
+        }
+
+        var hasProgress = data.hasFinal && data.change > 0;
         var certBtn = hasProgress ? '<button class="btn-p" style="font-size:11px;padding:3.5px 7px;background:#6366f1;border-color:#6366f1;color:#fff" onclick="generateContestCertificate(\''+p.id+'\')">🎓 Cert</button>' : '';
+
         return '<tr>' +
           '<td style="font-size:16px;text-align:center">'+medal+'</td>' +
-          '<td><div style="font-weight:600">'+p.customer_name+'</div></td>' +
-          '<td>'+(startV||'—')+(startV?cfg.unit:'')+'</td>' +
-          '<td>'+(curV||'—')+(curV?cfg.unit:'')+'</td>' +
+          '<td><div style="font-weight:600">'+p.customer_name + statusBadge + '</div></td>' +
+          '<td style="font-size:11px;color:var(--muted)">'+startMeas+'</td>' +
+          '<td style="font-size:11px;font-weight:600">'+finalMeas+'</td>' +
+          '<td>'+startMetricDisp+'</td>' +
+          '<td>'+curMetricDisp+'</td>' +
           '<td style="font-weight:700;color:'+changeColor+'">'+changeDisp+'</td>' +
           '<td><div style="display:flex;gap:4px">' +
             certBtn +
@@ -13515,8 +13784,74 @@ function openContestDetail(id) {
             '<button class="btn-d" onclick="removeContestParticipant(\''+p.id+'\')">🗑</button>' +
           '</div></td>' +
         '</tr>';
-      }).join('') +
-      '</tbody></table></div>';
+      }).join('');
+
+      var headerLabel = _activeBtpSubTab === 'weight_loss' ? 'Weight Loss' : _activeBtpSubTab === 'weight_gain' ? 'Weight Gain' : _activeBtpSubTab === 'fat_loss' ? 'Fat Loss' : 'Muscle Gain';
+      var metricLabel = (_activeBtpSubTab === 'weight_loss' || _activeBtpSubTab === 'weight_gain') ? 'Weight' : _activeBtpSubTab === 'fat_loss' ? 'Fat Mass' : 'Muscle Mass';
+
+      var tableHtml = '<div class="tcard" style="padding:0;overflow:hidden">' +
+        '<table><thead><tr>' +
+          '<th style="width:40px">Rank</th><th>Participant</th>' +
+          '<th>Start Checkup (Day 0)</th>' +
+          '<th>Final Checkup (Day 21)</th>' +
+          '<th>Start ' + metricLabel + '</th>' +
+          '<th>Final ' + metricLabel + '</th>' +
+          '<th>Change (kg)</th><th>Actions</th>' +
+        '</tr></thead><tbody>' +
+        (rows || '<tr><td colspan="8"><div class="empty"><p>No participants in this category yet.</p></div></td></tr>') +
+        '</tbody></table></div>';
+
+      lb.innerHTML = subTabsHtml + tableHtml;
+    }
+  } else {
+    var ranked = pts.slice().sort(function(a,b){ return cfg.dir*(parseFloat(b.progress||0)-parseFloat(a.progress||0)); });
+    if (!ranked.length) {
+      lb.innerHTML = '<div class="empty"><div class="ei">👥</div><p>No participants yet. Add someone to start!</p></div>';
+    } else {
+      lb.innerHTML = '<div class="tcard" style="padding:0;overflow:hidden">' +
+        '<table><thead><tr>' +
+          '<th style="width:40px">Rank</th><th>Participant</th>' +
+          '<th>Start '+cfg.label.split(' ')[1]+'</th>' +
+          '<th>Current</th><th>Change</th><th>Actions</th>' +
+        '</tr></thead><tbody>' +
+        ranked.map(function(p, i) {
+          var medal  = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+          var startV = parseFloat(p[cfg.startField]||0);
+          var curV   = parseFloat(p[cfg.field]||0);
+          var change = curV ? (curV - startV) : null;
+          var changeDisp = change!==null ? (change>0?'+':'')+change.toFixed(1)+cfg.unit : '—';
+          var changeColor= change===null ? 'var(--muted)' : (cfg.dir===1?(change>0?'var(--success)':'var(--danger)'):(change<0?'var(--success)':'var(--danger)'));
+          var hasProgress = change !== null && ((cfg.dir === -1 && change < 0) || (cfg.dir === 1 && change > 0));
+          
+          var vt = p.video_tracking ? (typeof p.video_tracking==='string' ? JSON.parse(p.video_tracking) : p.video_tracking) : {};
+          var videoKeys = ['week1', 'week2', 'week3'];
+          var missingVideos = false;
+          videoKeys.forEach(function(k) {
+            if (!vt[k] || !vt[k].received) {
+              missingVideos = true;
+            }
+          });
+          var statusBadge = '';
+          if (missingVideos) {
+            statusBadge += ' <span style="background:#fee2e2;color:#ef4444;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700" title="Missing weight videos">⚠️ Missing Videos</span>';
+          }
+          
+          var certBtn = hasProgress ? '<button class="btn-p" style="font-size:11px;padding:3.5px 7px;background:#6366f1;border-color:#6366f1;color:#fff" onclick="generateContestCertificate(\''+p.id+'\')">🎓 Cert</button>' : '';
+          return '<tr>' +
+            '<td style="font-size:16px;text-align:center">'+medal+'</td>' +
+            '<td><div style="font-weight:600">'+p.customer_name + statusBadge + '</div></td>' +
+            '<td>'+(startV||'—')+(startV?cfg.unit:'')+'</td>' +
+            '<td>'+(curV||'—')+(curV?cfg.unit:'')+'</td>' +
+            '<td style="font-weight:700;color:'+changeColor+'">'+changeDisp+'</td>' +
+            '<td><div style="display:flex;gap:4px">' +
+              certBtn +
+              '<button class="btn-e" onclick="openUpdateProgressModal(\''+p.id+'\')">📊 Update</button>' +
+              '<button class="btn-d" onclick="removeContestParticipant(\''+p.id+'\')">🗑</button>' +
+            '</div></td>' +
+          '</tr>';
+        }).join('') +
+        '</tbody></table></div>';
+    }
   }
 
   // Reset to leaderboard tab
@@ -13533,12 +13868,24 @@ function closeContestDetail() {
 function openAddParticipantModal(contestId) {
   var id = contestId || _activeContestId;
   if (!id) return;
+  var c = D.contests.find(function(x){ return x.id===id; });
   document.getElementById('cp-contest-id').value   = id;
   document.getElementById('cp-participant-id').value = '';
   document.getElementById('cp-start-weight').value  = '';
   document.getElementById('cp-start-fat').value     = '';
   document.getElementById('cp-start-muscle').value  = '';
   document.getElementById('cp-start-bmi').value     = '';
+
+  var catGroup = document.getElementById('cp-category-group');
+  if (c && c.type === 'btp') {
+    catGroup.style.display = 'block';
+  } else {
+    catGroup.style.display = 'none';
+  }
+
+  var infoEl = document.getElementById('cp-autofill-info');
+  if (infoEl) infoEl.style.display = 'none';
+
   // Populate customer dropdown (exclude already enrolled)
   var enrolled = D.contestParticipants.filter(function(p){ return p.contest_id===id; }).map(function(p){ return p.customer_id; });
   var sel = document.getElementById('cp-customer');
@@ -13557,6 +13904,9 @@ async function saveContestParticipant() {
   var startBmi   = document.getElementById('cp-start-bmi').value;
   if (!custId) { showToast('Select a customer', 'error'); return; }
   var cust = D.customers.find(function(c){ return c.id===custId; });
+  var c = D.contests.find(function(x){ return x.id===contestId; });
+  var category = (c && c.type === 'btp') ? document.getElementById('cp-category').value : c.type;
+
   var payload = {
     contest_id: contestId,
     customer_id: custId,
@@ -13568,7 +13918,9 @@ async function saveContestParticipant() {
     current_weight: startW||null,
     current_fat: startF||null,
     current_muscle: startM||null,
-    progress: 0
+    current_bmi: startBmi||null,
+    progress: 0,
+    category: category
   };
   try {
     var row = await dbInsert('contest_participants', payload);
@@ -13591,12 +13943,19 @@ function openUpdateProgressModal(participantId) {
   document.getElementById('cpp-fat').value     = p.current_fat     || '';
   document.getElementById('cpp-muscle').value  = p.current_muscle  || '';
   document.getElementById('cpp-bmi').value     = p.current_bmi     || '';
+
+  var goalLabel = cfg.label;
+  if (c && c.type === 'btp') {
+    var cat = p.category || 'weight_loss';
+    goalLabel = 'BTP ' + (cat === 'weight_loss' ? 'Weight Loss' : cat === 'weight_gain' ? 'Weight Gain' : cat === 'fat_loss' ? 'Fat Loss' : 'Muscle Gain');
+  }
+
   document.getElementById('cpp-start-summary').innerHTML =
     '<strong>Starting:</strong> ' +
     (p.start_weight  ? 'Weight '+p.start_weight+'kg' : '') +
     (p.start_fat     ? '  ·  Fat '+p.start_fat+'%' : '') +
     (p.start_muscle  ? '  ·  Muscle '+p.start_muscle+'%' : '') +
-    '  <span style="color:var(--primary);font-weight:700">Goal: '+cfg.label+'</span>';
+    '  <span style="color:var(--primary);font-weight:700">Goal: '+goalLabel+'</span>';
   openModal('contest-progress');
 }
 
@@ -13609,12 +13968,40 @@ async function saveContestProgress() {
   var p = D.contestParticipants.find(function(x){ return x.id===pid; });
   if (!p) return;
   var c   = D.contests.find(function(x){ return x.id===p.contest_id; });
-  var cfg = c ? CONTEST_CONFIG[c.type] : CONTEST_CONFIG.weight_loss;
-  // Calculate progress based on contest type
-  var curVal   = parseFloat({ weight_loss:'weight', weight_gain:'weight', fat_loss:'fat', muscle_gain:'muscle' }[c.type]==='weight'?weight:c.type==='fat_loss'?fat:muscle) || 0;
-  var startKey = { weight_loss:'start_weight', weight_gain:'start_weight', fat_loss:'start_fat', muscle_gain:'start_muscle' }[c.type];
-  var startVal = parseFloat(p[startKey]) || 0;
-  var progress = startVal && curVal ? parseFloat((curVal - startVal).toFixed(2)) : 0;
+
+  var progress = 0;
+  if (c && c.type === 'btp') {
+    var category = p.category || 'weight_loss';
+    var startW = parseFloat(p.start_weight) || 0;
+    var startF = parseFloat(p.start_fat) || 0;
+    var startM = parseFloat(p.start_muscle) || 0;
+    var curW = parseFloat(weight) || 0;
+    var curF = parseFloat(fat) || 0;
+    var curM = parseFloat(muscle) || 0;
+
+    if (startW && curW) {
+      if (category === 'weight_loss') {
+        progress = startW - curW;
+      } else if (category === 'weight_gain') {
+        progress = curW - startW;
+      } else if (category === 'fat_loss') {
+        var startFatKg = startW * (startF / 100);
+        var curFatKg = curW * (curF / 100);
+        progress = startFatKg - curFatKg;
+      } else if (category === 'muscle_gain') {
+        var startMuscleKg = startW * (startM / 100);
+        var curMuscleKg = curW * (curM / 100);
+        progress = curMuscleKg - startMuscleKg;
+      }
+    }
+    progress = parseFloat(progress.toFixed(2));
+  } else {
+    var curVal   = parseFloat({ weight_loss:'weight', weight_gain:'weight', fat_loss:'fat', muscle_gain:'muscle' }[c.type]==='weight'?weight:c.type==='fat_loss'?fat:muscle) || 0;
+    var startKey = { weight_loss:'start_weight', weight_gain:'start_weight', fat_loss:'start_fat', muscle_gain:'start_muscle' }[c.type];
+    var startVal = parseFloat(p[startKey]) || 0;
+    progress = startVal && curVal ? parseFloat((curVal - startVal).toFixed(2)) : 0;
+  }
+
   var payload = { current_weight:weight||null, current_fat:fat||null, current_muscle:muscle||null, current_bmi:bmi||null, progress:progress };
   try {
     await dbUpdate('contest_participants', pid, payload);
@@ -13635,6 +14022,138 @@ async function removeContestParticipant(pid) {
     if (_activeContestId) openContestDetail(_activeContestId);
     showToast('Removed', 'info');
   } catch(e) { showToast('Error: '+e.message, 'error'); }
+}
+
+// ── BTP Helper Functions ──
+function switchBtpSubTab(tab) {
+  _activeBtpSubTab = tab;
+  if (_activeContestId) openContestDetail(_activeContestId);
+}
+
+function handleCpCustomerChange() {
+  var custId = document.getElementById('cp-customer').value;
+  var infoEl = document.getElementById('cp-autofill-info');
+  if (!infoEl) {
+    infoEl = document.createElement('div');
+    infoEl.id = 'cp-autofill-info';
+    infoEl.style.fontSize = '11px';
+    infoEl.style.color = 'var(--primary)';
+    infoEl.style.marginTop = '6px';
+    infoEl.style.fontWeight = '600';
+    infoEl.style.padding = '6px 10px';
+    infoEl.style.background = 'var(--primary-light)';
+    infoEl.style.borderRadius = '6px';
+    var customerSelectGroup = document.getElementById('cp-customer').parentNode;
+    customerSelectGroup.appendChild(infoEl);
+  }
+  infoEl.style.display = 'none';
+  infoEl.textContent = '';
+
+  if (!custId) return;
+
+  var pastParticipants = D.contestParticipants.filter(function(p) {
+    return p.customer_id === custId && (p.current_weight || p.current_fat || p.current_muscle);
+  });
+
+  if (pastParticipants.length > 0) {
+    pastParticipants.sort(function(a, b) {
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    var lastP = pastParticipants[0];
+
+    document.getElementById('cp-start-weight').value = lastP.current_weight || '';
+    document.getElementById('cp-start-fat').value = lastP.current_fat || '';
+    document.getElementById('cp-start-muscle').value = lastP.current_muscle || '';
+    document.getElementById('cp-start-bmi').value = lastP.current_bmi || '';
+
+    infoEl.style.display = 'block';
+    infoEl.textContent = '✨ Day 0 starting measurements auto-filled from previous season\'s Day 21 checkup!';
+  } else {
+    document.getElementById('cp-start-weight').value = '';
+    document.getElementById('cp-start-fat').value = '';
+    document.getElementById('cp-start-muscle').value = '';
+    document.getElementById('cp-start-bmi').value = '';
+  }
+}
+
+function getBtpParticipantData(p, category) {
+  var startW = parseFloat(p.start_weight) || 0;
+  var startF = parseFloat(p.start_fat) || 0;
+  var startM = parseFloat(p.start_muscle) || 0;
+  var curW   = parseFloat(p.current_weight) || 0;
+  var curF   = parseFloat(p.current_fat) || 0;
+  var curM   = parseFloat(p.current_muscle) || 0;
+
+  var startVal = 0;
+  var curVal = 0;
+  var change = 0;
+  var label = '';
+  
+  if (category === 'weight_loss') {
+    startVal = startW;
+    curVal = curW;
+    change = startW - curW;
+    label = 'Weight';
+  } else if (category === 'weight_gain') {
+    startVal = startW;
+    curVal = curW;
+    change = curW - startW;
+    label = 'Weight';
+  } else if (category === 'fat_loss') {
+    startVal = startW * (startF / 100);
+    curVal = curW * (curF / 100);
+    change = startVal - curVal;
+    label = 'Fat mass';
+  } else if (category === 'muscle_gain') {
+    startVal = startW * (startM / 100);
+    curVal = curW * (curM / 100);
+    change = curVal - startVal;
+    label = 'Muscle mass';
+  }
+  
+  var hasFinal = !!(p.current_weight || p.current_fat || p.current_muscle);
+  return {
+    startW: startW, startF: startF, startM: startM,
+    curW: curW, curF: curF, curM: curM,
+    startVal: startVal, curVal: curVal,
+    change: hasFinal ? change : null,
+    label: label,
+    hasFinal: hasFinal
+  };
+}
+
+function getBtpSlotShares(category, count, pool) {
+  var slots = [];
+  if (count === 0 || pool === 0) return slots;
+  
+  var basePercentages = [];
+  if (category === 'weight_loss') {
+    basePercentages = [25, 18, 15, 12, 10, 8, 5, 4, 2, 1];
+  } else if (category === 'muscle_gain' || category === 'fat_loss') {
+    basePercentages = [50, 30, 20];
+  } else if (category === 'weight_gain') {
+    basePercentages = [100];
+  }
+  
+  var numWinners = Math.min(basePercentages.length, count);
+  if (numWinners === 0) return slots;
+  
+  var sumPct = 0;
+  for (var i = 0; i < numWinners; i++) {
+    sumPct += basePercentages[i];
+  }
+  
+  for (var i = 0; i < numWinners; i++) {
+    var pct = (basePercentages[i] / sumPct) * 100;
+    var prize = (pool * pct) / 100;
+    slots.push({
+      rank: i + 1,
+      percent: pct.toFixed(1),
+      prize: Math.round(prize)
+    });
+  }
+  return slots;
 }
 
 // ==========================================
@@ -14005,16 +14524,45 @@ function generateContestCertificate(participantId) {
     showToast('Contest not found', 'error');
     return;
   }
-  var cfg = CONTEST_CONFIG[c.type] || CONTEST_CONFIG.weight_loss;
-  var startV = parseFloat(p[cfg.startField]||0);
-  var curV   = parseFloat(p[cfg.field]||0);
-  var change = curV ? (curV - startV) : null;
-  if(change === null) {
-    showToast('No progress recorded for certificate.', 'error');
-    return;
+  
+  var verb = '';
+  var changeDisp = '';
+  
+  if (c.type === 'btp') {
+    var category = p.category || 'weight_loss';
+    var btpData = getBtpParticipantData(p, category);
+    var change = btpData.change;
+    if (change === null) {
+      showToast('No progress recorded for certificate.', 'error');
+      return;
+    }
+    
+    if (category === 'weight_loss') {
+      verb = 'reducing';
+      changeDisp = change.toFixed(1) + ' kg body weight';
+    } else if (category === 'weight_gain') {
+      verb = 'gaining';
+      changeDisp = change.toFixed(1) + ' kg body weight';
+    } else if (category === 'fat_loss') {
+      verb = 'reducing';
+      changeDisp = change.toFixed(2) + ' kg fat mass';
+    } else if (category === 'muscle_gain') {
+      verb = 'gaining';
+      changeDisp = change.toFixed(2) + ' kg muscle mass';
+    }
+  } else {
+    var cfg = CONTEST_CONFIG[c.type] || CONTEST_CONFIG.weight_loss;
+    var startV = parseFloat(p[cfg.startField]||0);
+    var curV   = parseFloat(p[cfg.field]||0);
+    var change = curV ? (curV - startV) : null;
+    if(change === null) {
+      showToast('No progress recorded for certificate.', 'error');
+      return;
+    }
+    verb = cfg.dir === -1 ? 'reducing' : 'gaining';
+    changeDisp = Math.abs(change).toFixed(1) + cfg.unit;
   }
   
-  var changeDisp = (change>0?'+':'') + change.toFixed(1) + cfg.unit;
   var centerName = getCenterName();
   
   openModal('certificate');
@@ -14080,7 +14628,6 @@ function generateContestCertificate(participantId) {
   
   ctx.font = 'bold 26px sans-serif';
   ctx.fillStyle = '#4ade80'; 
-  var verb = cfg.dir === -1 ? 'reducing' : 'gaining';
   ctx.fillText('by successfully ' + verb + ' ' + changeDisp.replace('+', '') + '!', canvas.width/2, 545);
   
   ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)';
