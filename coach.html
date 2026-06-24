@@ -54,7 +54,7 @@
   --border-solid:#e2e8f0;
   --danger:#ef4444;
   --danger-light:rgba(239, 68, 68, 0.1);
-  --success:#10b981;
+  --success:#047857;
   --success-light:rgba(16, 185, 129, 0.15);
   --shadow:0 8px 32px 0 rgba(15, 23, 42, 0.04);
   --shadow-lg:0 16px 48px rgba(15, 23, 42, 0.1);
@@ -84,13 +84,13 @@
   --border-success:rgba(16, 185, 129, 0.3);
   --border-danger:rgba(239, 68, 68, 0.3);
   --border-accent:rgba(217, 119, 6, 0.3);
-  --text-success:#10b981;
+  --text-success:#047857;
   --text-danger:#ef4444;
   --text-accent:#d97706;
   
   /* Hints */
   --good-bg:rgba(16, 185, 129, 0.15);
-  --good-text:#10b981;
+  --good-text:#047857;
   --warn-bg:rgba(217, 119, 6, 0.15);
   --warn-text:#d97706;
   --bad-bg:rgba(239, 68, 68, 0.15);
@@ -113,6 +113,11 @@
 [data-theme="light"] tr:hover td { background: rgba(0, 0, 0, 0.01) !important; }
 [data-theme="light"] .btn-p, [data-theme="light"] .setup-btn, [data-theme="light"] .login-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: #ffffff !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important; }
 [data-theme="light"] .btn-p:hover, [data-theme="light"] .setup-btn:hover, [data-theme="light"] .login-btn:hover { box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35), 0 0 12px rgba(16, 185, 129, 0.2) !important; }
+[data-theme="light"] .tcard, [data-theme="light"] .stat, [data-theme="light"] .report-card, [data-theme="light"] .login-box, [data-theme="light"] .modal {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+}
+
 
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);background-image:radial-gradient(circle at top left, rgba(0, 230, 118, 0.05), transparent 45%), radial-gradient(circle at bottom right, rgba(255, 214, 0, 0.03), transparent 50%), radial-gradient(circle at top right, rgba(255, 23, 68, 0.02), transparent 45%);background-attachment:fixed;color:var(--text);min-height:100vh;transition:background-color .3s, color .3s}
