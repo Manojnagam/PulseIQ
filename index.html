@@ -119,12 +119,106 @@
   /* Toolbar */
   --toolbar-bg:rgba(18, 26, 44, 0.8);
 }
+[data-theme="light"]{
+  --bg:#f8fafc;
+  --surface:rgba(255, 255, 255, 0.75);
+  --surface-solid:#ffffff;
+  --surface2:#f1f5f9;
+  --primary:#10b981;
+  --primary-mid:#059669;
+  --primary-light:rgba(16, 185, 129, 0.15);
+  --accent:#d97706;
+  --accent-light:rgba(217, 119, 6, 0.1);
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:rgba(15, 23, 42, 0.08);
+  --border-solid:#e2e8f0;
+  --danger:#ef4444;
+  --danger-light:rgba(239, 68, 68, 0.1);
+  --success:#10b981;
+  --success-light:rgba(16, 185, 129, 0.15);
+  --shadow:0 8px 32px 0 rgba(15, 23, 42, 0.04);
+  --shadow-lg:0 16px 48px rgba(15, 23, 42, 0.1);
+  --sidebar-bg:linear-gradient(180deg,#ffffff 0%,#f1f5f9 100%);
+  --glass-bg:rgba(255, 255, 255, 0.75);
+  --glass-border:rgba(15, 23, 42, 0.08);
+  --glass-blur:blur(16px);
+  --cyber-blue:#0284c7;
+  --purple:#7c3aed;
+  
+  /* Zebra rows & hovers */
+  --zebra-bg:rgba(0,0,0,.01);
+  --hover-bg:rgba(0,0,0,.02);
+  --hover-active-bg:rgba(16, 185, 129, 0.1);
+  
+  /* Input background & focus */
+  --input-bg:rgba(255, 255, 255, 0.85);
+  --input-focus-bg:rgba(255, 255, 255, 0.95);
+  
+  /* Statuses, warnings & alerts */
+  --warning-light:rgba(217, 119, 6, 0.1);
+  --warning-text:#d97706;
+  --info-light:rgba(2, 132, 199, 0.1);
+  --info-text:#0284c7;
+  --alert-bg:rgba(239, 68, 68, 0.1);
+  
+  /* Revenue cards borders & texts */
+  --border-success:rgba(16, 185, 129, 0.3);
+  --border-danger:rgba(239, 68, 68, 0.3);
+  --border-accent:rgba(217, 119, 6, 0.3);
+  --text-success:#10b981;
+  --text-danger:#ef4444;
+  --text-accent:#d97706;
+  
+  /* Hints */
+  --good-bg:rgba(16, 185, 129, 0.15);
+  --good-text:#10b981;
+  --warn-bg:rgba(217, 119, 6, 0.15);
+  --warn-text:#d97706;
+  --bad-bg:rgba(239, 68, 68, 0.15);
+  --bad-text:#ef4444;
+  --low-bg:rgba(2, 132, 199, 0.15);
+  --low-text:#0284c7;
+
+  /* Scrollbars */
+  --scrollbar-thumb:rgba(0,0,0,0.15);
+  --scrollbar-thumb-hover:rgba(0,0,0,0.3);
+
+  /* Toolbar */
+  --toolbar-bg:rgba(255, 255, 255, 0.8);
+}
+[data-theme="light"] body{background:var(--bg);color:var(--text)}
+[data-theme="light"] select option{background:#ffffff;color:#0f172a}
+[data-theme="light"] input::placeholder,[data-theme="light"] textarea::placeholder{color:var(--muted)}
+[data-theme="light"] .nav-lbl{color:rgba(0,0,0,.5)}
+[data-theme="light"] #sidebar, [data-theme="light"] .sidebar { border-right: 1px solid rgba(0, 0, 0, 0.08) !important; }
+[data-theme="light"] .sb-logo { border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important; }
+[data-theme="light"] .sb-logo h1 { color: #0f172a !important; }
+[data-theme="light"] .sb-logo span { color: rgba(0, 0, 0, 0.5) !important; }
+[data-theme="light"] .sb-coach-name, [data-theme="light"] .sb-name { color: #0f172a !important; }
+[data-theme="light"] .sb-coach-sub, [data-theme="light"] .sb-sub { color: rgba(0, 0, 0, 0.55) !important; }
+[data-theme="light"] .nav-lbl { color: rgba(0, 0, 0, 0.45) !important; }
+[data-theme="light"] .nav-item { color: rgba(15, 23, 42, 0.7) !important; }
+[data-theme="light"] .nav-item:hover { background: rgba(0, 0, 0, 0.04) !important; color: #0f172a !important; }
+[data-theme="light"] .nav-item.active { background: rgba(16, 185, 129, 0.15) !important; color: #059669 !important; }
+[data-theme="light"] .sb-coach-badge, [data-theme="light"] .sb-badge, [data-theme="light"] .sb-center-switch, [data-theme="light"] .sb-foot, [data-theme="light"] .sb-bottom { border-top-color: rgba(0, 0, 0, 0.06) !important; border-bottom-color: rgba(0, 0, 0, 0.06) !important; }
+[data-theme="light"] .sb-center-switch select { border-color: rgba(0, 0, 0, 0.12) !important; background: rgba(0, 0, 0, 0.04) !important; color: #0f172a !important; }
+[data-theme="light"] .sb-center-switch label { color: rgba(0, 0, 0, 0.5) !important; }
+[data-theme="light"] .sb-center-switch select option { color: #0f172a; background: #ffffff; }
+[data-theme="light"] .sb-icon-btn { background: rgba(0, 0, 0, 0.04) !important; color: rgba(15, 23, 42, 0.7) !important; border-color: rgba(0, 0, 0, 0.08) !important; }
+[data-theme="light"] .sb-icon-btn:hover { background: rgba(0, 0, 0, 0.08) !important; color: #0f172a !important; }
+[data-theme="light"] th { background: rgba(0, 0, 0, 0.02) !important; color: #475569 !important; border-bottom: 2px solid rgba(0, 0, 0, 0.06) !important; }
+[data-theme="light"] td { border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important; color: #0f172a !important; }
+[data-theme="light"] tr:hover td { background: rgba(0, 0, 0, 0.01) !important; }
+[data-theme="light"] .btn-p, [data-theme="light"] .setup-btn, [data-theme="light"] .login-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: #ffffff !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important; }
+[data-theme="light"] .btn-p:hover, [data-theme="light"] .setup-btn:hover, [data-theme="light"] .login-btn:hover { box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35), 0 0 12px rgba(16, 185, 129, 0.2) !important; }
+
 body{background:var(--bg);color:var(--text)}
 select option{background:#1f2937;color:#f3f4f6}
 input::placeholder,textarea::placeholder{color:var(--muted)}
 .nav-lbl{color:rgba(255,255,255,.5)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Plus Jakarta Sans',sans-serif;background-color:#0b0f19;background-image:radial-gradient(circle at top left, rgba(0, 230, 118, 0.05), transparent 45%), radial-gradient(circle at bottom right, rgba(255, 214, 0, 0.03), transparent 50%), radial-gradient(circle at top right, rgba(255, 23, 68, 0.02), transparent 45%);background-attachment:fixed;color:var(--text);min-height:100vh;font-size:14px}
+body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);background-image:radial-gradient(circle at top left, rgba(0, 230, 118, 0.05), transparent 45%), radial-gradient(circle at bottom right, rgba(255, 214, 0, 0.03), transparent 50%), radial-gradient(circle at top right, rgba(255, 23, 68, 0.02), transparent 45%);background-attachment:fixed;color:var(--text);min-height:100vh;font-size:14px;transition:background-color .3s, color .3s}
 /* SETUP */
 #setup{min-height:100vh;display:flex;align-items:stretch;justify-content:center;background:var(--bg);color:var(--text)}
 .setup-split{display:flex;width:100%;min-height:100vh}
@@ -1102,6 +1196,7 @@ input:focus, select:focus, textarea:focus {
       <div class="sb-foot-row">
         <button class="disc-btn" id="refresh-btn" onclick="refreshDashboard()" title="Refresh Data">🔄</button>
         <button class="disc-btn" id="lang-toggle-btn" onclick="toggleLang()" title="Toggle Language" style="font-weight:700">తె</button>
+        <button class="disc-btn" id="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle Theme">☀️</button>
         <button class="disc-btn" onclick="doDisconnect()" title="Disconnect">⚡</button>
         <button class="disc-btn" onclick="signOut()" title="Sign Out" style="font-size:13px">🔓</button>
       </div>
