@@ -4,59 +4,69 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Dashboard — Dharani's</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
-  --bg:#f5f2ee;
-  --surface:rgba(255, 255, 255, 0.75);
-  --surface-solid:#ffffff;
-  --surface2:#f0ede8;
-  --primary:#2d5a3d;
-  --primary-light:#3d7a52;
-  --accent:#e8a838;
-  --text:#1a2e1f;
-  --muted:#6b7c6f;
-  --border:rgba(221, 216, 208, 0.45);
-  --border-solid:#ddd8d0;
-  --danger:#c0392b;
-  --danger-light:#fdf0ef;
-  --success:#27ae60;
-  --success-light:#eafaf1;
-  --shadow:0 8px 32px 0 rgba(45, 90, 61, 0.04);
-  --shadow-lg:0 12px 40px rgba(0, 0, 0, 0.08);
-  --radius:16px;
-  --sw:210px;
-  --sidebar-bg:linear-gradient(180deg,#1a3a28 0%,#2d5a3d 100%);
-  --glass-bg:rgba(255, 255, 255, 0.7);
-  --glass-border:rgba(255, 255, 255, 0.45);
-  --glass-blur:blur(16px);
-}
-[data-theme="dark"]{
-  --bg:#0f172a;
-  --surface:rgba(30, 41, 59, 0.7);
-  --surface-solid:#1e293b;
-  --surface2:#334155;
-  --primary:#4ade80;
-  --primary-light:#86efac;
-  --accent:#fbbf24;
+  --bg:#0b0f19;
+  --surface:rgba(18, 26, 44, 0.65);
+  --surface-solid:#121a2c;
+  --surface2:rgba(28, 38, 62, 0.65);
+  --primary:#00e676;
+  --primary-mid:#00c853;
+  --primary-light:rgba(0, 230, 118, 0.15);
+  --accent:#ffd600;
+  --accent-light:rgba(255, 214, 0, 0.1);
   --text:#f8fafc;
   --muted:#94a3b8;
-  --border:rgba(148, 163, 184, 0.2);
-  --border-solid:#334155;
-  --danger:#ef4444;
-  --danger-light:#2d1212;
-  --success:#22c55e;
-  --success-light:#052e16;
+  --border:rgba(255, 255, 255, 0.07);
+  --border-solid:rgba(255, 255, 255, 0.15);
+  --danger:#ff1744;
+  --danger-light:rgba(255, 23, 68, 0.1);
+  --success:#00e676;
+  --success-light:rgba(0, 230, 118, 0.15);
   --shadow:0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  --shadow-lg:0 16px 48px rgba(0, 0, 0, 0.45);
-  --sidebar-bg:linear-gradient(180deg,#090d16 0%,#111827 100%);
-  --glass-bg:rgba(15, 23, 42, 0.65);
-  --glass-border:rgba(255, 255, 255, 0.08);
-  --glass-blur:blur(20px);
+  --shadow-lg:0 16px 48px rgba(0, 0, 0, 0.6);
+  --radius:16px;
+  --sw:210px;
+  --sidebar-bg:linear-gradient(180deg,#121a2c 0%,#0b0f19 100%);
+  --glass-bg:rgba(18, 26, 44, 0.65);
+  --glass-border:rgba(255, 255, 255, 0.07);
+  --glass-blur:blur(16px);
+  --cyber-blue:#38bdf8;
+  --purple:#a78bfa;
+}
+[data-theme="dark"]{
+  --bg:#0b0f19;
+  --surface:rgba(18, 26, 44, 0.65);
+  --surface-solid:#121a2c;
+  --surface2:rgba(28, 38, 62, 0.65);
+  --primary:#00e676;
+  --primary-mid:#00c853;
+  --primary-light:rgba(0, 230, 118, 0.15);
+  --accent:#ffd600;
+  --accent-light:rgba(255, 214, 0, 0.1);
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:rgba(255, 255, 255, 0.07);
+  --border-solid:rgba(255, 255, 255, 0.15);
+  --danger:#ff1744;
+  --danger-light:rgba(255, 23, 68, 0.1);
+  --success:#00e676;
+  --success-light:rgba(0, 230, 118, 0.15);
+  --shadow:0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  --shadow-lg:0 16px 48px rgba(0, 0, 0, 0.6);
+  --sidebar-bg:linear-gradient(180deg,#121a2c 0%,#0b0f19 100%);
+  --glass-bg:rgba(18, 26, 44, 0.65);
+  --glass-border:rgba(255, 255, 255, 0.07);
+  --glass-blur:blur(16px);
+  --cyber-blue:#38bdf8;
+  --purple:#a78bfa;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background-color .3s, color .3s}
+body{font-family:'Plus Jakarta Sans',sans-serif;background-color:#0b0f19;background-image:radial-gradient(circle at top left, rgba(0, 230, 118, 0.05), transparent 45%), radial-gradient(circle at bottom right, rgba(255, 214, 0, 0.03), transparent 50%), radial-gradient(circle at top right, rgba(255, 23, 68, 0.02), transparent 45%);background-attachment:fixed;color:var(--text);min-height:100vh;transition:background-color .3s, color .3s}
 
 /* Scrollbar styles */
 ::-webkit-scrollbar{width:8px;height:8px}
@@ -424,6 +434,167 @@ button:active {
 }
 [data-theme="dark"] #food-pref-modal div[style*="border-bottom"] {
   border-bottom-color: var(--border-solid) !important;
+}
+
+/* ─────────────────── PREMIUM CYBER-NEON GLASSMORPHIC OVERRIDES ─────────────────── */
+body, input, select, textarea, button {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .pt, .welcome-name, .mt, .sb-logo h1, .login-logo h1, .report-card h3, .welcome-name {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Numerical formatting */
+.stat-v, .report-stat-val, .badge, .mono, .numerical, .price, .amount, .count, .total, .number, .revenue-val, td[class*="number"], span[class*="diff-"], th[class*="number"] {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Card highlight strips & micro-animations */
+.tcard, .stat, .report-card, .login-box, .modal {
+  position: relative;
+  overflow: hidden;
+  background: rgba(18, 26, 44, 0.65) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 16px !important;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.tcard::before, .stat::before, .report-card::before, .login-box::before, .modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00e676, #38bdf8);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Specific card accents */
+.tcard:nth-child(3n)::before, .stat:nth-child(3n)::before {
+  background: linear-gradient(90deg, #ffd600, #ff9100) !important; /* Gold to Orange */
+}
+.tcard:nth-child(3n+1)::before, .stat:nth-child(3n+1)::before {
+  background: linear-gradient(90deg, #38bdf8, #a78bfa) !important; /* Cyber Blue to Purple */
+}
+
+/* Hover effects */
+.tcard:hover, .stat:hover, .report-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 24px -10px rgba(56, 189, 248, 0.3), 0 0 20px rgba(0, 230, 118, 0.1) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+/* Tables scrollbar & header */
+th {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: #94a3b8 !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.07) !important;
+  background: rgba(18, 26, 44, 0.4) !important;
+  padding: 10px 12px !important;
+}
+
+td {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #f8fafc !important;
+}
+
+tr:hover td {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Scrollbar customized */
+::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+::-webkit-scrollbar-track {
+  background: rgba(11, 15, 25, 0.5) !important;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 3px !important;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 230, 118, 0.3) !important;
+}
+
+/* Navigation Items & Tabs styling */
+.nav-item {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: #f8fafc !important;
+  transform: translateX(4px) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+.nav-item.active {
+  background: rgba(0, 230, 118, 0.1) !important;
+  color: #00e676 !important;
+  border-color: rgba(0, 230, 118, 0.25) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 15px rgba(0, 230, 118, 0.15) !important;
+}
+
+/* Button & input styling */
+.btn-p, .setup-btn, .login-btn {
+  background: linear-gradient(135deg, #00e676 0%, #00b252 100%) !important;
+  color: #0b0f19 !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 12px rgba(0, 230, 118, 0.2) !important;
+  padding: 10px 20px !important;
+}
+.btn-p:hover, .setup-btn:hover, .login-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(0, 230, 118, 0.35), 0 0 12px rgba(0, 230, 118, 0.2) !important;
+}
+.btn-c {
+  background: rgba(18, 26, 44, 0.6) !important;
+  color: #94a3b8 !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 10px 20px !important;
+}
+.btn-c:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="date"], select, textarea {
+  background: rgba(18, 26, 44, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  border-radius: 10px !important;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #00e676 !important;
+  background: rgba(18, 26, 44, 0.85) !important;
+  box-shadow: 0 0 10px rgba(0, 230, 118, 0.15) !important;
+}
+::placeholder {
+  color: #475569 !important;
 }
 </style>
 </head>
@@ -802,6 +973,21 @@ button:active {
 </div>
 
 <script>
+if (window.Chart) {
+  Chart.defaults.color = '#94a3b8';
+  Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.07)';
+  Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+  Chart.defaults.scale.grid = Chart.defaults.scale.grid || {};
+  Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.07)';
+  var tt = Chart.defaults.plugins.tooltip;
+  tt.backgroundColor = 'rgba(17, 24, 39, 0.95)';
+  tt.titleFont = { family: "'Plus Jakarta Sans', sans-serif", weight: 'bold' };
+  tt.bodyFont = { family: "'Plus Jakarta Sans', sans-serif" };
+  tt.padding = 10;
+  tt.cornerRadius = 8;
+  tt.borderColor = 'rgba(255, 255, 255, 0.07)';
+  tt.borderWidth = 1;
+}
 function showToast(msg, type) {
   var t = document.createElement('div');
   t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;font-size:13px;font-family:inherit;font-weight:600;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:opacity .3s;max-width:90vw;text-align:center;'
@@ -1687,9 +1873,9 @@ function renderProgress() {
       type: 'line',
       data: {
         labels: labels,
-        datasets: [{ label: 'Weight (kg)', data: weights, borderColor: '#2d5a3d', backgroundColor: 'rgba(45,90,61,.08)', borderWidth: 2.5, pointBackgroundColor: '#2d5a3d', pointRadius: 4, tension: 0.3, fill: true }]
+        datasets: [{ label: 'Weight (kg)', data: weights, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.08)', borderWidth: 2.5, pointBackgroundColor: '#38bdf8', pointRadius: 4, tension: 0.3, fill: true }]
       },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { color: '#f0ede8' } }, x: { grid: { display: false } } } }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
     });
   } else { chartCard.style.display = 'none'; }
 

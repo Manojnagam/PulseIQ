@@ -4,62 +4,78 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Join PulseZen — Register Your Center</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       min-height: 100vh;
-      background: linear-gradient(135deg, #05120b 0%, #0f2419 35%, #1a3a28 65%, #2d5a3d 100%);
+      background-color: #0b0f19;
+      background-image: 
+        radial-gradient(circle at top left, rgba(0, 230, 118, 0.05), transparent 45%),
+        radial-gradient(circle at bottom right, rgba(255, 214, 0, 0.03), transparent 50%),
+        radial-gradient(circle at top right, rgba(255, 23, 68, 0.02), transparent 45%);
+      background-attachment: fixed;
       display: flex; align-items: center; justify-content: center;
-      padding: 24px; font-family: 'DM Sans', sans-serif; color: #1a1a1a;
+      padding: 24px; font-family: 'Plus Jakarta Sans', sans-serif; color: #f8fafc;
     }
     .card {
-      background: #fff; border-radius: 20px; padding: 36px 32px;
-      width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      background: rgba(18, 26, 44, 0.65); border-radius: 16px; padding: 36px 32px;
+      width: 100%; max-width: 440px; box-shadow: 0 16px 48px rgba(0,0,0,.6);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      position: relative; overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
     }
-    .logo { font-family: 'DM Serif Display', serif; font-size: 26px; color: #1a3a28; margin-bottom: 4px; }
-    .logo span { color: #4caf7d; }
-    .subtitle { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, #00e676, #38bdf8);
+    }
+    .logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 26px; color: #00e676; margin-bottom: 4px; }
+    .logo span { color: #38bdf8; }
+    .subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 24px; }
     .invite-badge {
-      background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px;
-      padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: #1a3a28;
+      background: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 10px;
+      padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: #00e676;
     }
     .invite-badge strong { display: block; font-size: 15px; margin-top: 2px; }
-    label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
     input {
-      width: 100%; padding: 11px 13px; border: 1.5px solid #e5e7eb; border-radius: 10px;
-      font-size: 14px; font-family: inherit; outline: none; transition: border .2s;
-      margin-bottom: 16px;
+      width: 100%; padding: 11px 13px; border: 1.5px solid rgba(255, 255, 255, 0.08); border-radius: 10px;
+      font-size: 14px; font-family: inherit; outline: none; transition: all .3s;
+      margin-bottom: 16px; background: rgba(18, 26, 44, 0.65); color: #f8fafc;
     }
-    input:focus { border-color: #1a3a28; }
-    input.err { border-color: #dc2626; }
-    .optional { font-size: 11px; color: #9ca3af; font-weight: 400; text-transform: none; }
+    input:focus { border-color: #00e676; box-shadow: 0 0 10px rgba(0, 230, 118, 0.15); }
+    input.err { border-color: #ff1744; }
+    .optional { font-size: 11px; color: #475569; font-weight: 400; text-transform: none; }
     .btn {
-      width: 100%; padding: 14px; background: #1a3a28; color: #fff; border: none;
+      width: 100%; padding: 14px; background: linear-gradient(135deg, #00e676 0%, #00b252 100%); color: #0b0f19; border: none;
       border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer;
-      font-family: inherit; transition: background .2s; margin-top: 4px;
+      font-family: inherit; transition: all .3s; margin-top: 4px;
+      box-shadow: 0 4px 12px rgba(0, 230, 118, 0.2);
     }
-    .btn:hover { background: #2d5a3d; }
-    .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 230, 118, 0.35); }
+    .btn:disabled { background: #475569; cursor: not-allowed; color: #94a3b8; box-shadow: none; transform: none; }
     .error-box {
       display: none; margin-top: 12px; padding: 10px 14px;
-      background: #fef2f2; border-radius: 8px; font-size: 13px;
-      color: #dc2626; border-left: 3px solid #dc2626;
+      background: rgba(255, 23, 68, 0.1); border-radius: 8px; font-size: 13px;
+      color: #ff1744; border-left: 3px solid #ff1744;
     }
     .success-screen { display: none; text-align: center; }
     .success-screen .icon { font-size: 56px; margin-bottom: 16px; }
-    .success-screen h2 { font-family: 'DM Serif Display', serif; font-size: 22px; color: #1a3a28; margin-bottom: 8px; }
-    .success-screen p { font-size: 14px; color: #6b7280; line-height: 1.6; margin-bottom: 20px; }
-    .success-screen .nid { font-family: monospace; background: #e8f5e9; padding: 8px 16px; border-radius: 8px; font-size: 16px; font-weight: 700; color: #1a3a28; display: inline-block; margin-bottom: 20px; }
+    .success-screen h2 { font-family: 'Space Grotesk', sans-serif; font-size: 22px; color: #00e676; margin-bottom: 8px; }
+    .success-screen p { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 20px; }
+    .success-screen .nid { font-family: 'JetBrains Mono', monospace; background: rgba(0, 230, 118, 0.1); padding: 8px 16px; border-radius: 8px; font-size: 16px; font-weight: 700; color: #00e676; display: inline-block; margin-bottom: 20px; border: 1px solid rgba(0, 230, 118, 0.25); }
     .login-btn {
-      display: inline-block; background: #1a3a28; color: #fff; text-decoration: none;
+      display: inline-block; background: linear-gradient(135deg, #00e676 0%, #00b252 100%); color: #0b0f19; text-decoration: none;
       padding: 13px 32px; border-radius: 10px; font-size: 15px; font-weight: 700;
-      font-family: inherit;
+      font-family: inherit; transition: all .3s; box-shadow: 0 4px 12px rgba(0, 230, 118, 0.2);
     }
-    .loading-screen { text-align: center; padding: 20px 0; }
+    .login-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 230, 118, 0.35); }
+    .loading-screen { text-align: center; padding: 20px 0; color: #94a3b8; }
     .spin { display: inline-block; font-size: 36px; animation: spin 1.5s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .divider { border: none; border-top: 1px solid #f3f4f6; margin: 20px 0; }
+    .divider { border: none; border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 20px 0; }
     .field { margin-bottom: 4px; }
   </style>
 </head>

@@ -636,7 +636,7 @@ function toggleDarkMode() {
   document.getElementById('dark-mode-btn').textContent = next === 'dark' ? '☀️' : '🌙';
 }
 (function applyTheme() {
-  var t = localStorage.getItem('svTheme') || 'light';
+  var t = localStorage.getItem('svTheme') || 'dark';
   document.documentElement.setAttribute('data-theme', t);
   var btn = document.getElementById('dark-mode-btn');
   if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
@@ -1407,6 +1407,22 @@ async function bootDashboard() {
   try {
     // ── STEP 1: Auth check ──
     initAuthClient();
+
+    if (window.Chart) {
+      Chart.defaults.color = '#94a3b8';
+      Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.07)';
+      Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+      Chart.defaults.scale.grid = Chart.defaults.scale.grid || {};
+      Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.07)';
+      var tt = Chart.defaults.plugins.tooltip;
+      tt.backgroundColor = 'rgba(17, 24, 39, 0.95)';
+      tt.titleFont = { family: "'Plus Jakarta Sans', sans-serif", weight: 'bold' };
+      tt.bodyFont = { family: "'Plus Jakarta Sans', sans-serif" };
+      tt.padding = 10;
+      tt.cornerRadius = 8;
+      tt.borderColor = 'rgba(255, 255, 255, 0.07)';
+      tt.borderWidth = 1;
+    }
 
     // Token refresh listener (keeps pz_session_tokens fresh while tab is open)
     _sbAuth.auth.onAuthStateChange(function(event, session) {
@@ -6175,11 +6191,11 @@ function renderFinance() {
     _charts['pl'] = new Chart(document.getElementById('chart-pl'),{
       type:'bar',
       data:{ labels:lbls, datasets:[
-        {label:'Income',data:months.map(function(m){return monthMap[m].inc;}),backgroundColor:'rgba(34,197,94,.7)',borderRadius:4},
-        {label:'Expense',data:months.map(function(m){return monthMap[m].exp;}),backgroundColor:'rgba(239,68,68,.7)',borderRadius:4},
-        {label:'Net',data:months.map(function(m){return monthMap[m].inc-monthMap[m].exp;}),type:'line',borderColor:'var(--primary)',backgroundColor:'transparent',tension:0.4,pointRadius:4,borderWidth:2}
+        {label:'Income',data:months.map(function(m){return monthMap[m].inc;}),backgroundColor:'rgba(0, 230, 118, 0.7)',borderRadius:4},
+        {label:'Expense',data:months.map(function(m){return monthMap[m].exp;}),backgroundColor:'rgba(255, 23, 68, 0.7)',borderRadius:4},
+        {label:'Net',data:months.map(function(m){return monthMap[m].inc-monthMap[m].exp;}),type:'line',borderColor:'#00e676',pointBackgroundColor:'#00e676',backgroundColor:'transparent',tension:0.4,pointRadius:4,borderWidth:2}
       ]},
-      options:{responsive:true,plugins:{legend:{labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{font:{size:11},callback:function(v){return '₹'+Number(v).toLocaleString('en-IN');}}}}}
+      options:{responsive:true,plugins:{legend:{labels:{font:{size:11},color:'#94a3b8'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#94a3b8'}},y:{grid:{color:'rgba(255, 255, 255, 0.07)'},ticks:{font:{size:11},color:'#94a3b8',callback:function(v){return '₹'+Number(v).toLocaleString('en-IN');}}}}}
     });
   }
 
@@ -7699,10 +7715,10 @@ function renderAnalytics() {
   var incMA = movingAvg(incData, 3);
   var expMA = movingAvg(expData, 3);
   var revDatasets = [];
-  if (!revTypeFilter || revTypeFilter==='income')  revDatasets.push({label:'Income', data:incData, backgroundColor:'rgba(39,174,96,0.75)', borderRadius:4, order:2});
-  if (!revTypeFilter || revTypeFilter==='expense') revDatasets.push({label:'Expense',data:expData, backgroundColor:'rgba(192,57,43,0.6)',  borderRadius:4, order:2});
-  if (!revTypeFilter || revTypeFilter==='income')  revDatasets.push({label:'Income 3M Avg', data:incMA, type:'line', borderColor:'#16a34a', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#16a34a', tension:0.3, order:1});
-  if (!revTypeFilter || revTypeFilter==='expense') revDatasets.push({label:'Expense 3M Avg',data:expMA, type:'line', borderColor:'#e74c3c', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#e74c3c', tension:0.3, order:1});
+  if (!revTypeFilter || revTypeFilter==='income')  revDatasets.push({label:'Income', data:incData, backgroundColor:'rgba(0, 230, 118, 0.75)', borderRadius:4, order:2});
+  if (!revTypeFilter || revTypeFilter==='expense') revDatasets.push({label:'Expense',data:expData, backgroundColor:'rgba(255, 23, 68, 0.6)',  borderRadius:4, order:2});
+  if (!revTypeFilter || revTypeFilter==='income')  revDatasets.push({label:'Income 3M Avg', data:incMA, type:'line', borderColor:'#00e676', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#00e676', tension:0.3, order:1});
+  if (!revTypeFilter || revTypeFilter==='expense') revDatasets.push({label:'Expense 3M Avg',data:expMA, type:'line', borderColor:'#ff1744', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#ff1744', tension:0.3, order:1});
   destroyChart('revenue');
   if (document.getElementById('chart-revenue')) {
     _charts['revenue'] = new Chart(document.getElementById('chart-revenue'),{
@@ -7711,10 +7727,13 @@ function renderAnalytics() {
       options:{
         responsive:true,
         plugins:{
-          legend:{position:'bottom'},
+          legend:{position:'bottom', labels:{color:'#94a3b8'}},
           tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': ₹'+Number(ctx.raw||0).toLocaleString('en-IN');}}}
         },
-        scales:{y:{beginAtZero:true, ticks:{callback:function(v){return '₹'+v.toLocaleString('en-IN');}}}}
+        scales:{
+          y:{beginAtZero:true, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8', callback:function(v){return '₹'+v.toLocaleString('en-IN');}}},
+          x:{grid:{display:false}, ticks:{color:'#94a3b8'}}
+        }
       }
     });
   }
@@ -7842,8 +7861,8 @@ function renderAnalytics() {
   destroyChart('attendance');
   if (document.getElementById('chart-attendance')) {
     _charts['attendance'] = new Chart(document.getElementById('chart-attendance'),{
-      type:'bar', data:{labels:days,datasets:[{label:'Check-ins',data:dayCounts,backgroundColor:'rgba(45,90,61,0.75)',borderRadius:4}]},
-      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+      type:'bar', data:{labels:days,datasets:[{label:'Check-ins',data:dayCounts,backgroundColor:'rgba(0, 230, 118, 0.75)',borderRadius:4}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8'}}, x:{grid:{display:false}, ticks:{color:'#94a3b8'}}}}
     });
   }
 
@@ -7861,8 +7880,8 @@ function renderAnalytics() {
   if (document.getElementById('chart-streaks')) {
     _charts['streaks'] = new Chart(document.getElementById('chart-streaks'),{
       type:'doughnut',
-      data:{labels:Object.keys(streakBuckets),datasets:[{data:Object.values(streakBuckets),backgroundColor:['#c0392b','#e8a838','#3d7a52','#2b5ce6','#9333ea'],borderWidth:2}]},
-      options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+      data:{labels:Object.keys(streakBuckets),datasets:[{data:Object.values(streakBuckets),backgroundColor:['#ff1744','#ffd600','#00e676','#38bdf8','#a78bfa'],borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}}}
     });
   }
 
@@ -7890,15 +7909,15 @@ function renderAnalytics() {
   if (document.getElementById('chart-packs')) {
     _charts['packs'] = new Chart(document.getElementById('chart-packs'),{
       type:'pie',
-      data:{labels:Object.keys(packMap),datasets:[{data:Object.values(packMap),backgroundColor:['#2d5a3d','#e8a838','#2b5ce6','#9333ea','#c0392b','#27ae60'],borderWidth:2}]},
-      options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+      data:{labels:Object.keys(packMap),datasets:[{data:Object.values(packMap),backgroundColor:['#00e676','#38bdf8','#ffd600','#a78bfa','#ff1744','#f8fafc'],borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}}}
     });
   }
 
   // ── Body metric trend (filtered, metric switcher) ──
   var metricLabel = {weight:'Weight (kg)', fat:'Body Fat %', muscle:'Muscle %', bmi:'BMI'}[metricFilter] || 'Weight (kg)';
   var metricKey   = {weight:'weight', fat:'fat_percentage', muscle:'muscle_percentage', bmi:'bmi'}[metricFilter] || 'weight';
-  var metricColor = {weight:'#2d5a3d', fat:'#c0392b', muscle:'#2b5ce6', bmi:'#9333ea'}[metricFilter] || '#2d5a3d';
+  var metricColor = {weight:'#38bdf8', fat:'#ff1744', muscle:'#00e676', bmi:'#a78bfa'}[metricFilter] || '#38bdf8';
   var monthsW=[]; var avgMet=[];
   for(var j=numMonths-1;j>=0;j--){
     var dW=new Date(); dW.setDate(1); dW.setMonth(dW.getMonth()-j);
@@ -7912,7 +7931,7 @@ function renderAnalytics() {
     _charts['weightloss'] = new Chart(document.getElementById('chart-weightloss'),{
       type:'line',
       data:{labels:monthsW,datasets:[{label:metricLabel,data:avgMet,borderColor:metricColor,backgroundColor:metricColor+'15',tension:0.35,fill:true,pointBackgroundColor:metricColor,pointRadius:5}]},
-      options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:false}},spanGaps:true}
+      options:{responsive:true,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}, scales:{y:{beginAtZero:false, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8'}}, x:{grid:{display:false}, ticks:{color:'#94a3b8'}}}},spanGaps:true}
     });
   }
 
@@ -7924,7 +7943,7 @@ function renderAnalytics() {
     if (ACTIVE_CENTER || D.centers.length < 2) { compWrap.style.display = 'none'; return; }
     compWrap.style.display = 'block';
     var thisMonth = new Date().toISOString().substring(0, 7);
-    var colors = ['#2d5a3d','#e8a838','#2b5ce6','#9333ea','#c0392b','#27ae60','#e67e22','#16a34a'];
+    var colors = ['#00e676', '#38bdf8', '#ffd600', '#a78bfa', '#ff1744', '#f8fafc', '#a855f7', '#6366f1'];
     var centerLabels = [], revData = [], attData = [], tableRows = [];
     D.centers.forEach(function(center, i) {
       var rev = (D.finance||[]).filter(function(f){
@@ -7946,12 +7965,12 @@ function renderAnalytics() {
     if (crEl) _charts['center-revenue'] = new Chart(crEl, {
       type: 'bar',
       data: { labels: centerLabels, datasets: [{ label: 'Revenue (₹)', data: revData, backgroundColor: colors.slice(0, centerLabels.length), borderRadius: 6 }] },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: function(v){ return '₹'+v.toLocaleString('en-IN'); } } } } }
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return '₹'+v.toLocaleString('en-IN'); } } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
     });
     if (caEl) _charts['center-attendance'] = new Chart(caEl, {
       type: 'bar',
       data: { labels: centerLabels, datasets: [{ label: 'Check-ins', data: attData, backgroundColor: colors.slice(0, centerLabels.length), borderRadius: 6 }] },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
     });
     var tbl = document.getElementById('analytics-center-table');
     if (tbl) tbl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px">'
@@ -8119,12 +8138,12 @@ function renderAnalytics() {
           datasets: [{
             label: 'Renewal Rate %',
             data: rates,
-            borderColor: '#16a34a',
-            backgroundColor: 'rgba(22,163,74,0.12)',
+            borderColor: '#00e676',
+            backgroundColor: 'rgba(0,230,118,0.12)',
             fill: true,
             tension: 0.4,
             pointRadius: 5,
-            pointBackgroundColor: rates.map(function(r){ return r>=70?'#16a34a':r>=40?'#d97706':'#e74c3c'; }),
+            pointBackgroundColor: rates.map(function(r){ return r>=70?'#00e676':r>=40?'#ffd600':'#ff1744'; }),
             borderWidth: 2
           }]
         },
@@ -8132,8 +8151,8 @@ function renderAnalytics() {
           responsive: true,
           plugins: { legend: { display: false } },
           scales: {
-            y: { min: 0, max: 100, ticks: { callback: function(v){ return v+'%'; }, font: { size: 11 } } },
-            x: { ticks: { font: { size: 11 } } }
+            y: { min: 0, max: 100, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return v+'%'; }, font: { size: 11 } } },
+            x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } }
           }
         }
       });

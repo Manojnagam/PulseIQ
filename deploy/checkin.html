@@ -4,22 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PulseZen — Self Check-In</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg-gradient: linear-gradient(135deg, #0f2318 0%, #1c3d2a 60%, #2d5a3d 100%);
-  --surface: rgba(255, 255, 255, 0.08);
-  --surface-solid: #224330;
-  --border: rgba(255, 255, 255, 0.12);
-  --primary: #4ade80;
-  --accent: #fbbf24;
-  --text: #f3f4f6;
-  --text-muted: #9ca3af;
-  --success: #22c55e;
-  --danger: #ef4444;
+  --bg-gradient: radial-gradient(circle at top left, rgba(0, 230, 118, 0.05), transparent 45%), radial-gradient(circle at bottom right, rgba(255, 214, 0, 0.03), transparent 50%), radial-gradient(circle at top right, rgba(255, 23, 68, 0.02), transparent 45%);
+  --bg-color: #0b0f19;
+  --surface: rgba(18, 26, 44, 0.65);
+  --surface-solid: #121a2c;
+  --border: rgba(255, 255, 255, 0.07);
+  --primary: #00e676;
+  --accent: #ffd600;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --success: #00e676;
+  --danger: #ff1744;
   --radius-lg: 24px;
   --radius-md: 16px;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  --shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
 }
 
 * {
@@ -30,7 +33,9 @@
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background: var(--bg-gradient);
+  background-color: #0b0f19;
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
   display: flex;
@@ -371,6 +376,42 @@ body {
   text-decoration: none;
   font-weight: 600;
 }
+
+/* Overrides */
+h1, h2, h3, h4, h5, h6, .brand-logo {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.kiosk-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00e676, #38bdf8);
+  z-index: 2;
+  pointer-events: none;
+}
+
+input, button, select {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #00e676 0%, #00b252 100%) !important;
+  color: #0b0f19 !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 230, 118, 0.2) !important;
+}
+.btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(0, 230, 118, 0.35) !important;
+}
 </style>
 </head>
 <body>
@@ -710,8 +751,9 @@ async function executeProfileCheckin(profile) {
     // Mark attendance
     await req('POST', 'attendance', {
       customer_id: cust.id,
+      customer_name: cust.name,
       date: todayStr,
-      wellness_center_id: centerId,
+      status: 'present',
       servings: 1,
       check_in_time: checkInTime,
       notes: qrNotes
