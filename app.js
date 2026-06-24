@@ -3409,7 +3409,7 @@ function renderOverview() {
     '<div class="stat"><div class="stat-ic">⏰</div><div class="stat-l">Expiring (≤5 days)</div><div class="stat-v" style="color:'+(expiringCusts.length?'var(--accent)':'var(--success)')+'">'+expiringCusts.length+'</div></div>'+
     '<div class="stat"><div class="stat-ic">📋</div><div class="stat-l">Today\'s Check-ins</div><div class="stat-v">'+attToday+'</div></div>'+
     '<div class="stat"><div class="stat-ic">😴</div><div class="stat-l">Inactive (7d+)</div><div class="stat-v" style="color:'+(inactiveCusts?'var(--danger)':'var(--success)')+'">'+inactiveCusts+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">🚶</div><div class="stat-l">Walk-ins Today</div><div class="stat-v" style="color:'+(walkinsToday.length?'var(--primary)':'var(--muted)')+'">'+walkinsToday.length+'</div></div>'+
+    '<div class="stat"><div class="stat-ic">🚶</div><div class="stat-l">Walk-ins Today</div><div class="stat-v" style="color:'+(walkinsToday.length?'var(--primary)':'var(--text)')+'">'+walkinsToday.length+'</div></div>'+
     (expiryAlerts.length?'<div class="stat" style="border-left:3px solid var(--danger);grid-column:1/-1"><div class="stat-l" style="color:var(--danger)">🚨 Stock Expiry Alerts</div><div style="margin-top:6px;font-size:13px">'+expiryAlerts.map(function(a){return '<span style="display:inline-block;margin:2px 6px 2px 0;padding:2px 8px;border-radius:12px;background:'+(a.isExpired?'var(--danger-light)':'var(--accent-light)')+';color:'+(a.isExpired?'var(--danger)':'#b07800')+'">'+a.name+' — '+a.date+(a.isExpired?' EXPIRED':'')+'</span>';}).join('')+'</div></div>':'');
 
   // ── Revenue Row ──
