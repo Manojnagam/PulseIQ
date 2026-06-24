@@ -3866,7 +3866,7 @@ function renderCoaches() {
   else tb.innerHTML = rows.map(function(c){
     var refs = D.customers.filter(function(cust){return cust.referred_by_id===c.id;}).length;
     var st = c.status||'Active';
-    var pinHtml = c.herbalife_pin ? '<span style="font-size:10px;background:#e8f4fd;color:var(--primary);padding:2px 7px;border-radius:10px;font-weight:600;display:block;margin-top:3px">'+c.herbalife_pin+'</span>' : '';
+    var pinHtml = c.herbalife_pin ? '<span style="font-size:10px;background:var(--info-light);color:var(--info-text);padding:2px 7px;border-radius:10px;font-weight:600;display:block;margin-top:3px">'+c.herbalife_pin+'</span>' : '';
     // Check if this coach has a pack price but no payment record yet
     var hasPackPrice = c.pack_type && c.pack_price && Number(c.pack_price) > 0;
     var hasPaymentRecord = (D.payments||[]).some(function(p){return p.person_id===c.id;});
@@ -11299,7 +11299,7 @@ function openPromoteModal(coachId) {
   _promoteCoachId = coachId;
   document.getElementById('promote-coach-info').innerHTML =
     '🏆 Promoting <strong>'+coach.name+'</strong> to Supervisor'
-    +(coach.herbalife_pin?' &nbsp;·&nbsp; Current pin: <span style="background:#e8f4fd;color:var(--primary);padding:2px 8px;border-radius:10px;font-size:12px">'+coach.herbalife_pin+'</span>':'')
+    +(coach.herbalife_pin?' &nbsp;·&nbsp; Current pin: <span style="background:var(--info-light);color:var(--info-text);padding:2px 8px;border-radius:10px;font-size:12px">'+coach.herbalife_pin+'</span>':'')
     +(coach.contact?'<br><span style="font-size:12px;color:var(--muted);margin-top:4px;display:block">📞 '+coach.contact+'</span>':'');
   document.getElementById('promote-center-name').value = coach.name+'\'s Wellness Center';
   document.getElementById('promote-center-location').value = '';
@@ -11369,7 +11369,7 @@ function renderPromoteSummary() {
     +'<div style="display:flex;flex-direction:column;gap:10px;font-size:13px">'
     +'<div>🏢 New <strong>Downline Center</strong> created: <strong>'+centerName+'</strong>'+(location?' in <strong>'+location+'</strong>':'')+'</div>'
     +'<div>👤 <strong>'+(coach?coach.name:'Coach')+'</strong> set as owner of the new center</div>'
-    +'<div>🏅 Coach pin updated to <span style="background:#e8f4fd;color:var(--primary);padding:2px 8px;border-radius:10px;font-weight:700">Supervisor</span></div>'
+    +'<div>🏅 Coach pin updated to <span style="background:var(--info-light);color:var(--info-text);padding:2px 8px;border-radius:10px;font-weight:700">Supervisor</span></div>'
     +(selectedCusts.length
       ?'<div>👥 <strong>'+selectedCusts.length+' customer(s)</strong> will move to '+centerName+':<br><div style="margin-top:6px;padding-left:16px;line-height:1.9">'+selectedCusts.map(function(c){return '• '+c.name+(c.contact?' <span style="color:var(--muted);font-size:11px">'+c.contact+'</span>':'');}).join('<br>')+'</div></div>'
       :'<div style="color:var(--muted)">👥 No customers selected to move — all stay in your center</div>')
