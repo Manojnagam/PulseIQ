@@ -86,6 +86,7 @@ Key relationships:
 **Pending migration** (run in Supabase SQL editor if not done):
 ```sql
 ALTER TABLE finance ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id);
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS issues text;
 ```
 
 ## Authentication

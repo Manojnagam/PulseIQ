@@ -3310,6 +3310,26 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div class="fg"><label for="customer-diet-type">Diet Preference</label><select id="customer-diet-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="veg">Veg</option><option value="non-veg">Non-Veg</option></select></div>
       </div>
       <div class="fr">
+        <div class="fg">
+          <label for="customer-issues-preset">Select Health Issue</label>
+          <select id="customer-issues-preset" onchange="onIssuesPresetChange(this.value)" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+            <option value="">-- Quick Select Issue --</option>
+            <option value="Diabetes">Diabetes</option>
+            <option value="Thyroid">Thyroid</option>
+            <option value="PCOD/PCOS">PCOD / PCOS</option>
+            <option value="Hypertension">Hypertension (B.P)</option>
+            <option value="Cholesterol">Cholesterol</option>
+            <option value="Joint Pains">Joint Pains</option>
+            <option value="Gastric Issues">Gastric / Digestive Issues</option>
+            <option value="Other">Other (Write below)</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label for="customer-issues">Issues Suffering With</label>
+          <input type="text" id="customer-issues" placeholder="e.g. Diabetes, Thyroid, None" style="width:100%">
+        </div>
+      </div>
+      <div class="fr">
         <div class="fg"><label for="customer-activity-level">Activity Level</label><select id="customer-activity-level" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="sedentary">Sedentary (no exercise)</option><option value="light" selected>Light (walks, light work)</option><option value="moderate">Moderate (regular exercise)</option><option value="active">Active (intense daily work)</option></select></div>
         <div class="fg"><label for="customer-training-type">Training Type</label><select id="customer-training-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="dumbbell">🏋️ Dumbbell Training</option><option value="bodyweight">🤸 Bodyweight / Fitness Exercises</option><option value="walking">🚶 Walking Only (10k steps)</option><option value="dumbbell+walking">🏋️+🚶 Dumbbell + Walking</option><option value="bodyweight+walking">🤸+🚶 Bodyweight + Walking</option></select></div>
       </div>

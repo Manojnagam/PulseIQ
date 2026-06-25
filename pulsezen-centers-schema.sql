@@ -32,6 +32,7 @@ create table if not exists customers (
   referred_by text,
   diet_plan text,
   food_override text,
+  issues text,
   notes text,
   status text default 'active',
   created_at timestamptz default now()

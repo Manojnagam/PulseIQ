@@ -481,10 +481,10 @@ function exportCustomersCSV() {
   if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Growth plan feature (₹499/mo).', 'error'); return; }
   var custs = filterByCenter(D.customers);
   exportCSV(
-    ['Name','Contact','Email','Pack','Start Date','Days Left','Status','Goal','Coach','Center','Joined'],
+    ['Name','Contact','Email','Pack','Start Date','Days Left','Status','Goal','Issues','Coach','Center','Joined'],
     custs.map(function(c){
       var st = getDaysLeft(c);
-      return [c.name, c.contact||'', c.email||'', c.pack_type||'', c.start_date||'', st.active?st.days:'Expired', st.active?'Active':'Expired', c.goal||'', c.coach_name||'', getCenterById(c.wellness_center_id)||'', c.join_date||c.created_at||''];
+      return [c.name, c.contact||'', c.email||'', c.pack_type||'', c.start_date||'', st.active?st.days:'Expired', st.active?'Active':'Expired', c.goal||'', c.issues||'', c.coach_name||'', getCenterById(c.wellness_center_id)||'', c.join_date||c.created_at||''];
     }),
     'customers'
   );
@@ -581,10 +581,10 @@ function exportDataPack(type) {
   if (type === 'customers') {
     var custs = filterByCenter(D.customers).filter(function(c){ return _inExpRange(c.pack_start_date || c.join_date || c.created_at); });
     exportCSV(
-      ['Name','Contact','Email','Pack','Pack Start','Days Left','Status','Goal','Coach','Center','Joined'],
+      ['Name','Contact','Email','Pack','Pack Start','Days Left','Status','Goal','Issues','Coach','Center','Joined'],
       custs.map(function(c){
         var st = getDaysLeft(c);
-        return [c.name, c.contact||'', c.email||'', c.pack_type||'', c.pack_start_date||'', st.active?st.days:'Expired', st.active?'Active':'Expired', c.goal||'', c.coach_name||'', getCenterById(c.wellness_center_id)||'', c.join_date||c.created_at||''];
+        return [c.name, c.contact||'', c.email||'', c.pack_type||'', c.pack_start_date||'', st.active?st.days:'Expired', st.active?'Active':'Expired', c.goal||'', c.issues||'', c.coach_name||'', getCenterById(c.wellness_center_id)||'', c.join_date||c.created_at||''];
       }),
       'customers'
     );
@@ -2855,6 +2855,9 @@ function onWsCustomerSelectChange() {
     }
     if (c.goal) {
       document.getElementById('ws-goal').value = c.goal;
+    }
+    if (c.issues) {
+      document.getElementById('ws-digestion').value = c.issues;
     }
   }
 
@@ -6698,6 +6701,7 @@ async function saveCustomer() {
   if(_v('customer-address'))   payload.address              = _v('customer-address');
   if(_v('customer-goal'))           payload.goal           = _v('customer-goal');
   if(_v('customer-diet-type'))      payload.diet_type      = _v('customer-diet-type');
+  payload.issues = _v('customer-issues');
   if(_v('customer-activity-level')) payload.activity_level  = _v('customer-activity-level');
   if(_v('customer-training-type'))  payload.training_type   = _v('customer-training-type');
   if(_v('customer-protein-ratio'))  payload.protein_ratio   = _v('customer-protein-ratio');
@@ -6839,6 +6843,7 @@ function editCustomer(id) {
   document.getElementById('customer-pack').value=c.pack_type||''; 
   document.getElementById('customer-goal').value=c.goal||'';
   document.getElementById('customer-diet-type').value=c.diet_type||'veg';
+  document.getElementById('customer-issues').value=c.issues||'';
   document.getElementById('customer-activity-level').value=c.activity_level||'light';
   var ttEl=document.getElementById('customer-training-type'); if(ttEl) ttEl.value=c.training_type||'dumbbell';
   var prEl=document.getElementById('customer-protein-ratio'); if(prEl) prEl.value=c.protein_ratio||'2.0';
@@ -10902,7 +10907,7 @@ function openNewCustomerModal() {
   document.getElementById('customer-id').value='';
   ['customer-name','customer-contact','customer-address','customer-ref-name','customer-ref-phone'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   ['customer-age','customer-height','customer-pack-price','customer-paid-now'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
-  ['customer-gender','customer-pack','customer-goal','customer-center','customer-lang'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  ['customer-gender','customer-pack','customer-goal','customer-center','customer-lang','customer-issues','customer-issues-preset'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   var dtEl=document.getElementById('customer-diet-type'); if(dtEl) dtEl.value='veg';
   var alEl=document.getElementById('customer-activity-level'); if(alEl) alEl.value='light';
   var ttEl2=document.getElementById('customer-training-type'); if(ttEl2) ttEl2.value='dumbbell';
@@ -10931,6 +10936,25 @@ function onCustomerPackChange() {
     var pr = document.getElementById('customer-pack-price');
     if (pr) { pr.value = 15000; onPackPriceChange(); }
   }
+}
+function onIssuesPresetChange(val) {
+  if (!val) return;
+  var input = document.getElementById('customer-issues');
+  if (!input) return;
+  if (val === 'Other') {
+    input.focus();
+    return;
+  }
+  var current = input.value.trim();
+  if (!current) {
+    input.value = val;
+  } else {
+    var items = current.split(',').map(function(i) { return i.trim().toLowerCase(); });
+    if (items.indexOf(val.toLowerCase()) === -1) {
+      input.value = current + ', ' + val;
+    }
+  }
+  document.getElementById('customer-issues-preset').value = '';
 }
 function onPackPriceChange() {
   var price = Number(document.getElementById('customer-pack-price').value)||0;
@@ -11136,8 +11160,9 @@ function renderCustomers() {
     var risk = getChurnRisk(c.id);
     var riskBadge = risk.label ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;display:block;margin-top:2px;'+(risk.level==='critical'?'background:var(--danger-light);color:var(--text-danger)':'background:var(--warning-light);color:var(--warning-text)')+'" title="'+risk.reasons.join(', ')+'">'+risk.label+'</span>' : '';
     var msBadges = getMilestones(c.id).slice(-2).map(function(m){ return '<span class="milestone-badge ms-gold" style="font-size:9px;display:inline-block;margin-top:2px">'+m.icon+' '+m.label+'</span>'; }).join('');
+    var issuesDisplay = c.issues ? '<div style="font-size:11px;color:var(--danger);margin-top:2px" title="Issues: '+c.issues+'">⚠️ Issues: '+c.issues+'</div>' : '';
     return '<tr>'
-      +'<td><strong>'+c.name+bdayFlag+'</strong>'+noDobBadge+freeDay+sharedBadge+memberBadge+coachBadge+riskBadge+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
+      +'<td><strong>'+c.name+bdayFlag+'</strong>'+noDobBadge+freeDay+sharedBadge+memberBadge+coachBadge+riskBadge+issuesDisplay+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
       +'<td>'+(c.contact||'—')+'</td>'
       +'<td>'+(c.pack_owner_id ? '↗ shared' : (c.pack_type||'—'))+'</td>'
       +'<td>'+(c.pack_owner_id ? '—' : (c.pack_start_date||'—'))+'</td>'
