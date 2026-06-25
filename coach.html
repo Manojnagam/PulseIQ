@@ -3015,17 +3015,17 @@ async function saveCustomer() {
         var payMode = document.getElementById('cust-pay-mode').value;
         var payDate = document.getElementById('cust-pay-date').value || todayStr();
         if (payMode === 'full') {
-          await dbInsert('finance', { type:'income', description:name+' — Pack sale', amount:packPrice, category:'Pack sale to customer', date:payDate });
+          await dbInsert('finance', { type:'income', description:name+' — Pack sale', amount:packPrice, category:'Pack sale to customer', date:payDate, wellness_center_id: CENTER_UUID || null });
           showToast('Customer added + ₹'+packPrice.toLocaleString('en-IN')+' income recorded!', 'success');
         } else if (payMode === 'partial') {
           var paidNow = Number(document.getElementById('cust-paid-now').value) || 0;
           var dueDate = document.getElementById('cust-due-date').value || null;
-          await dbInsert('payments', { person_id:newCust.id, person_name:name, total_amount:packPrice, amount_paid:paidNow, payment_date:payDate, due_date:dueDate, description:payload.pack_type||'Pack', notes:'Added by coach' });
-          if (paidNow > 0) await dbInsert('finance', { type:'income', description:name+' — Partial pack payment', amount:paidNow, category:'Pack sale to customer', date:payDate });
+          await dbInsert('payments', { person_id:newCust.id, person_name:name, total_amount:packPrice, amount_paid:paidNow, payment_date:payDate, due_date:dueDate, description:payload.pack_type||'Pack', notes:'Added by coach', wellness_center_id: CENTER_UUID || null });
+          if (paidNow > 0) await dbInsert('finance', { type:'income', description:name+' — Partial pack payment', amount:paidNow, category:'Pack sale to customer', date:payDate, wellness_center_id: CENTER_UUID || null });
           showToast('Customer added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
         } else {
           var dueDateNone = document.getElementById('cust-due-date').value || null;
-          await dbInsert('payments', { person_id:newCust.id, person_name:name, total_amount:packPrice, amount_paid:0, payment_date:payDate, due_date:dueDateNone, description:payload.pack_type||'Pack', notes:'Added by coach' });
+          await dbInsert('payments', { person_id:newCust.id, person_name:name, total_amount:packPrice, amount_paid:0, payment_date:payDate, due_date:dueDateNone, description:payload.pack_type||'Pack', notes:'Added by coach', wellness_center_id: CENTER_UUID || null });
           showToast('Customer added + payment reminder created!', 'success');
         }
         // Refresh payments
@@ -3078,7 +3078,7 @@ async function toggleAtt(cid, cname, date, currentStatus) {
       await dbUpdate('attendance', existing.id, {status:'present', servings:1});
       showToast(cname + ' — marked present');
     } else {
-      await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1});
+      await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1, wellness_center_id: CENTER_UUID || null});
       showToast(cname + ' — marked present');
     }
     _daysLeftCache = {};
@@ -3604,7 +3604,8 @@ async function saveBodyRecord() {
     age:                            document.getElementById('body-age-field').value || null,
     subcutaneous_fat_percentage:    document.getElementById('body-subfat').value || null,
     bmr:                            document.getElementById('body-bmr').value || null,
-    body_age:                       document.getElementById('body-age').value || null
+    body_age:                       document.getElementById('body-age').value || null,
+    wellness_center_id:             CENTER_UUID || null
   };
   try {
     if (id) {
@@ -4005,7 +4006,8 @@ async function saveLead() {
     next_followup_date: document.getElementById('lead-next-date').value || null,
     source: document.getElementById('lead-source').value.trim() || null,
     notes: document.getElementById('lead-notes').value.trim() || null,
-    coach_id: COACH_ID
+    coach_id: COACH_ID,
+    wellness_center_id: CENTER_UUID || null
   };
   try {
     if (id) {
