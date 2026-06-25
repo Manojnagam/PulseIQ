@@ -1770,44 +1770,50 @@ input:focus, select:focus, textarea:focus {
       </div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Date</label><input type="date" id="body-date"></div>
-      <div class="fg"><label>Weight (kg)</label><input type="number" step="0.1" id="body-weight" placeholder="38.2" oninput="coachCalcBody()"></div>
+      <div class="fg"><label for="body-customer">Customer *</label><select id="body-customer" disabled><option value="">Select person</option></select></div>
+      <div class="fg"><label for="body-date">Date *</label><input type="date" id="body-date"></div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Height (cm)</label><input type="number" step="0.1" id="body-height" placeholder="170" oninput="coachCalcBody()"></div>
-      <div class="fg"><label>Age</label><input type="number" id="body-age-field" placeholder="30"></div>
+      <div class="fg"><label for="body-height">Height (cm)</label><input type="number" step="0.1" id="body-height" placeholder="170" oninput="coachCalcBody()"></div>
+      <div class="fg"><label for="body-age-field">Age</label><input type="number" id="body-age-field" placeholder="30"></div>
     </div>
     <div class="fg-row">
+      <div class="fg"><label for="body-weight">Weight (kg)</label><input type="number" step="0.1" id="body-weight" placeholder="60.3" oninput="coachCalcBody()"></div>
       <div class="fg">
-        <label>Body Fat (%)</label>
-        <input type="number" step="0.1" id="body-fat" placeholder="23" oninput="coachCalcBody()">
+        <label for="body-fat">Fat (%) <span style="color:var(--accent);font-size:11px">enter %</span></label>
+        <input type="number" step="0.01" id="body-fat" placeholder="e.g. 22.5" oninput="coachCalcBody()">
+        <div id="body-fat-kg-display" style="font-size:11px;color:var(--primary);font-weight:600;margin-top:4px;min-height:16px;"></div>
         <div id="body-fat-hint"></div>
       </div>
-      <div class="fg">
-        <label>Visceral Fat <span style="font-size:10px;color:var(--accent)">(auto)</span></label>
-        <input type="number" step="0.01" id="body-visceral" placeholder="1.5" readonly style="background:#f5f5f5;color:var(--primary);font-weight:600">
-        <div id="body-visceral-hint"></div>
-      </div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>BMR</label><input type="number" id="body-bmr" placeholder="950"></div>
       <div class="fg">
-        <label>BMI <span style="font-size:10px;color:var(--accent)">(auto)</span></label>
+        <label for="body-visceral">Visceral Fat (kg) <span style="color:var(--accent);font-size:11px">auto-calculated</span></label>
+        <input type="number" step="0.01" id="body-visceral" placeholder="auto" readonly style="background:var(--surface2);color:var(--primary);font-weight:600">
+        <div id="body-visceral-hint"></div>
+      </div>
+      <div class="fg"><label for="body-bmr">BMR</label><input type="number" id="body-bmr" placeholder="1483"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg">
+        <label for="body-bmi">BMI <span style="color:var(--accent);font-size:11px">(auto)</span></label>
         <input type="number" step="0.1" id="body-bmi" placeholder="auto" oninput="this.dataset.manual=this.value?'1':'';coachCalcBody()">
         <div id="body-bmi-hint"></div>
       </div>
+      <div class="fg"><label for="body-age">Body Age</label><input type="number" id="body-age" placeholder="25"></div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Body Age</label><input type="number" id="body-age" placeholder="18"></div>
-      <div class="fg"><label>Subcutaneous Fat (%)</label><input type="number" step="0.01" id="body-subfat" placeholder="18.9" oninput="coachCalcBody()"></div>
+      <div class="fg">
+        <label for="body-subfat">Subcutaneous Fat (%) <span style="color:var(--accent);font-size:11px">enter %</span></label>
+        <input type="number" step="0.01" id="body-subfat" placeholder="e.g. 15.0" oninput="coachCalcBody()">
+        <div id="body-subfat-kg-display" style="font-size:11px;color:var(--primary);font-weight:600;margin-top:4px;min-height:16px;"></div>
+      </div>
+      <div class="fg"><label for="body-muscle">Muscle (%)</label><input type="number" step="0.1" id="body-muscle" placeholder="e.g. 35.0"></div>
     </div>
-    <div class="fg-row">
-      <div class="fg"><label>Muscle (%)</label><input type="number" step="0.1" id="body-muscle" placeholder="26.8"></div>
-    </div>
-    <div class="fg"><label>Notes</label><textarea id="body-notes" rows="2" placeholder="Any observations..."></textarea></div>
+    <div class="fg"><label for="body-notes">Notes</label><textarea id="body-notes" placeholder="Any observations..."></textarea></div>
     <div class="mf">
       <button class="btn-c" onclick="closeModal('body')">Cancel</button>
-      <button class="btn-p" onclick="saveBodyRecord()">Save</button>
+      <button class="btn-p" onclick="saveBodyRecord()">Save Record</button>
     </div>
   </div>
 </div>
@@ -3623,37 +3629,62 @@ function renderBodyTargets(latest, custId) {
 }
 
 function coachCalcBody() {
-  var w   = parseFloat(document.getElementById('body-weight').value) || 0;
-  var h   = parseFloat(document.getElementById('body-height').value) || 0;
-  var f   = parseFloat(document.getElementById('body-fat').value) || 0;
-  var sf  = parseFloat(document.getElementById('body-subfat').value) || 0;
-  var vfEl  = document.getElementById('body-visceral');
-  var bmiEl = document.getElementById('body-bmi');
-  var vfKg  = 0;
+  var weight    = parseFloat(document.getElementById('body-weight').value);
+  var height    = parseFloat(document.getElementById('body-height').value);
+  var fatPct    = parseFloat(document.getElementById('body-fat').value);
+  var subfatPct = parseFloat(document.getElementById('body-subfat').value);
 
-  // Auto-calculate visceral fat
-  if (w > 0 && f > 0) {
-    var fatKg = w * f / 100;
-    var sfKg  = sf > 0 ? (w * sf / 100) : (fatKg * 0.8);
-    vfKg = Math.max(0, fatKg - sfKg);
-    vfEl.value = vfKg.toFixed(2);
-  } else {
-    vfEl.value = '';
+  // Show Fat kg preview
+  var fatKgDiv = document.getElementById('body-fat-kg-display');
+  if (fatKgDiv) {
+    if (!isNaN(weight) && !isNaN(fatPct) && weight > 0 && fatPct > 0) {
+      var fatKg = (weight * fatPct / 100).toFixed(2);
+      fatKgDiv.textContent = '= ' + fatKg + ' kg fat';
+    } else {
+      fatKgDiv.textContent = '';
+    }
+  }
+
+  // Show Subcutaneous Fat kg preview
+  var subfatKgDiv = document.getElementById('body-subfat-kg-display');
+  if (subfatKgDiv) {
+    if (!isNaN(weight) && !isNaN(subfatPct) && weight > 0 && subfatPct > 0) {
+      var subfatKg = (weight * subfatPct / 100).toFixed(2);
+      subfatKgDiv.textContent = '= ' + subfatKg + ' kg subcutaneous fat';
+    } else {
+      subfatKgDiv.textContent = '';
+    }
   }
 
   // Auto-calculate BMI
+  var bmiEl = document.getElementById('body-bmi');
   var bmi = 0;
-  if (w > 0 && h > 0 && !bmiEl.dataset.manual) {
-    var hm = h / 100;
-    bmi = parseFloat((w / (hm * hm)).toFixed(1));
+  if (!isNaN(weight) && !isNaN(height) && weight > 0 && height > 0 && !bmiEl.dataset.manual) {
+    var hm = height / 100;
+    bmi = parseFloat((weight / (hm * hm)).toFixed(1));
     bmiEl.value = bmi;
   } else {
     bmi = parseFloat(bmiEl.value) || 0;
   }
 
+  // Auto-calculate Visceral Fat
+  var vfEl = document.getElementById('body-visceral');
+  var vfKg = 0;
+  if (!isNaN(weight) && !isNaN(fatPct) && !isNaN(subfatPct) &&
+      weight > 0 && fatPct > 0 && subfatPct > 0 && fatPct > subfatPct) {
+    var fatKgVal = weight * fatPct / 100;
+    var subfatKgVal = weight * subfatPct / 100;
+    vfKg = parseFloat((fatKgVal - subfatKgVal).toFixed(2));
+    vfEl.value = vfKg;
+    vfEl.style.color = 'var(--primary)';
+  } else {
+    vfEl.value = '';
+    vfEl.style.color = '';
+  }
+
   // Field hint badges
   setBodyHint('body-bmi-hint',      bmiHint(bmi));
-  setBodyHint('body-fat-hint',      fatHint(f));
+  setBodyHint('body-fat-hint',      fatHint(isNaN(fatPct) ? 0 : fatPct));
   setBodyHint('body-visceral-hint', vfHint(vfKg));
 
   // Live Health Score in modal
@@ -3661,7 +3692,7 @@ function coachCalcBody() {
   var weightLive = parseFloat(document.getElementById('body-weight') ? document.getElementById('body-weight').value : 0) || 0;
   var _modalCustId = _bodySelCustId;
   var _modalC = _modalCustId === COACH_ID ? {gender: COACH_GENDER} : (D.customers||[]).find(function(x){return x.id===_modalCustId;}) || {};
-  var score = calcHealthScore(bmi || 0, f || 0, vfKg || 0, muscleLive || null, _modalC.gender||'', weightLive);
+  var score = calcHealthScore(bmi || 0, isNaN(fatPct) ? 0 : fatPct, vfKg, muscleLive || null, _modalC.gender||'', weightLive);
   updateModalHealthScore(score);
 }
 
@@ -3846,6 +3877,15 @@ function openBodyModal(id) {
   document.getElementById('body-rec-id').value = id || '';
   var today = todayStr();
   var fields = ['body-weight','body-fat','body-muscle','body-bmi','body-visceral','body-notes','body-height','body-age-field','body-subfat','body-bmr','body-age'];
+  
+  // Prep customer selection
+  var cust = _bodySelCustId === COACH_ID ? { name: '👤 My Own Measurements' } : D.customers.find(function(c){ return c.id === _bodySelCustId; });
+  var bodyCustEl = document.getElementById('body-customer');
+  if (bodyCustEl) {
+    bodyCustEl.innerHTML = '<option value="' + _bodySelCustId + '">' + (cust ? cust.name : '') + '</option>';
+    bodyCustEl.value = _bodySelCustId;
+  }
+
   if (id) {
     var b = D.body.find(function(x){ return x.id === id; });
     if (!b) return;
@@ -3866,7 +3906,6 @@ function openBodyModal(id) {
     fields.forEach(function(f){ document.getElementById(f).value=''; });
     document.getElementById('body-date').value = today;
     // Pre-fill height/age from customer record
-    var cust = D.customers.find(function(c){ return c.id === _bodySelCustId; });
     if (cust) {
       if (cust.height) document.getElementById('body-height').value = cust.height;
       if (cust.age)    document.getElementById('body-age-field').value = cust.age;
@@ -3874,6 +3913,10 @@ function openBodyModal(id) {
   }
   // Reset manual BMI flag so auto-calc works fresh
   document.getElementById('body-bmi').dataset.manual = '';
+  
+  // Trigger calculation so previews/displays update immediately
+  coachCalcBody();
+  
   openModal('body');
 }
 
