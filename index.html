@@ -3278,27 +3278,18 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div class="fg"><label for="customer-height">Height (cm)</label><input type="number" id="customer-height" placeholder="cm"></div>
       </div>
       <div class="fg"><label for="customer-address">Address</label><input type="text" id="customer-address" placeholder="Full address"></div>
-      <div class="fg"><label for="customer-pack-owner">Shares Pack With</label><select id="customer-pack-owner" onchange="onPackOwnerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— Own Pack (not shared) —</option></select></div>
-      <div id="shared-pack-info" style="display:none;background:linear-gradient(135deg,#edf3ff,#f0f4ff);border:1px solid #bfcfff;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:#2b5ce6"></div>
-      <div id="own-pack-fields">
+      <!-- Date of Birth & WhatsApp Language -->
       <div class="fr">
-        <div class="fg"><label for="customer-pack">Pack Type</label><select id="customer-pack" onchange="onCustomerPackChange()"><option value="">Select pack</option><option>Star UMS 90 days</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option><option>Custom</option></select></div>
-        <div class="fg"><label for="customer-goal">Goal</label><select id="customer-goal"><option value="">Select Goal</option><option>Weight Loss</option><option>Weight Gain</option><option>General Wellness</option></select></div>
-      </div>
-      <div class="fr">
-        <div class="fg"><label for="customer-diet-type">Diet Preference</label><select id="customer-diet-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="veg">Veg</option><option value="non-veg">Non-Veg</option></select></div>
-        <div class="fg"><label for="customer-activity-level">Activity Level</label><select id="customer-activity-level" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="sedentary">Sedentary (no exercise)</option><option value="light" selected>Light (walks, light work)</option><option value="moderate">Moderate (regular exercise)</option><option value="active">Active (intense daily work)</option></select></div>
-      </div>
-      <div class="fr">
-        <div class="fg"><label for="customer-training-type">Training Type</label><select id="customer-training-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="dumbbell">🏋️ Dumbbell Training</option><option value="bodyweight">🤸 Bodyweight / Fitness Exercises</option><option value="walking">🚶 Walking Only (10k steps)</option><option value="dumbbell+walking">🏋️+🚶 Dumbbell + Walking</option><option value="bodyweight+walking">🤸+🚶 Bodyweight + Walking</option></select></div>
-        <div class="fg"><label for="customer-protein-ratio">Protein Ratio (per kg bodyweight)</label><select id="customer-protein-ratio" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="1.6">1.6g/kg — Standard Muscle Gain</option><option value="2.0" selected>2.0g/kg — Aggressive Muscle Building</option><option value="2.2">2.2g/kg — Maximum (Athletes)</option></select></div>
-      </div>
-      <div class="fr">
-        <div class="fg"><label for="customer-shake-freq">Shake Frequency</label><select id="customer-shake-freq" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="once" selected>1x per day (morning only)</option><option value="twice">2x per day (morning + post-workout)</option></select></div>
-      </div>
-      <div class="fr">
-        <div class="fg"><label for="customer-food-override">✅ Can Get These Foods <span style="font-weight:400;color:var(--muted)">(overrides center restriction)</span></label><input type="text" id="customer-food-override" placeholder="e.g. Fish, Tofu (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:3px">Foods this client can access even if unavailable at their center.</div></div>
-        <div class="fg"><label for="customer-food-restrict">🚫 Personal Food Restrictions</label><input type="text" id="customer-food-restrict" placeholder="e.g. Almonds, Paneer (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:3px">Allergies or foods this client personally avoids.</div></div>
+        <div class="fg"><label for="customer-dob">Date of Birth 🎂 <span style="color:var(--danger)">*</span></label><input type="date" id="customer-dob" required></div>
+        <div class="fg">
+          <label for="customer-lang">🌐 WhatsApp Language</label>
+          <select id="customer-lang" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+            <option value="">Default (use center setting)</option>
+            <option value="English">English</option>
+            <option value="Telugu">Telugu (తెలుగు)</option>
+            <option value="Hindi">Hindi (हिंदी)</option>
+          </select>
+        </div>
       </div>
       <div class="fr">
         <div class="fg"><label for="customer-center">Wellness Center</label><select id="customer-center"><option value="">Select center</option><option value="c1fb6027-fbda-4640-b97e-bd1f086479e8">Dharani's wellness center</option></select></div>
@@ -3315,7 +3306,43 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div class="fg"><label for="customer-ref-phone">Referrer Phone</label><input type="text" id="customer-ref-phone" placeholder="Phone number"></div>
       </div>
       <div class="fr">
+        <div class="fg"><label for="customer-goal">Goal</label><select id="customer-goal"><option value="">Select Goal</option><option>Weight Loss</option><option>Weight Gain</option><option>General Wellness</option></select></div>
+        <div class="fg"><label for="customer-diet-type">Diet Preference</label><select id="customer-diet-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="veg">Veg</option><option value="non-veg">Non-Veg</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label for="customer-activity-level">Activity Level</label><select id="customer-activity-level" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="sedentary">Sedentary (no exercise)</option><option value="light" selected>Light (walks, light work)</option><option value="moderate">Moderate (regular exercise)</option><option value="active">Active (intense daily work)</option></select></div>
+        <div class="fg"><label for="customer-training-type">Training Type</label><select id="customer-training-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="dumbbell">🏋️ Dumbbell Training</option><option value="bodyweight">🤸 Bodyweight / Fitness Exercises</option><option value="walking">🚶 Walking Only (10k steps)</option><option value="dumbbell+walking">🏋️+🚶 Dumbbell + Walking</option><option value="bodyweight+walking">🤸+🚶 Bodyweight + Walking</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label for="customer-protein-ratio">Protein Ratio (per kg bodyweight)</label><select id="customer-protein-ratio" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="1.6">1.6g/kg — Standard Muscle Gain</option><option value="2.0" selected>2.0g/kg — Aggressive Muscle Building</option><option value="2.2">2.2g/kg — Maximum (Athletes)</option></select></div>
+        <div class="fg"><label for="customer-shake-freq">Shake Frequency</label><select id="customer-shake-freq" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="once" selected>1x per day (morning only)</option><option value="twice">2x per day (morning + post-workout)</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label for="customer-food-override">✅ Can Get These Foods <span style="font-weight:400;color:var(--muted)">(overrides center restriction)</span></label><input type="text" id="customer-food-override" placeholder="e.g. Fish, Tofu (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:3px">Foods this client can access even if unavailable at their center.</div></div>
+        <div class="fg"><label for="customer-food-restrict">🚫 Personal Food Restrictions</label><input type="text" id="customer-food-restrict" placeholder="e.g. Almonds, Paneer (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:3px">Allergies or foods this client personally avoids.</div></div>
+      </div>
+      <div class="fr">
         <div class="fg"><label for="customer-join">Join Date</label><input type="date" id="customer-join"></div>
+      </div>
+      <!-- Photo Upload -->
+      <div class="fr" style="margin-top:4px">
+        <div class="fg">
+          <label for="customer-photo-before">📸 Before Photo</label>
+          <input type="file" id="customer-photo-before" accept="image/*" style="width:100%;font-size:12px;padding:4px" onchange="previewCustPhoto('before')">
+          <div id="cust-before-preview"></div>
+        </div>
+        <div class="fg" id="cust-after-photo-wrap">
+          <label for="customer-photo-after">📸 After Photo (transformation)</label>
+          <input type="file" id="customer-photo-after" accept="image/*" style="width:100%;font-size:12px;padding:4px" onchange="previewCustPhoto('after')">
+          <div id="cust-after-preview"></div>
+        </div>
+      </div>
+
+      <div class="fg"><label for="customer-pack-owner">Shares Pack With</label><select id="customer-pack-owner" onchange="onPackOwnerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— Own Pack (not shared) —</option></select></div>
+      <div id="shared-pack-info" style="display:none;background:linear-gradient(135deg,#edf3ff,#f0f4ff);border:1px solid #bfcfff;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:#2b5ce6"></div>
+      <div id="own-pack-fields">
+      <div class="fr">
+        <div class="fg"><label for="customer-pack">Pack Type</label><select id="customer-pack" onchange="onCustomerPackChange()"><option value="">Select pack</option><option>Star UMS 90 days</option><option>Premium 30 days</option><option>Standard 26 days</option><option>Hot Drink 30 days</option><option>Trial 3 days</option><option>Custom</option></select></div>
         <div class="fg"><label for="customer-start">Pack Start Date</label><input type="date" id="customer-start"></div>
       </div>
       <!-- Complementary Day -->
@@ -3336,32 +3363,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div style="font-size:11px;color:var(--muted);margin-top:8px">Pack will start <strong>tomorrow</strong>. Today's visit is free and won't count against pack days.</div>
       </div>
       <div class="fr">
-        <div class="fg"><label for="customer-dob">Date of Birth 🎂 <span style="color:var(--danger)">*</span></label><input type="date" id="customer-dob" required></div>
         <div class="fg"><label for="customer-pack-price">Pack Price (₹)</label><input type="number" id="customer-pack-price" placeholder="e.g. 2500" oninput="onPackPriceChange()"></div>
-      </div>
-      <div class="fr">
-        <div class="fg">
-          <label for="customer-lang">🌐 WhatsApp Language</label>
-          <select id="customer-lang" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
-            <option value="">Default (use center setting)</option>
-            <option value="English">English</option>
-            <option value="Telugu">Telugu (తెలుగు)</option>
-            <option value="Hindi">Hindi (हिंदी)</option>
-          </select>
-        </div>
-      </div>
-      <!-- Photo Upload -->
-      <div class="fr" style="margin-top:4px">
-        <div class="fg">
-          <label for="customer-photo-before">📸 Before Photo</label>
-          <input type="file" id="customer-photo-before" accept="image/*" style="width:100%;font-size:12px;padding:4px" onchange="previewCustPhoto('before')">
-          <div id="cust-before-preview"></div>
-        </div>
-        <div class="fg" id="cust-after-photo-wrap">
-          <label for="customer-photo-after">📸 After Photo (transformation)</label>
-          <input type="file" id="customer-photo-after" accept="image/*" style="width:100%;font-size:12px;padding:4px" onchange="previewCustPhoto('after')">
-          <div id="cust-after-preview"></div>
-        </div>
       </div>
       <!-- Payment section — shown only when adding new customer with a price -->
       <div id="cust-pay-section" style="display:none;border-top:1px solid var(--border);margin:14px 0 0;padding-top:14px">

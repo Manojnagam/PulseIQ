@@ -9809,7 +9809,7 @@ async function saveRenewal(){
     if(isCoach) histRow.coach_id=cid; else histRow.customer_id=cid;
     await dbInsert('pack_history',histRow);
     // Update record in the right table
-    await dbUpdate(isCoach?'coaches':'customers',cid,{pack_type:packType,pack_start_date:startDate,pack_price:price});
+    await dbUpdate(isCoach?'coaches':'customers',cid,{pack_type:packType,pack_start_date:startDate,pack_price:price,pack_owner_id:null});
 
     // ── Payment handling ──
     var finCategory = isCoach ? 'Coach pack payment' : 'Pack sale to customer';
