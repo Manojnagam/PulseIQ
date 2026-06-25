@@ -3905,11 +3905,34 @@ function openBodyModal(id) {
   } else {
     fields.forEach(function(f){ document.getElementById(f).value=''; });
     document.getElementById('body-date').value = today;
-    // Pre-fill height/age from customer record
-    if (cust) {
-      if (cust.height) document.getElementById('body-height').value = cust.height;
-      if (cust.age)    document.getElementById('body-age-field').value = cust.age;
+
+    var heightVal = '';
+    var ageVal = '';
+
+    // 1. Check latest record in body composition
+    var lastRec = (D.body || []).filter(function(b){ return b.customer_id === _bodySelCustId; }).sort(function(a,b){ return new Date(b.date) - new Date(a.date); })[0];
+    if (lastRec) {
+      if (lastRec.height) heightVal = lastRec.height;
+      if (lastRec.age)    ageVal = lastRec.age;
     }
+
+    // 2. Fallback to customer profile height/age/dob
+    if (!heightVal || !ageVal) {
+      var person = _bodySelCustId === COACH_ID ? null : D.customers.find(function(c){ return c.id === _bodySelCustId; });
+      if (person) {
+        if (!heightVal && person.height) heightVal = person.height;
+        if (!ageVal) {
+          if (person.age) {
+            ageVal = person.age;
+          } else if (person.dob) {
+            ageVal = Math.floor((new Date() - new Date(person.dob)) / (365.25 * 24 * 3600 * 1000));
+          }
+        }
+      }
+    }
+
+    if (heightVal) document.getElementById('body-height').value = heightVal;
+    if (ageVal)    document.getElementById('body-age-field').value = ageVal;
   }
   // Reset manual BMI flag so auto-calc works fresh
   document.getElementById('body-bmi').dataset.manual = '';
