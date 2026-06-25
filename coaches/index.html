@@ -1378,63 +1378,173 @@ input:focus, select:focus, textarea:focus {
 
 <!-- Customer Modal -->
 <div class="modal-overlay" id="modal-cust">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width: 540px;">
     <div class="modal-h">
       <h3 id="cust-modal-title">Add Customer</h3>
       <button class="modal-close" onclick="closeModal('cust')">×</button>
     </div>
     <input type="hidden" id="cust-id">
+    
     <div class="fg-row">
-      <div class="fg"><label>Name *</label><input type="text" id="cust-name" placeholder="Full name"></div>
-      <div class="fg"><label>Contact</label><input type="text" id="cust-contact" placeholder="Phone number"></div>
+      <div class="fg"><label>Full Name *</label><input type="text" id="cust-name" placeholder="Customer name"></div>
+      <div class="fg"><label>Contact</label><input type="text" id="cust-contact" placeholder="Phone"></div>
     </div>
-    <div class="fg-row">
-      <div class="fg"><label>Date of Birth *</label><input type="date" id="cust-dob"></div>
+    
+    <div class="fg-row" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="fg"><label>Age</label><input type="number" id="cust-age" placeholder="Age"></div>
       <div class="fg"><label>Gender</label><select id="cust-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+      <div class="fg"><label>Height (cm)</label><input type="number" id="cust-height" placeholder="cm"></div>
     </div>
+    
+    <div class="fg"><label>Address</label><input type="text" id="cust-address" placeholder="Full address"></div>
+    
     <div class="fg-row">
-      <div class="fg"><label>Pack Type</label><select id="cust-pack" onchange="onCoachCustPackChange()"><option value="">No Pack</option><option value="Star UMS 90 days">Star UMS 90 days</option><option value="26 days">26 Days</option><option value="30 days">30 Days</option><option value="3 days">3 Days (Trial)</option></select></div>
-      <div class="fg"><label>Pack Start Date</label><input type="date" id="cust-pack-start"></div>
-    </div>
-    <div class="fg"><label>Goal</label><input type="text" id="cust-goal" placeholder="Weight loss, muscle gain..."></div>
-    <div class="fg-row">
-      <div class="fg"><label>Pack Price (₹)</label><input type="number" id="cust-pack-price" placeholder="e.g. 2500" oninput="onCoachPackPriceChange()"></div>
-    </div>
-    <!-- Payment section — shown only when price is entered -->
-    <div id="cust-pay-section" style="display:none;border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
-      <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">💰 Payment</div>
-      <div class="fg-row">
-        <div class="fg">
-          <label>Payment Mode</label>
-          <select id="cust-pay-mode" onchange="onCoachPayModeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
-            <option value="full">✅ Full Payment — paid in full</option>
-            <option value="partial">⏳ Partial — paying in installments</option>
-            <option value="none">🕐 No payment yet</option>
-          </select>
-        </div>
-        <div class="fg"><label>Payment Date</label><input type="date" id="cust-pay-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      <div class="fg"><label>Date of Birth *</label><input type="date" id="cust-dob" required></div>
+      <div class="fg">
+        <label>🌐 WhatsApp Language</label>
+        <select id="cust-lang" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="">Default (use center setting)</option>
+          <option value="English">English</option>
+          <option value="Telugu">Telugu (తెలుగు)</option>
+          <option value="Hindi">Hindi (हिंदी)</option>
+        </select>
       </div>
-      <div class="fg-row" id="cust-paid-now-row" style="display:none">
-        <div class="fg"><label>Paid So Far (₹)</label><input type="number" id="cust-paid-now" placeholder="e.g. 1000" oninput="updateCoachBalancePreview()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-        <div class="fg"><label>Balance Due By</label><input type="date" id="cust-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
-      </div>
-      <div id="cust-balance-preview" style="display:none;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:13px;margin-top:6px"></div>
     </div>
-    <div class="fg"><label>Notes</label><textarea id="cust-notes" rows="2" placeholder="Any notes..."></textarea></div>
+    
     <div class="fg">
-      <label>🌐 WhatsApp Language</label>
-      <select id="cust-lang" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
-        <option value="">Default</option>
-        <option value="English">English</option>
-        <option value="Telugu">Telugu (తెలుగు)</option>
-        <option value="Hindi">Hindi (हिंदी)</option>
+      <label>Shares Pack With</label>
+      <select id="cust-pack-owner" onchange="onCoachPackOwnerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+        <option value="">— Own Pack (not shared) —</option>
       </select>
     </div>
-    <div class="fg">
-      <label>📸 Before Photo (optional)</label>
-      <input type="file" id="cust-photo-before" accept="image/*" style="width:100%;font-size:12px;padding:4px" onchange="previewCoachCustPhoto()">
-      <div id="coach-cust-before-preview"></div>
+    
+    <div id="cust-shared-pack-info" style="display:none;background:linear-gradient(135deg,#edf3ff,#f0f4ff);border:1px solid #bfcfff;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:#2b5ce6"></div>
+    
+    <div id="cust-own-pack-fields">
+      <div class="fg-row">
+        <div class="fg">
+          <label>Pack Type</label>
+          <select id="cust-pack" onchange="onCoachCustPackChange()">
+            <option value="">Select pack</option>
+            <option value="Star UMS 90 days">Star UMS 90 days</option>
+            <option value="Premium 30 days">Premium 30 days</option>
+            <option value="Standard 26 days">Standard 26 days</option>
+            <option value="Hot Drink 30 days">Hot Drink 30 days</option>
+            <option value="Trial 3 days">Trial 3 days</option>
+            <option value="Custom">Custom</option>
+          </select>
+        </div>
+        <div class="fg"><label>Pack Start Date</label><input type="date" id="cust-pack-start"></div>
+      </div>
+      
+      <!-- Complementary Day -->
+      <div id="cust-comp-day-section" style="display:none;background:linear-gradient(135deg,#eafaf1,#f0fdf4);border:1px solid #82c99a;border-radius:10px;padding:14px 16px;margin:10px 0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <input type="checkbox" id="cust-comp-day" checked onchange="onCoachCompDayToggle()">
+          <label for="cust-comp-day" style="font-size:13px;font-weight:600;color:var(--primary);cursor:pointer;margin:0">🎁 Complementary First Day</label>
+        </div>
+        <div id="cust-comp-day-options" style="display:flex;gap:12px;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;padding:6px 12px;border-radius:8px;background:#fff;border:1.5px solid var(--success);color:var(--success);font-weight:600">
+            <input type="radio" name="cust-comp-type" value="shake" checked> Free Shake + Counselling
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;padding:6px 12px;border-radius:8px;background:#fff;border:1.5px solid var(--border);color:var(--muted);font-weight:600">
+            <input type="radio" name="cust-comp-type" value="counselling"> Counselling Only
+          </label>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">Pack will start <strong>tomorrow</strong>. Today's visit is free and won't count against pack days.</div>
+      </div>
+      
+      <div class="fg-row">
+        <div class="fg"><label>Pack Price (₹)</label><input type="number" id="cust-pack-price" placeholder="e.g. 2500" oninput="onCoachPackPriceChange()"></div>
+      </div>
+      
+      <!-- Payment section — shown only when adding new customer with a price -->
+      <div id="cust-pay-section" style="display:none;border-top:1px solid var(--border);margin:14px 0 0;padding-top:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">💰 Payment</div>
+        <div class="fg-row">
+          <div class="fg">
+            <label>Payment Mode</label>
+            <select id="cust-pay-mode" onchange="onCoachPayModeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+              <option value="full">✅ Full Payment — paid in full</option>
+              <option value="partial">⏳ Partial — paying in installments</option>
+              <option value="none">🕐 No payment yet</option>
+            </select>
+          </div>
+          <div class="fg"><label>Payment Date</label><input type="date" id="cust-pay-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        </div>
+        <div class="fg-row" id="cust-paid-now-row" style="display:none">
+          <div class="fg">
+            <label>Paid So Far (₹)</label>
+            <input type="number" id="cust-paid-now" placeholder="e.g. 1000" oninput="updateCoachBalancePreview()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          </div>
+          <div class="fg"><label>Balance Due By</label><input type="date" id="cust-due-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        </div>
+        <div id="cust-due-row" style="display:none">
+          <div id="cust-balance-preview" style="padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:13px;margin-top:6px">Balance: <strong style="color:var(--danger)">₹0</strong></div>
+        </div>
+      </div>
+    </div><!-- /cust-own-pack-fields -->
+    
+    <div class="fg-row">
+      <div class="fg"><label>Goal</label><select id="cust-goal"><option value="">Select Goal</option><option>Weight Loss</option><option>Weight Gain</option><option>General Wellness</option></select></div>
+      <div class="fg"><label>Diet Preference</label><select id="cust-diet-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="veg">Veg</option><option value="non-veg">Non-Veg</option></select></div>
     </div>
+    
+    <div class="fg-row">
+      <div class="fg">
+        <label>Select Health Issue</label>
+        <select id="cust-issues-preset" onchange="onIssuesPresetChange(this.value)" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="">-- Quick Select Issue --</option>
+          <option value="Diabetes">Diabetes</option>
+          <option value="Thyroid">Thyroid</option>
+          <option value="PCOD/PCOS">PCOD / PCOS</option>
+          <option value="Hypertension">Hypertension (B.P)</option>
+          <option value="Cholesterol">Cholesterol</option>
+          <option value="Joint Pains">Joint Pains</option>
+          <option value="Gastric Issues">Gastric / Digestive Issues</option>
+          <option value="Other">Other (Write below)</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Issues Suffering With</label>
+        <input type="text" id="cust-issues" placeholder="e.g. Diabetes, Thyroid, None" style="width:100%">
+      </div>
+    </div>
+    
+    <div class="fg-row">
+      <div class="fg"><label>Activity Level</label><select id="cust-activity-level" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="sedentary">Sedentary (no exercise)</option><option value="light" selected>Light (walks, light work)</option><option value="moderate">Moderate (regular exercise)</option><option value="active">Active (intense daily work)</option></select></div>
+      <div class="fg"><label>Training Type</label><select id="cust-training-type" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="dumbbell">🏋️ Dumbbell Training</option><option value="bodyweight">🤸 Bodyweight / Fitness Exercises</option><option value="walking">🚶 Walking Only (10k steps)</option><option value="dumbbell+walking">🏋️+🚶 Dumbbell + Walking</option><option value="bodyweight+walking">🤸+🚶 Bodyweight + Walking</option></select></div>
+    </div>
+    
+    <div class="fg-row">
+      <div class="fg"><label>Protein Ratio (per kg bodyweight)</label><select id="cust-protein-ratio" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="1.6">1.6g/kg — Standard Muscle Gain</option><option value="2.0" selected>2.0g/kg — Aggressive Muscle Building</option><option value="2.2">2.2g/kg — Maximum (Athletes)</option></select></div>
+      <div class="fg"><label>Shake Frequency</label><select id="cust-shake-freq" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="once" selected>1x per day (morning only)</option><option value="twice">2x per day (morning + post-workout)</option></select></div>
+    </div>
+    
+    <div class="fg-row">
+      <div class="fg"><label>✅ Can Get These Foods <span style="font-weight:400;color:var(--muted)">(overrides center restriction)</span></label><input type="text" id="cust-food-override" placeholder="e.g. Fish, Tofu (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:3px">Foods this client can access even if unavailable at their center.</div></div>
+      <div class="fg"><label>🚫 Personal Food Restrictions</label><input type="text" id="cust-food-restrict" placeholder="e.g. Almonds, Paneer (comma separated)" style="width:100%"><div style="font-size:11px;color:var(--muted);margin-top:3px">Allergies or foods this client personally avoids.</div></div>
+    </div>
+    
+    <div class="fg-row">
+      <div class="fg"><label>Join Date</label><input type="date" id="cust-join"></div>
+      <div class="fg"><label>Notes</label><textarea id="cust-notes" rows="1" placeholder="Any notes..." style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></textarea></div>
+    </div>
+    
+    <!-- Photo Upload -->
+    <div class="fg-row" style="margin-top:4px">
+      <div class="fg">
+        <label>📸 Before Photo</label>
+        <input type="file" id="cust-photo-before" accept="image/*" style="width:100%;font-size:12px;padding:4px" onchange="previewCoachCustPhoto('before')">
+        <div id="coach-cust-before-preview"></div>
+      </div>
+      <div class="fg" id="cust-after-photo-wrap">
+        <label>📸 After Photo (transformation)</label>
+        <input type="file" id="cust-photo-after" accept="image/*" style="width:100%;font-size:12px;padding:4px" onchange="previewCoachCustPhoto('after')">
+        <div id="coach-cust-after-preview"></div>
+      </div>
+    </div>
+    
     <div class="mf">
       <button class="btn-c" onclick="closeModal('cust')">Cancel</button>
       <button class="btn-p" onclick="saveCustomer()">Save</button>
@@ -2856,18 +2966,59 @@ function openCustModal(id) {
     document.getElementById('cust-goal').value        = c.goal || '';
     document.getElementById('cust-notes').value       = c.notes || '';
     document.getElementById('cust-lang').value        = c.preferred_language || '';
+    
+    // New fields
+    document.getElementById('cust-age').value         = c.age || '';
+    document.getElementById('cust-height').value      = c.height || '';
+    document.getElementById('cust-address').value     = c.address || '';
+    document.getElementById('cust-diet-type').value   = c.diet_type || 'veg';
+    document.getElementById('cust-issues').value      = c.issues || '';
+    document.getElementById('cust-activity-level').value = c.activity_level || 'light';
+    document.getElementById('cust-training-type').value  = c.training_type || 'dumbbell';
+    document.getElementById('cust-protein-ratio').value  = c.protein_ratio || '2.0';
+    document.getElementById('cust-shake-freq').value     = c.shake_frequency || 'once';
+    document.getElementById('cust-food-override').value  = c.food_override || '';
+    document.getElementById('cust-food-restrict').value  = c.food_restrict || '';
+    document.getElementById('cust-join').value        = c.join_date || '';
+    
+    // pack owner
+    document.getElementById('cust-pack-owner').value  = c.pack_owner_id || '';
+    onCoachPackOwnerChange();
+    
+    // hide complementary section for editing
+    document.getElementById('cust-comp-day-section').style.display = 'none';
+    
+    // photo previews
+    document.getElementById('coach-cust-before-preview').innerHTML = c.photo_before ? '<img src="'+c.photo_before+'" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);margin-top:4px">' : '';
+    document.getElementById('coach-cust-after-preview').innerHTML = c.photo_after ? '<img src="'+c.photo_after+'" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);margin-top:4px">' : '';
   } else {
-    ['cust-name','cust-contact','cust-dob','cust-pack-start','cust-goal','cust-notes','cust-pack-price','cust-paid-now','cust-due-date','cust-pay-date'].forEach(function(f){ document.getElementById(f).value = ''; });
+    ['cust-name','cust-contact','cust-dob','cust-pack-start','cust-goal','cust-notes','cust-pack-price','cust-paid-now','cust-due-date','cust-pay-date',
+     'cust-age','cust-height','cust-address','cust-issues','cust-food-override','cust-food-restrict','cust-join'
+    ].forEach(function(f){ document.getElementById(f).value = ''; });
     document.getElementById('cust-gender').value = '';
     document.getElementById('cust-pack').value = '';
     document.getElementById('cust-pay-section').style.display = 'none';
     document.getElementById('cust-paid-now-row').style.display = 'none';
-    document.getElementById('cust-balance-preview').style.display = 'none';
+    document.getElementById('cust-due-row').style.display = 'none';
+    document.getElementById('cust-balance-preview').innerHTML = 'Balance: <strong style="color:var(--success)">₹0</strong>';
     document.getElementById('cust-lang').value = '';
     document.getElementById('cust-photo-before').value = '';
+    document.getElementById('cust-photo-after').value = '';
     document.getElementById('coach-cust-before-preview').innerHTML = '';
+    document.getElementById('coach-cust-after-preview').innerHTML = '';
     document.getElementById('cust-pay-mode').value = 'full';
+    document.getElementById('cust-diet-type').value = 'veg';
+    document.getElementById('cust-activity-level').value = 'light';
+    document.getElementById('cust-training-type').value = 'dumbbell';
+    document.getElementById('cust-protein-ratio').value = '2.0';
+    document.getElementById('cust-shake-freq').value = 'once';
+    document.getElementById('cust-pack-owner').value = '';
+    onCoachPackOwnerChange();
+    
+    // check comp day eligibility
+    checkCoachCompDayEligibility();
   }
+  updateCoachPackOwnerSelect();
   openModal('cust');
 }
 
@@ -2887,7 +3038,7 @@ function onCoachPackPriceChange() {
 function onCoachPayModeChange() {
   var mode = document.getElementById('cust-pay-mode').value;
   document.getElementById('cust-paid-now-row').style.display = (mode === 'partial' || mode === 'none') ? 'flex' : 'none';
-  document.getElementById('cust-balance-preview').style.display = mode === 'partial' ? 'block' : 'none';
+  document.getElementById('cust-due-row').style.display = mode === 'partial' ? 'block' : 'none';
   updateCoachBalancePreview();
 }
 function updateCoachBalancePreview() {
@@ -2898,51 +3049,105 @@ function updateCoachBalancePreview() {
   if (el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</strong>';
 }
 
-function renderPendingPayments() {
-  var el = document.getElementById('coach-pending-payments'); if (!el) return;
-  var today = todayStr();
-  var pending = (D.payments || []).filter(function(p) {
-    return Math.max(0, Number(p.total_amount) - Number(p.amount_paid)) > 0;
-  });
-  if (!pending.length) {
-    el.innerHTML = '<div class="empty"><div class="ei">✅</div><p>No pending payments.</p></div>';
-    return;
+function onCoachPackOwnerChange() {
+  var ownerId = document.getElementById('cust-pack-owner').value;
+  var ownFields = document.getElementById('cust-own-pack-fields');
+  var infoEl = document.getElementById('cust-shared-pack-info');
+  if (ownerId) {
+    ownFields.style.display = 'none';
+    infoEl.style.display = 'block';
+    var owner = D.customers.find(function(c){return c.id===ownerId;}) || D.coaches.find(function(c){return c.id===ownerId;});
+    if (owner) {
+      var st = getDaysLeft(owner);
+      infoEl.innerHTML = '🔗 <strong>Shared Pack:</strong> Inheriting ' + owner.name + '\'s <strong>' + (owner.pack_type||'Pack') + '</strong> (' + st.days + ' servings left, starts ' + (owner.pack_start_date||'—') + ')';
+    } else { infoEl.innerHTML = '🔗 Linked to shared pack'; }
+  } else {
+    ownFields.style.display = 'block';
+    infoEl.style.display = 'none';
   }
-  el.innerHTML = pending.map(function(p) {
-    var total = Number(p.total_amount), paid = Number(p.amount_paid), bal = Math.max(0, total - paid);
-    var isOverdue = p.due_date && p.due_date < today;
-    var badgeStyle = isOverdue ? 'color:var(--danger);font-weight:700' : 'color:var(--accent);font-weight:700';
-    var badgeText  = isOverdue ? '⚠️ Overdue' : '⏳ Pending';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:6px">' +
-      '<div>' +
-        '<div style="font-weight:600;font-size:13px">' + (p.person_name || '—') + '</div>' +
-        '<div style="font-size:11px;color:var(--muted)">' + (p.description || '') + (p.due_date ? ' · Due: ' + p.due_date : '') + '</div>' +
-      '</div>' +
-      '<div style="text-align:right">' +
-        '<div style="font-size:13px;color:var(--danger);font-weight:700">₹' + bal.toLocaleString('en-IN') + ' due</div>' +
-        '<div style="font-size:11px;' + badgeStyle + '">' + badgeText + '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
 }
 
-async function uploadPhoto(file, customerId, type) {
-  var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-  var path = customerId + '/' + type + '_' + Date.now() + '.' + ext;
-  var res = await fetch(SB_URL + '/storage/v1/object/customer-photos/' + path, {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' },
-    body: file
-  });
-  if (!res.ok) { var t = await res.text(); throw new Error('Photo upload failed: ' + t); }
-  return SB_URL + '/storage/v1/object/public/customer-photos/' + path;
+function onCoachCompDayToggle() {
+  var checked = document.getElementById('cust-comp-day').checked;
+  document.getElementById('cust-comp-day-options').style.display = checked ? 'flex' : 'none';
+  if(checked) {
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate()+1);
+    document.getElementById('cust-pack-start').value = tomorrow.toISOString().split('T')[0];
+  } else {
+    document.getElementById('cust-pack-start').value = new Date().toISOString().split('T')[0];
+  }
 }
-function previewCoachCustPhoto() {
-  var file = document.getElementById('cust-photo-before').files[0];
+
+function checkCoachCompDayEligibility() {
+  var sec = document.getElementById('cust-comp-day-section');
+  if(!sec) return;
+  var isNew = !document.getElementById('cust-id').value;
+  if(!isNew) { sec.style.display='none'; return; }
+  
+  // Since they are logged in as a coach, they are always considered an active referrer. Show the section.
+  sec.style.display = 'block';
+  document.getElementById('cust-comp-day').checked = true;
+  onCoachCompDayToggle();
+}
+
+function updateCoachPackOwnerSelect() {
+  var sel = document.getElementById('cust-pack-owner'); if(!sel) return;
+  var editId = document.getElementById('cust-id').value;
+  var _custs = D.customers.filter(function(c){
+    return c.id !== editId && c.pack_type && c.pack_start_date && !c.pack_owner_id;
+  });
+  // Since we also want to allow sharing with coaches, and we load the coaches list for login, we can use it!
+  var _coaches = [];
+  var coachSel = document.getElementById('login-coach-sel');
+  if (coachSel) {
+    Array.from(coachSel.options).forEach(function(opt){
+      if (opt.value && opt.value !== COACH_ID) {
+        _coaches.push({id: opt.value, name: opt.text});
+      }
+    });
+  }
+  var _all = _custs.map(function(c){ return {id:c.id, name:c.name, obj:c}; })
+    .concat(_coaches.map(function(c){ return {id:c.id, name:c.name+' 👨‍🏫', obj:c}; }));
+  
+  sel.innerHTML = '<option value="">— Own Pack (not shared) —</option>' +
+    _all.map(function(p){
+      if (p.obj) {
+        var st = getDaysLeft(p.obj);
+        return '<option value="'+p.id+'">'+p.name+' ('+p.obj.pack_type+' — '+st.days+' servings left)</option>';
+      } else {
+        return '<option value="'+p.id+'">'+p.name+'</option>';
+      }
+    }).join('');
+}
+
+function onIssuesPresetChange(val) {
+  if (!val) return;
+  var input = document.getElementById('cust-issues');
+  if (!input) return;
+  if (val === 'Other') {
+    input.focus();
+    return;
+  }
+  var current = input.value.trim();
+  if (!current) {
+    input.value = val;
+  } else {
+    var items = current.split(',').map(function(i) { return i.trim().toLowerCase(); });
+    if (items.indexOf(val.toLowerCase()) === -1) {
+      input.value = current + ', ' + val;
+    }
+  }
+  document.getElementById('cust-issues-preset').value = '';
+}
+
+function previewCoachCustPhoto(type) {
+  type = type || 'before';
+  var file = document.getElementById('cust-photo-' + type).files[0];
   if (!file) return;
   var reader = new FileReader();
   reader.onload = function(e) {
-    document.getElementById('coach-cust-before-preview').innerHTML = '<img src="'+e.target.result+'" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);margin-top:4px">';
+    document.getElementById('coach-cust-' + type + '-preview').innerHTML = '<img src="'+e.target.result+'" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);margin-top:4px">';
   };
   reader.readAsDataURL(file);
 }
@@ -2958,32 +3163,67 @@ async function saveCustomer() {
   if (!dob) { showToast('Date of Birth is required — customer needs it to log in to their dashboard', 'error'); return; }
   if (!isUUID(COACH_ID)) { showToast('Session error — please log out and log in again', 'error'); return; }
   var id = document.getElementById('cust-id').value;
-  var packPrice = Number(document.getElementById('cust-pack-price').value) || 0;
+  
   var payload = {
     name: name,
     contact: document.getElementById('cust-contact').value.trim() || null,
     dob: dob,
     gender: document.getElementById('cust-gender').value || null,
-    pack_type: document.getElementById('cust-pack').value || null,
-    pack_start_date: document.getElementById('cust-pack-start').value || null,
-    pack_price: packPrice || null,
-    goal: document.getElementById('cust-goal').value.trim() || null,
+    goal: document.getElementById('cust-goal').value || null,
     notes: document.getElementById('cust-notes').value.trim() || null,
     preferred_language: document.getElementById('cust-lang').value || null,
+    
+    // New fields
+    age: document.getElementById('cust-age').value ? Number(document.getElementById('cust-age').value) : null,
+    height: document.getElementById('cust-height').value ? Number(document.getElementById('cust-height').value) : null,
+    address: document.getElementById('cust-address').value.trim() || null,
+    diet_type: document.getElementById('cust-diet-type').value || null,
+    issues: document.getElementById('cust-issues').value.trim() || null,
+    activity_level: document.getElementById('cust-activity-level').value || null,
+    training_type: document.getElementById('cust-training-type').value || null,
+    protein_ratio: document.getElementById('cust-protein-ratio').value || null,
+    shake_frequency: document.getElementById('cust-shake-freq').value || null,
+    food_override: document.getElementById('cust-food-override').value.trim() || null,
+    food_restrict: document.getElementById('cust-food-restrict').value.trim() || null,
+    join_date: document.getElementById('cust-join').value || null,
+    
     referred_by_id: safeUUID(COACH_ID),
     referred_by: safeUUID(COACH_ID),
     wellness_center_id: CENTER_UUID || null
   };
+
+  // Shared pack or own pack
+  var packOwnerId = document.getElementById('cust-pack-owner').value || null;
+  var packPrice = 0;
+  if (packOwnerId) {
+    payload.pack_owner_id = packOwnerId;
+    var packOwner = D.customers.find(function(c){return c.id===packOwnerId;}) || D.coaches.find(function(c){return c.id===packOwnerId;});
+    if (packOwner) {
+      payload.pack_type = packOwner.pack_type;
+      payload.pack_start_date = packOwner.pack_start_date;
+    }
+  } else {
+    payload.pack_owner_id = null;
+    payload.pack_type = document.getElementById('cust-pack').value || null;
+    payload.pack_start_date = document.getElementById('cust-pack-start').value || null;
+    packPrice = Number(document.getElementById('cust-pack-price').value) || 0;
+    payload.pack_price = packPrice || null;
+  }
+  
   try {
+    var savedRecords;
     if (id) {
       await dbUpdate('customers', id, payload);
       var idx = D.customers.findIndex(function(c){ return c.id === id; });
       if (idx !== -1) D.customers[idx] = Object.assign(D.customers[idx], payload);
       showToast('Customer updated');
+      savedRecords = [{ id: id }];
     } else {
       var res = await dbInsert('customers', payload);
-      var newCust = Array.isArray(res) && res[0] ? res[0] : null;
+      savedRecords = Array.isArray(res) ? res : [res];
+      var newCust = savedRecords[0] ? savedRecords[0] : null;
       if (newCust) D.customers.push(newCust);
+      
       // ── Auto-earn shake balance ──
       if (newCust) {
         var hasPack = !!payload.pack_type;
@@ -2992,54 +3232,105 @@ async function saveCustomer() {
           // +1 for visit (always)
           var v = await dbInsert('coach_shakes', { coach_id: COACH_ID, customer_id: newCust.id, event_type: 'earn_visit', quantity: 1, date: todayStr(), month: shakeMonth, notes: name + ' visited' });
           if (Array.isArray(v) && v[0]) D.shakes.push(v[0]);
-          if (hasPack) {
+          if (hasPack && !payload.pack_owner_id) {
             // +3 for taking pack
             var p = await dbInsert('coach_shakes', { coach_id: COACH_ID, customer_id: newCust.id, event_type: 'earn_pack', quantity: 3, date: todayStr(), month: shakeMonth, notes: name + ' took ' + payload.pack_type });
             if (Array.isArray(p) && p[0]) D.shakes.push(p[0]);
           }
         } catch(se) { console.error('Shake earn failed:', se); }
       }
-      // ── Upload before photo if selected ──
-      if (newCust) {
-        var beforeFile = document.getElementById('cust-photo-before').files[0];
-        if (beforeFile) {
-          try {
-            var photoUrl = await uploadPhoto(beforeFile, newCust.id, 'before');
-            await dbUpdate('customers', newCust.id, { photo_before: photoUrl });
-            newCust.photo_before = photoUrl;
-          } catch(pe) { showToast('Photo upload failed: ' + pe.message, 'error'); }
-        }
-      }
-      // ── Auto-create payment record ──
-      if (newCust && packPrice > 0) {
-        var payMode = document.getElementById('cust-pay-mode').value;
-        var payDate = document.getElementById('cust-pay-date').value || todayStr();
-        if (payMode === 'full') {
-          await dbInsert('finance', { type:'income', description:name+' — Pack sale', amount:packPrice, category:'Pack sale to customer', date:payDate, wellness_center_id: CENTER_UUID || null });
-          showToast('Customer added + ₹'+packPrice.toLocaleString('en-IN')+' income recorded!', 'success');
-        } else if (payMode === 'partial') {
-          var paidNow = Number(document.getElementById('cust-paid-now').value) || 0;
-          var dueDate = document.getElementById('cust-due-date').value || null;
-          await dbInsert('payments', { person_id:newCust.id, person_name:name, total_amount:packPrice, amount_paid:paidNow, payment_date:payDate, due_date:dueDate, description:payload.pack_type||'Pack', notes:'Added by coach', wellness_center_id: CENTER_UUID || null });
-          if (paidNow > 0) await dbInsert('finance', { type:'income', description:name+' — Partial pack payment', amount:paidNow, category:'Pack sale to customer', date:payDate, wellness_center_id: CENTER_UUID || null });
-          showToast('Customer added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
-        } else {
-          var dueDateNone = document.getElementById('cust-due-date').value || null;
-          await dbInsert('payments', { person_id:newCust.id, person_name:name, total_amount:packPrice, amount_paid:0, payment_date:payDate, due_date:dueDateNone, description:payload.pack_type||'Pack', notes:'Added by coach', wellness_center_id: CENTER_UUID || null });
-          showToast('Customer added + payment reminder created!', 'success');
-        }
-        // Refresh payments
-        try { var allPay = await dbGet('payments','payment_date'); var custIds = D.customers.map(function(c){return c.id;}); D.payments = Array.isArray(allPay)?allPay.filter(function(p){return custIds.indexOf(p.person_id)!==-1;}):[];} catch(e){}
-        renderPendingPayments();
-      } else {
-        showToast('Customer added!');
-      }
     }
+    
+    var newCustId = id || (savedRecords[0] ? savedRecords[0].id : null);
+    var targetCustObj = id ? D.customers.find(function(x){ return x.id === id; }) : (savedRecords[0] ? savedRecords[0] : null);
+
+    // ── Upload photos if selected ──
+    var beforeFile = document.getElementById('cust-photo-before').files[0];
+    var afterFile  = document.getElementById('cust-photo-after').files[0];
+    if (newCustId && (beforeFile || afterFile)) {
+      try {
+        var photoPayload = {};
+        if (beforeFile) {
+          photoPayload.photo_before = await uploadPhoto(beforeFile, newCustId, 'before');
+          if (targetCustObj) targetCustObj.photo_before = photoPayload.photo_before;
+        }
+        if (afterFile) {
+          photoPayload.photo_after = await uploadPhoto(afterFile, newCustId, 'after');
+          if (targetCustObj) targetCustObj.photo_after = photoPayload.photo_after;
+        }
+        await dbUpdate('customers', newCustId, photoPayload);
+        showToast('Photos uploaded!', 'success');
+      } catch(pe) { showToast('Photo upload failed: ' + pe.message, 'error'); }
+    }
+
+    // ── Auto-create payment/finance record (new customer only, own pack only) ──
+    if (!id && newCustId && packPrice > 0 && !payload.pack_owner_id) {
+      var payMode = document.getElementById('cust-pay-mode').value;
+      var payDate = document.getElementById('cust-pay-date').value || todayStr();
+      if (payMode === 'full') {
+        await dbInsert('finance', { type:'income', description:name+' — Pack sale', amount:packPrice, category:'Pack sale to customer', date:payDate, wellness_center_id: CENTER_UUID || null });
+        showToast('Customer added + ₹'+packPrice.toLocaleString('en-IN')+' income recorded!', 'success');
+      } else if (payMode === 'partial') {
+        var paidNow = Number(document.getElementById('cust-paid-now').value) || 0;
+        var dueDate = document.getElementById('cust-due-date').value || null;
+        await dbInsert('payments', { person_id:newCustId, person_name:name, total_amount:packPrice, amount_paid:paidNow, payment_date:payDate, due_date:dueDate, description:payload.pack_type||'Pack', notes:'Added by coach', wellness_center_id: CENTER_UUID || null });
+        if (paidNow > 0) await dbInsert('finance', { type:'income', description:name+' — Partial pack payment', amount:paidNow, category:'Pack sale to customer', date:payDate, wellness_center_id: CENTER_UUID || null });
+        showToast('Customer added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
+      } else {
+        var dueDateNone = document.getElementById('cust-due-date').value || null;
+        await dbInsert('payments', { person_id:newCustId, person_name:name, total_amount:packPrice, amount_paid:0, payment_date:payDate, due_date:dueDateNone, description:payload.pack_type||'Pack', notes:'Added by coach', wellness_center_id: CENTER_UUID || null });
+        showToast('Customer added + payment reminder created!', 'success');
+      }
+      // Refresh payments
+      try {
+        var allPay = await dbGet('payments','payment_date');
+        var custIds = D.customers.map(function(c){return c.id;});
+        D.payments = Array.isArray(allPay)?allPay.filter(function(p){return custIds.indexOf(p.person_id)!==-1;}):[];
+      } catch(e){}
+      renderPendingPayments();
+    } else if (!id) {
+      showToast('Customer added!');
+    }
+
+    // ── Complementary day: auto-mark attendance + send WhatsApp (new customer only) ──
+    var isCompDayChecked = document.getElementById('cust-comp-day') && document.getElementById('cust-comp-day').checked;
+    var isCompDayVisible = document.getElementById('cust-comp-day-section') && document.getElementById('cust-comp-day-section').style.display !== 'none';
+    if (!id && newCustId && isCompDayVisible && isCompDayChecked && !payload.pack_owner_id) {
+      var compType = (document.querySelector('input[name="cust-comp-type"]:checked')||{}).value || 'shake';
+      var compDate = todayStr();
+      try {
+        var att = await dbInsert('attendance', { customer_id:newCustId, customer_name:name, date:compDate, status:'complementary', notes: compType==='shake' ? 'Complementary: Free shake + counselling' : 'Complementary: Counselling only', wellness_center_id: CENTER_UUID || null });
+        if(Array.isArray(att) && att[0]) D.attendance.push(att[0]);
+      } catch(ae) { console.error('Complementary attendance save failed:', ae); }
+      sendCoachCompDayWhatsApp(name, payload.contact, payload.pack_type, payload.pack_start_date, compType, payload.wellness_center_id);
+    }
+
     closeModal('cust');
     _daysLeftCache = {};
     renderCustomers();
     renderOverview();
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function sendCoachCompDayWhatsApp(custName, contact, packType, packStartDate, compType, centerId) {
+  if(!contact) return;
+  var phone = (contact||'').replace(/\D/g,'');
+  if(phone.length===10) phone = COUNTRY_CODE + phone;
+  var activeCenter = D.centers.find(function(c){return c.id===(centerId || CENTER_UUID);});
+  var cn = (activeCenter && activeCenter.name) || 'our Wellness Center';
+
+  var freeItems = compType === 'shake'
+    ? 'a *free health checkup, counselling & nutritional shake*'
+    : 'a *free health checkup & counselling session*';
+
+  var totalDays = parsePack(packType);
+
+  var msg = 'Hi '+custName+'! 🌿 Welcome to *'+cn+'*!\n\n'
+    + '🎁 *Today is your complementary day!*\nEnjoy '+freeItems+' — completely on us!\n\n'
+    + '📅 Your *'+totalDays+'-serving pack* starts *'+packStartDate+'* (tomorrow).\n\n'
+    + 'We\'re excited to be part of your wellness journey. See you tomorrow for Day 1! 💪💚\n\n'
+    + '— '+cn;
+  window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg), '_blank');
 }
 
 // ══════════════════════════════════════════
