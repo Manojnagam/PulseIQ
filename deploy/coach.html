@@ -1388,10 +1388,10 @@ input:focus, select:focus, textarea:focus {
       <div class="tcard">
         <div style="font-weight:700;font-size:14px;margin-bottom:6px">Customer Dashboard</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Share this link with customers so they can track their own progress.</div>
-        <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-family:monospace;font-size:12px;word-break:break-all;color:var(--primary);margin-bottom:12px">https://app.pulsezen.in/customer.html</div>
+        <div id="portal-client-link-box" style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-family:monospace;font-size:12px;word-break:break-all;color:var(--primary);margin-bottom:12px">—</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-p" onclick="navigator.clipboard.writeText('https://app.pulsezen.in/customer.html').then(function(){showToast('Customer dashboard link copied!','success');})" style="flex:1">📋 Copy Link</button>
-          <button class="btn-p" onclick="window.open('https://api.whatsapp.com/send?text='+encodeURIComponent('Hi! 🌿 Track your wellness progress here:\nhttps://app.pulsezen.in/customer.html\n\nLogin with your mobile number and date of birth. 💪'),'_blank')" style="flex:1;background:#25D366;border-color:#25D366">💬 Share on WhatsApp</button>
+          <button class="btn-p" onclick="copyClientPortalLink()" style="flex:1">📋 Copy Link</button>
+          <button class="btn-p" onclick="shareClientPortalOnWhatsApp()" style="flex:1;background:#25D366;border-color:#25D366">💬 Share on WhatsApp</button>
         </div>
       </div>
     </div>
@@ -2242,9 +2242,17 @@ function getPortalLink() {
   if (CENTER_UUID) return 'https://app.pulsezen.in/coach.html?center=' + (URL_CENTER_PARAM || CENTER_UUID);
   return 'https://app.pulsezen.in/coach.html';
 }
+function getClientPortalLink() {
+  var center = D.centers && D.centers[0];
+  var nid = center && center.network_id ? center.network_id : '';
+  if (nid) return 'https://client.pulsezen.in/?center=' + nid;
+  return 'https://client.pulsezen.in/';
+}
 function renderPortalLink() {
   var el = document.getElementById('portal-coach-link-box');
   if (el) el.textContent = getPortalLink();
+  var elClient = document.getElementById('portal-client-link-box');
+  if (elClient) elClient.textContent = getClientPortalLink();
 }
 function copyPortalLink() {
   var link = getPortalLink();
@@ -2256,6 +2264,20 @@ function sharePortalOnWhatsApp() {
   var link = getPortalLink();
   var centerName = document.getElementById('login-center-name').textContent || 'our center';
   var msg = 'Hi! 🌿 Join me on the Coach Portal for ' + centerName + '.\n\nClick here to log in:\n' + link + '\n\nUse your name + PIN to access. 💪';
+  window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
+}
+function copyClientPortalLink() {
+  var link = getClientPortalLink();
+  navigator.clipboard.writeText(link).then(function() {
+    showToast('Customer dashboard link copied! Share it with your customers.', 'success');
+  }).catch(function() {
+    prompt('Copy this link and share with your customers:', link);
+  });
+}
+function shareClientPortalOnWhatsApp() {
+  var link = getClientPortalLink();
+  var centerName = (D.centers && D.centers[0]) ? D.centers[0].name : 'our center';
+  var msg = 'Hi! 🌿 Track your wellness progress here:\n' + link + '\n\nLogin with your mobile number and date of birth. 💪\n\n— ' + centerName;
   window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
 }
 function logout() {
