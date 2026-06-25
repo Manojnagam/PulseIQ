@@ -362,9 +362,9 @@ tr:hover td{background:var(--hover-bg)}
 .empty{text-align:center;padding:44px 20px;color:var(--muted)}
 .empty .ei{font-size:38px;margin-bottom:10px}
 /* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:14px;opacity:0;pointer-events:none;transition:opacity .22s}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:20px 14px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .22s;-webkit-overflow-scrolling:touch}
 .overlay.open{opacity:1;pointer-events:all}
-.modal{background:var(--surface);border-radius:18px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;transform:translateY(16px);transition:transform .22s;box-shadow:0 24px 64px rgba(0,0,0,.2),0 2px 12px rgba(0,0,0,.06)}
+.modal{background:var(--surface);border-radius:18px;width:100%;max-width:520px;margin:auto;transform:translateY(16px);transition:transform .22s;box-shadow:0 24px 64px rgba(0,0,0,.2),0 2px 12px rgba(0,0,0,.06);flex-shrink:0}
 .overlay.open .modal{transform:translateY(0)}
 .mh{padding:22px 24px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .mt{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text)}
