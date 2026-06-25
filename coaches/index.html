@@ -4135,6 +4135,56 @@ function renderFinance() {
     '</div>';
   }).join('');
   renderTransactions();
+  renderPendingPayments();
+}
+
+function renderPendingPayments() {
+  var el = document.getElementById('coach-pending-payments');
+  if (!el) return;
+
+  var today = todayStr();
+  var pendingPay = (D.payments || []).filter(function(p) {
+    return Math.max(0, Number(p.total_amount) - Number(p.amount_paid)) > 0;
+  }).map(function(p) {
+    var cust = (D.customers || []).find(function(c) { return c.id === p.person_id; });
+    var phone = cust ? (cust.contact || '').replace(/\D/g, '') : '';
+    if (phone.length === 10) phone = COUNTRY_CODE + phone;
+    return {
+      name: p.person_name || 'Unknown',
+      bal: Math.max(0, Number(p.total_amount) - Number(p.amount_paid)),
+      due: p.due_date || '',
+      overdue: p.due_date && p.due_date < today,
+      phone: phone,
+      desc: p.description || 'pack'
+    };
+  });
+
+  if (!pendingPay.length) {
+    el.innerHTML = '<div class="empty"><div class="ei">💳</div><p>No pending payments.</p></div>';
+    return;
+  }
+
+  el.innerHTML = pendingPay.map(function(p) {
+    var dueLabel = p.overdue
+      ? '<div class="lead-meta" style="color:var(--danger);font-weight:600">⚠️ Overdue — due ' + p.due + '</div>'
+      : '<div class="lead-meta">Due: ' + (p.due || 'No date') + '</div>';
+    var waBtn = '';
+    if (p.phone) {
+      var centerName = (D.centers && D.centers[0]) ? D.centers[0].name : 'our center';
+      var waMsg = encodeURIComponent('Hi ' + p.name + '! 👋\n\nThis is a friendly reminder that ₹' + p.bal.toLocaleString('en-IN') + ' is pending for your ' + p.desc + ' at ' + centerName + '.' + (p.due ? '\n\nDue date: ' + p.due : '') + (p.overdue ? '\n\n⚠️ Your payment is overdue. Please clear it at your earliest convenience.' : '\n\nKindly arrange the payment at your next visit. Thank you! 🙏'));
+      waBtn = '<a href="https://api.whatsapp.com/send?phone=' + p.phone + '&text=' + waMsg + '" target="_blank" style="padding:4px 8px;background:#25D366;color:#fff;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center" title="Send reminder">💬 Remind</a>';
+    }
+    return '<div class="lead-card" style="display:flex;justify-content:space-between;align-items:center;padding:12px;margin-bottom:8px;border:1.5px solid var(--border);border-radius:10px;background:#fff">' +
+      '<div>' +
+        '<div style="font-weight:600;font-size:13px">' + p.name + '</div>' +
+        dueLabel +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+        '<span style="font-weight:700;color:var(--danger);font-size:14px">₹' + p.bal.toLocaleString('en-IN') + '</span>' +
+        waBtn +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 // ══════════════════════════════════════════
