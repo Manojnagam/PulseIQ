@@ -2085,8 +2085,7 @@ function getPersonIds(id) {
   if (coach) {
     D.customers.forEach(function(c) {
       if (c.pack_owner_id === id && (
-        (c.contact && coach.contact && c.contact.replace(/\D/g,'') === coach.contact.replace(/\D/g,'')) || 
-        (c.name && coach.name && c.name.trim().toLowerCase() === coach.name.trim().toLowerCase())
+        c.name && coach.name && c.name.trim().toLowerCase() === coach.name.trim().toLowerCase()
       )) {
         ids.push(c.id);
       }
@@ -2094,8 +2093,7 @@ function getPersonIds(id) {
   } else if (cust) {
     var co = cust.pack_owner_id ? D.coaches.find(function(x){ return x.id === cust.pack_owner_id; }) : null;
     if (co && (
-      (cust.contact && co.contact && cust.contact.replace(/\D/g,'') === co.contact.replace(/\D/g,'')) || 
-      (cust.name && co.name && cust.name.trim().toLowerCase() === co.name.trim().toLowerCase())
+      cust.name && co.name && cust.name.trim().toLowerCase() === co.name.trim().toLowerCase()
     )) {
       ids.push(co.id);
     }
@@ -11141,8 +11139,7 @@ function renderCustomers() {
     var waWeekly = (bodyCount>=2&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px;background:#0ea5e9" onclick="sendWeeklyProgressWA(\''+c.id+'\')">📊</button> ':'';
     var isConvertedCoach = c.pack_owner_id && D.coaches.some(function(co){ 
       return co.id === c.pack_owner_id && (
-        (co.contact && c.contact && co.contact.replace(/\D/g,'') === c.contact.replace(/\D/g,'')) || 
-        (co.name && c.name && co.name.trim().toLowerCase() === c.name.trim().toLowerCase())
+        co.name && c.name && co.name.trim().toLowerCase() === c.name.trim().toLowerCase()
       ); 
     });
     var sharedBadge = '';
