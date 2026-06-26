@@ -104,7 +104,11 @@
     <div class="field"><label>Center Name</label><input type="text" id="f-center" placeholder="e.g. Priya's Wellness Center"></div>
     <div class="field"><label>Location / Area</label><input type="text" id="f-location" placeholder="e.g. Hyderabad, Telangana"></div>
     <div class="field"><label>WhatsApp Number</label><input type="tel" id="f-contact" placeholder="e.g. 9876543210"></div>
-    <div class="field"><label>Distributor ID <span class="optional">(optional)</span></label><input type="text" id="f-distid" placeholder="Your Herbalife distributor ID"></div>
+    <div class="field" id="upline-manual-fields" style="display:none; margin-top: 16px; padding: 12px; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px;">
+      <label style="color:#38bdf8">Upline / Sponsor Details <span class="optional">(Optional - If your sponsor is not on PulseZen yet)</span></label>
+      <input type="text" id="f-upline-ref" placeholder="Upline's Email or Distributor ID (e.g. sponsor@gmail.com)" style="margin-bottom:8px">
+      <input type="text" id="f-upline-name" placeholder="Upline Center or Owner Name" style="margin-bottom:0">
+    </div>
 
     <button class="btn" id="submit-btn" onclick="submitRegistration()">Register My Center →</button>
     <div class="error-box" id="err-box"></div>
@@ -157,6 +161,15 @@
     return { ok: res.ok, data: await res.json() };
   }
 
+  async function sbPatch(table, id, body) {
+    var res = await fetch(SB_URL + '/rest/v1/' + table + '?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(body)
+    });
+    return { ok: res.ok, data: await res.json() };
+  }
+
   function generateNetworkId(centerName, count) {
     var initials = (centerName || 'XX').replace(/[^a-zA-Z]/g,'').substring(0,2).toUpperCase() || 'ZZ';
     var num = String(count).padStart(4, '0');
@@ -168,14 +181,20 @@
     var params = new URLSearchParams(window.location.search);
     var ref = params.get('ref');
 
-    if (!ref) { show('error-screen'); return; }
-
-    var rows = await sbGet('wellness_centers', 'network_id=eq.' + encodeURIComponent(ref) + '&select=id,name,network_id');
-    if (!rows || !rows.length) { show('error-screen'); return; }
-
-    _inviterCenter = rows[0];
-    document.getElementById('inviter-name').textContent = _inviterCenter.name;
-    document.getElementById('invite-badge').style.display = 'block';
+    if (ref) {
+      var rows = await sbGet('wellness_centers', 'network_id=eq.' + encodeURIComponent(ref) + '&select=id,name,network_id');
+      if (rows && rows.length) {
+        _inviterCenter = rows[0];
+        document.getElementById('inviter-name').textContent = _inviterCenter.name;
+        document.getElementById('invite-badge').style.display = 'block';
+      } else {
+        // Invite link was provided but invalid. Show manual fields so they can still register.
+        document.getElementById('upline-manual-fields').style.display = 'block';
+      }
+    } else {
+      // No invite link. Show manual fields.
+      document.getElementById('upline-manual-fields').style.display = 'block';
+    }
     show('form-screen');
   }
 
@@ -221,10 +240,60 @@
         }
       }
 
+      // Check if there is an existing pending shadow center for THIS registering user (Center A)
+      var pendingCenter = null;
+      var queryFilter = '';
+      if (distid) {
+        queryFilter = 'distributor_id=eq.' + encodeURIComponent(distid);
+      }
+      if (email) {
+        if (queryFilter) queryFilter = 'or=(distributor_id.eq.' + encodeURIComponent(distid) + ',owner_email.eq.' + encodeURIComponent(email) + ')';
+        else queryFilter = 'owner_email=eq.' + encodeURIComponent(email);
+      }
+      
+      if (queryFilter) {
+        var pendingCenters = await sbGet('wellness_centers', queryFilter + '&plan_type=eq.pending&select=id');
+        if (pendingCenters && pendingCenters.length) {
+          pendingCenter = pendingCenters[0];
+        }
+      }
+
       // Count centers to generate network ID
       var all = await sbGet('wellness_centers', 'select=id');
       var count = (Array.isArray(all) ? all.length : 0) + 1;
       var networkId = generateNetworkId(center, count);
+
+      // Determine the upline center ID
+      var uplineCenterId = null;
+      if (_inviterCenter) {
+        uplineCenterId = _inviterCenter.id;
+      } else {
+        var uplineRef = document.getElementById('f-upline-ref').value.trim();
+        var uplineName = document.getElementById('f-upline-name').value.trim();
+        if (uplineRef) {
+          // Check if the upline is already registered (active or pending)
+          var uplineQuery = uplineRef.includes('@') 
+            ? 'owner_email=eq.' + encodeURIComponent(uplineRef.toLowerCase())
+            : 'distributor_id=eq.' + encodeURIComponent(uplineRef);
+          var existingUplines = await sbGet('wellness_centers', uplineQuery + '&select=id');
+          if (existingUplines && existingUplines.length) {
+            uplineCenterId = existingUplines[0].id;
+          } else {
+            // Create a pending shadow center for the unregistered upline
+            var shadowPayload = {
+              name: uplineName || 'Pending Upline (' + uplineRef + ')',
+              owner_email: uplineRef.includes('@') ? uplineRef.toLowerCase() : null,
+              distributor_id: !uplineRef.includes('@') ? uplineRef : null,
+              plan_type: 'pending',
+              type: 'main'
+            };
+            var shadowRes = await sbPost('wellness_centers', shadowPayload);
+            if (shadowRes.ok && shadowRes.data && shadowRes.data[0]) {
+              uplineCenterId = shadowRes.data[0].id;
+            }
+          }
+        }
+      }
 
       var payload = {
         name: center,
@@ -233,18 +302,26 @@
         type: 'downline',
         owner_email: email,
         network_id: networkId,
-        upline_center_id: _inviterCenter ? _inviterCenter.id : null,
-        distributor_id: distid || null
+        upline_center_id: uplineCenterId,
+        distributor_id: distid || null,
+        plan_type: 'free' // explicitly set to free (not pending)
       };
 
-      var result = await sbPost('wellness_centers', payload);
+      var result;
+      if (pendingCenter) {
+        // Promote/claim the pending shadow center
+        result = await sbPatch('wellness_centers', pendingCenter.id, payload);
+      } else {
+        // Create new center
+        result = await sbPost('wellness_centers', payload);
+      }
+
       if (!result.ok) {
         showErr('Registration failed. Please try again.');
         btn.disabled = false; btn.textContent = 'Register My Center →';
         return;
       }
 
-      // Also store owner name in center pin field note (best effort, non-blocking)
       // Network ID success
       document.getElementById('success-nid').textContent = networkId;
       show('success-screen');

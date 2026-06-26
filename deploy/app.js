@@ -10408,16 +10408,19 @@ function renderOrgTree(){
     var children=centers.filter(function(c){return c.upline_center_id===center.id;});
     var custCount=getCenterCustCount(center.id);
     var lvlCls=level===0?'root':level===1?'l1':'l2';
-    var typeBadge='<span style="font-size:9px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:10px;margin-left:4px">'+center.type+'</span>';
+    var isPending = center.plan_type === 'pending';
+    var typeBadge = isPending 
+      ? '<span style="font-size:9px;background:var(--warning-light);color:var(--warning-text);padding:1px 6px;border-radius:10px;margin-left:4px">Pending Signup</span>'
+      : '<span style="font-size:9px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:10px;margin-left:4px">'+center.type+'</span>';
     var nid=center.network_id?'<div style="font-family:monospace;font-size:10px;opacity:.75;margin-top:2px">'+center.network_id+'</div>':'';
     var email=center.owner_email?'<div style="font-size:10px;opacity:.7;margin-top:2px">✉️ '+center.owner_email+'</div>':'';
     var custs=custCount>0?'<div style="font-size:10px;margin-top:3px">👥 '+custCount+' customers</div>':'';
     var inviteBtn='<div style="margin-top:6px"><button onclick="copyInviteLink(\''+center.network_id+'\')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:6px;font-size:10px;cursor:pointer;font-family:inherit">🔗 Copy Invite</button></div>';
 
-    var html='<div class="org-child"><div class="org-node '+lvlCls+'">';
+    var html='<div class="org-child"><div class="org-node '+(isPending ? 'pending-node' : lvlCls)+'"'+(isPending ? ' style="border:1.5px dashed var(--warning);opacity:0.85;background:rgba(245,158,11,0.05)"' : '')+'>';
     html+='<div style="font-weight:700;font-size:13px">'+center.name+typeBadge+'</div>';
     html+=nid+email+custs;
-    if(center.network_id) html+=inviteBtn;
+    if(center.network_id && !isPending) html+=inviteBtn;
     html+='</div>';
     if(children.length){html+='<div class="org-line">';children.forEach(function(ch){html+=buildCenterNode(ch,level+1);});html+='</div>';}
     html+='</div>';
