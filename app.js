@@ -845,6 +845,17 @@ function filterFinanceByCenter(arr) {
   return arr.filter(function(f){ return f.wellness_center_id === ACTIVE_CENTER; });
 }
 
+// Helper: filter payments by customer/coach center matching ACTIVE_CENTER
+function filterPaymentsByCenter(arr) {
+  if(!ACTIVE_CENTER) return arr;
+  var allowedIds = {};
+  if (D.customers) D.customers.forEach(function(c){ allowedIds[c.id]=true; });
+  if (D.coaches) D.coaches.forEach(function(co){ allowedIds[co.id]=true; });
+  return arr.filter(function(p){ 
+    return (p.wellness_center_id === ACTIVE_CENTER) || (p.person_id && allowedIds[p.person_id]); 
+  });
+}
+
 // Helper: get the active center's display name
 function getCenterName() {
   if (ACTIVE_CENTER && D && D.centers) {
@@ -6759,12 +6770,12 @@ async function saveCustomer() {
       } else if (payMode === 'partial') {
         var paidNow = Number(document.getElementById('customer-paid-now').value)||0;
         var dueDate = document.getElementById('customer-due-date').value||null;
-        await dbInsert('payments', { person_id:custId, person_name:custName, total_amount:packPrice, amount_paid:paidNow, payment_date:today, due_date:dueDate, description:payload.pack_type||'Pack', notes:'Auto-created on customer add' });
+        await dbInsert('payments', { person_id:custId, person_name:custName, total_amount:packPrice, amount_paid:paidNow, payment_date:today, due_date:dueDate, description:payload.pack_type||'Pack', notes:'Auto-created on customer add', wellness_center_id:_custCenter });
         if (paidNow > 0) await dbInsert('finance', { type:'income', description:custName+' — Partial pack payment', amount:paidNow, category:'Pack sale to customer', date:today, wellness_center_id:_custCenter });
         showToast('Customer added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
       } else {
         var dueDateNone = document.getElementById('customer-due-date') ? document.getElementById('customer-due-date').value||null : null;
-        await dbInsert('payments', { person_id:custId, person_name:custName, total_amount:packPrice, amount_paid:0, payment_date:today, due_date:dueDateNone, description:payload.pack_type||'Pack', notes:'Auto-created on customer add' });
+        await dbInsert('payments', { person_id:custId, person_name:custName, total_amount:packPrice, amount_paid:0, payment_date:today, due_date:dueDateNone, description:payload.pack_type||'Pack', notes:'Auto-created on customer add', wellness_center_id:_custCenter });
         showToast('Customer added + payment reminder created!', 'success');
       }
       await loadPayments(); await loadFinance();
@@ -7443,12 +7454,12 @@ async function saveCoach() {
       } else if (payMode === 'partial') {
         var paidNow = Number((document.getElementById('coach-paid-now')||{value:0}).value)||0;
         var dueDate = (document.getElementById('coach-due-date')||{value:''}).value||null;
-        await dbInsert('payments', { person_id:coachId, person_name:coachName, total_amount:packPrice, amount_paid:paidNow, payment_date:today, due_date:dueDate, description:(payload.pack_type||'Coach Pack'), notes:'Coach pack payment' });
+        await dbInsert('payments', { person_id:coachId, person_name:coachName, total_amount:packPrice, amount_paid:paidNow, payment_date:today, due_date:dueDate, description:(payload.pack_type||'Coach Pack'), notes:'Coach pack payment', wellness_center_id:_coachCenter });
         if (paidNow > 0) await dbInsert('finance', { type:'income', description:coachName+' — Partial coach pack payment', amount:paidNow, category:'Coach pack payment', date:today, wellness_center_id:_coachCenter });
         showToast('Coach added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
       } else {
         var dueDateNone = (document.getElementById('coach-due-date')||{value:''}).value||null;
-        await dbInsert('payments', { person_id:coachId, person_name:coachName, total_amount:packPrice, amount_paid:0, payment_date:today, due_date:dueDateNone, description:(payload.pack_type||'Coach Pack'), notes:'Coach pack payment' });
+        await dbInsert('payments', { person_id:coachId, person_name:coachName, total_amount:packPrice, amount_paid:0, payment_date:today, due_date:dueDateNone, description:(payload.pack_type||'Coach Pack'), notes:'Coach pack payment', wellness_center_id:_coachCenter });
         showToast('Coach added + payment reminder created!', 'success');
       }
       await loadPayments(); await loadFinance();
@@ -9823,10 +9834,10 @@ async function saveRenewal(){
         showToast('Pack renewed + ₹'+price.toLocaleString('en-IN')+' income recorded! 🎉');
       } else if(payMode==='partial'){
         if(paidNow>0) await dbInsert('finance',{type:'income',description:displayName+' — Partial renewal payment',amount:paidNow,category:finCategory,date:today,wellness_center_id:_renewCenter});
-        await dbInsert('payments',{person_id:cid,person_name:displayName,total_amount:price,amount_paid:paidNow,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — balance due'});
+        await dbInsert('payments',{person_id:cid,person_name:displayName,total_amount:price,amount_paid:paidNow,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — balance due',wellness_center_id:_renewCenter});
         showToast('Pack renewed! Balance ₹'+(price-paidNow).toLocaleString('en-IN')+' due. 🎉');
       } else {
-        await dbInsert('payments',{person_id:cid,person_name:displayName,total_amount:price,amount_paid:0,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — not yet paid'});
+        await dbInsert('payments',{person_id:cid,person_name:displayName,total_amount:price,amount_paid:0,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — not yet paid',wellness_center_id:_renewCenter});
         showToast('Pack renewed! ₹'+price.toLocaleString('en-IN')+' payment pending. 🎉');
       }
       await loadPayments(); await loadFinance();
@@ -10751,7 +10762,11 @@ async function saveShakeRedemption(){
 // ══════════════════════════════════════════════
 async function loadPayments(){
   getCredentials();if(!getActiveSbUrl()||!getActiveSbKey())return;
-  try{var r=await dbGet('payments','payment_date');D.payments=Array.isArray(r)?r:[];}
+  try{
+    var r=await dbGet('payments','payment_date');
+    var rawPayments=Array.isArray(r)?r:[];
+    D.payments=filterPaymentsByCenter(rawPayments);
+  }
   catch(e){D.payments=[];}
   renderPayments();checkOverduePayments();
 }
@@ -10852,18 +10867,18 @@ async function saveCoachPaymentSetup() {
   var payDate = document.getElementById('cps-date').value || new Date().toISOString().split('T')[0];
   try {
     if (mode === 'full') {
-      await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:packPrice, payment_date:payDate, description:c.pack_type||'Coach Pack', notes:'Coach pack — full payment' });
+      await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:packPrice, payment_date:payDate, description:c.pack_type||'Coach Pack', notes:'Coach pack — full payment', wellness_center_id:c.wellness_center_id||null });
       await dbInsert('finance', { type:'income', description:c.name+' — Coach pack sale', amount:packPrice, category:'Coach pack payment', date:payDate, wellness_center_id:c.wellness_center_id||null });
       showToast('Payment recorded! ₹'+packPrice.toLocaleString('en-IN')+' income logged.', 'success');
     } else if (mode === 'partial') {
       var paidNow = Number(document.getElementById('cps-paid-now').value)||0;
       var dueDate = document.getElementById('cps-due-date').value||null;
-      await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:paidNow, payment_date:payDate, due_date:dueDate, description:c.pack_type||'Coach Pack', notes:'Coach pack — partial' });
+      await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:paidNow, payment_date:payDate, due_date:dueDate, description:c.pack_type||'Coach Pack', notes:'Coach pack — partial', wellness_center_id:c.wellness_center_id||null });
       if (paidNow > 0) await dbInsert('finance', { type:'income', description:c.name+' — Partial coach pack payment', amount:paidNow, category:'Coach pack payment', date:payDate, wellness_center_id:c.wellness_center_id||null });
       showToast('Payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
     } else {
       var dueDateNone = document.getElementById('cps-due-date').value||null;
-      await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:0, payment_date:payDate, due_date:dueDateNone, description:c.pack_type||'Coach Pack', notes:'Coach pack — pending' });
+      await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:0, payment_date:payDate, due_date:dueDateNone, description:c.pack_type||'Coach Pack', notes:'Coach pack — pending', wellness_center_id:c.wellness_center_id||null });
       showToast('Payment reminder created!', 'success');
     }
     closeModal('coach-pay-setup');
@@ -11040,7 +11055,8 @@ async function savePayment(){
     total_amount:Number(total),amount_paid:Number(paid),payment_date:date,
     due_date:document.getElementById('payment-due-date').value||null,
     description:document.getElementById('payment-desc').value.trim(),
-    notes:document.getElementById('payment-notes')?document.getElementById('payment-notes').value.trim()||null:null};
+    notes:document.getElementById('payment-notes')?document.getElementById('payment-notes').value.trim()||null:null,
+    wellness_center_id: ACTIVE_CENTER || null};
   try{if(id)await dbUpdate('payments',id,payload);else await dbInsert('payments',payload);
     showToast(id?'Updated!':'Saved!');closeModal('payment');await loadPayments();}
   catch(e){showToast('Error: '+e.message,'error');}
