@@ -5854,7 +5854,7 @@ function renderBody() {
     }
 
     // Highlight most recent row
-    var rowStyle = isMostRecent ? ' style="background:#f0fdf4"' : '';
+    var rowStyle = isMostRecent ? ' style="background:var(--success-light)"' : '';
 
     var cv  = b.visceral_fat   ? Number(b.visceral_fat)   : null;
     var pv  = prev && prev.visceral_fat ? Number(prev.visceral_fat) : null;
@@ -9380,7 +9380,7 @@ function renderSvBody() {
       return '<td style="line-height:1.4">' + main + arr + sub + '</td>';
     }
     var isMostRecent=idx===sorted.length-1;
-    return '<tr'+(isMostRecent?' style="background:#f0fdf4"':'')+'>'
+    return '<tr'+(isMostRecent?' style="background:var(--success-light)"':'')+'>'
       +'<td>'+b.date+(isMostRecent?' <span class="badge bg" style="font-size:9px">Latest</span>':'')+'</td>'
       +'<td>'+(cw||'—')+getArr(cw,pw,revWeight)+'</td>'
       +svKgCell(cfKg, cf, pfKg, true)
@@ -10862,7 +10862,7 @@ function renderPayments(){
     var pct=total>0?Math.round((paid/total)*100):100;
     var isOverdue=bal>0&&p.due_date&&p.due_date<today;
     var badge=bal===0?'<span class="badge bg">Paid</span>':(isOverdue?'<span class="badge br">Overdue</span>':'<span class="badge by">Pending</span>');
-    return'<tr style="'+(isOverdue?'background:#fff5f5':'')+'">'
+    return'<tr style="'+(isOverdue?'background:var(--danger-light)':'')+'">'
       +'<td><strong>'+(p.person_name||'—')+'</strong></td><td>'+(p.description||'—')+'</td>'
       +'<td>₹'+total.toLocaleString('en-IN')+'</td>'
       +'<td style="color:var(--success)">₹'+paid.toLocaleString('en-IN')+'</td>'
