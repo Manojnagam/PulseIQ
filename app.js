@@ -10871,6 +10871,7 @@ function renderPayments(){
       +'<td>'+(p.due_date||'—')+'</td><td>'+badge+'</td>'
       +'<td><div class="acts">'
       +(bal>0?'<button class="btn-p" style="font-size:11px;padding:3px 8px;background:var(--success);border-color:var(--success)" onclick="openInstallmentModal(\''+p.id+'\')">💰 Pay</button> ':'')
+      +(bal>0?'<button class="btn-p" style="font-size:11px;padding:3px 8px;background:#f59e0b;border-color:#f59e0b;color:#fff" onclick="convertToWalkin(\''+p.id+'\')">🚶 Walk-in</button> ':'')
       +(bal>0&&p.person_id?'<button class="wa-btn" style="font-size:11px;padding:3px 7px" onclick="sendPaymentWA(\''+p.id+'\')">💬</button> ':'')
       +'<button class="btn-e" onclick="editPayment(\''+p.id+'\')">Edit</button>'
       +'<button class="btn-d" onclick="delPayment(\''+p.id+'\')">Del</button></div></td></tr>';
@@ -10881,6 +10882,60 @@ function renderPayments(){
   if(el)el.innerHTML='<div class="stat"><div class="stat-l">Outstanding</div><div class="stat-v" style="color:var(--danger)">₹'+totalBal.toLocaleString('en-IN')+'</div></div>'
     +'<div class="stat"><div class="stat-l">Overdue</div><div class="stat-v" style="color:var(--danger)">'+overdueCount+'</div></div>'
     +'<div class="stat"><div class="stat-l">Records</div><div class="stat-v">'+allPayments.length+'</div></div>';
+}
+
+async function convertToWalkin(paymentId) {
+  var p = (D.payments||[]).find(function(x){return x.id===paymentId;});
+  if (!p) { showToast('Payment record not found', 'error'); return; }
+  var amountPaid = Number(p.amount_paid) || 0;
+  var name = p.person_name || '—';
+
+  if (!confirm('Convert ' + name + ' to a Walk-in?\n\nThis will:\n1. Create a Walk-in product sale record for ₹' + amountPaid.toLocaleString('en-IN') + '.\n2. Clear their outstanding payment balance to ₹0.\n3. Change their customer pack type to "Walk-in" (preserving their body composition scans).')) {
+    return;
+  }
+
+  try {
+    var isCoach = false;
+    var person = (D.customers||[]).find(function(c){return c.id===p.person_id;});
+    if (!person) {
+      person = (D.coaches||[]).find(function(c){return c.id===p.person_id;});
+      if (person) isCoach = true;
+    }
+
+    var walkinDate = p.payment_date || new Date().toISOString().split('T')[0];
+    var walkinData = {
+      date: walkinDate,
+      name: name,
+      phone: person ? (person.contact || '') : '',
+      pincode: '',
+      source: 'other',
+      outcome: 'product_sale',
+      amount_received: amountPaid,
+      product_details: p.description || 'Product Purchase',
+      notes: 'Converted from customer membership record',
+      wellness_center_id: ACTIVE_CENTER || null
+    };
+
+    await dbInsert('walkins', walkinData);
+    await dbUpdate('payments', paymentId, { total_amount: amountPaid });
+
+    if (person) {
+      var table = isCoach ? 'coaches' : 'customers';
+      await dbUpdate(table, person.id, { 
+        pack_type: 'Walk-in', 
+        pack_price: amountPaid 
+      });
+    }
+
+    showToast('Converted ' + name + ' to Walk-in successfully! 🎉', 'success');
+
+    if (isCoach) { await loadCoaches(); } else { await loadCustomers(); }
+    await loadPayments();
+    await loadWalkins();
+    await loadFinance();
+  } catch(e) {
+    showToast('Conversion error: ' + e.message, 'error');
+  }
 }
 // ── CUSTOMER PAYMENT MODAL HELPERS ──
 // ── COACH PAYMENT SETUP (for existing coaches) ──
