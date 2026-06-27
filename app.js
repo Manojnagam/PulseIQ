@@ -478,7 +478,7 @@ function exportCSV(headers, rows, filename) {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 function exportCustomersCSV() {
-  if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Growth plan feature (₹499/mo).', 'error'); return; }
+  if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Basic plan feature (₹499/mo).', 'error'); return; }
   var custs = filterByCenter(D.customers);
   exportCSV(
     ['Name','Contact','Email','Pack','Start Date','Days Left','Status','Goal','Issues','Coach','Center','Joined'],
@@ -490,7 +490,7 @@ function exportCustomersCSV() {
   );
 }
 function exportFinanceCSV() {
-  if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Growth plan feature (₹499/mo).', 'error'); return; }
+  if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Basic plan feature (₹499/mo).', 'error'); return; }
   var fin = filterFinanceByCenter(D.finance);
   exportCSV(
     ['Type','Description','Amount','Category','Date','Center'],
@@ -533,7 +533,14 @@ function isGrowthPlan() {
   var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
   var c = (D.centers||[]).find(function(x){return x.id===targetId;});
   var plan = c ? (c.plan_type||'free') : 'free';
-  return plan==='growth'||plan==='elite'||plan==='president';
+  return plan==='growth'||plan==='basic'||plan==='pro'||plan==='elite'||plan==='president';
+}
+function isProPlan() {
+  if (!isCenterSession() && !ACTIVE_CENTER) return true; // supervisor always has full access
+  var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
+  var c = (D.centers||[]).find(function(x){return x.id===targetId;});
+  var plan = c ? (c.plan_type||'free') : 'free';
+  return plan==='pro'||plan==='elite'||plan==='president';
 }
 function isElitePlan() {
   if (!isCenterSession() && !ACTIVE_CENTER) return true; // supervisor always has full access
@@ -545,21 +552,31 @@ function isElitePlan() {
 function planLockHtml(feature, desc) {
   return '<div style="text-align:center;padding:48px 24px">'
     +'<div style="font-size:40px;margin-bottom:12px">🔒</div>'
-    +'<div style="font-size:18px;font-weight:700;color:#7c3aed;margin-bottom:8px">'+feature+' — Growth Plan</div>'
+    +'<div style="font-size:18px;font-weight:700;color:#7c3aed;margin-bottom:8px">'+feature+' — Basic Plan</div>'
     +'<div style="font-size:13px;color:#6b7280;margin-bottom:20px;max-width:340px;margin-left:auto;margin-right:auto">'+desc+'</div>'
     +'<div style="font-size:22px;font-weight:800;color:#7c3aed;margin-bottom:4px">₹499<span style="font-size:13px;font-weight:400">/month</span></div>'
-    +'<div style="font-size:11px;color:var(--muted);margin-bottom:16px">Growth Plan</div>'
-    +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Growth plan (₹499/month) to unlock '+feature+'. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:10px 24px;background:#7c3aed;border-color:#7c3aed">💬 Request Upgrade via WhatsApp</a>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:16px">Basic Plan</div>'
+    +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Basic plan (₹499/month) to unlock '+feature+'. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:10px 24px;background:#7c3aed;border-color:#7c3aed">💬 Request Upgrade via WhatsApp</a>'
+    +'</div>';
+}
+function planLockHtmlPro(feature, desc) {
+  return '<div style="text-align:center;padding:48px 24px">'
+    +'<div style="font-size:40px;margin-bottom:12px">🔒</div>'
+    +'<div style="font-size:18px;font-weight:700;color:#b45309;margin-bottom:8px">'+feature+' — Pro Plan</div>'
+    +'<div style="font-size:13px;color:#6b7280;margin-bottom:20px;max-width:340px;margin-left:auto;margin-right:auto">'+desc+'</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#b45309;margin-bottom:4px">₹999<span style="font-size:13px;font-weight:400">/month</span></div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:16px">Pro Plan</div>'
+    +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Pro plan (₹999/month) to unlock '+feature+'. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:10px 24px;background:#b45309;border-color:#b45309">💬 Request Upgrade via WhatsApp</a>'
     +'</div>';
 }
 function planLockHtmlElite(feature, desc) {
   return '<div style="text-align:center;padding:48px 24px">'
     +'<div style="font-size:40px;margin-bottom:12px">🔒</div>'
-    +'<div style="font-size:18px;font-weight:700;color:#b45309;margin-bottom:8px">'+feature+' — Elite Plan</div>'
+    +'<div style="font-size:18px;font-weight:700;color:#dc2626;margin-bottom:8px">'+feature+' — Elite Plan</div>'
     +'<div style="font-size:13px;color:#6b7280;margin-bottom:20px;max-width:340px;margin-left:auto;margin-right:auto">'+desc+'</div>'
-    +'<div style="font-size:22px;font-weight:800;color:#b45309;margin-bottom:4px">₹999<span style="font-size:13px;font-weight:400">/month</span></div>'
+    +'<div style="font-size:22px;font-weight:800;color:#dc2626;margin-bottom:4px">₹1,999<span style="font-size:13px;font-weight:400">/month</span></div>'
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:16px">Elite Plan</div>'
-    +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Elite plan (₹999/month) to unlock '+feature+'. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:10px 24px;background:#b45309;border-color:#b45309">💬 Request Upgrade via WhatsApp</a>'
+    +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Elite plan (₹1,999/month) to unlock '+feature+'. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:10px 24px;background:#dc2626;border-color:#dc2626">💬 Request Upgrade via WhatsApp</a>'
     +'</div>';
 }
 
@@ -2268,7 +2285,7 @@ var _renewalResults = [];
 var _expiringItems  = [];
 
 async function runRenewalAgent() {
-  if (isCenterSession() && !isGrowthPlan()) { showToast('WhatsApp Nudges are a Growth plan feature (₹499/mo). Request upgrade via WhatsApp.', 'error'); return; }
+  if (isCenterSession() && !isGrowthPlan()) { showToast('WhatsApp Nudges are a Basic plan feature (₹499/mo). Request upgrade via WhatsApp.', 'error'); return; }
   if (!getGroqKey()) { showToast('Please set your Groq API Key in Config tab first', 'error'); return; }
 
   // Find customers expiring in 0–5 days (within active center filter)
@@ -2484,7 +2501,7 @@ async function regenAgentMsg(i) {
 //  AGENT 1 — 😴 Inactive Re-engagement
 // ══════════════════════════════════════════
 function runInactiveAgent() {
-  if (isCenterSession() && !isGrowthPlan()) { showToast('WhatsApp Nudges are a Growth plan feature (₹499/mo). Request upgrade via WhatsApp.', 'error'); return; }
+  if (isCenterSession() && !isGrowthPlan()) { showToast('WhatsApp Nudges are a Basic plan feature (₹499/mo). Request upgrade via WhatsApp.', 'error'); return; }
   var todayStr = new Date().toISOString().split('T')[0];
   var items = filterByCenter(D.customers).filter(function(c){ return getDaysLeft(c).active && isInactive(c); });
   runGenericAgent({
@@ -2702,7 +2719,7 @@ function runWelcomeAgent() {
 //  AGENT 8 — 💹 Finance Analyst
 // ══════════════════════════════════════════
 async function runFinanceAnalystAgent() {
-  if (isCenterSession() && !isElitePlan()) { showToast('Finance AI Analyst is an Elite plan feature (₹999/mo). Request upgrade via WhatsApp.', 'error'); return; }
+  if (isCenterSession() && !isElitePlan()) { showToast('Finance AI Analyst is an Elite plan feature (₹1,999/mo). Request upgrade via WhatsApp.', 'error'); return; }
   if (!getGroqKey()) { showToast('Set Groq API Key in Config tab first', 'error'); return; }
 
   var today       = new Date();
@@ -3635,7 +3652,7 @@ function renderOverview() {
       +'<div class="ov-card-body" style="text-align:center;padding:20px 10px">'
         +'<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">AI Churn Risk Alerts</div>'
         +'<div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.4">Elite plan monitors attendance trends to predict and prevent customer churn.</div>'
-        +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Elite plan (₹999/month) to unlock AI Churn Risk Alerts. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="font-size:11px;padding:6px 14px;background:#b45309;border-color:#b45309;text-decoration:none;display:inline-block">Upgrade to Elite</a>'
+        +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I would like to upgrade to the Elite plan (₹1,999/month) to unlock AI Churn Risk Alerts. Please help me proceed. 🙏')+'" target="_blank" class="btn-p" style="font-size:11px;padding:6px 14px;background:#dc2626;border-color:#dc2626;text-decoration:none;display:inline-block">Upgrade to Elite</a>'
       +'</div></div>';
   } else {
     var riskList = _custs.map(function(c){ return { c:c, r:getChurnRisk(c.id) }; })
@@ -6756,9 +6773,23 @@ async function saveCustomer() {
   if (!_v('customer-dob')) { showToast('Date of birth is required for secure client portal access','error'); return; }
   if (!id) {
     var _custCount = filterByCenter(D.customers).length;
-    var _custLimit = isElitePlan() ? Infinity : isGrowthPlan() ? 200 : 20;
+    var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
+    var centerRow = (D.centers||[]).find(function(x){return x.id===targetId;});
+    var currentPlan = centerRow ? (centerRow.plan_type||'free') : 'free';
+    
+    var _custLimit = 20;
+    if (currentPlan === 'starter') _custLimit = 0;
+    else if (currentPlan === 'basic') _custLimit = 200;
+    else if (currentPlan === 'pro' || currentPlan === 'elite' || currentPlan === 'president') _custLimit = Infinity;
+
     if (_custCount >= _custLimit) {
-      showToast(isGrowthPlan() ? 'Customer limit of 200 reached. Upgrade to Elite (₹999/mo) for unlimited customers.' : 'Free plan limit of 20 customers reached. Upgrade to Growth (₹499/mo) to add up to 200 customers.', 'error');
+      if (currentPlan === 'starter') {
+        showToast('Starter plan has no CRM access. Upgrade to Basic (₹499/mo) to add customers.', 'error');
+      } else if (currentPlan === 'basic') {
+        showToast('Basic plan limit of 200 customers reached. Upgrade to Pro (₹999/mo) for unlimited customers.', 'error');
+      } else {
+        showToast('Free plan limit of 20 customers reached. Upgrade to Basic (₹499/mo) to add up to 200 customers.', 'error');
+      }
       return;
     }
   }
@@ -10297,7 +10328,7 @@ function renderBizAnalyst() {
 
 var _bizAiInFlight = false;
 async function generateBizAIReport() {
-  if (isCenterSession() && !isElitePlan()) { showToast('AI Business Analyst report is an Elite plan feature (₹999/mo). Upgrade to unlock. 🙏', 'error'); return; }
+  if (isCenterSession() && !isElitePlan()) { showToast('AI Business Analyst report is an Elite plan feature (₹1,999/mo). Upgrade to unlock. 🙏', 'error'); return; }
   if(_bizAiInFlight) return;
   if(!getGroqKey()) { showToast('Add your Groq API key in SQL/Config to use AI Report','error'); return; }
   var month = (document.getElementById('biz-month')||{}).value || new Date().toISOString().substring(0,7);
@@ -10350,15 +10381,29 @@ async function generateBizAIReport() {
 // ══════════════════════════════════════════════
 // PLAN MANAGEMENT (supervisor only)
 // ══════════════════════════════════════════════
-var PLAN_LABELS = { free:'Free', growth:'Growth ₹499', elite:'Elite ₹999', president:"Founder's Deal ₹499" };
-var PLAN_COLORS = { free:'#6b7280', growth:'#7c3aed', elite:'#b45309', president:'#0f766e' };
+var PLAN_LABELS = { 
+  free: 'Free (₹0)', 
+  starter: 'Starter (₹99/mo)', 
+  basic: 'Basic (₹499/mo)', 
+  pro: 'Pro (₹999/mo)', 
+  elite: 'Elite (₹1,999/mo)', 
+  president: "Founder's Deal (₹499/mo)" 
+};
+var PLAN_COLORS = { 
+  free: '#6b7280', 
+  starter: '#3b82f6', 
+  basic: '#7c3aed', 
+  pro: '#b45309', 
+  elite: '#dc2626', 
+  president: '#0f766e' 
+};
 
 function renderPlanMgmt() {
   var tb = document.getElementById('planmgmt-body'); if (!tb) return;
   var centers = (D.centers||[]).slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
   if (!centers.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="ei">💎</div><p>No centers found.</p></div></td></tr>'; return; }
   var today = Date.now();
-  var growthCount = centers.filter(function(c){ return c.plan_type==='growth'||c.plan_type==='elite'||c.plan_type==='president'; }).length;
+  var growthCount = centers.filter(function(c){ return c.plan_type==='growth'||c.plan_type==='basic'||c.plan_type==='pro'||c.plan_type==='elite'||c.plan_type==='president'; }).length;
   var statsEl = document.getElementById('planmgmt-stats');
   if (statsEl) statsEl.innerHTML =
     '<div class="stat"><div class="stat-l">Total Centers</div><div class="stat-v">'+centers.length+'</div></div>'+
@@ -12747,6 +12792,7 @@ function renderNotifications() {
 // ── AI DIET PLAN GENERATOR ──
 var _dietInFlight = false;
 async function generateDietPlan(custId, silent) {
+  if (isCenterSession() && !isProPlan()) { if(!silent) showToast('AI Diet Plans are a Pro plan feature (₹999/mo). Request upgrade via WhatsApp.', 'error'); return; }
   if(_dietInFlight){ if(!silent) showToast('Already generating a plan...','error'); return; }
   var c = D.customers.find(function(x){return x.id===custId;});
   if(!c){ if(!silent) showToast('Customer not found','error'); return; }
@@ -13027,7 +13073,7 @@ async function viewMealCompliance(custId, custName) {
 
 // ── BULK DIET PLAN GENERATOR ──
 async function bulkGenerateDietPlans() {
-  if (isCenterSession() && !isElitePlan()) { showToast('AI Diet Plans are an Elite plan feature (₹999/mo). Request upgrade via WhatsApp.', 'error'); return; }
+  if (isCenterSession() && !isProPlan()) { showToast('AI Diet Plans are a Pro plan feature (₹999/mo). Request upgrade via WhatsApp.', 'error'); return; }
   if(_dietInFlight){ showToast('Already generating a plan...','error'); return; }
   var groqKey = getGroqKey();
   if(!groqKey){ showToast('Set your Groq API key in SQL/Config section first','error'); return; }
