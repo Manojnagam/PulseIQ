@@ -533,14 +533,14 @@ function isGrowthPlan() {
   var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
   var c = (D.centers||[]).find(function(x){return x.id===targetId;});
   var plan = c ? (c.plan_type||'free') : 'free';
-  return plan==='growth'||plan==='basic'||plan==='pro'||plan==='elite'||plan==='president';
+  return plan==='growth'||plan==='basic'||plan==='pro'||plan==='elite'||plan==='president'||plan==='trial'||plan==='free';
 }
 function isProPlan() {
   if (!isCenterSession() && !ACTIVE_CENTER) return true; // supervisor always has full access
   var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
   var c = (D.centers||[]).find(function(x){return x.id===targetId;});
   var plan = c ? (c.plan_type||'free') : 'free';
-  return plan==='pro'||plan==='elite'||plan==='president';
+  return plan==='pro'||plan==='elite'||plan==='president'||plan==='trial'||plan==='free';
 }
 function isElitePlan() {
   if (!isCenterSession() && !ACTIVE_CENTER) return true; // supervisor always has full access
@@ -548,6 +548,130 @@ function isElitePlan() {
   var c = (D.centers||[]).find(function(x){return x.id===targetId;});
   var plan = c ? (c.plan_type||'free') : 'free';
   return plan==='elite'||plan==='president';
+}
+
+function isTrialExpired() {
+  if (!isCenterSession() && !ACTIVE_CENTER) return false; // supervisor never expires
+  var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
+  var c = (D.centers||[]).find(function(x){return x.id===targetId;});
+  if (!c) return false;
+  
+  var plan = c.plan_type || 'trial';
+  if (plan !== 'trial' && plan !== 'free') return false; // paid plans never expire
+  
+  if (!c.created_at) return false;
+  var created = new Date(c.created_at).getTime();
+  var now = Date.now();
+  var diffDays = (now - created) / (1000 * 60 * 60 * 24);
+  return diffDays > 14;
+}
+
+function showTrialExpiredScreen() {
+  var container = document.getElementById('main-content') || document.getElementById('app-body');
+  if (!container) return;
+  
+  container.innerHTML = 
+    '<div style="max-width:560px;margin:80px auto;padding:48px 36px;background:var(--surface);border:1.5px solid var(--border);border-radius:24px;text-align:center;box-shadow:var(--shadow-lg);backdrop-filter:var(--glass-blur)">'
+      +'<div style="font-size:64px;margin-bottom:24px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.2))">⏳</div>'
+      +'<h2 style="font-size:26px;font-weight:800;color:var(--primary);margin-bottom:14px;letter-spacing:-0.5px">14-Day Trial Expired</h2>'
+      +'<p style="font-size:14.5px;color:var(--muted);line-height:1.65;margin-bottom:32px">Your center\'s trial period has ended. To continue managing customers, logging attendance, tracking payments, and recording health stats, please subscribe to one of our plans.</p>'
+      +'<div style="display:flex;flex-direction:column;gap:14px;margin-bottom:36px;text-align:left;background:var(--surface2);padding:20px 24px;border-radius:14px;border:1px solid var(--border)">'
+        +'<div style="font-size:13px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;opacity:0.8">Subscription Plans:</div>'
+        +'<div style="font-size:14px;color:var(--text);line-height:1.5">💎 <strong>Basic Plan</strong> (₹499/mo) — Up to 200 clients, body stats, finance ledger, nudges.</div>'
+        +'<div style="font-size:14px;color:var(--text);line-height:1.5">🚀 <strong>Pro Plan</strong> (₹999/mo) — Unlimited clients, area exclusivity, AI diet plans.</div>'
+        +'<div style="font-size:14px;color:var(--text);line-height:1.5">👑 <strong>Elite Plan</strong> (₹1,999/mo) — Multi-center org reports, AI churn analysis.</div>'
+      +'</div>'
+      +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! My 14-day trial has expired and I would like to activate a subscription. Please guide me. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:12px 32px;font-size:14px;font-weight:700;background:var(--primary);border-color:var(--primary);border-radius:10px;box-shadow:0 4px 12px var(--primary-light)">💬 Contact Supervisor to Activate</a>'
+    +'</div>';
+  
+  document.querySelectorAll('.nav-item').forEach(function(el){
+    var clickAttr = el.getAttribute('onclick') || '';
+    if (clickAttr.indexOf('signOut') === -1) {
+      el.style.opacity = '0.25';
+      el.style.pointerEvents = 'none';
+    }
+  });
+}
+
+function renderOnboardingChecklist() {
+  if (!isCenterSession() && !ACTIVE_CENTER) return;
+  var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
+  var c = (D.centers||[]).find(function(x){return x.id===targetId;});
+  if (!c) return;
+  
+  var plan = c.plan_type || 'free';
+  var checklistEl = document.getElementById('onboarding-checklist');
+  if (!checklistEl) return;
+  
+  if (plan !== 'free' && plan !== 'trial') {
+    checklistEl.style.display = 'none';
+    return;
+  }
+  
+  var _custs = filterByCenter(D.customers);
+  var _att = filterByCenterViaCustomer(D.attendance);
+  var _bodyCount = D.body ? D.body.filter(function(b){ return _custs.some(function(cu){ return cu.id === b.customer_id; }); }).length : 0;
+  var _payCount = (D.payments||[]).filter(function(p){ return _custs.some(function(cu){ return cu.id === p.person_id; }); }).length;
+  
+  var t1 = _custs.length > 0;
+  var t2 = _att.length > 0;
+  var t3 = _bodyCount > 0;
+  var t4 = _payCount > 0;
+  
+  var completed = 0;
+  if(t1) completed++;
+  if(t2) completed++;
+  if(t3) completed++;
+  if(t4) completed++;
+  
+  var pct = completed * 25;
+  var createdDate = c.created_at ? new Date(c.created_at).getTime() : Date.now();
+  var daysLeft = Math.max(0, 14 - Math.floor((Date.now() - createdDate) / (1000 * 86400)));
+  
+  var html = 
+    '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 24px;box-shadow:var(--shadow)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">'
+        +'<div>'
+          +'<h3 style="font-size:16px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:6px">🌿 Center Setup Checklist <span style="font-size:11px;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:20px;font-weight:700">Trial Mode</span></h3>'
+          +'<div style="font-size:12px;color:var(--muted);margin-top:2px">Complete these 4 simple steps to learn the application.</div>'
+        +'</div>'
+        +'<div style="margin-left:auto;text-align:right">'
+          +'<span style="font-size:13px;font-weight:700;color:var(--danger)">⏳ '+daysLeft+' days left in trial</span>'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
+        +'<div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">'
+          +'<div style="height:100%;width:'+pct+'%;background:var(--primary);transition:width .4s ease"></div>'
+        +'</div>'
+        +'<span style="font-size:12px;font-weight:700;color:var(--text);width:36px">'+pct+'%</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">'
+        +buildTaskRow('1. Add Your First Client', t1, 'openModal(\'customer\')')
+        +buildTaskRow('2. Mark First Attendance', t2, 'openModal(\'attendance\')')
+        +buildTaskRow('3. Log Health Scan (Body Stats)', t3, 'goTo(\'body\',document.querySelector(\'[onclick*=body]\'))')
+        +buildTaskRow('4. Record Pack Payment', t4, 'goTo(\'payments\',document.querySelector(\'[onclick*=payments]\'))')
+      +'</div>'
+    +'</div>';
+    
+  checklistEl.innerHTML = html;
+  checklistEl.style.display = 'block';
+}
+
+function buildTaskRow(label, done, action) {
+  var check = done ? '✅' : '⬜';
+  var strike = done ? 'text-decoration:line-through;opacity:0.6;' : 'font-weight:600;';
+  var btnText = done ? 'Done' : 'Do It →';
+  var btnStyle = done 
+    ? 'background:rgba(0,230,118,0.1);color:var(--primary);border:none;cursor:default' 
+    : 'background:var(--primary);color:#000;border:none;cursor:pointer';
+    
+  return '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);padding:10px 14px;border-radius:10px;border:1.5px solid var(--border)">'
+    +'<div style="display:flex;align-items:center;gap:8px;flex:1">'
+      +'<span style="font-size:16px">'+check+'</span>'
+      +'<span style="font-size:13px;color:var(--text);'+strike+'">'+label+'</span>'
+    +'</div>'
+    +(!done ? '<button class="btn-p" style="font-size:11px;padding:4px 10px;margin-left:8px;white-space:nowrap;'+btnStyle+'" onclick="'+action+'">'+btnText+'</button>' : '')
+  +'</div>';
 }
 function planLockHtml(feature, desc) {
   return '<div style="text-align:center;padding:48px 24px">'
@@ -1585,6 +1709,9 @@ async function loadAll() {
     // On startup: if PINs exist but no email-auth session, prompt for PIN
     // Skip PIN prompt if user is already authenticated via email OTP
     if (!_authSession) checkStartupAuth();
+    if (isTrialExpired()) {
+      showTrialExpiredScreen();
+    }
   } catch(e) {
     console.error('loadAll crash:', e);
     // Hide loading splash and show error
@@ -1907,6 +2034,11 @@ function isSupervisor() {
 }
 
 function goTo(name, el) {
+  if (isTrialExpired() && name !== 'profile' && name !== 'guide') {
+    showToast('Your 14-day trial has ended. Please subscribe to continue.', 'error');
+    showTrialExpiredScreen();
+    return;
+  }
   var isSuper = isSupervisor();
   if (!isSuper && ['planmgmt', 'pintracker', 'centers', 'sql', 'profile'].indexOf(name) > -1) {
     showToast('This section is for supervisors only', 'error'); return;
@@ -3351,6 +3483,11 @@ function getCustomerHealthRankings() {
 }
 
 function renderOverview() {
+  if (isTrialExpired()) {
+    showTrialExpiredScreen();
+    return;
+  }
+  try { renderOnboardingChecklist(); } catch(e) { console.error('checklist err:', e); }
   var todayStr = new Date().toISOString().split('T')[0];
   var today = new Date(); today.setHours(0,0,0,0);
   var currentMonth = todayStr.substring(0,7);
@@ -10382,20 +10519,22 @@ async function generateBizAIReport() {
 // PLAN MANAGEMENT (supervisor only)
 // ══════════════════════════════════════════════
 var PLAN_LABELS = { 
-  free: 'Free (₹0)', 
+  trial: 'Free Trial (14 Days)', 
   starter: 'Starter (₹99/mo)', 
   basic: 'Basic (₹499/mo)', 
   pro: 'Pro (₹999/mo)', 
   elite: 'Elite (₹1,999/mo)', 
-  president: "Founder's Deal (₹499/mo)" 
+  president: "Founder's Deal (₹499/mo)",
+  free: 'Free (₹0) - Legacy'
 };
 var PLAN_COLORS = { 
-  free: '#6b7280', 
+  trial: '#6b7280', 
   starter: '#3b82f6', 
   basic: '#7c3aed', 
   pro: '#b45309', 
   elite: '#dc2626', 
-  president: '#0f766e' 
+  president: '#0f766e',
+  free: '#6b7280'
 };
 
 function renderPlanMgmt() {
