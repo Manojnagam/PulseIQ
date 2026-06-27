@@ -856,6 +856,17 @@ function filterPaymentsByCenter(arr) {
   });
 }
 
+// Helper: filter coupons by customer/coach center matching ACTIVE_CENTER
+function filterCouponsByCenter(arr) {
+  if(!ACTIVE_CENTER) return arr;
+  var allowedIds = {};
+  if (D.customers) D.customers.forEach(function(c){ allowedIds[c.id]=true; });
+  if (D.coaches) D.coaches.forEach(function(co){ allowedIds[co.id]=true; });
+  return arr.filter(function(c){ 
+    return (c.wellness_center_id === ACTIVE_CENTER) || (c.coach_id && allowedIds[c.coach_id]); 
+  });
+}
+
 // Helper: get the active center's display name
 function getCenterName() {
   if (ACTIVE_CENTER && D && D.centers) {
@@ -6787,12 +6798,12 @@ async function saveCustomer() {
       var couponDate = new Date().toISOString().split('T')[0];
       var newCustName = payload.name;
       // +1 coupon for inviting a new person
-      await dbInsert('coupons',{coach_id:refId, quantity:1, type:'earn', reason:'invite', referred_person:newCustName, date:couponDate});
+      await dbInsert('coupons',{coach_id:refId, quantity:1, type:'earn', reason:'invite', referred_person:newCustName, date:couponDate, wellness_center_id:_custCenter});
       var couponMsg = '🎟️ +1 coupon to referrer for invite';
       // +3 more if the new customer took a 26 or 30 day pack
       var pt = payload.pack_type||'';
       if (pt.includes('26') || pt.includes('30')) {
-        await dbInsert('coupons',{coach_id:refId, quantity:3, type:'earn', reason:'pack_taken', referred_person:newCustName, date:couponDate});
+        await dbInsert('coupons',{coach_id:refId, quantity:3, type:'earn', reason:'pack_taken', referred_person:newCustName, date:couponDate, wellness_center_id:_custCenter});
         couponMsg = '🎟️ +4 coupons to referrer (invite + pack)';
       }
       showToast(couponMsg, 'success');
@@ -10509,9 +10520,14 @@ function renderOrgTree(){
 // ══════════════════════════════════════════════
 async function loadCoupons(){
   getCredentials();if(!getActiveSbUrl()||!getActiveSbKey())return;
-  try{var r=await dbGet('coupons','created_at');D.coupons=Array.isArray(r)?r:[];}
+  try{
+    var r=await dbGet('coupons','created_at');
+    var rawCoupons=Array.isArray(r)?r:[];
+    D.coupons=filterCouponsByCenter(rawCoupons);
+  }
   catch(e){D.coupons=[];}
 }
+
 function updateCouponCoachSelects(){
   // Searchable dropdowns are updated via updateCoachSelects() → sdSetItems
   // This function kept for compatibility with loadCoaches() call
@@ -10652,7 +10668,7 @@ async function saveCoupon(){
   var refName=refPerson?refPerson.name:(document.getElementById('coupon-ref-input').value.trim()||null);
   var date=document.getElementById('coupon-date').value;
   if(!personId||!date){showToast('Person and date required','error');return;}
-  try{await dbInsert('coupons',{coach_id:personId,quantity:qty,type:'earn',reason:reason,referred_person:refName,date:date});
+  try{await dbInsert('coupons',{coach_id:personId,quantity:qty,type:'earn',reason:reason,referred_person:refName,date:date,wellness_center_id:ACTIVE_CENTER||null});
     showToast('Coupon added!');closeModal('add-coupon');sdClear('coupon-person');sdClear('coupon-ref');await loadCoupons();renderCouponView();}
   catch(e){showToast('Error: '+e.message,'error');}
 }
@@ -10739,7 +10755,7 @@ async function saveShakeRedemption(){
   var bal=getCouponBalance(cid).balance;
   if(bal<qty){showToast('Only '+bal+' coupon'+(bal!==1?'s':'')+' available','error');return;}
   try{
-    await dbInsert('coupons',{coach_id:cid,quantity:qty,type:'use',reason:'Free shake redemption',date:date});
+    await dbInsert('coupons',{coach_id:cid,quantity:qty,type:'use',reason:'Free shake redemption',date:date,wellness_center_id:ACTIVE_CENTER||null});
     await dbInsert('attendance',{customer_id:cid,customer_name:person.name,date:date,status:'coupon_shake',servings:qty,notes:'Coupon shake redemption ('+qty+' coupon'+(qty>1?'s':'')+' used)'});
     showToast('🥤 '+qty+' free shake'+(qty>1?'s':'')+' redeemed!','success');
     closeModal('shake-redeem');sdClear('shake-person');
