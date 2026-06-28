@@ -211,7 +211,8 @@
     var center = document.getElementById('f-center').value.trim();
     var location = document.getElementById('f-location').value.trim();
     var contact = document.getElementById('f-contact').value.trim();
-    var distid = document.getElementById('f-distid').value.trim();
+    var distidEl = document.getElementById('f-distid');
+    var distid = distidEl ? distidEl.value.trim() : '';
 
     document.getElementById('err-box').style.display = 'none';
 
