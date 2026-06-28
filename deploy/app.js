@@ -14623,16 +14623,19 @@ async function pollQrCheckins() {
     }
     
     if (Array.isArray(todayCoachAtt)) {
+      var isFirstRun = (typeof D.coachAttendance === 'undefined');
+      if (isFirstRun) D.coachAttendance = [];
       todayCoachAtt.forEach(function(att) {
-        if (typeof D.coachAttendance === 'undefined') D.coachAttendance = [];
         var exists = D.coachAttendance.some(function(a) { return a.id === att.id; });
         if (!exists) {
           D.coachAttendance.push(att);
-          var coach = D.coaches.find(function(c) { return c.id === att.coach_id; });
-          var coachName = coach ? coach.name : 'Coach';
-          showToast('👨‍🏫 Coach ' + coachName + ' checked in via QR kiosk!', 'success');
-          playChimeSound();
-          hasNew = true;
+          if (!isFirstRun) {
+            var coach = D.coaches.find(function(c) { return c.id === att.coach_id; });
+            var coachName = coach ? coach.name : 'Coach';
+            showToast('👨‍🏫 Coach ' + coachName + ' checked in via QR kiosk!', 'success');
+            playChimeSound();
+            hasNew = true;
+          }
         }
       });
     }
