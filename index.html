@@ -1222,6 +1222,17 @@ input:focus, select:focus, textarea:focus {
       <div id="announcement-banner" style="display:none;margin-bottom:14px"></div>
       <div id="onboarding-checklist" style="display:none;margin-bottom:18px"></div>
       <div id="birthday-banner" style="display:none;background:linear-gradient(135deg,#fff8e1,#fffde7);border:1px solid #f9c74f;border-radius:var(--radius);padding:12px 18px;margin-bottom:14px;font-size:13px;color:#b07800;line-height:1.8"></div>
+      <!-- LEADS POTENTIAL REVENUE BANNER -->
+      <div id="leads-revenue-banner" style="display:none;background:linear-gradient(135deg,#e0f2fe,#bae6fd);border:1.5px solid #7dd3fc;color:#0369a1;padding:12px 18px;border-radius:10px;margin-bottom:14px;font-size:13px;align-items:center;justify-content:space-between;gap:12px;box-shadow:var(--shadow)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">📈</span>
+          <div>
+            <div style="font-weight:800;font-size:14px">Untouched Lead Potential</div>
+            <div style="font-size:12px;opacity:0.9" id="leads-revenue-text">You have pending leads waiting. Estimated potential revenue: ₹0.</div>
+          </div>
+        </div>
+        <button onclick="goTo('leads',document.querySelector('[onclick*=leads]'))" style="background:#0369a1;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(3,105,161,0.2)">Call Leads →</button>
+      </div>
       <div id="ai-overview-summary" class="tcard" style="display:none; padding:20px; line-height:1.6; margin-bottom:20px;"></div>
       <!-- Quick Actions -->
       <div class="ov-quick" id="ov-quick-actions"></div>
