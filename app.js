@@ -550,6 +550,48 @@ function isElitePlan() {
   return plan==='elite'||plan==='president';
 }
 
+function safeParseDate(dateStr) {
+  if (!dateStr) return Date.now();
+  if (typeof dateStr === 'string') {
+    dateStr = dateStr.replace(' ', 'T');
+  }
+  var t = Date.parse(dateStr);
+  return isNaN(t) ? Date.now() : t;
+}
+
+function updateTrialCountdownBanner() {
+  var banner = document.getElementById('trial-countdown-banner');
+  if (!banner) return;
+  
+  // Show only for active center session or when a center is selected in the switcher
+  if (!isCenterSession() && !ACTIVE_CENTER) {
+    banner.style.display = 'none';
+    return;
+  }
+  
+  var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
+  var c = (D.centers||[]).find(function(x){return x.id===targetId;});
+  if (!c) {
+    banner.style.display = 'none';
+    return;
+  }
+  
+  var plan = c.plan_type || 'free';
+  if (plan !== 'trial' && plan !== 'free') {
+    banner.style.display = 'none';
+    return;
+  }
+  
+  var createdDate = c.created_at ? safeParseDate(c.created_at) : Date.now();
+  var daysLeft = Math.max(0, 14 - Math.floor((Date.now() - createdDate) / (1000 * 86400)));
+  
+  var textEl = document.getElementById('trial-countdown-text');
+  if (textEl) {
+    textEl.textContent = 'Your 14-day free trial is active. ' + daysLeft + ' days remaining.';
+  }
+  banner.style.display = 'flex';
+}
+
 function isTrialExpired() {
   if (!isCenterSession() && !ACTIVE_CENTER) return false; // supervisor never expires
   var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
@@ -560,7 +602,7 @@ function isTrialExpired() {
   if (plan !== 'trial' && plan !== 'free') return false; // paid plans never expire
   
   if (!c.created_at) return false;
-  var created = new Date(c.created_at).getTime();
+  var created = safeParseDate(c.created_at);
   var now = Date.now();
   var diffDays = (now - created) / (1000 * 60 * 60 * 24);
   return diffDays > 14;
@@ -625,7 +667,7 @@ function renderOnboardingChecklist() {
   if(t4) completed++;
   
   var pct = completed * 25;
-  var createdDate = c.created_at ? new Date(c.created_at).getTime() : Date.now();
+  var createdDate = c.created_at ? safeParseDate(c.created_at) : Date.now();
   var daysLeft = Math.max(0, 14 - Math.floor((Date.now() - createdDate) / (1000 * 86400)));
   
   var html = 
@@ -3487,6 +3529,7 @@ function renderOverview() {
     showTrialExpiredScreen();
     return;
   }
+  try { updateTrialCountdownBanner(); } catch(e) { console.error('banner err:', e); }
   try { renderOnboardingChecklist(); } catch(e) { console.error('checklist err:', e); }
   var todayStr = new Date().toISOString().split('T')[0];
   var today = new Date(); today.setHours(0,0,0,0);
@@ -10550,7 +10593,16 @@ function renderPlanMgmt() {
     '<div class="stat"><div class="stat-l">Paid</div><div class="stat-v" style="color:#7c3aed">'+growthCount+'</div></div>';
   tb.innerHTML = centers.map(function(c) {
     var plan = c.plan_type || 'free';
-    var days = c.created_at ? Math.floor((today - new Date(c.created_at).getTime()) / 86400000) : '—';
+    var daysActive = c.created_at ? Math.floor((today - safeParseDate(c.created_at)) / 86400000) : null;
+    var daysText = '—';
+    if (daysActive !== null) {
+      if (plan === 'trial' || plan === 'free') {
+        var trialLeft = Math.max(0, 14 - daysActive);
+        daysText = daysActive + ' days active (' + trialLeft + ' left in trial)';
+      } else {
+        daysText = daysActive + ' days active';
+      }
+    }
     var color = PLAN_COLORS[plan] || '#6b7280';
     var opts = Object.keys(PLAN_LABELS).map(function(k){
       return '<option value="'+k+'"'+(k===plan?' selected':'')+'>'+PLAN_LABELS[k]+'</option>';
@@ -10558,7 +10610,7 @@ function renderPlanMgmt() {
     return '<tr>'
       +'<td><strong>'+c.name+'</strong></td>'
       +'<td style="font-size:12px;color:var(--muted)">'+(c.owner_name||c.owner_email||'—')+'</td>'
-      +'<td>'+days+' days</td>'
+      +'<td>'+daysText+'</td>'
       +'<td><span style="font-weight:700;color:'+color+'">'+PLAN_LABELS[plan]+'</span></td>'
       +'<td><select id="plan-sel-'+c.id+'" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px">'+opts+'</select></td>'
       +'<td><button class="btn-p" style="font-size:11px;padding:4px 12px" onclick="saveCenterPlan(\''+c.id+'\')">Save</button></td>'
@@ -10586,6 +10638,7 @@ async function saveCenterPlan(centerId) {
     center.plan_type = newPlan;
     showToast((center.name||'Center')+' upgraded to '+PLAN_LABELS[newPlan]+'!', 'success');
     renderPlanMgmt();
+    try { updateTrialCountdownBanner(); } catch(e) {}
   } catch(e) {
     showToast('Failed to update plan: '+(e&&e.message?e.message:String(e)), 'error');
   }
