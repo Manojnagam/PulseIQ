@@ -3352,7 +3352,7 @@ async function saveCustomer() {
       var compType = (document.querySelector('input[name="cust-comp-type"]:checked')||{}).value || 'shake';
       var compDate = todayStr();
       try {
-        var att = await dbInsert('attendance', { customer_id:newCustId, customer_name:name, date:compDate, status:'complementary', notes: compType==='shake' ? 'Complementary: Free shake + counselling' : 'Complementary: Counselling only', wellness_center_id: CENTER_UUID || null });
+        var att = await dbInsert('attendance', { customer_id:newCustId, customer_name:name, date:compDate, status:'complementary', notes: compType==='shake' ? 'Complementary: Free shake + counselling' : 'Complementary: Counselling only' });
         if(Array.isArray(att) && att[0]) D.attendance.push(att[0]);
       } catch(ae) { console.error('Complementary attendance save failed:', ae); }
       sendCoachCompDayWhatsApp(name, payload.contact, payload.pack_type, payload.pack_start_date, compType, payload.wellness_center_id);
@@ -3422,7 +3422,7 @@ async function toggleAtt(cid, cname, date, currentStatus) {
       await dbUpdate('attendance', existing.id, {status:'present', servings:1});
       showToast(cname + ' — marked present');
     } else {
-      await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1, wellness_center_id: CENTER_UUID || null});
+      await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1});
       showToast(cname + ' — marked present');
     }
     _daysLeftCache = {};
