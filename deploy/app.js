@@ -550,6 +550,127 @@ function isElitePlan() {
   return plan==='elite'||plan==='president';
 }
 
+function safeParseDate(dateStr) {
+  if (!dateStr) return Date.now();
+  if (typeof dateStr === 'string') {
+    dateStr = dateStr.replace(' ', 'T');
+  }
+  var t = Date.parse(dateStr);
+  return isNaN(t) ? Date.now() : t;
+}
+
+function updateTrialCountdownBanner() {
+  var banner = document.getElementById('trial-countdown-banner');
+  if (!banner) return;
+  
+  // Show only for active center session or when a center is selected in the switcher
+  if (!isCenterSession() && !ACTIVE_CENTER) {
+    banner.style.display = 'none';
+    return;
+  }
+  
+  var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
+  var c = (D.centers||[]).find(function(x){return x.id===targetId;});
+  if (!c) {
+    banner.style.display = 'none';
+    return;
+  }
+  
+  var plan = c.plan_type || 'free';
+  if (plan !== 'trial' && plan !== 'free') {
+    banner.style.display = 'none';
+    return;
+  }
+  
+  var createdDate = c.created_at ? safeParseDate(c.created_at) : Date.now();
+  var daysLeft = Math.max(0, 14 - Math.floor((Date.now() - createdDate) / (1000 * 86400)));
+  
+  var textEl = document.getElementById('trial-countdown-text');
+  if (textEl) {
+    textEl.textContent = 'Your 14-day free trial is active. ' + daysLeft + ' days remaining.';
+  }
+  banner.style.display = 'flex';
+}
+
+function triggerFirstRevenueCelebration(amount) {
+  var modalId = 'first-revenue-celebration-modal';
+  var existing = document.getElementById(modalId);
+  if (existing) existing.remove();
+  
+  var el = document.createElement('div');
+  el.id = modalId;
+  el.style.position = 'fixed';
+  el.style.zIndex = '9999';
+  el.style.left = '0';
+  el.style.top = '0';
+  el.style.width = '100%';
+  el.style.height = '100%';
+  el.style.background = 'rgba(11, 15, 25, 0.85)';
+  el.style.backdropFilter = 'blur(8px)';
+  el.style.display = 'flex';
+  el.style.alignItems = 'center';
+  el.style.justifyContent = 'center';
+  el.style.fontFamily = 'inherit';
+  
+  var modalContent = 
+    '<div style="max-width:480px;width:90%;background:linear-gradient(135deg, #1e1b4b, #311042);border:2px solid #a855f7;border-radius:24px;padding:40px 32px;text-align:center;box-shadow:0 20px 50px rgba(168,85,247,0.3);position:relative;overflow:hidden">'
+      +'<div style="position:absolute;top:-50px;left:-50px;width:150px;height:150px;background:rgba(168,85,247,0.4);filter:blur(50px);border-radius:50%"></div>'
+      +'<div style="position:absolute;bottom:-50px;right:-50px;width:150px;height:150px;background:rgba(236,72,153,0.4);filter:blur(50px);border-radius:50%"></div>'
+      +'<div style="font-size:72px;margin-bottom:20px;">🏆</div>'
+      +'<h2 style="font-size:26px;font-weight:800;color:#fff;margin-bottom:12px;letter-spacing:-0.5px;background:linear-gradient(90deg, #c084fc, #f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">First Revenue Recorded!</h2>'
+      +'<p style="font-size:15px;color:#cbd5e1;line-height:1.6;margin-bottom:28px">Congratulations! You just recorded your center\'s first payment of <strong style="color:#22c55e;font-size:18px">₹'+amount+'</strong> on PulseZen. This is the first step toward scaling your wellness business! 🚀</p>'
+      +'<button onclick="document.getElementById(\''+modalId+'\').remove()" style="width:100%;padding:14px;background:linear-gradient(135deg, #a855f7 0%, #ec4899 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(168,85,247,0.4);transition:transform 0.2s" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'translateY(0)\'">Awesome, Let\'s Keep Going! 🌿</button>'
+    +'</div>';
+    
+  el.innerHTML = modalContent;
+  document.body.appendChild(el);
+  launchSimpleConfetti();
+}
+
+function launchSimpleConfetti() {
+  for (var i = 0; i < 60; i++) {
+    var p = document.createElement('div');
+    p.style.position = 'fixed';
+    p.style.zIndex = '10000';
+    p.style.width = (Math.random() * 10 + 6) + 'px';
+    p.style.height = (Math.random() * 6 + 4) + 'px';
+    var colors = ['#a855f7', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.left = '50%';
+    p.style.top = '40%';
+    p.style.borderRadius = '2px';
+    p.style.transform = 'translate3d(0,0,0) rotate(' + (Math.random() * 360) + 'deg)';
+    document.body.appendChild(p);
+    animateConfetti(p);
+  }
+}
+
+function animateConfetti(el) {
+  var angle = Math.random() * Math.PI * 2;
+  var speed = Math.random() * 15 + 10;
+  var vx = Math.cos(angle) * speed;
+  var vy = Math.sin(angle) * speed - 5;
+  var x = 0;
+  var y = 0;
+  var rot = Math.random() * 360;
+  var rotSpeed = Math.random() * 10 - 5;
+  var gravity = 0.5;
+  
+  var interval = setInterval(function() {
+    vy += gravity;
+    x += vx;
+    y += vy;
+    rot += rotSpeed;
+    el.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0) rotate(' + rot + 'deg)';
+    var opacity = Number(el.style.opacity || 1) - 0.02;
+    el.style.opacity = opacity;
+    if (opacity <= 0 || y > window.innerHeight) {
+      clearInterval(interval);
+      el.remove();
+    }
+  }, 16);
+}
+
 function isTrialExpired() {
   if (!isCenterSession() && !ACTIVE_CENTER) return false; // supervisor never expires
   var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
@@ -560,7 +681,7 @@ function isTrialExpired() {
   if (plan !== 'trial' && plan !== 'free') return false; // paid plans never expire
   
   if (!c.created_at) return false;
-  var created = new Date(c.created_at).getTime();
+  var created = safeParseDate(c.created_at);
   var now = Date.now();
   var diffDays = (now - created) / (1000 * 60 * 60 * 24);
   return diffDays > 14;
@@ -625,7 +746,7 @@ function renderOnboardingChecklist() {
   if(t4) completed++;
   
   var pct = completed * 25;
-  var createdDate = c.created_at ? new Date(c.created_at).getTime() : Date.now();
+  var createdDate = c.created_at ? safeParseDate(c.created_at) : Date.now();
   var daysLeft = Math.max(0, 14 - Math.floor((Date.now() - createdDate) / (1000 * 86400)));
   
   var html = 
@@ -651,6 +772,13 @@ function renderOnboardingChecklist() {
         +buildTaskRow('3. Log Health Scan (Body Stats)', t3, 'goTo(\'body\',document.querySelector(\'[onclick*=body]\'))')
         +buildTaskRow('4. Record Pack Payment', t4, 'goTo(\'payments\',document.querySelector(\'[onclick*=payments]\'))')
       +'</div>'
+      +(completed === 4 ? 
+        '<div style="margin-top:16px;padding:14px 18px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #bbf7d0;border-radius:10px;text-align:center">'
+          +'<div style="font-size:18px;font-weight:800;color:#166534;margin-bottom:6px">🎉 Checklist Completed!</div>'
+          +'<div style="font-size:12px;color:#166534;line-height:1.5;margin-bottom:12px">You have successfully mastered the basics. You are now eligible for our <strong>Founder\'s Deal Lifetime Price Lock</strong> — get all premium PRO and ELITE features for only <strong>₹499/mo</strong> (locked forever).</div>'
+          +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I have completed all 4 setup checklist items for ' + c.name + '. I would like to activate the Founder\'s Deal subscription for ₹499/mo. Please guide me. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:8px 16px;font-size:12px;font-weight:700;background:#15803d;color:#fff;border:none;border-radius:8px;box-shadow:0 4px 10px rgba(21,128,61,0.2)">💬 Activate Founder\'s Deal Now</a>'
+        +'</div>'
+        : '')
     +'</div>';
     
   checklistEl.innerHTML = html;
@@ -3487,7 +3615,49 @@ function renderOverview() {
     showTrialExpiredScreen();
     return;
   }
+  try { updateTrialCountdownBanner(); } catch(e) { console.error('banner err:', e); }
   try { renderOnboardingChecklist(); } catch(e) { console.error('checklist err:', e); }
+
+  // Update Leads Potential Revenue Banner
+  try {
+    var leadsRevenueBanner = document.getElementById('leads-revenue-banner');
+    if (leadsRevenueBanner) {
+      var pendingLeads = (D.leads || []).filter(function(l) {
+        var isCenterMatch = !ACTIVE_CENTER || l.center_id === ACTIVE_CENTER;
+        return isCenterMatch && (l.status === 'new' || l.status === 'New' || l.status === 'Interested');
+      });
+      if (pendingLeads.length > 0) {
+        var estVal = pendingLeads.length * 2000;
+        var textEl = document.getElementById('leads-revenue-text');
+        if (textEl) {
+          textEl.textContent = 'You have ' + pendingLeads.length + ' pending leads waiting. Estimated potential revenue: ₹' + estVal.toLocaleString('en-IN') + ' (at ₹2,000/client).';
+        }
+        leadsRevenueBanner.style.display = 'flex';
+      } else {
+        leadsRevenueBanner.style.display = 'none';
+      }
+    }
+  } catch(e) { console.error('leads potential revenue banner err:', e); }
+
+  // Trigger First Revenue Celebration if first payment is recorded
+  try {
+    if (isCenterSession() || ACTIVE_CENTER) {
+      var targetId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId);
+      var cCusts = filterByCenter(D.customers || []);
+      var cPayments = (D.payments || []).filter(function(p) {
+        return cCusts.some(function(cu) { return cu.id === p.person_id; });
+      });
+      if (cPayments.length > 0 && targetId) {
+        var celebKey = 'celebratedFirstRevenue_' + targetId;
+        if (!localStorage.getItem(celebKey)) {
+          localStorage.setItem(celebKey, 'true');
+          var firstPayVal = cPayments[0].amount_paid || 0;
+          setTimeout(function() { triggerFirstRevenueCelebration(firstPayVal); }, 1000);
+        }
+      }
+    }
+  } catch(e) { console.error('celebration err:', e); }
+
   var todayStr = new Date().toISOString().split('T')[0];
   var today = new Date(); today.setHours(0,0,0,0);
   var currentMonth = todayStr.substring(0,7);
@@ -3741,12 +3911,34 @@ function renderOverview() {
     var _myCenter = D.centers.find(function(c){ return c.id === ACTIVE_CENTER; });
     if (_myCenter && _myCenter.network_id) {
       var _inviteUrl = 'https://app.pulsezen.in/register?ref=' + _myCenter.network_id;
+      var _downlines = (D.centers || []).filter(function(x){ return x.upline_center_id === _myCenter.id; });
+      var _rewardsEarned = _downlines.length;
+      
+      var _rewardHtml = '';
+      if (_downlines.length > 0) {
+        _rewardHtml = '<div style="margin-top:14px;padding-top:12px;border-top:1px dashed #bbf7d0">'
+          + '<div style="font-size:12.5px;font-weight:700;color:#16a34a;display:flex;justify-content:space-between;align-items:center">'
+          + '<span>👥 Referred Centers:</span>'
+          + '<span>' + _downlines.length + '</span>'
+          + '</div>'
+          + '<div style="font-size:11.5px;color:#15803d;margin-top:4px;display:flex;justify-content:space-between;align-items:center">'
+          + '<span>💎 Subscription Credits:</span>'
+          + '<span>' + _rewardsEarned + ' Month' + (_rewardsEarned !== 1 ? 's' : '') + ' Free!</span>'
+          + '</div>'
+          + '</div>';
+      } else {
+        _rewardHtml = '<div style="margin-top:12px;padding-top:10px;border-top:1px dashed #e2e8f0;font-size:11.5px;color:#64748b;text-align:center">'
+          + '🎁 Get 1 month of premium subscription free for each center you refer!'
+          + '</div>';
+      }
+
       rightHtml += '<div class="ov-card" style="margin-bottom:16px;border-left:3px solid var(--primary);background:linear-gradient(135deg,#f0fdf4,#fff)">'
         + '<div class="ov-card-h"><h3>🔗 Your Invite Link</h3></div>'
         + '<div class="ov-card-body">'
         + '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Share this link with anyone who wants to open a center under yours.</div>'
         + '<div style="font-family:monospace;font-size:11px;background:var(--surface2);border-radius:6px;padding:8px 10px;word-break:break-all;color:var(--primary);margin-bottom:10px">' + _inviteUrl + '</div>'
         + '<button class="btn-p" style="width:100%;font-size:13px;padding:9px" onclick="copyInviteLink(\'' + _myCenter.network_id + '\')">📋 Copy Invite Link</button>'
+        + _rewardHtml
         + '</div></div>';
     }
   }
@@ -10550,7 +10742,16 @@ function renderPlanMgmt() {
     '<div class="stat"><div class="stat-l">Paid</div><div class="stat-v" style="color:#7c3aed">'+growthCount+'</div></div>';
   tb.innerHTML = centers.map(function(c) {
     var plan = c.plan_type || 'free';
-    var days = c.created_at ? Math.floor((today - new Date(c.created_at).getTime()) / 86400000) : '—';
+    var daysActive = c.created_at ? Math.floor((today - safeParseDate(c.created_at)) / 86400000) : null;
+    var daysText = '—';
+    if (daysActive !== null) {
+      if (plan === 'trial' || plan === 'free') {
+        var trialLeft = Math.max(0, 14 - daysActive);
+        daysText = daysActive + ' days active (' + trialLeft + ' left in trial)';
+      } else {
+        daysText = daysActive + ' days active';
+      }
+    }
     var color = PLAN_COLORS[plan] || '#6b7280';
     var opts = Object.keys(PLAN_LABELS).map(function(k){
       return '<option value="'+k+'"'+(k===plan?' selected':'')+'>'+PLAN_LABELS[k]+'</option>';
@@ -10558,7 +10759,7 @@ function renderPlanMgmt() {
     return '<tr>'
       +'<td><strong>'+c.name+'</strong></td>'
       +'<td style="font-size:12px;color:var(--muted)">'+(c.owner_name||c.owner_email||'—')+'</td>'
-      +'<td>'+days+' days</td>'
+      +'<td>'+daysText+'</td>'
       +'<td><span style="font-weight:700;color:'+color+'">'+PLAN_LABELS[plan]+'</span></td>'
       +'<td><select id="plan-sel-'+c.id+'" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px">'+opts+'</select></td>'
       +'<td><button class="btn-p" style="font-size:11px;padding:4px 12px" onclick="saveCenterPlan(\''+c.id+'\')">Save</button></td>'
@@ -10586,6 +10787,7 @@ async function saveCenterPlan(centerId) {
     center.plan_type = newPlan;
     showToast((center.name||'Center')+' upgraded to '+PLAN_LABELS[newPlan]+'!', 'success');
     renderPlanMgmt();
+    try { updateTrialCountdownBanner(); } catch(e) {}
   } catch(e) {
     showToast('Failed to update plan: '+(e&&e.message?e.message:String(e)), 'error');
   }
@@ -11262,7 +11464,98 @@ function openInstallmentModal(paymentId) {
     'Total: <strong>₹'+total.toLocaleString('en-IN')+'</strong> &nbsp;|&nbsp; '+
     'Paid: <span style="color:var(--success)">₹'+paid.toLocaleString('en-IN')+'</span> &nbsp;|&nbsp; '+
     'Remaining: <span style="color:var(--danger)">₹'+bal.toLocaleString('en-IN')+'</span>';
+
+  // Reset UPI QR Code Section
+  var upiContainer = document.getElementById('inst-upi-container');
+  if (upiContainer) upiContainer.style.display = 'none';
+  var upiBtn = document.getElementById('btn-show-upi');
+  if (upiBtn) {
+    upiBtn.style.display = 'block';
+    upiBtn.textContent = '⚡ Show UPI QR Code';
+  }
+  var qrWrap = document.getElementById('inst-qr-wrap');
+  if (qrWrap) qrWrap.style.display = 'none';
+  var upiInput = document.getElementById('inst-upi-id');
+  if (upiInput) upiInput.value = '';
+
   openModal('installment');
+}
+
+function toggleUpiQR() {
+  var container = document.getElementById('inst-upi-container');
+  var btn = document.getElementById('btn-show-upi');
+  if (!container || !btn) return;
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    btn.textContent = 'Hide UPI QR Code';
+    
+    // Load saved UPI ID for this center from localStorage
+    var centerId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId) || 'default';
+    var savedUpiMap = JSON.parse(localStorage.getItem('center_upi_ids') || '{}');
+    var upiInput = document.getElementById('inst-upi-id');
+    
+    if (upiInput && !upiInput.value) {
+      if (savedUpiMap[centerId]) {
+        upiInput.value = savedUpiMap[centerId];
+      } else {
+        // Try to guess from active center contact
+        var c = D.centers.find(function(x){return x.id===centerId;});
+        if (c && c.contact && c.contact.replace(/\D/g,'').length === 10) {
+          upiInput.value = c.contact.replace(/\D/g,'') + '@upi';
+        } else {
+          upiInput.value = '';
+        }
+      }
+    }
+    
+    generateAndShowQR();
+  } else {
+    container.style.display = 'none';
+    btn.textContent = '⚡ Show UPI QR Code';
+  }
+}
+
+function generateAndShowQR() {
+  var pid = document.getElementById('inst-payment-id').value;
+  var p = (D.payments||[]).find(function(x){return x.id===pid;});
+  if (!p) return;
+  
+  var upiId = document.getElementById('inst-upi-id').value.trim();
+  if (!upiId) {
+    showToast('Please enter a valid UPI ID', 'error');
+    return;
+  }
+  
+  // Save to localStorage
+  var centerId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId) || 'default';
+  var savedUpiMap = JSON.parse(localStorage.getItem('center_upi_ids') || '{}');
+  savedUpiMap[centerId] = upiId;
+  localStorage.setItem('center_upi_ids', JSON.stringify(savedUpiMap));
+  
+  // Amount to pay: if inst-amount is set, use it; otherwise use full balance
+  var amt = Number(document.getElementById('inst-amount').value);
+  if (!amt || amt <= 0) {
+    amt = Math.max(0, Number(p.total_amount) - Number(p.amount_paid));
+  }
+  
+  var note = 'PulseZen ' + (p.description || 'Pack') + ' ' + (p.person_name || '');
+  note = note.substring(0, 50).trim(); // UPI notes cap at 50 chars usually
+  
+  var upiLink = 'upi://pay?pa=' + encodeURIComponent(upiId) +
+                '&pn=' + encodeURIComponent(p.person_name || 'Coach') +
+                '&am=' + encodeURIComponent(amt) +
+                '&tn=' + encodeURIComponent(note) +
+                '&cu=INR';
+                
+  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(upiLink);
+  
+  var qrImg = document.getElementById('inst-qr-img');
+  var qrWrap = document.getElementById('inst-qr-wrap');
+  if (qrImg && qrWrap) {
+    qrImg.src = qrUrl;
+    qrWrap.style.display = 'block';
+    showToast('QR Code updated for ₹' + amt, 'success');
+  }
 }
 function updateInstPreview() {
   var pid = document.getElementById('inst-payment-id').value;

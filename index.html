@@ -3993,6 +3993,25 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <div id="inst-balance-preview" style="margin-top:8px;padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:13px;display:none"></div>
       <div class="fg" style="margin-top:10px"><label for="inst-notes">Notes</label><input type="text" id="inst-notes" placeholder="e.g. Cash received" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       <div style="margin-top:12px;font-size:12px;color:var(--muted);padding:8px 12px;background:#e8f4fd;border-radius:6px">Finance income entry will be auto-created for this amount.</div>
+      
+      <!-- UPI QR Code Section -->
+      <div id="inst-upi-section" style="margin-top:14px;border-top:1px dashed var(--border);padding-top:12px">
+        <button class="btn-p" id="btn-show-upi" onclick="toggleUpiQR()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#a855f7);border-color:#7c3aed;font-size:12px;padding:8px 12px;color:#fff">⚡ Show UPI QR Code</button>
+        <div id="inst-upi-container" style="display:none;margin-top:10px;text-align:center;padding:12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px">
+          <div class="fg" style="margin-bottom:8px;text-align:left">
+            <label for="inst-upi-id" style="font-size:11px;font-weight:700">Your UPI ID (saved locally)</label>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <input type="text" id="inst-upi-id" placeholder="e.g. name@upi" style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;background:var(--surface)">
+              <button class="btn-e" onclick="generateAndShowQR()" style="padding:6px 10px;font-size:11px">Update</button>
+            </div>
+          </div>
+          <div id="inst-qr-wrap" style="margin:12px auto;display:none">
+            <img id="inst-qr-img" src="" alt="UPI QR Code" style="width:160px;height:160px;border:1px solid var(--border);border-radius:8px;padding:4px;background:#fff">
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">Scan using any UPI App (GPay, PhonePe, Paytm, BHIM)</div>
+          </div>
+        </div>
+      </div>
+
       <div class="mf"><button class="btn-c" onclick="closeModal('installment')">Cancel</button><button class="btn-p" onclick="saveInstallment()">Save Payment</button></div>
     </div>
   </div>

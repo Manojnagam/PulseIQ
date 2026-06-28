@@ -364,6 +364,21 @@
       .hero-stats{max-width:100%} section{padding:56px 16px}
     }
     @media (max-width:520px) { .hero-stat{padding:14px 10px} .hero-stat-label{font-size:10px} }
+
+    /* ── CALCULATOR WIDGET ── */
+    .calc-card { background:var(--white); border-radius:24px; border:1.5px solid var(--border); box-shadow:var(--shadow-md); padding:32px; max-width:800px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:start; }
+    .calc-form { display:flex; flex-direction:column; gap:16px; }
+    .calc-results { background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border:1.5px dashed var(--primary-light); border-radius:18px; padding:24px; display:flex; flex-direction:column; justify-content:center; height:100%; min-height:280px; box-sizing:border-box; }
+    .calc-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .calc-group { display:flex; flex-direction:column; gap:6px; text-align:left; }
+    .calc-group label { font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.5px; }
+    .calc-group input, .calc-group select { padding:10px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:inherit; font-size:14px; background:var(--white); outline:none; transition:border .2s; color:var(--text); }
+    .calc-group input:focus, .calc-group select:focus { border-color:var(--primary); }
+    .calc-btn { background:var(--primary); color:#fff; border:none; border-radius:10px; padding:14px; font-family:inherit; font-weight:700; font-size:15px; cursor:pointer; text-align:center; transition:background .2s; }
+    .calc-btn:hover { background:var(--primary-mid); }
+    .calc-score-val { font-size:42px; font-weight:900; color:var(--primary); line-height:1.1; margin:8px 0; }
+    .calc-score-label { font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.5px; }
+    @media (max-width:768px) { .calc-card { grid-template-columns:1fr; gap:24px; padding:24px 18px; } }
   </style>
 </head>
 <body>
@@ -601,6 +616,64 @@
   </div>
 </section>
 
+<!-- CALORIES & BMI CALCULATOR -->
+<section style="background:var(--white)" id="calculator" class="lazy-section">
+  <div class="container">
+    <div class="section-header center fade-in">
+      <span class="section-tag">Free Health Assessment</span>
+      <h2 class="section-title">Check Your Health Score</h2>
+      <p class="section-sub">Calculate your Body Mass Index (BMI) and daily energy requirements instantly. Get a complete wellness evaluation.</p>
+    </div>
+    
+    <div class="calc-card fade-in">
+      <!-- Input Form -->
+      <form class="calc-form" id="calcForm" onsubmit="calculateHealthScore(event)">
+        <div class="calc-group">
+          <label for="calc-name">Full Name</label>
+          <input type="text" id="calc-name" placeholder="Enter your name" required>
+        </div>
+        <div class="calc-group">
+          <label for="calc-phone">WhatsApp Number</label>
+          <input type="tel" id="calc-phone" placeholder="10-digit mobile number" required pattern="[0-9]{10}">
+        </div>
+        <div class="calc-row-2">
+          <div class="calc-group">
+            <label for="calc-height">Height (cm)</label>
+            <input type="number" id="calc-height" placeholder="e.g. 170" required min="100" max="250">
+          </div>
+          <div class="calc-group">
+            <label for="calc-weight">Weight (kg)</label>
+            <input type="number" id="calc-weight" placeholder="e.g. 70" required min="30" max="200" step="0.1">
+          </div>
+        </div>
+        <div class="calc-row-2">
+          <div class="calc-group">
+            <label for="calc-age">Age (years)</label>
+            <input type="number" id="calc-age" placeholder="e.g. 30" required min="10" max="100">
+          </div>
+          <div class="calc-group">
+            <label for="calc-gender">Gender</label>
+            <select id="calc-gender" required>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="calc-btn" id="calc-submit-btn">Calculate My Score &amp; Save →</button>
+      </form>
+      
+      <!-- Results Display -->
+      <div class="calc-results" id="calcResults">
+        <div style="text-align:center; padding:12px;">
+          <div style="font-size:36px; margin-bottom:12px;">📊</div>
+          <h3 style="font-size:18px; color:var(--primary); margin-bottom:8px;">Instant Wellness Report</h3>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6;">Fill out the form to see your BMI, health status, and estimated daily calorie needs. We will save your profile to connect you with a wellness coach.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- TESTIMONIALS -->
 <section style="background:var(--surface)" id="testimonials" class="lazy-section">
   <div class="container">
@@ -724,6 +797,7 @@
 
   var host = window.location.hostname.toLowerCase(); // e.g. dharanis.pulsezen.in
   var slug = host.split('.')[0];                     // e.g. dharanis
+  var currentCenter = null;
 
   function el(id) { return document.getElementById(id); }
 
@@ -745,6 +819,7 @@
         el('notfound').style.display = 'flex';
         return;
       }
+      currentCenter = c;
 
       var name     = c.name || 'Wellness Center';
       var owner    = c.owner || c.owner_name || '';
@@ -832,6 +907,128 @@
   function closeMobileNav() {
     el('navHam').classList.remove('open');
     el('navMobile').classList.remove('open');
+  }
+
+  async function calculateHealthScore(e) {
+    e.preventDefault();
+    var btn = el('calc-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Calculating & Saving...';
+    
+    var name = el('calc-name').value.trim();
+    var phone = el('calc-phone').value.trim();
+    var height = parseFloat(el('calc-height').value);
+    var weight = parseFloat(el('calc-weight').value);
+    var age = parseInt(el('calc-age').value);
+    var gender = el('calc-gender').value;
+    
+    // Calculations
+    var bmi = (weight / ((height / 100) * (height / 100))).toFixed(1);
+    
+    // BMR using Mifflin-St Jeor Equation
+    var bmr = 0;
+    if (gender === 'male') {
+      bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+    } else {
+      bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+    }
+    bmr = Math.round(bmr);
+    
+    // Active metabolic rate (assuming light activity multiplier 1.375)
+    var amr = Math.round(bmr * 1.375);
+    
+    // Determine BMI Category & color
+    var category = '';
+    var color = '';
+    var statusText = '';
+    
+    if (bmi < 18.5) {
+      category = 'Underweight';
+      color = '#e74c3c';
+      statusText = 'You might need to increase healthy calories and build muscle mass.';
+    } else if (bmi >= 18.5 && bmi < 25) {
+      category = 'Normal Weight';
+      color = '#27ae60';
+      statusText = 'Excellent! You are in the healthy range. Keep maintaining your lifestyle.';
+    } else if (bmi >= 25 && bmi < 30) {
+      category = 'Overweight';
+      color = '#f39c12';
+      statusText = 'A structured nutrition and workout plan can help you get back to your ideal weight.';
+    } else {
+      category = 'Obese';
+      color = '#c0392b';
+      statusText = 'We strongly recommend scheduling a personalized scan to draft a health plan.';
+    }
+    
+    // Display results in calcResults div
+    var resultsHtml = 
+      '<div style="text-align:left; display:flex; flex-direction:column; gap:16px;">' +
+        '<div style="border-bottom:1.5px solid rgba(0,0,0,0.06); padding-bottom:12px;">' +
+          '<div class="calc-score-label">Your BMI Status</div>' +
+          '<div class="calc-score-val" style="color:' + color + '">' + bmi + '</div>' +
+          '<div style="font-weight:700; color:' + color + '; font-size:16px;">' + category + '</div>' +
+        '</div>' +
+        '<div>' +
+          '<div class="calc-score-label">Estimated Daily Energy (BMR)</div>' +
+          '<div style="font-size:24px; font-weight:800; color:var(--primary); margin:4px 0;">' + bmr + ' kcal/day</div>' +
+          '<p style="font-size:12px; color:var(--muted); line-height:1.5;">This is the baseline energy your body needs to function. Daily requirements with activity are around ' + amr + ' kcal.</p>' +
+        '</div>' +
+        '<div style="background:rgba(255,255,255,0.6); padding:12px; border-radius:8px; font-size:13px; border:1px solid rgba(0,0,0,0.05);">' +
+          '<strong>Coach Recommendation:</strong> ' + statusText +
+        '</div>';
+        
+    // Build WhatsApp URL with calculation details
+    var coachPhone = (currentCenter && currentCenter.contact) ? currentCenter.contact.replace(/\D/g,'') : '';
+    if (coachPhone.length === 10) coachPhone = '91' + coachPhone;
+    
+    var waMsg = 'Hi! I calculated my wellness score on your website:\n' +
+                '• Name: ' + name + '\n' +
+                '• Height: ' + height + ' cm\n' +
+                '• Weight: ' + weight + ' kg\n' +
+                '• Age: ' + age + ' yrs\n' +
+                '• BMI: ' + bmi + ' (' + category + ')\n' +
+                '• Daily Calories: ' + bmr + ' kcal\n' +
+                'I would like to claim my free personal consultation and shake!';
+                
+    var waLink = coachPhone ? 'https://wa.me/' + coachPhone + '?text=' + encodeURIComponent(waMsg) : '#';
+    
+    resultsHtml += 
+        '<a href="' + waLink + '" target="_blank" class="calc-btn" style="background:#25d366; text-decoration:none; text-align:center; box-shadow:0 4px 12px rgba(37,211,102,0.3)">' +
+          '💬 Claim Free Shake & Consultation' +
+        '</a>' +
+      '</div>';
+      
+    el('calcResults').innerHTML = resultsHtml;
+    
+    // Save lead to Supabase
+    try {
+      var leadData = {
+        name: name,
+        mobile: phone,
+        source: 'Website Calculator',
+        status: 'New',
+        notes: 'Public calculator submission. BMI: ' + bmi + ' (' + category + '), Height: ' + height + 'cm, Weight: ' + weight + 'kg, Age: ' + age + ', Gender: ' + gender + ', BMR: ' + bmr + ' kcal.',
+        center_id: currentCenter ? currentCenter.id : null
+      };
+      
+      var response = await fetch(
+        SB_URL + '/rest/v1/leads',
+        {
+          method: 'POST',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': 'Bearer ' + SB_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(leadData)
+        }
+      );
+    } catch(err) {
+      console.error('Error saving lead to database:', err);
+    }
+    
+    btn.disabled = false;
+    btn.textContent = 'Recalculate Score →';
   }
 
   loadCenter();

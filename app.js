@@ -772,6 +772,13 @@ function renderOnboardingChecklist() {
         +buildTaskRow('3. Log Health Scan (Body Stats)', t3, 'goTo(\'body\',document.querySelector(\'[onclick*=body]\'))')
         +buildTaskRow('4. Record Pack Payment', t4, 'goTo(\'payments\',document.querySelector(\'[onclick*=payments]\'))')
       +'</div>'
+      +(completed === 4 ? 
+        '<div style="margin-top:16px;padding:14px 18px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #bbf7d0;border-radius:10px;text-align:center">'
+          +'<div style="font-size:18px;font-weight:800;color:#166534;margin-bottom:6px">🎉 Checklist Completed!</div>'
+          +'<div style="font-size:12px;color:#166534;line-height:1.5;margin-bottom:12px">You have successfully mastered the basics. You are now eligible for our <strong>Founder\'s Deal Lifetime Price Lock</strong> — get all premium PRO and ELITE features for only <strong>₹499/mo</strong> (locked forever).</div>'
+          +'<a href="https://wa.me/917981614593?text='+encodeURIComponent('Hi! I have completed all 4 setup checklist items for ' + c.name + '. I would like to activate the Founder\'s Deal subscription for ₹499/mo. Please guide me. 🙏')+'" target="_blank" class="btn-p" style="display:inline-block;text-decoration:none;padding:8px 16px;font-size:12px;font-weight:700;background:#15803d;color:#fff;border:none;border-radius:8px;box-shadow:0 4px 10px rgba(21,128,61,0.2)">💬 Activate Founder\'s Deal Now</a>'
+        +'</div>'
+        : '')
     +'</div>';
     
   checklistEl.innerHTML = html;
@@ -11457,7 +11464,98 @@ function openInstallmentModal(paymentId) {
     'Total: <strong>₹'+total.toLocaleString('en-IN')+'</strong> &nbsp;|&nbsp; '+
     'Paid: <span style="color:var(--success)">₹'+paid.toLocaleString('en-IN')+'</span> &nbsp;|&nbsp; '+
     'Remaining: <span style="color:var(--danger)">₹'+bal.toLocaleString('en-IN')+'</span>';
+
+  // Reset UPI QR Code Section
+  var upiContainer = document.getElementById('inst-upi-container');
+  if (upiContainer) upiContainer.style.display = 'none';
+  var upiBtn = document.getElementById('btn-show-upi');
+  if (upiBtn) {
+    upiBtn.style.display = 'block';
+    upiBtn.textContent = '⚡ Show UPI QR Code';
+  }
+  var qrWrap = document.getElementById('inst-qr-wrap');
+  if (qrWrap) qrWrap.style.display = 'none';
+  var upiInput = document.getElementById('inst-upi-id');
+  if (upiInput) upiInput.value = '';
+
   openModal('installment');
+}
+
+function toggleUpiQR() {
+  var container = document.getElementById('inst-upi-container');
+  var btn = document.getElementById('btn-show-upi');
+  if (!container || !btn) return;
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    btn.textContent = 'Hide UPI QR Code';
+    
+    // Load saved UPI ID for this center from localStorage
+    var centerId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId) || 'default';
+    var savedUpiMap = JSON.parse(localStorage.getItem('center_upi_ids') || '{}');
+    var upiInput = document.getElementById('inst-upi-id');
+    
+    if (upiInput && !upiInput.value) {
+      if (savedUpiMap[centerId]) {
+        upiInput.value = savedUpiMap[centerId];
+      } else {
+        // Try to guess from active center contact
+        var c = D.centers.find(function(x){return x.id===centerId;});
+        if (c && c.contact && c.contact.replace(/\D/g,'').length === 10) {
+          upiInput.value = c.contact.replace(/\D/g,'') + '@upi';
+        } else {
+          upiInput.value = '';
+        }
+      }
+    }
+    
+    generateAndShowQR();
+  } else {
+    container.style.display = 'none';
+    btn.textContent = '⚡ Show UPI QR Code';
+  }
+}
+
+function generateAndShowQR() {
+  var pid = document.getElementById('inst-payment-id').value;
+  var p = (D.payments||[]).find(function(x){return x.id===pid;});
+  if (!p) return;
+  
+  var upiId = document.getElementById('inst-upi-id').value.trim();
+  if (!upiId) {
+    showToast('Please enter a valid UPI ID', 'error');
+    return;
+  }
+  
+  // Save to localStorage
+  var centerId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId) || 'default';
+  var savedUpiMap = JSON.parse(localStorage.getItem('center_upi_ids') || '{}');
+  savedUpiMap[centerId] = upiId;
+  localStorage.setItem('center_upi_ids', JSON.stringify(savedUpiMap));
+  
+  // Amount to pay: if inst-amount is set, use it; otherwise use full balance
+  var amt = Number(document.getElementById('inst-amount').value);
+  if (!amt || amt <= 0) {
+    amt = Math.max(0, Number(p.total_amount) - Number(p.amount_paid));
+  }
+  
+  var note = 'PulseZen ' + (p.description || 'Pack') + ' ' + (p.person_name || '');
+  note = note.substring(0, 50).trim(); // UPI notes cap at 50 chars usually
+  
+  var upiLink = 'upi://pay?pa=' + encodeURIComponent(upiId) +
+                '&pn=' + encodeURIComponent(p.person_name || 'Coach') +
+                '&am=' + encodeURIComponent(amt) +
+                '&tn=' + encodeURIComponent(note) +
+                '&cu=INR';
+                
+  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(upiLink);
+  
+  var qrImg = document.getElementById('inst-qr-img');
+  var qrWrap = document.getElementById('inst-qr-wrap');
+  if (qrImg && qrWrap) {
+    qrImg.src = qrUrl;
+    qrWrap.style.display = 'block';
+    showToast('QR Code updated for ₹' + amt, 'success');
+  }
 }
 function updateInstPreview() {
   var pid = document.getElementById('inst-payment-id').value;
