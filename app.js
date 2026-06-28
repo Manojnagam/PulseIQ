@@ -11824,8 +11824,19 @@ async function executePromotion() {
     if(selected.length&&newCenterId){
       await Promise.all(selected.map(function(cid){return dbUpdate('customers',cid,{wellness_center_id:newCenterId});}));
     }
-    auditLog('Promoted','Coach',coach.name+' → Supervisor · New center: '+centerName+' ('+location+')'+(selected.length?' · '+selected.length+' customers moved':''));
-    showToast('🎉 '+coach.name+' promoted! New center created in '+location+(selected.length?' with '+selected.length+' customer(s)':'')+'.','success');
+    // 4. Move referred coaches to new center
+    var movedCoachesCount = 0;
+    if(newCenterId){
+      var downlineCoaches = D.coaches.filter(function(co){ return co.upline_id === _promoteCoachId; });
+      if(downlineCoaches.length){
+        await Promise.all(downlineCoaches.map(function(co){ return dbUpdate('coaches',co.id,{wellness_center_id:newCenterId}); }));
+        movedCoachesCount = downlineCoaches.length;
+      }
+    }
+    var movedMsg = (selected.length ? selected.length + ' customer(s)' : '') + (selected.length && movedCoachesCount ? ' and ' : '') + (movedCoachesCount ? movedCoachesCount + ' coach(es)' : '');
+    var movedSuffix = movedMsg ? ' with ' + movedMsg : '';
+    auditLog('Promoted','Coach',coach.name+' → Supervisor · New center: '+centerName+' ('+location+')'+(movedMsg?' · '+movedMsg+' moved':''));
+    showToast('🎉 '+coach.name+' promoted! New center created in '+location+movedSuffix+'.','success');
     closeModal('promote');
     await Promise.all([loadCenters(),loadCoaches(),loadCustomers()]);
     renderOverview();
