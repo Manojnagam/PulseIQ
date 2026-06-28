@@ -871,6 +871,50 @@
       el('footer-name').textContent = name;
       el('footer-copy').textContent = '© ' + new Date().getFullYear() + ' ' + name + '. All rights reserved.';
 
+      // Inject Local SEO Schema
+      try {
+        var schemaScript = el('seo-schema');
+        if (!schemaScript) {
+          schemaScript = document.createElement('script');
+          schemaScript.id = 'seo-schema';
+          schemaScript.type = 'application/ld+json';
+          document.head.appendChild(schemaScript);
+        }
+        var schemaData = {
+          "@context": "https://schema.org",
+          "@type": "HealthClub",
+          "name": name,
+          "description": name + " wellness center run by " + (owner || "professional coaches") + " offering personalized weight loss and nutrition programs.",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": location || "",
+            "addressLocality": location || "",
+            "addressCountry": "IN"
+          },
+          "telephone": phone ? "+" + phone : "",
+          "url": window.location.href,
+          "image": "https://pulsezen.in/images/logo.png",
+          "priceRange": "$$",
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+              "opens": "07:00",
+              "closes": "20:00"
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": "Sunday",
+              "opens": "08:00",
+              "closes": "13:00"
+            }
+          ]
+        };
+        schemaScript.text = JSON.stringify(schemaData);
+      } catch(schemaErr) {
+        console.error('Schema injection error:', schemaErr);
+      }
+
       // Show page
       el('loading').style.display = 'none';
       el('page').style.display = 'block';

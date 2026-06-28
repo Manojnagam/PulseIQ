@@ -10793,6 +10793,22 @@ async function saveCenterPlan(centerId) {
   }
 }
 
+function getCenterChecklistPct(centerId) {
+  var c = (D.centers||[]).find(function(x){return x.id===centerId;});
+  if (!c) return 0;
+  var _custs = D.customers ? D.customers.filter(function(x){ return x.wellness_center_id === centerId; }) : [];
+  var _att = D.attendance ? D.attendance.filter(function(x){ return _custs.some(function(cu){ return cu.id === x.customer_id; }); }) : [];
+  var _bodyCount = D.body ? D.body.filter(function(b){ return _custs.some(function(cu){ return cu.id === b.customer_id; }); }).length : 0;
+  var _payCount = D.payments ? D.payments.filter(function(p){ return _custs.some(function(cu){ return cu.id === p.person_id; }); }).length : 0;
+  
+  var completed = 0;
+  if(_custs.length > 0) completed++;
+  if(_att.length > 0) completed++;
+  if(_bodyCount > 0) completed++;
+  if(_payCount > 0) completed++;
+  return completed * 25;
+}
+
 function renderOrgTree(){
   var container=document.getElementById('orgtree-container');if(!container)return;
   var centers=D.centers||[];
@@ -10823,6 +10839,20 @@ function renderOrgTree(){
     var nid=center.network_id?'<div style="font-family:monospace;font-size:10px;opacity:.75;margin-top:2px">'+center.network_id+'</div>':'';
     var email=center.owner_email?'<div style="font-size:10px;opacity:.7;margin-top:2px">✉️ '+center.owner_email+'</div>':'';
     var custs=custCount>0?'<div style="font-size:10px;margin-top:3px">👥 '+custCount+' customers</div>':'';
+    
+    // Add setup progress visibility
+    var plan = center.plan_type || 'free';
+    var setupProgress = '';
+    if (plan === 'free' || plan === 'trial') {
+      var pct = getCenterChecklistPct(center.id);
+      setupProgress = '<div style="font-size:10px;margin-top:3px;font-weight:bold;color:'+(pct===100?'var(--success)':'#b07800')+'">📋 Setup: '+pct+'%</div>';
+    }
+    
+    var inviteBtn='<div style="margin-top:6px"><button onclick="copyInviteLink(\''+center.network_id+'\')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:6px;font-size:10px;cursor:pointer;font-family:inherit">🔗 Copy Invite</button></div>';
+
+    var html='<div class="org-child"><div class="org-node '+(isPending ? 'pending-node' : lvlCls)+'"'+(isPending ? ' style="border:1.5px dashed var(--warning);opacity:0.85;background:rgba(245,158,11,0.05)"' : '')+'>';
+    html+='<div style="font-weight:700;font-size:13px">'+center.name+typeBadge+'</div>';
+    html+=nid+email+custs+setupProgress;
     var inviteBtn='<div style="margin-top:6px"><button onclick="copyInviteLink(\''+center.network_id+'\')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:6px;font-size:10px;cursor:pointer;font-family:inherit">🔗 Copy Invite</button></div>';
 
     var html='<div class="org-child"><div class="org-node '+(isPending ? 'pending-node' : lvlCls)+'"'+(isPending ? ' style="border:1.5px dashed var(--warning);opacity:0.85;background:rgba(245,158,11,0.05)"' : '')+'>';
@@ -12493,8 +12523,20 @@ function renderLeads() {
     var convertBtn = (st === 'Interested') ?
       '<button class="btn-p" style="font-size:11px;padding:5px 10px;background:var(--success)" onclick="convertLeadToCustomer(\''+lead.id+'\')">Convert to Customer</button>' : '';
 
+    var waMsg = '';
+    if (lead.mobile) {
+      if (lead.source === 'Website Calculator') {
+        var bmiMatch = (lead.notes || '').match(/BMI:\s*([0-9.]+)/i);
+        var bmi = bmiMatch ? bmiMatch[1] : '';
+        var bmrMatch = (lead.notes || '').match(/BMR:\s*([0-9.]+)/i);
+        var bmr = bmrMatch ? bmrMatch[1] : '';
+        waMsg = 'Hi ' + lead.name + '! 😊 I saw you checked your wellness score on our website. Your BMI is ' + (bmi ? bmi : '') + ' (BMR: ' + (bmr ? bmr + ' kcal' : '') + '). When would you like to visit our club ' + getCenterName() + ' to claim your free nutrition shake and complete your physical consultation?';
+      } else {
+        waMsg = 'Hi ' + lead.name + '! 😊 Following up from ' + getCenterName() + '. How is your health and wellness goal coming along?';
+      }
+    }
     var waBtn = lead.mobile ?
-      '<button class="btn-e" style="font-size:11px;padding:5px 10px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="window.open(\'https://api.whatsapp.com/send?phone=\'+COUNTRY_CODE+\''+lead.mobile+'\',\'_blank\')">WhatsApp</button>' : '';
+      '<button class="btn-e" style="font-size:11px;padding:5px 10px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="window.open(\'https://api.whatsapp.com/send?phone=\'+COUNTRY_CODE+\''+lead.mobile+'\'+\'&text=\'+encodeURIComponent(\''+waMsg.replace(/'/g, "\\'")+'\'),\'_blank\')">WhatsApp</button>' : '';
 
     html += '<div class="'+cardClass+'" id="lead-card-'+lead.id+'">'+
       '<div class="lead-avatar">'+initial+'</div>'+
