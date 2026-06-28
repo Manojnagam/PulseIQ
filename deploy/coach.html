@@ -3219,7 +3219,7 @@ async function saveCustomer() {
   
   var payload = {
     name: name,
-    contact: document.getElementById('cust-contact').value.trim() || null,
+    contact: document.getElementById('cust-contact').value.replace(/\D/g, '') || null,
     dob: dob,
     gender: document.getElementById('cust-gender').value || null,
     goal: document.getElementById('cust-goal').value || null,

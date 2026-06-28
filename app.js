@@ -6868,7 +6868,7 @@ async function saveCustomer() {
   
   var payload = { name:document.getElementById('customer-name').value.trim() };
   var _v = function(id){ var v=document.getElementById(id); return v?v.value.trim()||null:null; };
-  if(_v('customer-contact'))   payload.contact              = _v('customer-contact');
+  if(_v('customer-contact'))   payload.contact              = _v('customer-contact').replace(/\D/g, '');
   if(_v('customer-age'))       payload.age                  = _v('customer-age');
   if(_v('customer-gender'))    payload.gender               = _v('customer-gender');
   if(_v('customer-height'))    payload.height               = _v('customer-height');
