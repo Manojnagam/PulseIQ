@@ -4904,6 +4904,7 @@ function deleteNote(idx) {
 //  MY BODY STATS (coach personal)
 // ══════════════════════════════════════════
 var D_MY_BODY = [];
+var _useBodyCompositionFallback = false;
 var _myWeightChart = null;
 var _bodyCompChart = null;
 
@@ -4911,8 +4912,21 @@ async function loadMyBodyStats() {
   try {
     var rows = await dbGet('coach_body_composition', 'date', 'coach_id=eq.' + COACH_ID);
     D_MY_BODY = Array.isArray(rows) ? rows : [];
+    _useBodyCompositionFallback = false;
   } catch(e) {
-    D_MY_BODY = [];
+    if (e.message && (e.message.indexOf('coach_body_composition') !== -1 || e.message.indexOf('PGRST205') !== -1)) {
+      _useBodyCompositionFallback = true;
+      try {
+        var rows = await dbGet('body_composition', 'date', 'customer_id=eq.' + COACH_ID);
+        D_MY_BODY = Array.isArray(rows) ? rows.map(function(r) {
+          return Object.assign({}, r, { coach_id: r.customer_id });
+        }) : [];
+      } catch(innerErr) {
+        D_MY_BODY = [];
+      }
+    } else {
+      D_MY_BODY = [];
+    }
   }
   renderMyBodyIdeals();
   renderMyBodyHistory();
@@ -5065,7 +5079,15 @@ async function saveMyBody() {
 
   if (!w) { showToast('Enter at least your weight', 'error'); return; }
 
-  var data = { coach_id: COACH_ID, date: date, weight: w };
+  var data = {};
+  if (_useBodyCompositionFallback) {
+    data.customer_id = COACH_ID;
+    data.customer_name = (typeof COACH_NAME !== 'undefined' ? COACH_NAME : '') || 'Coach';
+  } else {
+    data.coach_id = COACH_ID;
+  }
+  data.date = date;
+  data.weight = w;
   if (h) data.height = h;
   if (fat !== null) data.fat_percentage = fat;
   if (muscle !== null) data.muscle_percentage = muscle;
@@ -5073,12 +5095,13 @@ async function saveMyBody() {
   if (visceral !== null) data.visceral_fat = visceral;
   if (notes) data.notes = notes;
 
+  var tbl = _useBodyCompositionFallback ? 'body_composition' : 'coach_body_composition';
   try {
     if (id) {
-      await dbUpdate('coach_body_composition', id, data);
+      await dbUpdate(tbl, id, data);
       showToast('Body stats updated!', 'success');
     } else {
-      await dbInsert('coach_body_composition', data);
+      await dbInsert(tbl, data);
       showToast('Body stats saved!', 'success');
     }
     closeModal('mybody');
@@ -5090,8 +5113,9 @@ async function saveMyBody() {
 
 async function deleteMyBody(id) {
   if (!confirm('Delete this record?')) return;
+  var tbl = _useBodyCompositionFallback ? 'body_composition' : 'coach_body_composition';
   try {
-    await dbDelete('coach_body_composition', id);
+    await dbDelete(tbl, id);
     showToast('Deleted', 'success');
     loadMyBodyStats();
   } catch(e) {
