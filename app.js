@@ -1603,6 +1603,10 @@ function doDisconnect() {
   document.getElementById('app').style.display = 'none';
 }
 var GROQ_MODEL = localStorage.getItem('groqModel') || 'gemini-2.5-flash';
+if (GROQ_MODEL === 'gemini-1.5-flash' || GROQ_MODEL === 'llama-3.1-8b-instant') {
+  GROQ_MODEL = 'gemini-2.5-flash';
+  localStorage.setItem('groqModel', GROQ_MODEL);
+}
 var DEFAULT_GROQ_KEY = ''; // set in deploy/index.html — not stored in repo
 function getGroqKey() { return 'server-side'; }
 

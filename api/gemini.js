@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'userPrompt is required' });
   }
 
-  const targetModel = model || 'gemini-1.5-flash';
+  const targetModel = model || 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${key}`;
 
   const body = {
