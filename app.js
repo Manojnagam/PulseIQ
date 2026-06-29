@@ -1602,7 +1602,7 @@ function doDisconnect() {
   document.getElementById('setup').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
-var GROQ_MODEL = localStorage.getItem('groqModel') || 'llama-3.1-8b-instant';
+var GROQ_MODEL = localStorage.getItem('groqModel') || 'gemini-1.5-flash';
 var DEFAULT_GROQ_KEY = ''; // set in deploy/index.html — not stored in repo
 function getGroqKey() { return 'server-side'; }
 
@@ -1633,48 +1633,70 @@ async function testGroqKey() {
   btn.textContent = 'Testing…';
   btn.disabled = true;
   resultEl.style.display = 'none';
+
+  var statusHtml = '';
+
+  // 1. Test Gemini
   try {
-    var res = await fetch('/api/groq-models');
-    var data = await res.json();
-    if (!res.ok) {
-      resultEl.style.background = '#fde8e8';
-      resultEl.style.color = '#a10000';
-      resultEl.innerHTML = '❌ <strong>Server key invalid</strong> — ' + (data.error || 'HTTP ' + res.status);
+    var geminiRes = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userPrompt: 'Hello' })
+    });
+    if (geminiRes.ok) {
+      statusHtml += '🟢 <strong>Gemini Server API Key:</strong> Active & Valid (Gemini 1.5 Flash)<br>';
     } else {
-      var models = (data.data || []).map(function(m){ return m.id; }).sort();
-      resultEl.style.background = '#e6f9f0';
-      resultEl.style.color = '#065f46';
-      resultEl.innerHTML = '✅ <strong>Server Groq key is valid!</strong> ' + models.length + ' models available:<br>'
-        + models.map(function(m){ return '• ' + m; }).join('<br>');
+      var d = await geminiRes.json();
+      statusHtml += '🔴 <strong>Gemini Server API Key:</strong> Inactive — ' + (d.error || 'Check Vercel Config') + '<br>';
     }
   } catch(e) {
-    resultEl.style.background = '#fde8e8';
-    resultEl.style.color = '#a10000';
-    resultEl.innerHTML = '❌ Network error — ' + e.message;
+    statusHtml += '🔴 <strong>Gemini Server:</strong> Network error — ' + e.message + '<br>';
   }
+
+  // 2. Test Groq
+  try {
+    var groqRes = await fetch('/api/groq-models');
+    if (groqRes.ok) {
+      statusHtml += '🟢 <strong>Groq Server API Key:</strong> Active & Valid (Llama models available)';
+    } else {
+      var d = await groqRes.json();
+      statusHtml += '🔴 <strong>Groq Server API Key:</strong> Inactive — ' + (d.error || 'Check Vercel Config');
+    }
+  } catch(e) {
+    statusHtml += '🔴 <strong>Groq Server:</strong> Network error — ' + e.message;
+  }
+
+  resultEl.style.background = '#f8fafc';
+  resultEl.style.border = '1px solid var(--border)';
+  resultEl.style.color = 'var(--text)';
+  resultEl.innerHTML = statusHtml;
   resultEl.style.display = 'block';
-  btn.textContent = 'Test Key';
+  btn.textContent = 'Test Connections';
   btn.disabled = false;
 }
-// ── CENTRALIZED GROQ PIPELINE ──
-// All AI calls go through callGroq() — routes through /api/groq on Vercel.
-// The GROQ_API_KEY lives in Vercel env vars, never in the browser.
-var GROQ_URL = '/api/groq';
+// ── CENTRALIZED AI ROUTER & PIPELINE ──
+// All AI calls go through callGroq() — routes dynamically to /api/gemini or /api/groq.
 async function callGroq(systemPrompt, userPrompt, opts) {
   opts = opts || {};
-  var res = await fetch(GROQ_URL, {
+  var modelName = opts.model || GROQ_MODEL;
+
+  // Route to the appropriate serverless endpoint based on the selected model name
+  var isGemini = modelName.indexOf('gemini-') === 0;
+  var url = isGemini ? '/api/gemini' : '/api/groq';
+
+  var res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       systemPrompt: systemPrompt || null,
       userPrompt: userPrompt,
-      model: opts.model || GROQ_MODEL,
+      model: modelName,
       maxTokens: opts.maxTokens || 500,
       temperature: opts.temperature !== undefined ? opts.temperature : 0.85
     })
   });
   var data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Groq API error ' + res.status);
+  if (!res.ok) throw new Error(data.error || 'AI API error ' + res.status);
   if (data.error) throw new Error(data.error);
   return data.text;
 }

@@ -1002,7 +1002,7 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
-<script defer src="auth.min.js?v=1.0.9"></script>
+<script defer src="auth.min.js?v=1.1.0"></script>
 </head>
 <body>
 
@@ -2332,24 +2332,28 @@ input:focus, select:focus, textarea:focus {
     <div class="sec" id="sec-sql">
       <div class="ph"><div><div class="pt" data-t="pt_sql">SQL Setup Guide &amp; AI Config</div><div class="ps" data-t="ps_sql">Configure APIs and Database Schemas</div></div></div>
       <div class="tcard" style="padding:26px;margin-bottom:20px;border-top:4px solid var(--primary)">
-        <h3 style="margin:0 0 10px 0;font-size:16px;">🤖 Groq AI Configuration</h3>
+        <h3 style="margin:0 0 10px 0;font-size:16px;">🤖 AI Configuration (Gemini &amp; Groq)</h3>
         <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#166534">
-          🔒 <strong>Groq API key is managed server-side</strong> (Vercel environment variable). It is never sent to the browser.
+          🔒 <strong>AI API Keys are managed server-side</strong> (Vercel environment variables). They are never exposed to the browser.
         </div>
-        <button class="btn-s" onclick="testGroqKey()" id="btn-test-groq" style="margin-bottom:8px">🔍 Test Server Connection</button>
+        <button class="btn-s" onclick="testGroqKey()" id="btn-test-groq" style="margin-bottom:8px">🔍 Test Server Connections</button>
         <div id="groq-test-result" style="display:none;margin-bottom:10px;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.6"></div>
-        <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">🧠 AI Model Quality</label>
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">🧠 AI Model Selection</label>
         <div class="fr" style="grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:4px">
           <select id="cfg-groq-model" style="padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px" onchange="saveGroqModel()">
-            <option value="llama-3.1-8b-instant">llama-3.1-8b-instant — Fast &amp; lightweight (default)</option>
-            <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile — Best quality</option>
-            <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile — Great quality</option>
-            <option value="llama3-70b-8192">llama3-70b-8192 — Good quality</option>
-            <option value="mixtral-8x7b-32768">mixtral-8x7b-32768 — Good quality, longer context</option>
+            <optgroup label="Google Gemini (Recommended - Free &amp; Stable)">
+              <option value="gemini-1.5-flash">gemini-1.5-flash — Super fast, highly stable (default)</option>
+              <option value="gemini-1.5-pro">gemini-1.5-pro — Intelligent, advanced reasoning</option>
+            </optgroup>
+            <optgroup label="Groq LPU (High Speed)">
+              <option value="llama-3.1-8b-instant">llama-3.1-8b-instant — Fast &amp; lightweight</option>
+              <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile — Best quality Llama</option>
+              <option value="mixtral-8x7b-32768">mixtral-8x7b-32768 — Good quality</option>
+            </optgroup>
           </select>
           <button class="btn-p" onclick="saveGroqModel()">Save</button>
         </div>
-        <p style="font-size:11px;color:var(--muted);margin-bottom:14px">All models are free on Groq. Larger models give much better AI insights. <strong>llama-3.3-70b-versatile</strong> is closest to ChatGPT quality.</p>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:14px">Gemini 1.5 Flash offers a highly stable free tier. Groq models are served instantly but are subject to strict rate limits.</p>
         <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">📱 WhatsApp Country Code</label>
         <div class="fr" style="grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:14px">
           <input type="text" id="cfg-country-code" placeholder="91 (India), 1 (USA), 44 (UK)..." style="margin-bottom:0" maxlength="5">
