@@ -1602,7 +1602,7 @@ function doDisconnect() {
   document.getElementById('setup').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
-var GROQ_MODEL = localStorage.getItem('groqModel') || 'gemini-1.5-flash';
+var GROQ_MODEL = localStorage.getItem('groqModel') || 'gemini-2.5-flash';
 var DEFAULT_GROQ_KEY = ''; // set in deploy/index.html — not stored in repo
 function getGroqKey() { return 'server-side'; }
 
@@ -1644,7 +1644,7 @@ async function testGroqKey() {
       body: JSON.stringify({ userPrompt: 'Hello' })
     });
     if (geminiRes.ok) {
-      statusHtml += '🟢 <strong>Gemini Server API Key:</strong> Active & Valid (Gemini 1.5 Flash)<br>';
+      statusHtml += '🟢 <strong>Gemini Server API Key:</strong> Active & Valid (Gemini 2.5 Flash)<br>';
     } else {
       var d = await geminiRes.json();
       statusHtml += '🔴 <strong>Gemini Server API Key:</strong> Inactive — ' + (d.error || 'Check Vercel Config') + '<br>';

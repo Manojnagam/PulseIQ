@@ -1002,7 +1002,7 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
-<script defer src="auth.min.js?v=1.1.0"></script>
+<script defer src="auth.min.js?v=1.1.1"></script>
 </head>
 <body>
 
@@ -2342,8 +2342,9 @@ input:focus, select:focus, textarea:focus {
         <div class="fr" style="grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:4px">
           <select id="cfg-groq-model" style="padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px" onchange="saveGroqModel()">
             <optgroup label="Google Gemini (Recommended - Free &amp; Stable)">
-              <option value="gemini-1.5-flash">gemini-1.5-flash — Super fast, highly stable (default)</option>
-              <option value="gemini-1.5-pro">gemini-1.5-pro — Intelligent, advanced reasoning</option>
+              <option value="gemini-2.5-flash">gemini-2.5-flash — Super fast, highly stable (default)</option>
+              <option value="gemini-3.5-flash">gemini-3.5-flash — Next-generation, very intelligent</option>
+              <option value="gemini-2.5-pro">gemini-2.5-pro — Advanced reasoning &amp; analysis</option>
             </optgroup>
             <optgroup label="Groq LPU (High Speed)">
               <option value="llama-3.1-8b-instant">llama-3.1-8b-instant — Fast &amp; lightweight</option>
