@@ -1604,7 +1604,7 @@ function doDisconnect() {
 }
 var GROQ_MODEL = localStorage.getItem('groqModel') || 'llama-3.1-8b-instant';
 var DEFAULT_GROQ_KEY = ''; // set in deploy/index.html — not stored in repo
-function getGroqKey() { return localStorage.getItem('groqKey') || DEFAULT_GROQ_KEY; }
+function getGroqKey() { return 'server-side'; }
 
 // ── HERBALIFE SHAKE NUTRITION (hidden from clients) ──
 // WL: 3 scoops F1 + 1 scoop Protein + 1 scoop Shakemate
@@ -1620,9 +1620,12 @@ function countProteinSources(foodArr) {
   }).length;
 }
 function saveGroqKey() {
-  var key = document.getElementById('cfg-groq-key').value.trim();
-  localStorage.setItem('groqKey', key);
-  showToast('Groq API Key saved successfully!', 'success');
+  var el = document.getElementById('cfg-groq-key');
+  if (el) {
+    var key = el.value.trim();
+    localStorage.setItem('groqKey', key);
+    showToast('Groq API Key saved successfully!', 'success');
+  }
 }
 async function testGroqKey() {
   var resultEl = document.getElementById('groq-test-result');
@@ -1760,7 +1763,8 @@ async function bootDashboard() {
     // ── STEP 2: UI init (runs only when authed) ──
     var gKey = getGroqKey();
     var cc = localStorage.getItem('countryCode');
-    if(gKey) document.getElementById('cfg-groq-key').value = gKey;
+    var cfgKeyInput = document.getElementById('cfg-groq-key');
+    if(cfgKeyInput && gKey) cfgKeyInput.value = gKey;
     if(cc) { document.getElementById('cfg-country-code').value = cc; COUNTRY_CODE = cc; }
     else document.getElementById('cfg-country-code').value = '91';
     var savedWaLang = localStorage.getItem('waLang');
