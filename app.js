@@ -1678,6 +1678,16 @@ async function callGroq(systemPrompt, userPrompt, opts) {
   if (data.error) throw new Error(data.error);
   return data.text;
 }
+function formatAiText(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+    .replace(/^(#{1,4})\s+(.+)$/gm, '<div style="font-weight:700;margin-top:12px;margin-bottom:4px">$2</div>')
+    .replace(/^[-•]\s+(.+)$/gm, '<div style="padding-left:14px;margin-bottom:3px">• $1</div>')
+    .replace(/\n\n/g, '<br>')
+    .replace(/\n/g, '<br>');
+}
 function saveGroqModel() {
   var sel = document.getElementById('cfg-groq-model');
   if (!sel) return;
@@ -2534,7 +2544,7 @@ async function generateWeeklySummary() {
       'Here are the stats:\n' + statsMsg,
       { maxTokens: 500 }
     );
-    div.innerHTML = '<div style="font-size:16px; margin-bottom:10px;"><strong>🤖 AI Business Summary:</strong></div><div style="color:var(--text)">' + aiText.replace(/\n/g, '<br/>') + '</div>';
+    div.innerHTML = '<div style="font-size:16px; margin-bottom:10px;"><strong>🤖 AI Business Summary:</strong></div><div style="color:var(--text)">' + formatAiText(aiText) + '</div>';
   } catch(e) {
     div.innerHTML = '<div style="color:var(--danger)">Error generating summary: ' + e.message + '</div>';
     showToast('AI summary failed: ' + e.message, 'error');
@@ -3444,11 +3454,11 @@ async function askBodyAI(cid, rid) {
 
   try {
     var aiText = await callGroq(
-      "You are an expert wellness coach at a nutrition wellness center in India. Analyze this customer's body composition history from their Karada body scanner readings. Explain in simple, friendly language: 1) What changed and whether it is good or bad based on their goal, 2) Why this change likely happened (diet consistency, shake timing, hydration, attendance), 3) Two specific actionable recommendations for the wellness center owner to tell this customer. Keep response under 150 words. Be encouraging but honest. Use Indian context.",
+      "You are an expert wellness coach at a nutrition wellness center in India. Analyze this customer's body composition history from their Karada body scanner readings. Explain in simple, friendly English using short sentences. Format with easy subheadings (using *bold* text) and bullet points, no paragraphs. Include: 1) What changed (good/bad), 2) Why it happened (diet/water/attendance), 3) Two specific next steps. Keep response under 150 words. Use Indian context.",
       statsMsg,
       { maxTokens: 500 }
     );
-    content.innerHTML = '<strong>🤖 AI Analysis:</strong><div style="margin-top:8px">'+aiText.replace(/\n/g,'<br/>')+'</div>';
+    content.innerHTML = '<strong>🤖 AI Analysis:</strong><div style="margin-top:8px">'+formatAiText(aiText)+'</div>';
   } catch(e) {
     content.innerHTML = '<div style="color:var(--danger)">AI Error: '+e.message+'</div>';
     showToast('Body AI error: ' + e.message, 'error');
@@ -3468,7 +3478,7 @@ async function doGroqReport(cid, systemPrompt, userPrompt, title) {
 
   try {
     var aiText = await callGroq(systemPrompt, userPrompt, { maxTokens: 500 });
-    document.getElementById('wai-content').innerHTML = aiText.replace(/\n/g, '<br/>');
+    document.getElementById('wai-content').innerHTML = formatAiText(aiText);
     
     var waBtn = document.getElementById('wai-wa-btn');
     waBtn.style.display = 'inline-block';
@@ -3492,7 +3502,7 @@ async function generateFirstScanReport(cid) {
   if (!recs.length) return;
   var r = recs[0];
   var prompt = "Customer: "+name+", Goal: "+goal+", Baseline scan: weight "+(r.weight||'-')+"kg, fat "+(r.fat_percentage||'-')+"%, muscle "+(r.muscle_percentage||'-')+"%, visceral "+(r.visceral_fat||'-')+", BMR "+(r.bmr||'-')+", BMI "+(r.bmi||'-')+".";
-  var sys = 'You are an expert wellness coach at a nutrition wellness center. A customer just completed their FIRST EVER body scan. Analyze their baseline numbers considering their stated goal. In simple, friendly language: 1) Give a 2-sentence breakdown of what their starting numbers mean, 2) Provide 3 highly specific starting recommendations (diet, water, protein shakes) to kickstart their journey. Keep under 120 words. Be extremely motivating and welcoming.';
+  var sys = 'You are an expert wellness coach at a nutrition wellness center. A customer just completed their FIRST EVER body scan. Analyze their baseline numbers. Explain in simple, friendly English using short sentences. Format with easy subheadings (using *bold* text) and bullet points, no paragraphs. Include: 1) What the starting numbers mean, 2) Three starting recommendations (diet, water, shakes). Keep under 120 words. Be motivating.';
   doGroqReport(cid, sys, prompt, 'First Scan AI Report');
 }
 
@@ -3504,7 +3514,7 @@ async function generateWeeklyReport(cid) {
   if (recs.length < 2) { showToast('Need at least 2 records for a weekly comparison!', 'error'); return; }
   var r1 = recs[0]; var r0 = recs[1]; 
   var prompt = "Customer: "+name+", Goal: "+goal+", Last week: weight "+(r0.weight||'-')+"kg, fat "+(r0.fat_percentage||'-')+"%, muscle "+(r0.muscle_percentage||'-')+"%, visceral "+(r0.visceral_fat||'-')+", BMR "+(r0.bmr||'-')+", BMI "+(r0.bmi||'-')+". This week: weight "+(r1.weight||'-')+"kg, fat "+(r1.fat_percentage||'-')+"%, muscle "+(r1.muscle_percentage||'-')+"%, visceral "+(r1.visceral_fat||'-')+", BMR "+(r1.bmr||'-')+", BMI "+(r1.bmi||'-')+".";
-  var sys = 'You are an expert wellness coach at a nutrition wellness center in India. A customer has done their weekly body scan. Compare their current week results with last week and explain in simple, friendly language: 1) What changed and whether it is good or bad based on their goal, 2) Why this change likely happened (diet, consistency, timing of shakes), 3) Two specific actionable recommendations for the wellness center owner to tell the customer. Keep the response under 150 words. Be encouraging but honest.';
+  var sys = 'You are an expert wellness coach at a nutrition wellness center in India. Compare their weekly body scans. Explain in simple, friendly English using short sentences. Format with easy subheadings (using *bold* text) and bullet points, no paragraphs. Include: 1) What changed (good/bad), 2) Why it happened (diet/water/shake consistency), 3) Two specific next steps for the coach to tell the customer. Keep response under 150 words.';
   doGroqReport(cid, sys, prompt, 'Weekly Progress Report');
 }
 
@@ -10697,11 +10707,11 @@ async function generateBizAIReport() {
     +'- Coaches in network: '+coachCount+'\n'
     +'- Downline centers: '+centerCount+'\n'
     +'- Coach breakdown: '+coachLines+'\n\n'
-    +'Give a 150-word business analysis covering: 1) Overall health of the business, 2) Top 2 strengths, 3) Top 2 urgent issues to fix, 4) One specific action to take this week to grow VP. Be direct, practical, and encouraging. Use Indian business context.';
+    +'Give a 150-word business analysis in simple English using short sentences. Format with easy subheadings (using *bold* text) and bullet points, no paragraphs. Cover: 1) Overall health, 2) Top strengths, 3) Top issues to fix, 4) Specific action item this week to grow VP. Be direct, practical, and encouraging. Use Indian business context.';
 
   try {
     var text = await callGroq(null, prompt, { maxTokens: 300 });
-    resultEl.innerHTML = '<div style="font-weight:600;margin-bottom:8px;font-size:14px">✨ AI Business Report — '+month+'</div><div style="font-size:13px;line-height:1.8">'+text.replace(/\n/g,'<br>')+'</div>';
+    resultEl.innerHTML = '<div style="font-weight:600;margin-bottom:8px;font-size:14px">✨ AI Business Report — '+month+'</div><div style="font-size:13px;line-height:1.8">'+formatAiText(text)+'</div>';
   } catch(e) {
     resultEl.innerHTML = '<div style="color:var(--danger)">Error: '+e.message+'</div>';
     showToast('Business AI error: ' + e.message, 'error');
