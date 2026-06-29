@@ -189,7 +189,7 @@ async function loadAndStartDashboard() {
   window.SB_KEY = SB_KEY;
 
   try {
-    await loadScript('app.min.js?v=1.0.8');
+    await loadScript('app.min.js?v=1.0.9');
     if (typeof bootDashboard === 'function') {
       await bootDashboard();
     } else {
