@@ -2199,7 +2199,7 @@ function goTo(name, el) {
   if (name==='expenses')       { setTimeout(renderExpenses, 80); }
   if (name==='goals')          { setTimeout(renderGoals, 80); }
   if (name==='notifications')  { setTimeout(renderNotifications, 80); }
-  if (name==='coaches')        { setTimeout(initCommission, 80); }
+  if (name==='coaches')        { setTimeout(function(){ initCommission(); initCoachWorkTracker(); }, 80); }
 }
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
@@ -13129,6 +13129,150 @@ function saveCommissionRates() {
   closeModal('commission-rates');
   renderCommission();
   showToast('Commission rates saved', 'success');
+}
+
+// ── COACH WORK & ACTIVITY TRACKER ──
+function initCoachWorkTracker() {
+  var sel = document.getElementById('work-tracker-month');
+  if (!sel) return;
+  if (!sel.options.length) {
+    var months = []; var cur = new Date();
+    for (var i = 0; i < 6; i++) {
+      var d = new Date(cur.getFullYear(), cur.getMonth()-i, 1);
+      var val = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      months.push('<option value="'+val+'">'+d.toLocaleString('default',{month:'long',year:'numeric'})+'</option>');
+    }
+    sel.innerHTML = months.join('');
+  }
+  renderCoachWorkTracker();
+}
+
+async function renderCoachWorkTracker() {
+  var sel = document.getElementById('work-tracker-month');
+  var tb = document.getElementById('work-tracker-body');
+  if (!sel || !tb) return;
+
+  var month = sel.value;
+  if (!month) {
+    var d = new Date();
+    month = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  }
+
+  tb.innerHTML = '<tr><td colspan="8"><div class="empty">⏳ Loading activity data for ' + month + '...</div></td></tr>';
+
+  // 1. Fetch coach attendance records for this month
+  var coachAtt = [];
+  try {
+    coachAtt = await dbGet('coach_attendance', 'date', 'date=gte.' + month + '-01&date=lte.' + month + '-31');
+  } catch (e) {
+    console.error("Error loading coach attendance:", e);
+  }
+
+  // 2. We will aggregate stats for the Owner, and for each Coach
+  var coaches = filterByCenter(D.coaches) || [];
+  var ownerCoachId = (OWNER_PROFILE && OWNER_PROFILE.coach_id) || '';
+
+  // Create a list of people to show: Owner (if not already in coaches list) + coaches
+  var list = [];
+  var ownerInCoaches = coaches.some(function(c) { return c.id === ownerCoachId; });
+
+  if (!ownerInCoaches) {
+    list.push({
+      id: ownerCoachId || 'owner',
+      name: (OWNER_PROFILE && OWNER_PROFILE.name) || 'Supervisor (Main Owner)',
+      herbalife_pin: (OWNER_PROFILE && OWNER_PROFILE.next_pin) || 'Supervisor',
+      isOwner: true
+    });
+  }
+
+  coaches.forEach(function(c) {
+    list.push({
+      id: c.id,
+      name: c.name,
+      herbalife_pin: c.herbalife_pin || 'Associate',
+      isOwner: c.id === ownerCoachId
+    });
+  });
+
+  var html = '';
+
+  list.forEach(function(person) {
+    // Get client IDs assigned to this person
+    var myCusts = D.customers.filter(function(c) {
+      var cid = c.coach_id || '';
+      var rid = c.referred_by_id || '';
+      if (person.isOwner) {
+        // Owner gets their assigned clients OR clients with no coach assigned at all
+        var isAssignedToOther = coaches.some(function(co) { return co.id === cid || co.id === rid; });
+        return !isAssignedToOther;
+      } else {
+        return cid === person.id || rid === person.id;
+      }
+    });
+
+    var myCustIds = myCusts.map(function(c) { return c.id; });
+    var activeCusts = myCusts.filter(function(c) { return getDaysLeft(c).active; }).length;
+
+    // Client Attendance Check-ins
+    var checkins = D.attendance.filter(function(a) {
+      return a.date && a.date.substring(0,7) === month && a.status === 'present' && myCustIds.indexOf(a.customer_id) !== -1;
+    }).length;
+
+    // Body Profiles run
+    var bodyProfiles = D.body.filter(function(b) {
+      return b.date && b.date.substring(0,7) === month && myCustIds.indexOf(b.customer_id) !== -1;
+    }).length;
+
+    // Leads added
+    var leadsAdded = (D.leads || []).filter(function(l) {
+      var lCoachId = l.coach_id || '';
+      var yStr = l.created_at || '';
+      var isThisMonth = yStr.substring(0,7) === month;
+      if (!isThisMonth) return false;
+      if (person.isOwner) {
+        var isAssignedToOther = coaches.some(function(co) { return co.id === lCoachId; });
+        return !isAssignedToOther;
+      } else {
+        return lCoachId === person.id;
+      }
+    }).length;
+
+    // Self Attendance (present days)
+    var selfAttDays = coachAtt.filter(function(a) {
+      return a.coach_id === person.id && a.status === 'present';
+    }).length;
+
+    // Actions button: WhatsApp coach
+    var actionsHtml = '';
+    if (!person.isOwner) {
+      var coachRecord = coaches.find(function(c) { return c.id === person.id; });
+      var phone = coachRecord && coachRecord.contact ? coachRecord.contact.replace(/\D/g,'') : '';
+      if (phone.length === 10) phone = COUNTRY_CODE + phone;
+      if (phone) {
+        var waMsg = encodeURIComponent('Hi ' + person.name + '! Here is your activity summary for ' + month + ': Client Check-ins: ' + checkins + ', Body Profiles: ' + bodyProfiles + ', Leads Added: ' + leadsAdded + '. Keep up the great work! 💪');
+        actionsHtml = '<button class="wa-btn" style="font-size:11px;padding:4px 8px" onclick="window.open(\'https://api.whatsapp.com/send?phone=' + phone + '&text=' + waMsg + '\',\'_blank\')">💬 Notify</button>';
+      } else {
+        actionsHtml = '<span style="font-size:11px;color:var(--muted)">No contact</span>';
+      }
+    } else {
+      actionsHtml = '<span class="badge bg" style="font-size:10px">You (Owner)</span>';
+    }
+
+    var selfAttHtml = person.isOwner ? '<span class="badge bg" style="font-size:10px;background:#e0f2fe;color:#0369a1">Always Present</span>' : '<strong>' + selfAttDays + ' days</strong>';
+
+    html += '<tr>'
+      + '<td><strong>' + person.name + '</strong>' + (person.isOwner ? ' <span class="badge bg" style="font-size:9px">Owner</span>' : '') + '</td>'
+      + '<td><span class="badge by" style="font-size:10px">' + person.herbalife_pin + '</span></td>'
+      + '<td style="text-align:center">' + selfAttHtml + '</td>'
+      + '<td style="text-align:center;font-weight:700;color:var(--primary)">' + checkins + '</td>'
+      + '<td style="text-align:center;font-weight:700;color:var(--success)">' + bodyProfiles + '</td>'
+      + '<td style="text-align:center;font-weight:700;color:var(--accent)">' + leadsAdded + '</td>'
+      + '<td style="text-align:center"><strong>' + activeCusts + '</strong> / ' + myCusts.length + '</td>'
+      + '<td>' + actionsHtml + '</td>'
+      + '</tr>';
+  });
+
+  tb.innerHTML = html;
 }
 
 // Helper: days left for supervisor context (uses Supabase data structure)

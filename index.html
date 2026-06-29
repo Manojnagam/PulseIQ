@@ -1295,6 +1295,36 @@ input:focus, select:focus, textarea:focus {
           <tbody id="coaches-body"></tbody>
         </table></div>
       </div>
+
+      <!-- Coach Work & Activity Tracker -->
+      <div class="tcard" style="margin-top:16px">
+        <div class="ttoolbar" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px">📊 Coach Work & Activity Tracker</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="work-tracker-month" onchange="renderCoachWorkTracker()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></select>
+          </div>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Coach / Owner</th>
+                <th>Role / PIN</th>
+                <th style="text-align:center">Self Attendance</th>
+                <th style="text-align:center">Client Check-ins</th>
+                <th style="text-align:center">Body Profiles</th>
+                <th style="text-align:center">Leads Added</th>
+                <th style="text-align:center">Active Clients</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="work-tracker-body">
+              <tr><td colspan="8"><div class="empty">Loading activity data...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Commission Calculator -->
       <div class="tcard" style="margin-top:16px">
         <div class="ttoolbar" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
