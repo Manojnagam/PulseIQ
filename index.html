@@ -1002,7 +1002,7 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
-<script defer src="auth.min.js?v=1.1.5"></script>
+<script defer src="auth.min.js?v=1.1.6"></script>
 </head>
 <body>
 
@@ -4505,6 +4505,10 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div class="fg">
           <label for="share-card-title">Journey Title</label>
           <input type="text" id="share-card-title" value="My Health Journey" oninput="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+        </div>
+        <div class="fg">
+          <label for="share-card-header">Card Top Header (Center Name)</label>
+          <input type="text" id="share-card-header" value="" oninput="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px" placeholder="e.g. Dharani's / BK's Wellness Studio">
         </div>
         <div class="fg">
           <label for="share-card-theme">Card Theme</label>

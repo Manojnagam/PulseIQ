@@ -15322,6 +15322,7 @@ function openShareCardModal() {
   }).join('');
   
   document.getElementById('share-card-title').value = cust.name + "'s Progress";
+  document.getElementById('share-card-header').value = getCenterName();
   
   openModal('share-card');
   drawProgressCard();
@@ -15341,6 +15342,7 @@ function drawProgressCard() {
   
   var title = document.getElementById('share-card-title').value || "Health Journey";
   var theme = document.getElementById('share-card-theme').value;
+  var headerText = document.getElementById('share-card-header').value || getCenterName();
   
   var grad = ctx.createLinearGradient(0, 0, 1080, 1080);
   if(theme === 'midnight') {
@@ -15363,7 +15365,7 @@ function drawProgressCard() {
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
   ctx.font = 'bold 24px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(getCenterName().toUpperCase(), 540, 100);
+  ctx.fillText(headerText.toUpperCase(), 540, 100);
   
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 56px Georgia, serif';
