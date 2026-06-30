@@ -1679,30 +1679,54 @@ async function testGroqKey() {
   btn.disabled = false;
 }
 // ── CENTRALIZED AI ROUTER & PIPELINE ──
-// All AI calls go through callGroq() — routes dynamically to /api/gemini or /api/groq.
+// All AI calls go through callGroq() — routes dynamically to /api/gemini or /api/groq with auto-fallback.
 async function callGroq(systemPrompt, userPrompt, opts) {
   opts = opts || {};
   var modelName = opts.model || GROQ_MODEL;
 
-  // Route to the appropriate serverless endpoint based on the selected model name
-  var isGemini = modelName.indexOf('gemini-') === 0;
-  var url = isGemini ? '/api/gemini' : '/api/groq';
+  // Compile an ordered list of fallback models to guarantee success
+  var modelsToTry = [modelName];
+  if (modelName.indexOf('gemini-') === 0) {
+    modelsToTry.push('llama-3.3-70b-versatile');
+    modelsToTry.push('llama-3.1-8b-instant');
+  } else {
+    modelsToTry.push('gemini-2.5-flash');
+    modelsToTry.push('gemini-3.5-flash');
+  }
 
-  var res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemPrompt: systemPrompt || null,
-      userPrompt: userPrompt,
-      model: modelName,
-      maxTokens: opts.maxTokens || 500,
-      temperature: opts.temperature !== undefined ? opts.temperature : 0.85
-    })
-  });
-  var data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'AI API error ' + res.status);
-  if (data.error) throw new Error(data.error);
-  return data.text;
+  var lastError = null;
+  for (var i = 0; i < modelsToTry.length; i++) {
+    var currentModel = modelsToTry[i];
+    var isGemini = currentModel.indexOf('gemini-') === 0;
+    var url = isGemini ? '/api/gemini' : '/api/groq';
+
+    try {
+      var res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemPrompt: systemPrompt || null,
+          userPrompt: userPrompt,
+          model: currentModel,
+          maxTokens: opts.maxTokens || 500,
+          temperature: opts.temperature !== undefined ? opts.temperature : 0.85
+        })
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'AI API error ' + res.status);
+      if (data.error) throw new Error(data.error);
+
+      if (currentModel !== modelName) {
+        console.warn('AI call fell back from ' + modelName + ' to ' + currentModel);
+      }
+      return data.text;
+    } catch (e) {
+      console.warn('AI model ' + currentModel + ' failed: ' + e.message);
+      lastError = e;
+    }
+  }
+
+  throw lastError || new Error('All AI models failed');
 }
 function formatAiText(text) {
   if (!text) return '';
@@ -1805,8 +1829,10 @@ async function bootDashboard() {
     else document.getElementById('cfg-country-code').value = '91';
     var savedWaLang = localStorage.getItem('waLang');
     if (savedWaLang) { WA_LANG = savedWaLang; var wsel = document.getElementById('cfg-wa-lang'); if(wsel) wsel.value = savedWaLang; }
-    var savedModel = localStorage.getItem('groqModel');
-    if (savedModel) { GROQ_MODEL = savedModel; var msel = document.getElementById('cfg-groq-model'); if(msel) msel.value = savedModel; }
+    var savedModel = localStorage.getItem('groqModel') || 'gemini-2.5-flash';
+    GROQ_MODEL = savedModel;
+    var msel = document.getElementById('cfg-groq-model');
+    if (msel) msel.value = savedModel;
     onFinTypeChange();
     setFinPeriod('all', document.querySelectorAll('.fin-period')[3]);
     renderProfileCard();
