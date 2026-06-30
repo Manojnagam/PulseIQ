@@ -15363,7 +15363,7 @@ function drawProgressCard() {
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
   ctx.font = 'bold 24px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('PULSEZEN WELLNESS CENTER', 540, 100);
+  ctx.fillText(getCenterName().toUpperCase(), 540, 100);
   
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 56px Georgia, serif';
