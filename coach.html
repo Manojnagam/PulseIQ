@@ -2111,6 +2111,31 @@ function dbDelete(table, id) { return req(table + '?id=eq.' + id, 'DELETE'); }
 // ══════════════════════════════════════════
 //  AUTH
 // ══════════════════════════════════════════
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+async function sendCoachNudge(customerId, type, message) {
+  try {
+    await dbInsert('client_interactions', {
+      customer_id: customerId,
+      sender_type: 'coach',
+      type: type, // 'spark', 'cheer', 'nudge'
+      message: message || ('Coach sent you a ' + type + '!'),
+      is_read: false
+    });
+    showToast('Sent nudge successfully! ⚡', 'success');
+  } catch(e) {
+    showToast('Failed to log nudge in database, fallback to WhatsApp.', 'error');
+  }
+}
+
+function triggerCoachNudge(cid, name) {
+  var msg = prompt('Enter cheer/nudge message for ' + name + ' (e.g. "Great job on your water goal today! 💧"):', 'Keep going! You are doing great! 💪');
+  if (msg === null) return;
+  sendCoachNudge(cid, 'cheer', msg);
+}
+
 // ── THEME LOGIC ──
 function initTheme() {
   var theme = localStorage.getItem('theme') || 'dark';
@@ -3006,17 +3031,35 @@ function renderCustomers() {
     var bdg = st.total > 0 ? (st.days <= 3 ? '<span class="badge br">'+st.days+' left</span>' : '<span class="badge bg">'+st.days+' left</span>') : '<span class="badge" style="background:var(--surface2);color:var(--muted)">No Pack</span>';
     var phone = (c.contact||'').replace(/\D/g,'');
     if(phone.length===10) phone = COUNTRY_CODE + phone;
+    
+    // Today's mood and water metrics
+    var today = todayStr();
+    var attToday = D.attendance.find(function(a){ return a.customer_id === c.id && a.date === today; });
+    var moodText = '';
+    var waterText = '';
+    if (attToday) {
+      if (attToday.mood) {
+        var moodEmojis = { energetic: '😊 Energetic', tired: '🥱 Tired', sore: '🩹 Sore', focused: '🧘 Focused' };
+        moodText = ' <span class="badge" style="background:rgba(167,139,250,0.12);color:#a78bfa;font-size:10px;margin-left:4px">' + (moodEmojis[attToday.mood] || attToday.mood) + '</span>';
+      }
+      if (attToday.water_logged && attToday.water_logged > 0) {
+        waterText = ' <span class="badge" style="background:rgba(56,189,248,0.12);color:#38bdf8;font-size:10px;margin-left:4px">💧 ' + Number(attToday.water_logged).toFixed(1) + 'L</span>';
+      }
+    }
+
     var waMsg = encodeURIComponent('Hi '+c.name+'! 🌿 Hope you\'re doing great. See you at Dharani\'s today! 💪');
     var dashMsg = encodeURIComponent('Hi '+c.name+'! 🌿 Here\'s your personal wellness dashboard link:\nhttps://pulseiq-app.nagam-kumar.workers.dev/customer.html\n\nLogin with your mobile number and date of birth. Track your progress, attendance & more! 💪');
+    
     return '<div class="cust-card">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
-        '<div><div class="cust-name">'+c.name+'</div>'+
+        '<div><div class="cust-name">'+c.name+moodText+waterText+'</div>'+
         '<div class="cust-meta">'+(c.contact||'No contact')+' '+(c.pack_type ? '• '+c.pack_type : '')+'</div></div>'+
         bdg+
       '</div>'+
-      '<div class="cust-acts">'+
+      '<div class="cust-acts" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">'+
         '<button class="btn-e" onclick="openCustModal(\''+c.id+'\')">✏️ Edit</button>'+
         '<button class="btn-e" onclick="openNotesModal(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" style="background:#f0f4ff;border-color:#c7d2fe;color:#4f46e5">📝 Notes</button>'+
+        '<button class="btn-e" onclick="triggerCoachNudge(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" style="background:#fff7ed;border-color:#ffedd5;color:#ea580c">⚡ Nudge</button>'+
         (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+waMsg+'" target="_blank" style="padding:5px 12px;background:#25D366;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none">💬 WhatsApp</a>' : '')+
         (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+dashMsg+'" target="_blank" style="padding:5px 12px;background:#4f46e5;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none">🔗 Share Dashboard</a>' : '')+
       '</div>'+

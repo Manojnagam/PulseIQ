@@ -648,6 +648,216 @@ input:focus, select:focus, textarea:focus {
 ::placeholder {
   color: #475569 !important;
 }
+
+/* --- MOTIVATIONAL & CONNECTION ENGAGEMENT STYLES --- */
+.garden-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.03) 100%);
+  border: 1.5px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transition: border-color 0.3s;
+}
+.garden-card:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.garden-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+.garden-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.garden-svg-container {
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+.garden-milestones {
+  display: flex;
+  justify-content: space-around;
+  font-size: 11px;
+  color: var(--muted);
+  gap: 4px;
+}
+.garden-milestone-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--surface2);
+  margin: 4px auto 0;
+  transition: background 0.3s;
+}
+.garden-milestone-dot.active {
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+}
+
+/* Water Intake Widget */
+.water-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.water-btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.water-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  background: rgba(56, 189, 248, 0.08);
+  color: #38bdf8;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+}
+.water-btn:hover {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: #38bdf8;
+}
+
+/* Mood Reflection Card */
+.mood-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+.mood-btn {
+  padding: 10px 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  outline: none;
+}
+.mood-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.mood-btn.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  box-shadow: 0 0 10px rgba(0, 230, 118, 0.15);
+}
+
+/* Photo Timeline Slider */
+.timeline-slider-wrap {
+  margin-top: 12px;
+  text-align: center;
+}
+.timeline-slider {
+  width: 100%;
+  margin: 15px 0;
+  accent-color: var(--primary);
+}
+.timeline-photo-container {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  height: 240px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-lg);
+}
+.timeline-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.timeline-photo-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+  color: #fff;
+  padding: 8px;
+  text-align: center;
+}
+
+/* Nudges Alerts */
+.nudge-alert {
+  background: linear-gradient(135deg, rgba(255, 214, 0, 0.12) 0%, rgba(217, 119, 6, 0.04) 100%);
+  border: 1.5px solid rgba(255, 214, 0, 0.25);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  animation: pulseGold 2s infinite;
+}
+@keyframes pulseGold {
+  0%, 100% { box-shadow: 0 2px 8px rgba(255, 214, 0, 0.1); }
+  50% { box-shadow: 0 4px 16px rgba(255, 214, 0, 0.25); }
+}
+
+/* Center Wall Styles */
+.cw-avatar-row {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  border: 2px solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.cw-leaderboard-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.cw-leaderboard-row:last-child {
+  border-bottom: none;
+}
+.cw-rank {
+  font-weight: 800;
+  font-family: 'Space Grotesk', sans-serif;
+  width: 24px;
+}
 </style>
 </head>
 <body>
@@ -702,6 +912,7 @@ input:focus, select:focus, textarea:focus {
       <button class="nav-item" onclick="goTo('diet',this)"><span class="ic">🥗</span>My Diet Plan</button>
       <button class="nav-item" onclick="goTo('foodlog',this)"><span class="ic">🍽️</span>Food Log</button>
       <button class="nav-item" onclick="goTo('referral',this)"><span class="ic">🎟️</span>My Referrals</button>
+      <button class="nav-item" id="nav-centerwall" onclick="goTo('centerwall',this)"><span class="ic">🏛️</span>Center Wall</button>
     </nav>
     <div class="sb-bottom">
       <div style="display:flex;gap:6px">
@@ -715,13 +926,18 @@ input:focus, select:focus, textarea:focus {
 
     <!-- OVERVIEW -->
     <div class="sec active" id="sec-overview">
+      <div id="ov-coach-nudge-alert"></div>
       <div id="ov-streak"></div>
       <div id="ov-payment-banner"></div>
       <div class="welcome-card">
         <div class="welcome-greeting" id="ov-greeting">Welcome back</div>
         <div class="welcome-name" id="ov-name">—</div>
         <div class="welcome-sub" id="ov-sub">Loading your dashboard...</div>
+        <div id="ov-rank-badge" style="margin-top:8px"></div>
       </div>
+      <div id="ov-garden"></div>
+      <div id="ov-water-tracker"></div>
+      <div id="ov-mood-reflection"></div>
       <div class="stats" id="ov-stats"></div>
       <div id="ov-coach-msg"></div>
       <div id="ov-transformation"></div>
@@ -1014,6 +1230,45 @@ input:focus, select:focus, textarea:focus {
       </div>
     </div>
 
+    <!-- CENTER WALL -->
+    <div class="sec" id="sec-centerwall">
+      <div class="ph">
+        <div><div class="pt">Center Wall</div><div class="ps" id="cw-subtitle">Connected to your wellness community</div></div>
+      </div>
+      
+      <!-- Group Goal Card -->
+      <div class="tcard" id="cw-group-goal-card">
+        <h3>🎯 Center Check-in Goal</h3>
+        <div style="font-size: 13px; color: var(--muted); margin-bottom: 8px;">
+          This month, our center is aiming for <strong style="color: var(--primary)">500 physical check-ins</strong>!
+        </div>
+        <div class="goal-bar-wrap" style="height: 14px; background: var(--surface2); border-radius: 20px; overflow: hidden; margin-bottom: 6px;">
+          <div id="cw-group-goal-fill" class="goal-bar-fill done" style="width: 0%; height: 100%; transition: width 0.6s; background: linear-gradient(90deg, var(--primary), var(--primary-mid));"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">
+          <span id="cw-group-goal-count">0 / 500 Check-ins</span>
+          <span id="cw-group-goal-pct">0% Complete</span>
+        </div>
+      </div>
+
+      <!-- Checked-in Today Row -->
+      <div class="tcard">
+        <h3>👥 Checked-in Today</h3>
+        <div id="cw-checked-in-list" style="display: flex; gap: 12px; overflow-x: auto; padding: 10px 0; align-items: center;">
+          <div style="color: var(--muted); font-size: 13px; padding: 10px;">No check-ins yet today. Be the first! 🌿</div>
+        </div>
+      </div>
+
+      <!-- Streaks Leaderboard -->
+      <div class="tcard">
+        <h3>🏆 Consistency Leaderboard</h3>
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">Top 5 members with the most check-ins this month!</div>
+        <div id="cw-leaderboard-list">
+          <div style="text-align: center; color: var(--muted); padding: 10px;">Loading leaderboard...</div>
+        </div>
+      </div>
+    </div>
+
     <div class="sec" id="sec-referral">
       <div class="ph">
         <div><div class="pt">My Referrals</div><div class="ps" id="ref-subtitle">Friends you've brought to us</div></div>
@@ -1115,6 +1370,7 @@ function goTo(sec, btn) {
   if (sec === 'referral')   renderReferral();
   if (sec === 'diet')       loadMealLogs().then(renderDietPlan);
   if (sec === 'foodlog')    loadFoodLog();
+  if (sec === 'centerwall') renderCenterWall();
 }
 
 // ── HELPERS ──
@@ -1279,6 +1535,18 @@ async function loadData() {
       if (allC && allC[0] && allC[0].name) DATA.centerName = allC[0].name;
     }
   } catch(e) { console.error('center load failed', e); }
+
+  // Fetch referred count
+  try {
+    var referred = await req('GET', 'customers', null, 'referred_by_id=eq.' + CUST.id + '&select=id');
+    DATA.referredCount = referred ? referred.length : 0;
+  } catch(e) { console.error('referred load failed', e); DATA.referredCount = 0; }
+
+  // Fetch today's food entries for Visual Garden compliance
+  try {
+    var todayStr = new Date().toISOString().split('T')[0];
+    FL_ENTRIES = await req('GET', 'food_log_entries', null, 'customer_id=eq.' + CUST.id + '&date=eq.' + todayStr + '&order=created_at.asc') || [];
+  } catch(e) { console.error('food logs load failed', e); FL_ENTRIES = []; }
 }
 
 // ── OVERVIEW ──
@@ -1341,6 +1609,13 @@ function renderOverview() {
   renderGoalCard();
   buildPackCard(document.getElementById('ov-pack'));
   renderRenewalBanner(left);
+  
+  // Call new motivational features
+  renderMentorRank();
+  renderWellnessGarden();
+  renderWaterTracker();
+  renderMoodReflection();
+  checkCoachNudges();
 
   if (DATA.coach) {
     var c = DATA.coach;
@@ -3241,6 +3516,562 @@ function logout() {
   if (_bodyChart) { _bodyChart.destroy(); _bodyChart = null; }
   localStorage.removeItem('clientCustId');
   location.reload();
+}
+
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// ── IDENTITY TIER / MENTOR PROGRAM ──
+function renderMentorRank() {
+  var totalPres = DATA.attendance.filter(function(a){ return a.status === 'present'; }).length;
+  var referredCount = DATA.referredCount || 0;
+  
+  var weightChange = 0;
+  if (DATA.body && DATA.body.length >= 2) {
+    var firstWeight = DATA.body[DATA.body.length - 1].weight;
+    var latestWeight = DATA.body[0].weight;
+    weightChange = Math.abs(firstWeight - latestWeight);
+  }
+  
+  var rank = '🟢 Novice';
+  var color = '#10b981';
+  var rankDesc = 'Welcome to the club! Check in regularly to unlock Achiever status.';
+  var nextMilestoneDesc = 'Unlock Achiever: 25 check-ins or 5kg weight loss.';
+  
+  if (totalPres >= 50 && referredCount >= 1) {
+    rank = '👑 Club Mentor';
+    color = '#fbbf24';
+    rankDesc = 'Community Leader! You inspire others and guide the club.';
+    nextMilestoneDesc = 'Top Rank unlocked! Keep leading by example. 🌟';
+  } else if (totalPres >= 25 || weightChange >= 5) {
+    rank = '🔵 Achiever';
+    color = '#38bdf8';
+    rankDesc = 'Consistency Achiever! You are making major progress.';
+    nextMilestoneDesc = 'Unlock Club Mentor: 50 check-ins + refer 1 friend.';
+  }
+  
+  var elBadge = document.getElementById('ov-rank-badge');
+  if (elBadge) {
+    elBadge.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div><span style="background:rgba(255,255,255,0.12);border:1.5px solid ${color};color:${color};padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800;display:inline-block;letter-spacing:0.5px;box-shadow:0 0 10px rgba(0,0,0,0.2)">${rank}</span></div>
+        <p style="font-size:11px;opacity:0.85;margin-top:4px">${rankDesc}</p>
+        <span style="font-size:10px;opacity:0.7">${nextMilestoneDesc}</span>
+      </div>
+    `;
+  }
+}
+
+// ── VISUAL WELLNESS GARDEN ──
+function renderWellnessGarden() {
+  var el = document.getElementById('ov-garden');
+  if (!el) return;
+  
+  var today = todayStr();
+  var todayAtt = DATA.attendance.find(function(a){ return a.date === today; });
+  var hasCheckin = todayAtt && todayAtt.status === 'present';
+  
+  var waterLogged = Number(localStorage.getItem('water_' + CUST.id + '_' + today) || (todayAtt ? todayAtt.water_logged : 0) || 0);
+  var hasWater = waterLogged >= 1.0;
+  var hasMeals = FL_ENTRIES && FL_ENTRIES.length > 0;
+  var targetWaterReached = waterLogged >= 3.0;
+  
+  // Calculate Growth Stage (1 to 5)
+  var stage = 1;
+  if (hasCheckin) stage = 2;
+  if (hasCheckin && hasWater) stage = 3;
+  if (hasCheckin && hasWater && hasMeals) stage = 4;
+  if (hasCheckin && hasWater && hasMeals && targetWaterReached) stage = 5;
+  
+  var stagesText = ['🌱 Seed', '🌿 Sprout', '🌸 Budding', '🌺 Flowering', '🌳 Fully Bloomed'];
+  
+  // Dynamic plant SVG path based on stage
+  var stemHeight = stage * 18;
+  var leafColor = stage === 5 ? '#ffd600' : '#00e676';
+  var flowerColor = '#ff1744';
+  
+  // SVG drawing string
+  var plantSvg = `
+    <svg width="120" height="120" viewBox="0 0 100 100">
+      <!-- Ground -->
+      <path d="M10 90 L90 90" stroke="#475569" stroke-width="3" stroke-linecap="round"/>
+      <!-- Seed (Stage 1) -->
+      ${stage >= 1 ? '<circle cx="50" cy="85" r="4" fill="#a78bfa" />' : ''}
+      <!-- Stem (Stage 2+) -->
+      ${stage >= 2 ? `<path d="M50 90 Q48 ${90 - stemHeight/2} 50 ${90 - stemHeight}" stroke="#00e676" stroke-width="4" fill="none" stroke-linecap="round"/>` : ''}
+      <!-- Leaves (Stage 3+) -->
+      ${stage >= 3 ? `<path d="M50 ${90 - stemHeight + 10} Q35 ${90 - stemHeight} 40 ${90 - stemHeight - 5} Q48 ${90 - stemHeight + 2} 50 ${90 - stemHeight + 10}" fill="${leafColor}"/>` : ''}
+      ${stage >= 3 ? `<path d="M50 ${90 - stemHeight + 15} Q65 ${90 - stemHeight + 5} 60 ${90 - stemHeight} Q52 ${90 - stemHeight + 7} 50 ${90 - stemHeight + 15}" fill="${leafColor}"/>` : ''}
+      <!-- Flowers/Fruit (Stage 4+) -->
+      ${stage >= 4 ? `<circle cx="50" cy="${90 - stemHeight}" r="7" fill="${flowerColor}" />
+                      <circle cx="45" cy="${90 - stemHeight - 5}" r="5" fill="#f59e0b" />
+                      <circle cx="55" cy="${90 - stemHeight - 5}" r="5" fill="#f59e0b" />` : ''}
+      <!-- Glow (Stage 5) -->
+      ${stage === 5 ? `<circle cx="50" cy="${90 - stemHeight}" r="15" fill="rgba(255,214,0,0.2)" filter="blur(2px)"/>` : ''}
+    </svg>
+  `;
+  
+  el.innerHTML = `
+    <div class="garden-card">
+      <div class="garden-title">🌿 Your Wellness Garden</div>
+      <div class="garden-sub">Grow your plant daily by completing healthy habits!</div>
+      
+      <div class="garden-svg-container">
+        ${plantSvg}
+      </div>
+      
+      <div style="font-weight:700;font-size:14px;color:var(--primary);margin-bottom:12px">
+        Stage: ${stagesText[stage-1]}
+      </div>
+      
+      <div class="garden-milestones">
+        <div style="text-align:center">
+          <div style="font-weight:600;font-size:10px">Checkin</div>
+          <div class="garden-milestone-dot ${hasCheckin ? 'active' : ''}"></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-weight:600;font-size:10px">Water Log</div>
+          <div class="garden-milestone-dot ${hasWater ? 'active' : ''}"></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-weight:600;font-size:10px">Meals</div>
+          <div class="garden-milestone-dot ${hasMeals ? 'active' : ''}"></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-weight:600;font-size:10px">Target H2O</div>
+          <div class="garden-milestone-dot ${targetWaterReached ? 'active' : ''}"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── WATER TRACKER ──
+function renderWaterTracker() {
+  var el = document.getElementById('ov-water-tracker');
+  if (!el) return;
+  
+  var today = todayStr();
+  var todayAtt = DATA.attendance.find(function(a){ return a.date === today; });
+  var logged = Number(localStorage.getItem('water_' + CUST.id + '_' + today) || (todayAtt ? todayAtt.water_logged : 0) || 0);
+  
+  // Hitting water streak
+  var streak = 0;
+  var check = new Date(); check.setHours(0,0,0,0);
+  for (var i = 0; i < 30; i++) {
+    var checkStr = check.toISOString().split('T')[0];
+    var attVal = DATA.attendance.find(function(a){ return a.date === checkStr; });
+    var cacheVal = Number(localStorage.getItem('water_' + CUST.id + '_' + checkStr) || (attVal ? attVal.water_logged : 0) || 0);
+    if (cacheVal >= 3.0) {
+      streak++;
+    } else {
+      if (i > 0) break; // only break if not today (allowed to not be met today yet)
+    }
+    check.setDate(check.getDate() - 1);
+  }
+  
+  var pct = Math.min(100, Math.round((logged / 3.0) * 100));
+  
+  el.innerHTML = `
+    <div class="water-card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="font-family:'Space Grotesk',sans-serif;font-size:16px;color:#38bdf8">💧 Daily Hydration</h3>
+        <span style="font-size:12px;font-weight:700;color:#38bdf8">🔥 ${streak} Day Streak</span>
+      </div>
+      
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px">
+        <div>
+          <span style="font-size:24px;font-family:'Space Grotesk',sans-serif;font-weight:700;color:#38bdf8">${logged.toFixed(1)}L</span>
+          <span style="font-size:12px;color:var(--muted)">/ 3.0 Liters</span>
+        </div>
+        <span style="font-size:12px;color:var(--muted)">${pct}% target met</span>
+      </div>
+      
+      <div class="goal-bar-wrap" style="height:10px;background:var(--surface2);border-radius:20px;overflow:hidden;margin-top:8px">
+        <div style="height:100%;background:linear-gradient(90deg,#38bdf8,#0284c7);width:${pct}%;border-radius:20px;transition:width .4s ease"></div>
+      </div>
+      
+      <div class="water-btn-row">
+        <button class="water-btn" onclick="saveWater(${(logged + 0.25).toFixed(2)})">+ 250ml Glass</button>
+        <button class="water-btn" onclick="saveWater(${(logged + 0.5).toFixed(2)})">+ 500ml Bottle</button>
+        <button class="water-btn" onclick="saveWater(0)" style="max-width:50px;background:rgba(255,23,68,0.1);color:var(--danger);border-color:rgba(255,23,68,0.2)">✕</button>
+      </div>
+    </div>
+  `;
+}
+
+async function saveWater(liters) {
+  liters = parseFloat(liters) || 0;
+  var today = todayStr();
+  localStorage.setItem('water_' + CUST.id + '_' + today, liters);
+  
+  // Render instantly
+  renderWaterTracker();
+  renderWellnessGarden();
+  
+  try {
+    var todayAtt = DATA.attendance.find(function(a){ return a.date === today; });
+    if (todayAtt) {
+      await req('PATCH', 'attendance', { water_logged: liters }, 'id=eq.' + todayAtt.id);
+      todayAtt.water_logged = liters;
+    } else {
+      var res = await req('POST', 'attendance', {
+        customer_id: CUST.id,
+        customer_name: CUST.name,
+        date: today,
+        wellness_center_id: CUST.wellness_center_id,
+        status: null,
+        water_logged: liters
+      });
+      if (res && res[0]) DATA.attendance.push(res[0]);
+    }
+  } catch(e) {
+    console.warn('DB water log failed, cached in localStorage', e);
+  }
+}
+
+// ── MOOD REFLECTION ──
+function renderMoodReflection() {
+  var el = document.getElementById('ov-mood-reflection');
+  if (!el) return;
+  
+  var today = todayStr();
+  var todayAtt = DATA.attendance.find(function(a){ return a.date === today; });
+  var selectedMood = localStorage.getItem('mood_' + CUST.id + '_' + today) || (todayAtt ? todayAtt.mood : null) || null;
+  
+  var moods = [
+    { code: 'energetic', icon: '😊', label: 'Energetic' },
+    { code: 'tired', icon: '🥱', label: 'Tired' },
+    { code: 'sore', icon: '🩹', label: 'Sore' },
+    { code: 'focused', icon: '🧘', label: 'Focused' }
+  ];
+  
+  var quoteHtml = '';
+  if (selectedMood) {
+    var messages = {
+      energetic: 'Great energy! Hit your nutrition targets and channel this into a great day! 🚀',
+      tired: 'Rest is part of progress. Ensure you drink your protein shake and give yourself grace today. 😴',
+      sore: 'Muscle soreness means growth! Stretch gently, drink water, and refuel. 🩹',
+      focused: 'Beautiful mindset. Let this focus guide your choices and nutrition today. 🎯'
+    };
+    quoteHtml = `
+      <div style="margin-top:14px;padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--primary);font-style:italic;line-height:1.4">
+        ${messages[selectedMood]}
+      </div>
+    `;
+  }
+  
+  el.innerHTML = `
+    <div class="mood-card">
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:16px;color:var(--text)">🧠 How are you feeling today?</h3>
+      <div style="font-size:11px;color:var(--muted)">Share reflection with your coach</div>
+      
+      <div class="mood-grid">
+        ${moods.map(function(m){
+          var sel = selectedMood === m.code ? 'selected' : '';
+          return `<button class="mood-btn ${sel}" onclick="saveMood('${m.code}')">
+            <div style="font-size:18px">${m.icon}</div>
+            <div style="font-size:10px;margin-top:2px">${m.label}</div>
+          </button>`;
+        }).join('')}
+      </div>
+      ${quoteHtml}
+    </div>
+  `;
+}
+
+async function saveMood(mood) {
+  var today = todayStr();
+  localStorage.setItem('mood_' + CUST.id + '_' + today, mood);
+  
+  renderMoodReflection();
+  renderWellnessGarden();
+  
+  try {
+    var todayAtt = DATA.attendance.find(function(a){ return a.date === today; });
+    if (todayAtt) {
+      await req('PATCH', 'attendance', { mood: mood }, 'id=eq.' + todayAtt.id);
+      todayAtt.mood = mood;
+    } else {
+      var res = await req('POST', 'attendance', {
+        customer_id: CUST.id,
+        customer_name: CUST.name,
+        date: today,
+        wellness_center_id: CUST.wellness_center_id,
+        status: null,
+        mood: mood
+      });
+      if (res && res[0]) DATA.attendance.push(res[0]);
+    }
+    showToast('Reflection shared with your coach! 🧠', 'success');
+  } catch(e) {
+    console.warn('DB mood reflection failed, cached locally', e);
+  }
+}
+
+// ── TIMELINE SLIDER ──
+var TIMELINE_PHOTOS = [];
+function renderTransformation() {
+  var el = document.getElementById('ov-transformation');
+  if (!el) return;
+  
+  TIMELINE_PHOTOS = [];
+  try {
+    if (CUST.photo_history) {
+      TIMELINE_PHOTOS = JSON.parse(CUST.photo_history);
+    }
+  } catch(e) {}
+  
+  if (!TIMELINE_PHOTOS.length) {
+    if (CUST.photo_before) TIMELINE_PHOTOS.push({ date: CUST.join_date || 'Before', url: CUST.photo_before, label: 'Before' });
+    if (CUST.photo_after) TIMELINE_PHOTOS.push({ date: 'Today', url: CUST.photo_after, label: 'After' });
+  }
+  
+  if (!TIMELINE_PHOTOS.length) {
+    el.innerHTML = `
+      <div class="transform-card">
+        <h3>✨ Transformation Timeline</h3>
+        <p class="empty" style="font-size:12px;padding:20px 0">No photos uploaded yet.</p>
+        <input type="file" id="timeline-photo-input" accept="image/*" style="display:none" onchange="uploadTimelinePhoto()">
+        <button class="btn-p" onclick="document.getElementById('timeline-photo-input').click()" style="width:100%">📸 Upload Before Photo</button>
+      </div>
+    `;
+    return;
+  }
+  
+  var selectedIndex = Number(localStorage.getItem('timelineIndex_' + CUST.id) || 0);
+  if (selectedIndex >= TIMELINE_PHOTOS.length) selectedIndex = TIMELINE_PHOTOS.length - 1;
+  if (selectedIndex < 0) selectedIndex = 0;
+  
+  var activePhoto = TIMELINE_PHOTOS[selectedIndex] || TIMELINE_PHOTOS[0];
+  
+  var sliderHtml = '';
+  if (TIMELINE_PHOTOS.length > 1) {
+    sliderHtml = `
+      <div class="timeline-slider-wrap">
+        <input type="range" class="timeline-slider" min="0" max="${TIMELINE_PHOTOS.length - 1}" value="${selectedIndex}" oninput="changeTimelinePhoto(this.value)">
+        <div style="font-size:12px;color:var(--muted)">Swipe slider to see time-lapse progress</div>
+      </div>
+    `;
+  }
+  
+  el.innerHTML = `
+    <div class="transform-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="font-family:'Space Grotesk',sans-serif;font-size:16px">✨ Transformation Timeline</h3>
+        <button onclick="document.getElementById('timeline-photo-input').click()" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer">➕ Add Photo</button>
+      </div>
+      
+      <input type="file" id="timeline-photo-input" accept="image/*" style="display:none" onchange="uploadTimelinePhoto()">
+      
+      <div class="timeline-photo-container">
+        <img class="timeline-photo-img" src="${activePhoto.url}" alt="${activePhoto.label}">
+        <div class="timeline-photo-overlay">
+          <div style="font-weight:800;font-size:14px">${activePhoto.label}</div>
+          <div style="font-size:11px;opacity:0.8">${activePhoto.date}</div>
+        </div>
+      </div>
+      
+      ${sliderHtml}
+      
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="wa-btn" onclick="document.getElementById('timeline-photo-input').click()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border);font-size:12px">📸 Upload Update</button>
+        <button class="wa-btn" onclick="shareTimeline()" style="flex:1;background:linear-gradient(135deg,#25D366,#128C7E)">💚 Share Timeline</button>
+      </div>
+    </div>
+  `;
+}
+
+function changeTimelinePhoto(val) {
+  localStorage.setItem('timelineIndex_' + CUST.id, val);
+  renderTransformation();
+}
+
+async function uploadTimelinePhoto() {
+  var file = document.getElementById('timeline-photo-input').files[0];
+  if (!file) return;
+  var el = document.getElementById('ov-transformation');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Uploading photo to timeline...</div>';
+  
+  try {
+    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    var path = CUST.id + '/timeline_' + Date.now() + '.' + ext;
+    var res = await fetch(SB_URL + '/storage/v1/object/customer-photos/' + path, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' },
+      body: file
+    });
+    if (!res.ok) { var t = await res.text(); throw new Error(t); }
+    var photoUrl = SB_URL + '/storage/v1/object/public/customer-photos/' + path;
+    
+    // Add to history
+    var history = [];
+    try {
+      if (CUST.photo_history) history = JSON.parse(CUST.photo_history);
+    } catch(e) {}
+    if (!history.length) {
+      if (CUST.photo_before) history.push({ date: CUST.join_date || 'Before', url: CUST.photo_before, label: 'Before' });
+      if (CUST.photo_after) history.push({ date: 'Previous', url: CUST.photo_after, label: 'After' });
+    }
+    
+    var labelText = history.length === 0 ? 'Before' : 'Progress ' + (history.length);
+    history.push({
+      date: new Date().toISOString().slice(0, 10),
+      url: photoUrl,
+      label: labelText
+    });
+    
+    await req('PATCH', 'customers', {
+      photo_history: JSON.stringify(history),
+      photo_after: photoUrl
+    }, 'id=eq.' + CUST.id);
+    
+    CUST.photo_history = JSON.stringify(history);
+    CUST.photo_after = photoUrl;
+    
+    localStorage.setItem('timelineIndex_' + CUST.id, history.length - 1);
+    
+    renderTransformation();
+    toast('Timeline photo uploaded! Swiper updated.', 'success');
+  } catch(e) {
+    toast('Upload failed: ' + e.message, 'error');
+    renderTransformation();
+  }
+}
+
+function shareTimeline() {
+  var shareMsg = encodeURIComponent('Check out my weight and fitness transformation timeline at ' + getClientCenterName() + '! 🌿💪\n\nTrack progress with me: https://app.pulsezen.in/');
+  window.open('https://api.whatsapp.com/send?text=' + shareMsg, '_blank');
+}
+
+// ── COACH INTERACTION ENGINE ──
+async function checkCoachNudges() {
+  var el = document.getElementById('ov-coach-nudge-alert');
+  if (!el) return;
+  
+  try {
+    var res = await req('GET', 'client_interactions', null, 'customer_id=eq.' + CUST.id + '&sender_type=eq.coach&is_read=eq.false&order=created_at.desc&limit=1');
+    if (res && res[0]) {
+      var n = res[0];
+      var emoji = n.type === 'spark' ? '🔥' : n.type === 'cheer' ? '🎉' : '👋';
+      el.innerHTML = `
+        <div class="nudge-alert">
+          <div style="text-align:left">
+            <span style="font-size:18px">${emoji}</span>
+            <strong style="color:var(--accent);margin-left:4px">Coach Cheer!</strong>
+            <p style="font-size:12px;margin-top:2px;color:var(--text)">"${n.message}"</p>
+          </div>
+          <button class="btn-p" onclick="sendWaveBack('${n.id}')" style="padding:6px 12px !important;font-size:12px !important">Wave back 👋</button>
+        </div>
+      `;
+    } else {
+      el.innerHTML = '';
+    }
+  } catch(e) {
+    el.innerHTML = '';
+  }
+}
+
+async function sendWaveBack(nudgeId) {
+  try {
+    await req('PATCH', 'client_interactions', { is_read: true }, 'id=eq.' + nudgeId);
+    await req('POST', 'client_interactions', {
+      customer_id: CUST.id,
+      sender_type: 'client',
+      type: 'wave',
+      message: CUST.name + ' waved back at you!',
+      is_read: false
+    });
+    showToast('Waved back to your coach! 👋', 'success');
+    checkCoachNudges();
+  } catch(e) {
+    showToast('Failed to wave back, try again.', 'error');
+  }
+}
+
+// ── CENTER WALL (COMMUNITY BOARD) ──
+async function renderCenterWall() {
+  var listEl = document.getElementById('cw-checked-in-list');
+  var goalFill = document.getElementById('cw-group-goal-fill');
+  var goalCount = document.getElementById('cw-group-goal-count');
+  var goalPct = document.getElementById('cw-group-goal-pct');
+  var leadList = document.getElementById('cw-leaderboard-list');
+  
+  var today = todayStr();
+  var centerId = CUST.wellness_center_id;
+  
+  var centerName = getClientCenterName();
+  var cwSub = document.getElementById('cw-subtitle');
+  if (cwSub) cwSub.textContent = 'Connected to your wellness community at ' + centerName;
+  
+  // 1. Fetch Today's check-ins
+  try {
+    var checkinsToday = await req('GET', 'attendance', null, 'wellness_center_id=eq.' + centerId + '&date=eq.' + today + '&status=eq.present&order=check_in_time.desc');
+    if (checkinsToday && checkinsToday.length > 0) {
+      listEl.innerHTML = checkinsToday.map(function(c){
+        var initial = initials(c.customer_name);
+        return `
+          <div style="text-align:center;min-width:60px">
+            <div class="cw-avatar-row">${initial}</div>
+            <div style="font-size:10px;margin-top:4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65px">${c.customer_name.split(' ')[0]}</div>
+            <div style="font-size:9px;color:var(--muted)">${c.check_in_time || ''}</div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px;">No check-ins yet today. Be the first! 🌿</div>';
+    }
+  } catch(e) {
+    listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px;">Failed to load check-ins today.</div>';
+  }
+  
+  // 2. Fetch monthly count
+  var now = new Date();
+  var startStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  var endStr = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  
+  try {
+    var allMonth = await req('GET', 'attendance', null, 'wellness_center_id=eq.' + centerId + '&date=gte.' + startStr + '&date=lte.' + endStr + '&status=eq.present');
+    var monthCount = allMonth ? allMonth.length : 0;
+    var target = 500;
+    var pct = Math.min(100, Math.round((monthCount / target) * 100));
+    
+    if (goalFill) goalFill.style.width = pct + '%';
+    if (goalCount) goalCount.textContent = monthCount + ' / ' + target + ' Check-ins';
+    if (goalPct) goalPct.textContent = pct + '% Complete';
+    
+    // 3. Leaderboard
+    if (allMonth && allMonth.length > 0) {
+      var counts = {};
+      allMonth.forEach(function(r) {
+        if (r.customer_name) {
+          counts[r.customer_name] = (counts[r.customer_name] || 0) + 1;
+        }
+      });
+      
+      var leaderboard = Object.keys(counts).map(function(name) {
+        return { name: name, count: counts[name] };
+      }).sort(function(a,b) { return b.count - a.count; }).slice(0, 5);
+      
+      var medals = ['🥇', '🥈', '🥉', '✨', '⭐'];
+      leadList.innerHTML = leaderboard.map(function(item, idx){
+        return `
+          <div class="cw-leaderboard-row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="cw-rank">${medals[idx] || idx+1}</span>
+              <span style="font-weight:700">${item.name}</span>
+            </div>
+            <strong style="color:var(--primary)">${item.count} sessions</strong>
+          </div>
+        `;
+      }).join('');
+    } else {
+      leadList.innerHTML = '<div style="text-align:center;color:var(--muted);padding:10px;">No sessions logged this month yet.</div>';
+    }
+  } catch(e) {
+    if (leadList) leadList.innerHTML = '<div style="text-align:center;color:var(--muted);padding:10px;">Failed to load consistency leaderboard.</div>';
+  }
 }
 
 // ── THEME LOGIC ──
