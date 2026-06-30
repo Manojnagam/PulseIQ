@@ -200,6 +200,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .btn-c{padding:9px 18px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer}
 .empty{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty .ei{font-size:40px;margin-bottom:10px}
+.tabs{display:flex;gap:10px;margin-bottom:16px}
+.tab-btn{padding:8px 16px;background:var(--surface2);border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted)}
+.tab-btn.active{background:var(--primary);color:#fff}
 
 /* ── CUSTOMER CARDS ── */
 .cust-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
@@ -1037,26 +1040,60 @@ input:focus, select:focus, textarea:focus {
     <div class="sec" id="sec-body">
       <div class="ph">
         <div><div class="pt" data-t="pt_body">Body Composition</div><div class="ps" data-t="ps_body">Track customer measurements</div></div>
-        <button class="btn-p" style="background:linear-gradient(135deg,#047857,#10b981);border-color:#047857;color:#fff;font-weight:600;font-size:12px;padding:6px 12px;" onclick="openWellnessScanModal()">🥗 Wellness Scan AI</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-p" id="btn-body-share-card" onclick="openShareCardModal()" style="display:none;background:#ff6b6b;border-color:#ff6b6b;color:#fff;font-weight:600;font-size:12px;padding:6px 12px;">🎨 Share Card</button>
+          <button class="btn-p" style="background:linear-gradient(135deg,#047857,#10b981);border-color:#047857;color:#fff;font-weight:600;font-size:12px;padding:6px 12px;" onclick="openWellnessScanModal()">🥗 Wellness Scan AI</button>
+        </div>
       </div>
-      <div class="tcard" style="margin-bottom:16px">
-        <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Select Customer</label>
-        <select id="body-cust-sel" onchange="onBodyCustChange()" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
-          <option value="">— Select a customer —</option>
-        </select>
+      <div class="tabs">
+        <button class="tab-btn active" id="body-tab-records" onclick="switchBodyTab('records',this)">📋 Records</button>
+        <button class="tab-btn" id="body-tab-recheck" onclick="switchBodyTab('recheck',this)">🔔 Recheck Due <span id="recheck-count-badge" style="background:var(--danger);color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;margin-left:4px">0</span></button>
+        <button class="tab-btn" id="body-tab-myprofile" onclick="switchBodyTab('myprofile',this)">👤 My Profile</button>
       </div>
-      <div id="body-content" style="display:none">
+
+      <div id="body-sec-records">
+        <div class="tcard" style="margin-bottom:16px">
+          <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Select Customer</label>
+          <select id="body-cust-sel" onchange="onBodyCustChange()" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+            <option value="">— Select a customer —</option>
+          </select>
+        </div>
+        <div id="body-content" style="display:none">
+          <div class="ph" style="margin-bottom:12px">
+            <div class="pt" style="font-size:16px" id="body-cust-name"></div>
+            <button class="btn-p" onclick="openBodyModal()">+ Add Record</button>
+          </div>
+          <div class="stats" id="body-latest-stats" style="margin-bottom:16px"></div>
+          <div class="tcard" id="body-chart-card" style="display:none;margin-bottom:16px">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">📈 Weight Over Time</h3>
+            <div class="body-chart-wrap"><canvas id="body-weight-chart"></canvas></div>
+          </div>
+          <div id="body-coach-ideals" style="margin-bottom:16px"></div>
+          <div id="body-records"></div>
+        </div>
+      </div>
+
+      <div id="body-sec-recheck" style="display:none">
+        <div id="recheck-list"></div>
+      </div>
+
+      <div id="body-sec-myprofile" style="display:none">
         <div class="ph" style="margin-bottom:12px">
-          <div class="pt" style="font-size:16px" id="body-cust-name"></div>
-          <button class="btn-p" onclick="openBodyModal()">+ Add Record</button>
+          <div><div class="pt">My Body Stats</div><div class="ps">Track your personal body composition over time</div></div>
+          <button class="btn-p" onclick="openMyBodyModal()">+ Add Today's Stats</button>
         </div>
-        <div class="stats" id="body-latest-stats" style="margin-bottom:16px"></div>
-        <div class="tcard" id="body-chart-card" style="display:none;margin-bottom:16px">
-          <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">📈 Weight Over Time</h3>
-          <div class="body-chart-wrap"><canvas id="body-weight-chart"></canvas></div>
+        <!-- Ideal targets card -->
+        <div class="tcard" id="my-body-ideals" style="margin-bottom:16px"></div>
+        <!-- History -->
+        <div class="tcard">
+          <div style="font-weight:700;font-size:14px;margin-bottom:12px">Body History</div>
+          <div id="my-body-history"></div>
         </div>
-        <div id="body-coach-ideals" style="margin-bottom:16px"></div>
-        <div id="body-records"></div>
+        <!-- Weight chart -->
+        <div class="tcard" style="margin-top:16px">
+          <div style="font-weight:700;font-size:14px;margin-bottom:12px">Weight Over Time</div>
+          <div class="body-chart-wrap"><canvas id="my-weight-chart" height="120"></canvas></div>
+        </div>
       </div>
     </div>
 
@@ -1273,24 +1310,7 @@ input:focus, select:focus, textarea:focus {
     </div>
 
     <!-- ── MY BODY STATS ── -->
-    <div class="sec" id="sec-mybody">
-      <div class="ph">
-        <div><div class="pt">My Body Stats</div><div class="ps">Track your personal body composition over time</div></div>
-        <button class="btn-p" onclick="openMyBodyModal()">+ Add Today's Stats</button>
-      </div>
-      <!-- Ideal targets card -->
-      <div class="tcard" id="my-body-ideals" style="margin-bottom:16px"></div>
-      <!-- History -->
-      <div class="tcard">
-        <div style="font-weight:700;font-size:14px;margin-bottom:12px">Body History</div>
-        <div id="my-body-history"></div>
-      </div>
-      <!-- Weight chart -->
-      <div class="tcard" style="margin-top:16px">
-        <div style="font-weight:700;font-size:14px;margin-bottom:12px">Weight Over Time</div>
-        <canvas id="my-weight-chart" height="120"></canvas>
-      </div>
-    </div>
+    <div class="sec" id="sec-mybody" style="display:none"></div>
 
     <!-- ── MY DIET PLAN ── -->
     <div class="sec" id="sec-mydiet">
@@ -2301,7 +2321,7 @@ function goTo(name, el) {
   if (window.innerWidth <= 768) toggleSidebar();
   if (name === 'customers')  renderCustomers();
   if (name === 'attendance') renderAttendance();
-  if (name === 'body')       { renderBodyCustSelect(); loadMyBodyStats(); }
+  if (name === 'body')       { renderBodyCustSelect(); loadMyBodyStats(); switchBodyTab('records', document.getElementById('body-tab-records')); }
   if (name === 'finance')    renderFinance();
   if (name === 'leads')      renderLeads();
   if (name === 'renewals')   renderRenewals();
@@ -2309,7 +2329,7 @@ function goTo(name, el) {
   if (name === 'workout')    { renderWorkoutCustFilter(); renderWorkoutPlans(); }
   if (name === 'bulkwa')     renderWaRecipients();
   if (name === 'shakes')     renderShakes();
-  if (name === 'mybody')    loadMyBodyStats();
+  if (name === 'mybody')    { goTo('body', document.querySelector('.sb-nav button[onclick*="goTo(\'body\'"]')); switchBodyTab('myprofile', document.getElementById('body-tab-myprofile')); }
   if (name === 'mydiet')    loadMyDiet();
   if (name === 'myfoodlog') loadMyFoodLog();
 }
@@ -3482,6 +3502,7 @@ function renderBodyCustSelect() {
     '<option value="'+COACH_ID+'">👤 My Own Measurements</option>' +
     D.customers.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
   if (_bodySelCustId) { sel.value = _bodySelCustId; onBodyCustChange(); }
+  renderRecheckBadge();
 }
 
 function onBodyCustChange() {
@@ -3500,14 +3521,17 @@ function renderBodyRecords() {
   var chartCard = document.getElementById('body-chart-card');
   var el = document.getElementById('body-records');
 
+  var shareBtn = document.getElementById('btn-body-share-card');
   if (!recs.length) {
     statsEl.innerHTML = '';
     chartCard.style.display = 'none';
     if (_bodyCompChart) { _bodyCompChart.destroy(); _bodyCompChart = null; }
     el.innerHTML = '<div class="empty"><div class="ei">⚖️</div><p>No records yet. Add the first measurement.</p></div>';
     renderBodyTargets(null, null);
+    if (shareBtn) shareBtn.style.display = 'none';
     return;
   }
+  if (shareBtn) shareBtn.style.display = recs.length >= 2 ? 'block' : 'none';
 
   // ── Latest stat tiles ──
   var latest = recs[0];
@@ -4900,6 +4924,301 @@ function deleteNote(idx) {
   renderNotesList();
 }
 
+// Helper: get dynamic center name
+function getCenterName() {
+  if (D && D.centers && D.centers.length) {
+    return D.centers[0].name;
+  }
+  return 'Our Wellness Center';
+}
+
+// Sub-tab switcher for Coach Body Composition view
+function switchBodyTab(name, el) {
+  var recordsEl = document.getElementById('body-sec-records');
+  var recheckEl = document.getElementById('body-sec-recheck');
+  var myprofileEl = document.getElementById('body-sec-myprofile');
+
+  if(recordsEl) recordsEl.style.display = name === 'records' ? 'block' : 'none';
+  if(recheckEl) recheckEl.style.display = name === 'recheck' ? 'block' : 'none';
+  if(myprofileEl) myprofileEl.style.display = name === 'myprofile' ? 'block' : 'none';
+
+  document.querySelectorAll('#sec-body .tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (el) el.classList.add('active');
+
+  if (name === 'recheck') renderRecheckList();
+  if (name === 'myprofile') { loadMyBodyStats(); }
+}
+
+// Count number of clients whose recheck is due (>= 7 days since last scan)
+function renderRecheckBadge() {
+  var overdue = D.customers.filter(function(c){
+    var recs = D.body.filter(function(b){return b.customer_id===c.id;});
+    if (!recs.length) return false;
+    var latest = recs.sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0];
+    var days = Math.floor((new Date() - new Date(latest.date)) / 86400000);
+    return days >= 7;
+  });
+  var badge = document.getElementById('recheck-count-badge');
+  if (badge) badge.textContent = overdue.length;
+}
+
+// Generate the list of clients overdue for a wellness recheck
+function renderRecheckList() {
+  var container = document.getElementById('recheck-list');
+  if (!container) return;
+
+  var custData = D.customers.map(function(c) {
+    var recs = D.body.filter(function(b){return b.customer_id===c.id;})
+                     .sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+    var lastScan = recs.length ? recs[0].date : null;
+    var days = lastScan ? Math.floor((new Date() - new Date(lastScan)) / 86400000) : 9999;
+    var neverScanned = !lastScan;
+    return { c:c, lastScan:lastScan, days:days, neverScanned:neverScanned };
+  }).filter(function(x){ return x.days >= 7; })
+    .sort(function(a,b){ return b.days - a.days; });
+
+  if (!custData.length) {
+    container.innerHTML = '<div class="tcard" style="padding:40px;text-align:center;color:var(--muted)"><div style="font-size:36px;margin-bottom:10px">✅</div><p style="font-size:15px;font-weight:600;color:var(--text)">All customers are up to date!</p><p style="font-size:13px;margin-top:4px">Everyone has a body scan within the last 7 days.</p></div>';
+    return;
+  }
+
+  var html = '<div style="margin-bottom:12px;font-size:13px;color:var(--muted)">'+custData.length+' customer'+(custData.length>1?'s':'')+' need a recheck</div>';
+  html += custData.map(function(x){
+    var c = x.c;
+    var isOverdue = x.days >= 14;
+    var cls = isOverdue ? 'overdue' : 'due-soon';
+    var dayLabel = x.neverScanned ? 'Never scanned' : x.days + ' days since last scan';
+    var phone = (c.contact||'').replace(/\D/g,'');
+    if (phone.length===10) phone=COUNTRY_CODE+phone;
+
+    var centerName = getCenterName();
+    var waMsg = encodeURIComponent('Hi ' + c.name + '! It has been ' + (x.neverScanned ? 'some time' : x.days + ' days') + ' since your last body composition scan at ' + centerName + '. Let\'s schedule your next scan to track your progress! 💚');
+
+    return '<div class="recheck-card ' + (isOverdue ? 'overdue' : 'due-soon') + '" style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">'
+      +'<div>'
+        +'<div style="font-weight:700;font-size:14px">'+c.name+(isOverdue?' <span class="badge br" style="font-size:10px">Overdue</span>':' <span class="badge by" style="font-size:10px">Due</span>')+'</div>'
+        +'<div style="font-size:12px;color:var(--muted);margin-top:3px">'+dayLabel+(x.lastScan?' &nbsp;·&nbsp; Last: '+x.lastScan:'')+'</div>'
+        +(c.goal ? '<div style="font-size:11px;color:var(--primary);margin-top:3px">🎯 '+c.goal+'</div>' : '')
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="text-align:center"><div class="recheck-days" style="font-size:20px;font-weight:700;color:'+(isOverdue?'var(--danger)':'var(--accent)')+'">'+( x.neverScanned ? '∞' : x.days)+'</div><div style="font-size:10px;color:var(--muted)">days</div></div>'
+        +'<div style="display:flex;flex-direction:column;gap:5px">'
+          +(phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+waMsg+'" target="_blank" class="wa-btn" style="font-size:11px;padding:4px 10px;background:#25D366;color:#fff;border-radius:6px;text-decoration:none;font-weight:700;text-align:center;">💬 Remind</a>' : '')
+          +'<button class="btn-p" style="font-size:11px;padding:4px 10px" onclick="selectBodyCustomer(\''+c.id+'\')">📋 View Records</button>'
+        +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  container.innerHTML = html;
+}
+
+function selectBodyCustomer(custId) {
+  switchBodyTab('records', document.getElementById('body-tab-records'));
+  var sel = document.getElementById('body-cust-sel');
+  if (sel) {
+    sel.value = custId;
+    onBodyCustChange();
+  }
+}
+
+// --- Branded Progress Card (Social Share) ---
+var _selectedCardCust = null;
+var _selectedCardBase = null;
+var _selectedCardComp = null;
+
+function openShareCardModal() {
+  if(!_bodySelCustId) return;
+  var cust = _bodySelCustId === COACH_ID
+    ? { id: COACH_ID, name: COACH_NAME }
+    : D.customers.find(function(x){ return x.id === _bodySelCustId; });
+  if(!cust) return;
+
+  _selectedCardCust = cust;
+
+  var sorted = D.body
+    .filter(function(b){ return b.customer_id === _bodySelCustId; })
+    .sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+
+  if(sorted.length < 2) {
+    showToast('At least 2 body scans are required to generate a progress card.', 'error');
+    return;
+  }
+
+  var fromSel = document.getElementById('share-scan-from');
+  var toSel = document.getElementById('share-scan-to');
+
+  fromSel.innerHTML = sorted.map(function(b, idx) {
+    return '<option value="' + b.id + '"' + (idx === 0 ? ' selected' : '') + '>' + b.date + ' (' + b.weight + ' kg)</option>';
+  }).join('');
+
+  toSel.innerHTML = sorted.map(function(b, idx) {
+    return '<option value="' + b.id + '"' + (idx === sorted.length - 1 ? ' selected' : '') + '>' + b.date + ' (' + b.weight + ' kg)</option>';
+  }).join('');
+
+  document.getElementById('share-card-title').value = cust.name + "'s Progress";
+  document.getElementById('share-card-header').value = getCenterName();
+
+  openModal('share-card');
+  drawProgressCard();
+}
+
+function drawProgressCard() {
+  var canvas = document.getElementById('progress-card-canvas');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  var sorted = D.body.filter(function(b){ return b.customer_id === _bodySelCustId; });
+  if(!sorted.length) return;
+
+  var fromId = document.getElementById('share-scan-from').value;
+  var toId = document.getElementById('share-scan-to').value;
+
+  var base = sorted.find(function(b){ return b.id === fromId; }) || sorted[0];
+  var comp = sorted.find(function(b){ return b.id === toId; }) || sorted[sorted.length-1];
+
+  var title = document.getElementById('share-card-title').value || "Health Journey";
+  var theme = document.getElementById('share-card-theme').value;
+  var headerText = document.getElementById('share-card-header').value || getCenterName();
+
+  var grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+  if(theme === 'midnight') {
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(1, '#1e293b');
+  } else if(theme === 'sunset') {
+    grad.addColorStop(0, '#2d1c08');
+    grad.addColorStop(1, '#452a0a');
+  } else {
+    grad.addColorStop(0, '#0d1f14');
+    grad.addColorStop(1, '#1a3a28');
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1080, 1080);
+
+  ctx.strokeStyle = theme === 'sunset' ? '#f59e0b' : '#4ade80';
+  ctx.lineWidth = 14;
+  ctx.strokeRect(30, 30, 1020, 1020);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(headerText.toUpperCase(), 540, 100);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 56px Georgia, serif';
+  ctx.fillText(title, 540, 180);
+
+  function drawStatCol(x, title, scan) {
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(x - 200, 260, 400, 420, 20);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText(title, x, 310);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.fillText(scan.date, x, 345);
+
+    var startY = 400;
+    var rowH = 54;
+
+    function drawRow(label, val, unit) {
+      ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = '500 20px sans-serif';
+      ctx.fillText(label, x - 160, startY);
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 26px sans-serif';
+      var txt = val ? val + unit : '—';
+      ctx.fillText(txt, x + 160, startY);
+
+      startY += rowH;
+    }
+
+    drawRow("Weight", scan.weight, " kg");
+    drawRow("Body Fat", scan.fat_percentage, "%");
+    drawRow("Muscle Mass", scan.muscle_percentage, "%");
+    drawRow("Visceral Fat", scan.visceral_fat, "");
+    drawRow("BMI", scan.bmi, "");
+  }
+
+  drawStatCol(270, "INITIAL SCAN", base);
+  drawStatCol(810, "LATEST SCAN", comp);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(540, 260);
+  ctx.lineTo(540, 680);
+  ctx.stroke();
+
+  var wDiff = (parseFloat(comp.weight)||0) - (parseFloat(base.weight)||0);
+  var fDiff = (parseFloat(comp.fat_percentage)||0) - (parseFloat(base.fat_percentage)||0);
+
+  var resultText = "";
+  var badgeColor = '#10b981';
+  if(wDiff < 0) {
+    resultText = "LOST " + Math.abs(wDiff).toFixed(1) + " KG!";
+    badgeColor = '#4ade80';
+  } else if(wDiff > 0) {
+    resultText = "GAINED " + wDiff.toFixed(1) + " KG!";
+    badgeColor = '#fbbf24';
+  } else {
+    resultText = "MAINTAINED WEIGHT!";
+    badgeColor = '#38bdf8';
+  }
+
+  ctx.fillStyle = badgeColor;
+  ctx.beginPath();
+  ctx.roundRect(140, 740, 800, 160, 24);
+  ctx.fill();
+
+  ctx.fillStyle = '#0d1f14';
+  ctx.font = 'bold 52px sans-serif';
+  ctx.fillText(resultText, 540, 840);
+
+  if(fDiff < 0) {
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText("AND REDUCED BODY FAT BY " + Math.abs(fDiff).toFixed(1) + "%!", 540, 875);
+    ctx.font = 'bold 44px sans-serif';
+    ctx.fillText(resultText, 540, 825);
+  }
+
+  var centerName = getCenterName();
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText('Coached at ' + centerName.toUpperCase(), 540, 960);
+  ctx.fillStyle = theme === 'sunset' ? '#f59e0b' : '#4ade80';
+  ctx.fillText('www.pulsezen.in', 540, 995);
+}
+
+function downloadProgressCard() {
+  var canvas = document.getElementById('progress-card-canvas');
+  var link = document.createElement('a');
+  link.download = _selectedCardCust.name + '-progress-card.png';
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+function copyProgressCardToClipboard() {
+  var canvas = document.getElementById('progress-card-canvas');
+  canvas.toBlob(function(blob) {
+    var item = new ClipboardItem({ 'image/png': blob });
+    navigator.clipboard.write([item]).then(function() {
+      showToast('Progress card copied to clipboard!', 'success');
+    }).catch(function() {
+      showToast('Clipboard copy failed. Try downloading instead.', 'error');
+    });
+  });
+}
+
 // ══════════════════════════════════════════
 //  MY BODY STATS (coach personal)
 // ══════════════════════════════════════════
@@ -5589,6 +5908,51 @@ function renderMyFLEntries() {
     <div class="mf">
       <button class="btn-c" onclick="closeModal('mybody')">Cancel</button>
       <button class="btn-p" onclick="saveMyBody()">Save Stats</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Progress Card Modal -->
+<div class="modal-overlay" id="modal-share-card">
+  <div class="modal-box" style="max-width:700px; width:100%;">
+    <div class="modal-h">
+      <h3>🎨 Generate Progress Share Card</h3>
+      <button class="modal-close" onclick="closeModal('share-card')">×</button>
+    </div>
+    <div style="display:flex; gap:20px; flex-wrap:wrap; text-align:left; padding:10px 0;">
+      <div style="flex:1; min-width:260px; display:flex; flex-direction:column; gap:12px;">
+        <div class="fg">
+          <label for="share-scan-from">Compare From (Initial Scan)</label>
+          <select id="share-scan-from" onchange="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)"></select>
+        </div>
+        <div class="fg">
+          <label for="share-scan-to">Compare To (Latest Scan)</label>
+          <select id="share-scan-to" onchange="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)"></select>
+        </div>
+        <div class="fg">
+          <label for="share-card-title">Journey Title</label>
+          <input type="text" id="share-card-title" value="My Health Journey" oninput="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+        </div>
+        <div class="fg">
+          <label for="share-card-header">Card Top Header (Center Name)</label>
+          <input type="text" id="share-card-header" value="" oninput="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px" placeholder="e.g. Dharani's / BK's Wellness Studio">
+        </div>
+        <div class="fg">
+          <label for="share-card-theme">Card Theme</label>
+          <select id="share-card-theme" onchange="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)">
+            <option value="emerald">Forest Emerald</option>
+            <option value="midnight">Midnight Onyx</option>
+            <option value="sunset">Sunset Gold</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button class="btn-p" style="flex:1; background:var(--success); border-color:var(--success); font-weight:700" onclick="downloadProgressCard()">⬇️ Download PNG</button>
+          <button class="btn-p" style="flex:1; background:var(--accent); border-color:var(--accent); color:#1a2e1f; font-weight:700" onclick="copyProgressCardToClipboard()">📋 Copy Image</button>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.2); border-radius:12px; padding:10px; width:320px; height:320px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.3); margin:0 auto;">
+        <canvas id="progress-card-canvas" width="1080" height="1080" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></canvas>
+      </div>
     </div>
   </div>
 </div>
