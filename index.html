@@ -2635,6 +2635,31 @@ ADD COLUMN IF NOT EXISTS dob date,
 ADD COLUMN IF NOT EXISTS goal text;
 
 -- ==========================================
+-- 🚶 WALK-INS
+-- ==========================================
+create table if not exists walkins (
+  id uuid default gen_random_uuid() primary key,
+  date date not null,
+  name text not null,
+  phone text,
+  pincode text,
+  source text,
+  referred_by_id uuid,
+  referred_by_name text,
+  outcome text,
+  amount_received numeric default 0,
+  product_details text,
+  notes text,
+  wellness_center_id uuid references wellness_centers(id),
+  finance_id uuid,
+  converted boolean default false,
+  converted_customer_id uuid,
+  created_at timestamptz default now()
+);
+alter table walkins enable row level security;
+create policy "allow all" on walkins for all using (true);
+
+-- ==========================================
 -- 📞 LEADS & FOLLOW-UPS
 -- ==========================================
 create table if not exists leads (
