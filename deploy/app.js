@@ -1528,13 +1528,19 @@ async function req(method, table, body, filter) {
     'Content-Type': 'application/json',
     'Prefer': 'return=representation'
   };
-  var opts = { method: method, headers: headers };
-  if (body) opts.body = JSON.stringify(body);
-  var res = await fetch(url, opts);
-  if (res.status === 204) return [];
-  var data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'HTTP ' + res.status);
-  return data;
+  try {
+    var res = await fetch(url, opts);
+    if (res.status === 204) return [];
+    var data = await res.json();
+    if (!res.ok) {
+      console.error('Supabase API Error:', data);
+      throw new Error(data.message || 'HTTP ' + res.status);
+    }
+    return data;
+  } catch (err) {
+    console.error('Supabase Request Failed:', { url, method, body, error: err });
+    throw err;
+  }
 }
 async function dbGet(table, order, extraFilter) {
   order = order || 'created_at';
