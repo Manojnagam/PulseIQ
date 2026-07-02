@@ -2439,7 +2439,7 @@ function updateCustSelects() {
   if(bodySel) {
     var bCustOpts = _custs.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
     var bCoachOpts = _allCoaches.length ? '<optgroup label="── Coaches ──">'+_allCoaches.map(function(c){return '<option value="'+c.id+'">'+c.name+' (Coach)</option>';}).join('')+'</optgroup>' : '';
-    var _walkinList = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER; });
+    var _walkinList = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER||w.center_id===ACTIVE_CENTER; });
     var bWalkinOpts = _walkinList.length ? '<optgroup label="── Walk-ins ──">'+_walkinList.map(function(w){return '<option value="walkin__'+w.id+'">'+w.name+' 🚶 ('+(w.date||'')+')</option>';}).join('')+'</optgroup>' : '';
     bodySel.innerHTML = '<option value="">Select person</option><option value="__sv__">👤 Myself (Supervisor)</option>' + bCustOpts + bCoachOpts + bWalkinOpts;
   }
@@ -3769,7 +3769,7 @@ function renderOverview() {
   var mNet = mInc - mExp;
 
   // ── Walk-ins ──
-  var _walkins = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER; });
+  var _walkins = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER||w.center_id===ACTIVE_CENTER; });
   var walkinsToday = _walkins.filter(function(w){return w.date===todayStr;});
   var walkinsMonth = _walkins.filter(function(w){return (w.date||'').startsWith(currentMonth);});
   var walkinRevMonth = walkinsMonth.reduce(function(s,w){return s+Number(w.amount_received||0);},0);
@@ -9395,7 +9395,7 @@ function renderAnalytics() {
 
     var walkins = (D.walkins || []).filter(function(w) {
       if (!inRange(w.date)) return false;
-      if (centerFilter && w.wellness_center_id !== centerFilter) return false;
+      if (centerFilter && w.wellness_center_id !== centerFilter && w.center_id !== centerFilter) return false;
       return true;
     });
 
@@ -10115,7 +10115,7 @@ function updateBodyCustSelect() {
   var prev = sel.value;
   var custOpts = D.customers.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
   var coachOpts = D.coaches.length ? '<optgroup label="── Coaches ──">'+D.coaches.map(function(c){return '<option value="'+c.id+'">'+c.name+' 👨‍🏫</option>';}).join('')+'</optgroup>' : '';
-  var _wl = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER; });
+  var _wl = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER||w.center_id===ACTIVE_CENTER; });
   var walkinOpts = _wl.length ? '<optgroup label="── Walk-ins ──">'+_wl.map(function(w){return '<option value="walkin__'+w.id+'">'+w.name+' 🚶 ('+(w.date||'')+')</option>';}).join('')+'</optgroup>' : '';
   sel.innerHTML = '<option value="">— Choose a person —</option>' + custOpts + coachOpts + walkinOpts;
   if(prev) sel.value = prev;
@@ -12248,8 +12248,7 @@ async function executePromotion() {
 // ══════════════════════════════════════════════
 
 async function loadWalkins() {
-  var filter = ACTIVE_CENTER ? 'wellness_center_id=eq.'+ACTIVE_CENTER : '';
-  D.walkins = await dbGet('walkins', 'created_at', filter);
+  D.walkins = await dbGet('walkins', 'created_at');
   renderWalkins();
   updateCustSelects();
   updateBodyCustSelect();
@@ -12260,6 +12259,9 @@ function renderWalkins() {
   var filterOutcome = (document.getElementById('walkins-filter-outcome')||{}).value||'';
   var filterDate = (document.getElementById('walkins-filter-date')||{}).value||'';
   var all = D.walkins || [];
+  if (ACTIVE_CENTER) {
+    all = all.filter(function(w){ return w.wellness_center_id === ACTIVE_CENTER || w.center_id === ACTIVE_CENTER; });
+  }
   var today = new Date().toISOString().slice(0,10);
 
   // Stats
@@ -12385,7 +12387,8 @@ async function saveWalkin(){
     amount_received:Number(document.getElementById('walkin-amount').value)||0,
     product_details:(document.getElementById('walkin-product').value||'').trim(),
     notes:(document.getElementById('walkin-notes').value||'').trim(),
-    wellness_center_id:ACTIVE_CENTER||null
+    wellness_center_id:ACTIVE_CENTER||null,
+    center_id:ACTIVE_CENTER||null
   };
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Supabase not configured','error');return;}
   var existingFinanceId = document.getElementById('walkin-finance-id') ? document.getElementById('walkin-finance-id').value : '';

@@ -2616,6 +2616,7 @@ create table if not exists walkins (
   product_details text,
   notes text,
   wellness_center_id uuid references wellness_centers(id),
+  center_id uuid references wellness_centers(id),
   finance_id uuid,
   converted boolean default false,
   converted_customer_id uuid,
@@ -2825,6 +2826,10 @@ ALTER TABLE coupons
 ADD COLUMN IF NOT EXISTS wellness_center_id uuid;
 
 ALTER TABLE leads
+ADD COLUMN IF NOT EXISTS center_id uuid,
+ADD COLUMN IF NOT EXISTS wellness_center_id uuid;
+
+ALTER TABLE walkins
 ADD COLUMN IF NOT EXISTS center_id uuid,
 ADD COLUMN IF NOT EXISTS wellness_center_id uuid;
 
