@@ -11634,7 +11634,7 @@ async function savePayment(){
     due_date:document.getElementById('payment-due-date').value||null,
     description:document.getElementById('payment-desc').value.trim(),
     notes:document.getElementById('payment-notes')?document.getElementById('payment-notes').value.trim()||null:null,
-    wellness_center_id: ACTIVE_CENTER || null};
+    center_id: ACTIVE_CENTER || null};
   try{if(id)await dbUpdate('payments',id,payload);else await dbInsert('payments',payload);
     showToast(id?'Updated!':'Saved!');closeModal('payment');await loadPayments();}
   catch(e){showToast('Error: '+e.message,'error');}

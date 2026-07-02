@@ -2534,7 +2534,7 @@ create table if not exists coupons (
   coach_id uuid not null, quantity integer not null default 1,
   type text not null default 'earn', reason text,
   referred_person text, date date default current_date,
-  notes text, created_at timestamptz default now()
+  notes text, wellness_center_id uuid, created_at timestamptz default now()
 );
 -- NOTE: coach_id is used for both coaches and customers.
 -- Coupons are auto-earned: +1 on invite, +3 when referred person takes a pack.
@@ -2549,7 +2549,7 @@ create table if not exists payments (
   person_id uuid, person_name text, description text,
   total_amount numeric not null, amount_paid numeric not null default 0,
   payment_date date default current_date, due_date date,
-  notes text, created_at timestamptz default now()
+  notes text, center_id uuid, created_at timestamptz default now()
 );
 alter table payments enable row level security;
 create policy "allow all" on payments for all using (true);
@@ -2817,8 +2817,6 @@ ALTER TABLE wellness_centers
 ADD COLUMN IF NOT EXISTS network_id text,
 ADD COLUMN IF NOT EXISTS distributor_id text;
 -- network_id: auto-generated PulseZen identity (e.g. PZ-DH-0001) — set by app on center creation
--- distributor_id: optional self-entered distributor ID — for center owner's own reference only
-
 -- ==========================================
 -- 🏢 MULTI-CENTER FINANCE TRACKING (Run if you have 2+ centers)
 -- ==========================================
@@ -2826,6 +2824,12 @@ ALTER TABLE finance
 ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id);
 -- After this, each finance record can be tagged to a center.
 -- Use the "Wellness Center" dropdown in Add Transaction to assign.
+
+ALTER TABLE payments
+ADD COLUMN IF NOT EXISTS center_id uuid;
+
+ALTER TABLE coupons
+ADD COLUMN IF NOT EXISTS wellness_center_id uuid;
 
 -- ==========================================
 -- 📦 MULTI-CENTER INVENTORY TRACKING (Run if you use inventory across 2+ centers)
