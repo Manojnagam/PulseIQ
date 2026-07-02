@@ -12476,7 +12476,7 @@ async function _markWalkinConverted(customerId){
 // ══════════════════════════════════════════════
 
 async function loadLeads() {
-  D.leads = await dbGet('leads', 'id', _cFilter('center_id'));
+  D.leads = await dbGet('leads', 'id');
   D.leadFollowups = await dbGet('lead_followups', 'called_at');
   renderLeadsStats();
   renderLeads();
@@ -12511,7 +12511,7 @@ function todayStr() {
 
 function filterLeadsByCenter(leads) {
   if (!ACTIVE_CENTER) return leads;
-  return leads.filter(function(l){ return l.center_id === ACTIVE_CENTER; });
+  return leads.filter(function(l){ return l.center_id === ACTIVE_CENTER || l.wellness_center_id === ACTIVE_CENTER; });
 }
 
 function setLeadTab(tab, el) {
@@ -12679,6 +12679,7 @@ async function saveLead() {
     name: name,
     mobile: mobile,
     center_id: document.getElementById('lead-center-sel').value || null,
+    wellness_center_id: document.getElementById('lead-center-sel').value || null,
     status: document.getElementById('lead-status').value,
     source: document.getElementById('lead-source').value.trim(),
     next_followup_date: document.getElementById('lead-next-date').value || null,

@@ -2630,6 +2630,7 @@ create policy "allow all" on walkins for all using (true);
 create table if not exists leads (
   id uuid default gen_random_uuid() primary key,
   center_id uuid references wellness_centers(id),
+  wellness_center_id uuid references wellness_centers(id),
   name text not null,
   mobile text,
   status text default 'New',
@@ -2821,6 +2822,10 @@ ALTER TABLE payments
 ADD COLUMN IF NOT EXISTS center_id uuid;
 
 ALTER TABLE coupons
+ADD COLUMN IF NOT EXISTS wellness_center_id uuid;
+
+ALTER TABLE leads
+ADD COLUMN IF NOT EXISTS center_id uuid,
 ADD COLUMN IF NOT EXISTS wellness_center_id uuid;
 
 -- ==========================================
