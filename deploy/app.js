@@ -10814,6 +10814,10 @@ function renderPlanMgmt() {
 }
 
 async function saveCenterPlan(centerId) {
+  if (!isSupervisor()) {
+    showToast('Unauthorized: Only super admin can change plans.', 'error');
+    return;
+  }
   var sel = document.getElementById('plan-sel-'+centerId); if (!sel) return;
   var newPlan = sel.value;
   var center = (D.centers||[]).find(function(c){ return c.id===centerId; });
