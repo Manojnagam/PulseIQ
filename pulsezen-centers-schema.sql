@@ -219,21 +219,21 @@ alter table foods enable row level security;
 alter table contests enable row level security;
 alter table contest_participants enable row level security;
 
--- Allow anon access (app PIN system controls isolation)
-create policy "anon_all" on wellness_centers for all to anon using (true) with check (true);
-create policy "anon_all" on customers for all to anon using (true) with check (true);
-create policy "anon_all" on attendance for all to anon using (true) with check (true);
-create policy "anon_all" on body_composition for all to anon using (true) with check (true);
-create policy "anon_all" on finance for all to anon using (true) with check (true);
-create policy "anon_all" on coaches for all to anon using (true) with check (true);
-create policy "anon_all" on coupons for all to anon using (true) with check (true);
-create policy "anon_all" on payments for all to anon using (true) with check (true);
-create policy "anon_all" on pack_history for all to anon using (true) with check (true);
-create policy "anon_all" on leads for all to anon using (true) with check (true);
-create policy "anon_all" on expenses for all to anon using (true) with check (true);
-create policy "anon_all" on foods for all to anon using (true) with check (true);
-create policy "anon_all" on contests for all to anon using (true) with check (true);
-create policy "anon_all" on contest_participants for all to anon using (true) with check (true);
+-- Allow access to all roles (app PIN system controls isolation)
+create policy "anon_all" on wellness_centers for all using (true) with check (true);
+create policy "anon_all" on customers for all using (true) with check (true);
+create policy "anon_all" on attendance for all using (true) with check (true);
+create policy "anon_all" on body_composition for all using (true) with check (true);
+create policy "anon_all" on finance for all using (true) with check (true);
+create policy "anon_all" on coaches for all using (true) with check (true);
+create policy "anon_all" on coupons for all using (true) with check (true);
+create policy "anon_all" on payments for all using (true) with check (true);
+create policy "anon_all" on pack_history for all using (true) with check (true);
+create policy "anon_all" on leads for all using (true) with check (true);
+create policy "anon_all" on expenses for all using (true) with check (true);
+create policy "anon_all" on foods for all using (true) with check (true);
+create policy "anon_all" on contests for all using (true) with check (true);
+create policy "anon_all" on contest_participants for all using (true) with check (true);
 
 -- ==========================================
 -- LEAD FOLLOWUPS
