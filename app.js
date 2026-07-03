@@ -8,8 +8,19 @@ function loadScript(src) {
     }
     var s = document.createElement('script');
     s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
+    var timer = setTimeout(function() {
+      s.onload = null;
+      s.onerror = null;
+      reject(new Error('Timeout loading ' + src));
+    }, 10000);
+    s.onload = function() {
+      clearTimeout(timer);
+      resolve();
+    };
+    s.onerror = function() {
+      clearTimeout(timer);
+      reject(new Error('Failed to load ' + src));
+    };
     document.head.appendChild(s);
   });
 }
@@ -1874,8 +1885,9 @@ async function refreshDashboard() {
 async function loadAll() {
   D.stockIn=[]; D.stockOut=[]; D.dailyUsage=[]; D.currentStock={};
   D.coupons=[]; D.payments=[]; D.packHistory=[];
+  var chartPromise = loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js')
+    .catch(function(scErr) { console.error('Background Chart.js load failed:', scErr); });
   try {
-    try { await loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'); } catch(scErr) { console.error(scErr); }
     // Phase 1: centers + customers + coaches first (attendance/body need customer IDs for center-scoped query)
     var _ldMsg = document.getElementById('app-loading-msg'); if(_ldMsg) _ldMsg.textContent = 'Connecting to database…';
     await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
@@ -1887,6 +1899,13 @@ async function loadAll() {
     // Phase 3: body runs after walkins so _custIdsFilter() includes walk-in IDs
     await loadBody();
     _daysLeftCache = {};  // all data loaded — recalculate with full attendance
+    try { await chartPromise; } catch(scErr) {}
+    if (typeof Chart === 'undefined') {
+      window.Chart = function() {
+        this.destroy = function() {};
+        this.update = function() {};
+      };
+    }
     try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
     try { renderAnnouncementBanner(); } catch(re){ console.error('renderAnnouncementBanner crash:',re); }

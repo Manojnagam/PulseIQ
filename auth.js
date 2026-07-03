@@ -9,8 +9,19 @@ function loadScript(src) {
     }
     var s = document.createElement('script');
     s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
+    var timer = setTimeout(function() {
+      s.onload = null;
+      s.onerror = null;
+      reject(new Error('Timeout loading ' + src));
+    }, 10000);
+    s.onload = function() {
+      clearTimeout(timer);
+      resolve();
+    };
+    s.onerror = function() {
+      clearTimeout(timer);
+      reject(new Error('Failed to load ' + src));
+    };
     document.head.appendChild(s);
   });
 }
