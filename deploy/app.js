@@ -1489,15 +1489,28 @@ async function req(method, table, body, filter) {
   getCredentials();
   filter = filter || '';
   var activeUrl = getActiveSbUrl();
-  var activeKey = getActiveSbKey();
-  var anonKey = SB_KEY || CENTER_SB_KEY;
+  
+  var apikey = '';
+  var authBearer = '';
+  if (SB_URL && activeUrl === SB_URL) {
+    // Wellness Hub database (custom credentials): query anonymously using SB_KEY
+    apikey = SB_KEY;
+    authBearer = SB_KEY;
+  } else {
+    // PulseZen Centers database (fallback): query using session JWT or anon key
+    apikey = CENTER_SB_KEY;
+    authBearer = (_authSession && _authSession.access_token) || CENTER_SB_KEY;
+  }
+  
   var url = activeUrl + '/rest/v1/' + table + filter;
   var headers = {
-    'apikey': anonKey,
-    'Authorization': 'Bearer ' + activeKey,
+    'apikey': apikey,
+    'Authorization': 'Bearer ' + authBearer,
     'Content-Type': 'application/json',
     'Prefer': 'return=representation'
   };
+  var opts = { method: method, headers: headers };
+  if (body) opts.body = JSON.stringify(body);
   try {
     var res = await fetch(url, opts);
     if (res.status === 204) return [];
