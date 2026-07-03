@@ -10824,9 +10824,23 @@ function renderPlanMgmt() {
     var opts = Object.keys(PLAN_LABELS).map(function(k){
       return '<option value="'+k+'"'+(k===plan?' selected':'')+'>'+PLAN_LABELS[k]+'</option>';
     }).join('');
+    var ownerName = '—';
+    if(c.owner_id){
+      var oc = D.coaches.find(function(x){return x.id===c.owner_id;}); if(oc) ownerName=oc.name;
+      else if(OWNER_PROFILE && OWNER_PROFILE.coach_id===c.owner_id && OWNER_PROFILE.name) ownerName=OWNER_PROFILE.name;
+    }
+    if(ownerName === '—' && c.owner_email){
+      var oc = D.coaches.find(function(x){return x.email && x.email.toLowerCase()===c.owner_email.toLowerCase();});
+      if(oc) ownerName=oc.name;
+    }
+    if(ownerName === '—'){
+      var oc = D.coaches.find(function(x){return x.wellness_center_id===c.id && x.role==='owner';});
+      if(oc) ownerName=oc.name;
+    }
+    if(ownerName === '—') ownerName = c.owner_name || c.owner_email || '—';
     return '<tr>'
       +'<td><strong>'+c.name+'</strong></td>'
-      +'<td style="font-size:12px;color:var(--muted)">'+(c.owner_name||c.owner_email||'—')+'</td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+ownerName+'</td>'
       +'<td>'+daysText+'</td>'
       +'<td><span style="font-weight:700;color:'+color+'">'+PLAN_LABELS[plan]+'</span></td>'
       +'<td><select id="plan-sel-'+c.id+'" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px">'+opts+'</select></td>'
