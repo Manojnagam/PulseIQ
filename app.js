@@ -170,7 +170,7 @@ async function startApp() {
 
   // ── Super admin fast-path: check remembered email even without a real auth session ──
   var _currentEmail = (_authUser && _authUser.email) || (_authSession && _authSession.user && _authSession.user.email) || localStorage.getItem('pz_remembered_email') || '';
-  var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com', 'silent.maibox47@gmail.com', 'silent.mailbox47@gmail.com'];
+  var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
   if (HARDCODED_SUPER_ADMINS.indexOf(_currentEmail) !== -1) {
     ACTIVE_CENTER = '';
     localStorage.setItem('activeCenter', '');
@@ -195,7 +195,7 @@ async function startApp() {
       var settingsData = await settingsRes.json();
       superAdminEmail = (Array.isArray(settingsData) && settingsData[0]) ? settingsData[0].value : '';
     } catch(e) {}
-    var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com', 'silent.maibox47@gmail.com', 'silent.mailbox47@gmail.com'];
+    var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
     var isSuperAdmin = (_authUser.user_metadata && _authUser.user_metadata.role === 'super_admin') || _authUser.email === superAdminEmail || HARDCODED_SUPER_ADMINS.indexOf(_authUser.email) !== -1;
 
     if (isSuperAdmin) {
@@ -1029,10 +1029,11 @@ function updateCenterSwitcher() {
   var prev = sel.value || ACTIVE_CENTER;
   var isMaster = _centerAuth.type === 'master';
   var noPins = !_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0;
-  // Build options: non-master users only see their authenticated center
+  var isElite = isElitePlan();
+  // Build options: non-master users only see their authenticated center and downlines
   var opts = '';
   var orgIds = (_centerAuth.type === 'center') ? getOrgCenterIds(_centerAuth.centerId) : null;
-  if(isMaster || noPins) {
+  if(isMaster || noPins || isElite) {
     opts = '<option value="">All Centers</option>';
   }
   D.centers.forEach(function(c){
@@ -1538,8 +1539,16 @@ async function dbDelete(table, id) { return req('DELETE', table, null, '?id=eq.'
 // ── Center-scoped query helpers ──
 // Builds a PostgREST filter for a center field, including null (legacy) records
 function _cFilter(field) {
-  if (!ACTIVE_CENTER) return '';
   field = field || 'wellness_center_id';
+  if (!ACTIVE_CENTER) {
+    if (isCenterSession() && _centerAuth.centerId) {
+      var orgIds = getOrgCenterIds(_centerAuth.centerId);
+      if (orgIds && orgIds.length) {
+        return 'or=(' + field + '.is.null,' + field + '.in.(' + orgIds.join(',') + '))';
+      }
+    }
+    return '';
+  }
   return 'or=(' + field + '.is.null,' + field + '.eq.' + ACTIVE_CENTER + ')';
 }
 // Builds a PostgREST filter for customer_id IN (active center's customers)
@@ -12829,7 +12838,8 @@ function expFromDB(r) {
 }
 function getExpenses() { return D.expenses; }
 async function loadExpenses() {
-  var filter = 'type=eq.expense' + (ACTIVE_CENTER ? '&wellness_center_id=eq.' + ACTIVE_CENTER : '');
+  var cF = _cFilter('wellness_center_id');
+  var filter = 'type=eq.expense' + (cF ? '&' + cF : '');
   var rows = await dbGet('finance', 'date', filter);
   D.expenses = rows.map(expFromDB);
 }
