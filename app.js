@@ -7022,7 +7022,7 @@ function openAddCenter() {
 }
 function onCenterTypeChange() {
   var type = document.getElementById('center-type').value;
-  document.getElementById('center-pin-row').style.display = 'block';
+  document.getElementById('center-pin-row').style.display = 'none';
 }
 function updateCenterOwnerSelect() {
   var sel = document.getElementById('center-owner'); if(!sel) return;
