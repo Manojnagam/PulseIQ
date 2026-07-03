@@ -323,6 +323,35 @@
         return;
       }
 
+      // Auto-create/link Coach record for Owner
+      var centerId = pendingCenter ? pendingCenter.id : (result.data && result.data[0] ? result.data[0].id : null);
+      if (centerId) {
+        try {
+          var existingCoaches = await sbGet('coaches', 'email=eq.' + encodeURIComponent(email.toLowerCase()) + '&select=id');
+          var coachId = null;
+          if (existingCoaches && existingCoaches.length) {
+            coachId = existingCoaches[0].id;
+          } else {
+            var coachPayload = {
+              name: name,
+              email: email.toLowerCase(),
+              phone: contact,
+              wellness_center_id: centerId,
+              role: 'owner'
+            };
+            var coachRes = await sbPost('coaches', coachPayload);
+            if (coachRes.ok && coachRes.data && coachRes.data[0]) {
+              coachId = coachRes.data[0].id;
+            }
+          }
+          if (coachId) {
+            await sbPatch('wellness_centers', centerId, { owner_id: coachId });
+          }
+        } catch (coachErr) {
+          console.error('Failed to auto-link coach:', coachErr);
+        }
+      }
+
       // Network ID success
       document.getElementById('success-nid').textContent = networkId;
       show('success-screen');
