@@ -170,7 +170,7 @@ async function startApp() {
 
   // ── Super admin fast-path: check remembered email even without a real auth session ──
   var _currentEmail = (_authUser && _authUser.email) || (_authSession && _authSession.user && _authSession.user.email) || localStorage.getItem('pz_remembered_email') || '';
-  var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
+  var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com', 'silent.maibox47@gmail.com', 'silent.mailbox47@gmail.com'];
   if (HARDCODED_SUPER_ADMINS.indexOf(_currentEmail) !== -1) {
     ACTIVE_CENTER = '';
     localStorage.setItem('activeCenter', '');
@@ -195,7 +195,7 @@ async function startApp() {
       var settingsData = await settingsRes.json();
       superAdminEmail = (Array.isArray(settingsData) && settingsData[0]) ? settingsData[0].value : '';
     } catch(e) {}
-    var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
+    var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com', 'silent.maibox47@gmail.com', 'silent.mailbox47@gmail.com'];
     var isSuperAdmin = (_authUser.user_metadata && _authUser.user_metadata.role === 'super_admin') || _authUser.email === superAdminEmail || HARDCODED_SUPER_ADMINS.indexOf(_authUser.email) !== -1;
 
     if (isSuperAdmin) {
