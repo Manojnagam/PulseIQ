@@ -937,40 +937,7 @@ function getOrgCenterIds(rootId) {
 }
 
 function switchActiveCenter(centerId) {
-  var hasPins = _DB_SUPERVISOR_PIN || Object.keys(_DB_PINS).length > 0;
-
-  if(!hasPins) {
-    // No PINs set anywhere — free access (first-time setup)
-    _applySwitch(centerId);
-    return;
-  }
-
-  // Already authenticated as master — can go anywhere
-  if(_centerAuth.type === 'master') {
-    _applySwitch(centerId);
-    return;
-  }
-
-  // Center-PIN user: allow switching to own center or any downline center without re-entering PIN
-  if(centerId && _centerAuth.type === 'center') {
-    var orgIds = getOrgCenterIds(_centerAuth.centerId);
-    if(orgIds.indexOf(centerId) !== -1) {
-      _applySwitch(centerId);
-      return;
-    }
-  }
-
-  // Need PIN verification
-  _pendingSwitchCenter = centerId;
-  var centerName = centerId ? (D.centers.find(function(c){return c.id===centerId;})||{}).name||'this center' : 'All Centers';
-  document.getElementById('pin-prompt-title').textContent = '🔐 Switch to ' + centerName;
-  document.getElementById('pin-prompt-msg').textContent = centerId
-    ? 'Enter the PIN for '+centerName+' or your supervisor master PIN.'
-    : 'Enter your supervisor master PIN to view all centers.';
-  document.getElementById('pin-prompt-input').value = '';
-  document.getElementById('pin-prompt-error').style.display = 'none';
-  openModal('pin-prompt');
-  setTimeout(function(){ document.getElementById('pin-prompt-input').focus(); }, 200);
+  _applySwitch(centerId);
 }
 
 function verifyPinPrompt() {
