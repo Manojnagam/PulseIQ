@@ -5126,6 +5126,35 @@ function resetDailyUsage() {
 }
 
 
+function getCenterOwnerName(c) {
+  if (!c) return '—';
+  var name = '—';
+  if (c.owner_id) {
+    var oc = D.coaches.find(function(x){ return x.id === c.owner_id; });
+    if (oc) name = oc.name;
+    else if (OWNER_PROFILE && OWNER_PROFILE.coach_id === c.owner_id && OWNER_PROFILE.name) name = OWNER_PROFILE.name;
+  }
+  if (name === '—' && c.owner_email) {
+    var oc = D.coaches.find(function(x){ return x.email && x.email.toLowerCase() === c.owner_email.toLowerCase(); });
+    if (oc) name = oc.name;
+  }
+  if (name === '—') {
+    var oc = D.coaches.find(function(x){ return x.wellness_center_id === c.id && x.role === 'owner'; });
+    if (oc) name = oc.name;
+  }
+  var email = (c.owner_email || '').toLowerCase().trim();
+  if (name === '—') {
+    if (email === 'silent.maibox47@gmail.com' || email === 'silent.mailbox47@gmail.com') name = 'Dharani';
+    else if (email === 'manojnagam1551@gmail.com') name = 'Manoj Nagam';
+    else if (email === 'bharathkumarnagam07@gmail.com') name = 'Nagam Venkata Bharath Kumar';
+  }
+  if (name === '—') {
+    var _pcOwner = JSON.parse(localStorage.getItem('profileCenterOwner') || '{}');
+    if (_pcOwner[c.name] && OWNER_PROFILE && OWNER_PROFILE.name) name = OWNER_PROFILE.name;
+  }
+  return name === '—' ? (c.owner_name || c.owner_email || '—') : name;
+}
+
 // ── RENDER CENTERS ──
 function renderCenters() {
   var q = document.getElementById('centers-search').value.toLowerCase();
@@ -5134,12 +5163,7 @@ function renderCenters() {
   var _pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
   if (!rows.length) { tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="ei">🏢</div><p>No centers found. Add your first one!</p></div></td></tr>'; }
   else tb.innerHTML = rows.map(function(c){
-    var ownerName = '—';
-    var _pcOwner = JSON.parse(localStorage.getItem('profileCenterOwner') || '{}');
-    if(c.owner_id){
-      var oc = D.coaches.find(function(x){return x.id===c.owner_id;}); if(oc) ownerName=oc.name;
-      else if(OWNER_PROFILE && OWNER_PROFILE.coach_id===c.owner_id && OWNER_PROFILE.name) ownerName=OWNER_PROFILE.name;
-    } else if(_pcOwner[c.name] && OWNER_PROFILE && OWNER_PROFILE.name) { ownerName=OWNER_PROFILE.name; }
+    var ownerName = getCenterOwnerName(c);
     var pinVal = _pins[c.id] || '';
     var pinHtml = pinVal
       ? '<span id="pin-show-'+c.id+'" style="font-family:monospace;font-size:14px;letter-spacing:3px;background:var(--surface2);padding:2px 8px;border-radius:6px;cursor:pointer" onclick="this.textContent=this.textContent===\'••••\'?\''+pinVal+'\':\'••••\'" title="Click to show/hide">••••</span>'
@@ -10843,20 +10867,7 @@ function renderPlanMgmt() {
     var opts = Object.keys(PLAN_LABELS).map(function(k){
       return '<option value="'+k+'"'+(k===plan?' selected':'')+'>'+PLAN_LABELS[k]+'</option>';
     }).join('');
-    var ownerName = '—';
-    if(c.owner_id){
-      var oc = D.coaches.find(function(x){return x.id===c.owner_id;}); if(oc) ownerName=oc.name;
-      else if(OWNER_PROFILE && OWNER_PROFILE.coach_id===c.owner_id && OWNER_PROFILE.name) ownerName=OWNER_PROFILE.name;
-    }
-    if(ownerName === '—' && c.owner_email){
-      var oc = D.coaches.find(function(x){return x.email && x.email.toLowerCase()===c.owner_email.toLowerCase();});
-      if(oc) ownerName=oc.name;
-    }
-    if(ownerName === '—'){
-      var oc = D.coaches.find(function(x){return x.wellness_center_id===c.id && x.role==='owner';});
-      if(oc) ownerName=oc.name;
-    }
-    if(ownerName === '—') ownerName = c.owner_name || c.owner_email || '—';
+    var ownerName = getCenterOwnerName(c);
     return '<tr>'
       +'<td><strong>'+c.name+'</strong></td>'
       +'<td style="font-size:12px;color:var(--muted)">'+ownerName+'</td>'
