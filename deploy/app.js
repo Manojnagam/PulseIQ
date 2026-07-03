@@ -173,6 +173,57 @@ async function signOut() {
   localStorage.removeItem('pz_login_ts');
   location.reload();
 }
+var IS_SUPER_ADMIN = false;
+var ACTIVE_CENTER = localStorage.getItem('activeCenter') || '';
+
+// ── LANGUAGE / TRANSLATIONS ──
+var LANG = localStorage.getItem('svLang') || 'en';
+var T = {
+  en: {
+    // sidebar groups
+    nav_management:'Management', nav_business:'Business', nav_setup:'Setup',
+    // nav items
+    nav_overview:'Overview', nav_centers:'Wellness Centers', nav_coaches:'Coaches',
+    nav_coach_portal:'Coach Portal \u2197', nav_inventory:'Inventory', nav_customers:'Customers',
+    nav_leads:'Leads', nav_attendance:'Attendance', nav_body:'Body Composition',
+    nav_finance:'Finance', nav_analytics:'Analytics', nav_coupons:'Coupons',
+    nav_payments:'Payments', nav_announcements:'Announcements', nav_checklists:'Daily Checklist',
+    nav_recurring:'Recurring Finance', nav_followers:'Follow Ups', nav_contests:'Contests',
+    nav_pintracker:'Pin Tracker', nav_planmgmt:'Plan Management', nav_sql:'SQL Query Console',
+    nav_profile:'My Profile', nav_guide:'User Guide',
+    // common buttons / indicators
+    btn_save:'Save', btn_cancel:'Cancel', btn_edit:'Edit', btn_delete:'Delete',
+    btn_add:'Add', btn_submit:'Submit', badge_active:'Active', badge_inactive:'Inactive'
+  },
+  te: {
+    // sidebar groups
+    nav_management:'నిర్వహణ', nav_business:'వ్యాపారం', nav_setup:'సెటప్',
+    // nav items
+    nav_overview:'అవలోకనం', nav_centers:'వెల్నెస్ సెంటర్లు', nav_coaches:'కోచ్‌లు',
+    nav_coach_portal:'కోచ్ పోర్టల్ \u2197', nav_inventory:'ఇన్వెంటరీ', nav_customers:'కస్టమర్లు',
+    nav_leads:'లీడ్స్', nav_attendance:'హాజరు', nav_body:'శరీర కొలతలు',
+    nav_finance:'ఆర్థికం', nav_analytics:'విశ్లేషణలు', nav_coupons:'కూపన్లు',
+    nav_payments:'చెల్లింపులు', nav_announcements:'ప్రకటనలు', nav_checklists:'రోజువారీ చెక్‌లిస్ట్',
+    nav_recurring:'आवर्ती वित्त', nav_followers:'ఫాలో అప్స్', nav_contests:'పోటీలు',
+    nav_pintracker:'పిన్ ట్రాకర్', nav_planmgmt:'ప్లాన్ మేనేజ్మెంట్', nav_sql:'SQL కన్సోల్',
+    nav_profile:'నా ప్రొఫైల్', nav_guide:'వినియోగదారు గైడ్',
+    // common buttons / indicators
+    btn_save:'భద్రపరచు', btn_cancel:'రద్దు చేయి', btn_edit:'మార్చు', btn_delete:'తొలగించు',
+    btn_add:'జోడించు', btn_submit:'సమర్పించు', badge_active:'క్రియాశీల', badge_inactive:'నిష్క్రియాశీల'
+  }
+};
+var PLAN_LABELS = {
+  'free': 'Free Trial (14 Days)',
+  'growth': 'Growth (₹999/mo)',
+  'elite': 'Elite (₹1,999/mo)',
+  'trial': 'Free Trial (14 Days)'
+};
+var PLAN_COLORS = {
+  'free': '#6b7280',
+  'growth': '#10b981',
+  'elite': '#7c3aed',
+  'trial': '#6b7280'
+};
 
 async function startApp() {
   document.getElementById('login-screen').style.display = 'none';
@@ -183,6 +234,7 @@ async function startApp() {
   var _currentEmail = (_authUser && _authUser.email) || (_authSession && _authSession.user && _authSession.user.email) || localStorage.getItem('pz_remembered_email') || '';
   var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
   if (HARDCODED_SUPER_ADMINS.indexOf(_currentEmail) !== -1) {
+    IS_SUPER_ADMIN = true;
     ACTIVE_CENTER = '';
     localStorage.setItem('activeCenter', '');
     _centerAuth = { type: 'master' };
@@ -208,6 +260,7 @@ async function startApp() {
     } catch(e) {}
     var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
     var isSuperAdmin = (_authUser.user_metadata && _authUser.user_metadata.role === 'super_admin') || _authUser.email === superAdminEmail || HARDCODED_SUPER_ADMINS.indexOf(_authUser.email) !== -1;
+    IS_SUPER_ADMIN = isSuperAdmin;
 
     if (isSuperAdmin) {
       // Super admin: clear any center lock from previous session
@@ -2173,8 +2226,10 @@ function onCompDayToggle() {
 
 // ── NAVIGATION ──
 function isSupervisor() {
-  // If no PINs configured in DB at all, you're always supervisor
-  if(!_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0) return true;
+  if (IS_SUPER_ADMIN) return true;
+  if (!_authSession) return false;
+  if (_centerAuth.type === 'center') return false;
+  if (!_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0) return true;
   return !_centerAuth.type || _centerAuth.type === 'master';
 }
 
@@ -5095,7 +5150,7 @@ function renderCenters() {
   var rows = D.centers.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.location||'').toLowerCase().includes(q); });
   var tb = document.getElementById('centers-body');
   var _pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
-  if (!rows.length) { tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="ei">🏢</div><p>No centers found. Add your first one!</p></div></td></tr>'; }
+  if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">🏢</div><p>No centers found. Add your first one!</p></div></td></tr>'; }
   else tb.innerHTML = rows.map(function(c){
     var ownerName = getCenterOwnerName(c);
     var pinVal = _pins[c.id] || '';
@@ -5106,7 +5161,11 @@ function renderCenters() {
     var copyBtn = c.network_id
       ? '<button class="btn-e" onclick="copyInviteLink(\''+c.network_id+'\')" title="Copy invite link for downline registration" style="background:#e8f5e9;color:#2d5a3d;border-color:#a5d6a7">🔗 Invite Link</button>'
       : '';
-    return '<tr><td><strong>'+c.name+'</strong></td><td>'+nidHtml+'</td><td>'+(ownerName)+'</td><td>'+(c.location||'—')+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(c.type==='main'?'bg':c.type==='downline'?'by':'bb')+'">'+c.type+'</span></td><td>'+pinHtml+'</td><td><div class="acts">'+copyBtn+'<button class="btn-e" onclick="editCenter(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'wellness_centers\',\''+c.id+'\',\'centers\')">Delete</button></div></td></tr>';
+    var plan = c.plan_type || 'free';
+    var planLabel = PLAN_LABELS[plan] || plan;
+    var planColor = PLAN_COLORS[plan] || '#6b7280';
+    var planHtml = '<span style="font-weight:700;color:'+planColor+'">'+planLabel+'</span>';
+    return '<tr><td><strong>'+c.name+'</strong></td><td>'+nidHtml+'</td><td>'+(ownerName)+'</td><td>'+(c.location||'—')+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(c.type==='main'?'bg':c.type==='downline'?'by':'bb')+'">'+c.type+'</span></td><td>'+planHtml+'</td><td>'+pinHtml+'</td><td><div class="acts">'+copyBtn+'<button class="btn-e" onclick="editCenter(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'wellness_centers\',\''+c.id+'\',\'centers\')">Delete</button></div></td></tr>';
   }).join('');
   document.getElementById('centers-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Centers</div><div class="stat-v">'+D.centers.length+'</div></div><div class="stat"><div class="stat-l">Downline</div><div class="stat-v">'+D.centers.filter(function(c){return c.type==='downline';}).length+'</div></div><div class="stat"><div class="stat-l">Branches</div><div class="stat-v">'+D.centers.filter(function(c){return c.type==='branch';}).length+'</div></div>';
 }
