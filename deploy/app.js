@@ -1079,11 +1079,14 @@ function updateCenterSwitcher() {
   var isSuper = isSupervisor();
   var isElite = isElitePlan();
   var isGrowth = isGrowthPlan();
+  var isOwner = _authSession && isCenterSession();
   document.querySelectorAll('.nav-supervisor-only').forEach(function(el){
     var onclickAttr = el.getAttribute('onclick') || '';
-    if (onclickAttr.indexOf('planmgmt') !== -1 || onclickAttr.indexOf('pintracker') !== -1 || onclickAttr.indexOf('centers') !== -1 || onclickAttr.indexOf('sql') !== -1 || onclickAttr.indexOf('profile') !== -1) {
+    if (onclickAttr.indexOf('planmgmt') !== -1 || onclickAttr.indexOf('pintracker') !== -1 || onclickAttr.indexOf('sql') !== -1) {
       el.style.display = isSuper ? '' : 'none';
-    } else if (onclickAttr.indexOf('orgtree') !== -1 || onclickAttr.indexOf('bizanalyst') !== -1) {
+    } else if (onclickAttr.indexOf('profile') !== -1) {
+      el.style.display = (isSuper || isOwner) ? '' : 'none';
+    } else if (onclickAttr.indexOf('centers') !== -1 || onclickAttr.indexOf('orgtree') !== -1 || onclickAttr.indexOf('bizanalyst') !== -1) {
       el.style.display = (isSuper || isElite) ? '' : 'none';
     } else if (onclickAttr.indexOf('export') !== -1) {
       el.style.display = (isSuper || isGrowth) ? '' : 'none';
@@ -2174,10 +2177,14 @@ function goTo(name, el) {
     return;
   }
   var isSuper = isSupervisor();
-  if (!isSuper && ['planmgmt', 'pintracker', 'centers', 'sql', 'profile'].indexOf(name) > -1) {
+  var isOwner = _authSession && isCenterSession();
+  if (name === 'profile' && !isSuper && !isOwner) {
+    showToast('This section is for supervisors and logged-in owners only', 'error'); return;
+  }
+  if (!isSuper && ['planmgmt', 'pintracker', 'sql'].indexOf(name) > -1) {
     showToast('This section is for supervisors only', 'error'); return;
   }
-  if (!isSuper && ['orgtree', 'bizanalyst'].indexOf(name) > -1 && !isElitePlan()) {
+  if (!isSuper && ['centers', 'orgtree', 'bizanalyst'].indexOf(name) > -1 && !isElitePlan()) {
     showToast('This section is an Elite plan feature. Upgrade to unlock.', 'error'); return;
   }
   if (!isSuper && ['export'].indexOf(name) > -1 && !isGrowthPlan()) {
