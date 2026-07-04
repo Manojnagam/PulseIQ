@@ -1601,7 +1601,15 @@ async function dbGet(table, order, extraFilter) {
   catch(e) { console.error(table, e); return []; }
 }
 async function dbInsert(table, data) { return req('POST', table, data); }
-async function dbUpdate(table, id, data) { return req('PATCH', table, data, '?id=eq.' + id); }
+async function dbUpdate(table, id, data) {
+  var existing = await req('GET', table, null, '?id=eq.' + id);
+  if (existing && existing[0]) {
+    var merged = Object.assign({}, existing[0], data);
+    return req('POST', table, merged, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
+  } else {
+    throw new Error("Row not found for update");
+  }
+}
 async function dbDelete(table, id) { return req('DELETE', table, null, '?id=eq.' + id); }
 
 // ── Center-scoped query helpers ──
