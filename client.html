@@ -1316,6 +1316,18 @@ var _attYear = null, _attMonth = null, _bodyChart = null;
 
 // ── SUPABASE ──
 async function req(method, table, body, params) {
+  if (method === 'PATCH') {
+    var idMatch = params && params.match(/id=eq\.(.+)/);
+    var id = idMatch ? idMatch[1] : null;
+    if (id) {
+      var existing = await req('GET', table, null, params);
+      if (existing && existing[0]) {
+        var merged = Object.assign({}, existing[0], body);
+        return upsert(table, merged);
+      }
+    }
+  }
+
   var url = SB_URL + '/rest/v1/' + table + (params ? '?' + params : '');
   var opts = {
     method: method,

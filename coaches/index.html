@@ -2105,7 +2105,31 @@ function dbGet(table, order, filter) {
   return req(q);
 }
 function dbInsert(table, data) { return req(table, 'POST', data); }
-function dbUpdate(table, id, data) { return req(table + '?id=eq.' + id, 'PATCH', data); }
+async function dbUpdate(table, id, data) {
+  var existing = await req(table + '?id=eq.' + id, 'GET');
+  if (existing && existing[0]) {
+    var merged = Object.assign({}, existing[0], data);
+    var headers = {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates, return=representation'
+    };
+    var res = await fetch(SB_URL + '/rest/v1/' + table, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(merged)
+    });
+    if (!res.ok) {
+      var err = await res.json().catch(function(){ return {}; });
+      throw new Error(err.message || err.details || res.statusText);
+    }
+    var text = await res.text();
+    return text ? JSON.parse(text) : [];
+  } else {
+    throw new Error("Row not found for update");
+  }
+}
 function dbDelete(table, id) { return req(table + '?id=eq.' + id, 'DELETE'); }
 
 // ══════════════════════════════════════════
