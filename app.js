@@ -5803,8 +5803,12 @@ async function applyRecurringNow() {
 }
 
 var _attResetTimer = null;
+var _attInFlight = {};
 async function toggleAtt(cid, cname, date, currentStatus) {
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
+  var key = cid + '|' + date;
+  if (_attInFlight[key]) return;
+  _attInFlight[key] = true;
   var pIds = getPersonIds(cid);
   var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
   try {
@@ -5824,18 +5828,23 @@ async function toggleAtt(cid, cname, date, currentStatus) {
     await loadAttendance(); renderOverview();
     sendAttendanceWhatsApp(cid, cname, date);
   } catch(e) { showToast('Error: '+e.message,'error'); }
+  finally { delete _attInFlight[key]; }
 }
 async function resetAtt(cid, cname, date) {
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) return;
+  var key = cid + '|' + date;
+  if (_attInFlight[key]) return;
+  _attInFlight[key] = true;
   var pIds = getPersonIds(cid);
   var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
-  if(!existing || existing.status!=='present') return;
+  if(!existing || existing.status!=='present') { delete _attInFlight[key]; return; }
   try {
     await dbUpdate('attendance', existing.id, {status:'absent', servings:0});
     showToast(cname+' — attendance removed','info');
     _daysLeftCache = {};
     await loadAttendance(); renderOverview();
   } catch(e) { showToast('Error: '+e.message,'error'); }
+  finally { delete _attInFlight[key]; }
 }
 function sendAttendanceWhatsApp(custId, custName, date) {
   var cust = D.customers.find(function(c){return c.id===custId;}) || D.coaches.find(function(c){return c.id===custId;});
@@ -6117,6 +6126,9 @@ async function gridServSave(id, name, date) {
   var v = parseInt(document.getElementById('grid-serv-val').textContent) || 1;
   document.getElementById('grid-cell-popup').style.display = 'none';
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()) return;
+  var key = id + '|' + date;
+  if (_attInFlight[key]) return;
+  _attInFlight[key] = true;
   var pIds = getPersonIds(id);
   var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
   try {
@@ -6127,6 +6139,7 @@ async function gridServSave(id, name, date) {
     await loadAttendance(); renderOverview();
     sendAttendanceWhatsApp(id, name, date);
   } catch(e) { showToast('Error: '+e.message,'error'); }
+  finally { delete _attInFlight[key]; }
 }
 async function gridServRemove(id, name, date) {
   document.getElementById('grid-cell-popup').style.display = 'none';
