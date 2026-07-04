@@ -5824,8 +5824,7 @@ async function toggleAtt(cid, cname, date, currentStatus) {
         customer_name: cname,
         date: date,
         status: 'present',
-        servings: newServ,
-        wellness_center_id: existing.wellness_center_id || null
+        servings: newServ
       };
       await req('POST', 'attendance', payload, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
       showToast(cname+' — '+newServ+' servings today','success');
@@ -5836,8 +5835,7 @@ async function toggleAtt(cid, cname, date, currentStatus) {
         customer_name: cname,
         date: date,
         status: 'present',
-        servings: 1,
-        wellness_center_id: existing.wellness_center_id || null
+        servings: 1
       };
       await req('POST', 'attendance', payload, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
       showToast(cname+' — marked present (1 serving)','success');
@@ -5866,8 +5864,7 @@ async function resetAtt(cid, cname, date) {
       customer_name: cname,
       date: date,
       status: 'absent',
-      servings: 0,
-      wellness_center_id: existing.wellness_center_id || null
+      servings: 0
     };
     await req('POST', 'attendance', payload, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
     showToast(cname+' — attendance removed','info');
@@ -6171,7 +6168,6 @@ async function gridServSave(id, name, date) {
     };
     if (existing) {
       payload.id = existing.id;
-      payload.wellness_center_id = existing.wellness_center_id || null;
     }
     await req('POST', 'attendance', payload, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
     showToast(name+' — '+v+' serving'+(v!==1?'s':'')+' saved','success');
