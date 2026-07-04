@@ -200,7 +200,7 @@ async function loadAndStartDashboard() {
   window.SB_KEY = SB_KEY;
 
   try {
-    await loadScript('app.min.js?v=1.1.4');
+    await loadScript('app.min.js?v=1.2.3');
     if (typeof bootDashboard === 'function') {
       await bootDashboard();
     } else {
@@ -239,18 +239,16 @@ window.onload = async function() {
     var loginTs = parseInt(localStorage.getItem('pz_login_ts') || '0');
     var deviceTrusted = rememberedEmail && (Date.now() - loginTs) < SIXTY_DAYS;
 
-    if (!deviceTrusted) {
-      var sessionRestored = false;
-      if (hasTokens) {
-        sessionRestored = await checkExistingSession();
+    var sessionRestored = false;
+    if (hasTokens) {
+      sessionRestored = await checkExistingSession();
+    }
+    if (sessionRestored) {
+      if (_authUser && _authUser.email) {
+        localStorage.setItem('pz_remembered_email', _authUser.email);
+        localStorage.setItem('pz_login_ts', Date.now());
       }
-      if (sessionRestored) {
-        if (_authUser && _authUser.email) {
-          localStorage.setItem('pz_remembered_email', _authUser.email);
-          localStorage.setItem('pz_login_ts', Date.now());
-        }
-        deviceTrusted = true;
-      }
+      deviceTrusted = true;
     }
 
     if (!deviceTrusted) {

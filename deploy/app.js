@@ -173,6 +173,7 @@ async function signOut() {
   localStorage.removeItem('pz_login_ts');
   location.reload();
 }
+
 var IS_SUPER_ADMIN = false;
 var ACTIVE_CENTER = localStorage.getItem('activeCenter') || '';
 
@@ -1664,9 +1665,13 @@ function doDisconnect() {
   document.getElementById('setup').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
-var GROQ_MODEL = localStorage.getItem('groqModel') || 'llama-3.1-8b-instant';
+var GROQ_MODEL = localStorage.getItem('groqModel') || 'gemini-2.5-flash';
+if (GROQ_MODEL === 'gemini-1.5-flash' || GROQ_MODEL === 'llama-3.1-8b-instant') {
+  GROQ_MODEL = 'gemini-2.5-flash';
+  localStorage.setItem('groqModel', GROQ_MODEL);
+}
 var DEFAULT_GROQ_KEY = ''; // set in deploy/index.html — not stored in repo
-function getGroqKey() { return localStorage.getItem('groqKey') || DEFAULT_GROQ_KEY; }
+function getGroqKey() { return 'server-side'; }
 
 // ── HERBALIFE SHAKE NUTRITION (hidden from clients) ──
 // WL: 3 scoops F1 + 1 scoop Protein + 1 scoop Shakemate
@@ -1682,9 +1687,12 @@ function countProteinSources(foodArr) {
   }).length;
 }
 function saveGroqKey() {
-  var key = document.getElementById('cfg-groq-key').value.trim();
-  localStorage.setItem('groqKey', key);
-  showToast('Groq API Key saved successfully!', 'success');
+  var el = document.getElementById('cfg-groq-key');
+  if (el) {
+    var key = el.value.trim();
+    localStorage.setItem('groqKey', key);
+    showToast('Groq API Key saved successfully!', 'success');
+  }
 }
 async function testGroqKey() {
   var resultEl = document.getElementById('groq-test-result');
@@ -1692,50 +1700,106 @@ async function testGroqKey() {
   btn.textContent = 'Testing…';
   btn.disabled = true;
   resultEl.style.display = 'none';
+
+  var statusHtml = '';
+
+  // 1. Test Gemini
   try {
-    var res = await fetch('/api/groq-models');
-    var data = await res.json();
-    if (!res.ok) {
-      resultEl.style.background = '#fde8e8';
-      resultEl.style.color = '#a10000';
-      resultEl.innerHTML = '❌ <strong>Server key invalid</strong> — ' + (data.error || 'HTTP ' + res.status);
+    var geminiRes = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userPrompt: 'Hello' })
+    });
+    if (geminiRes.ok) {
+      statusHtml += '🟢 <strong>Gemini Server API Key:</strong> Active & Valid (Gemini 2.5 Flash)<br>';
     } else {
-      var models = (data.data || []).map(function(m){ return m.id; }).sort();
-      resultEl.style.background = '#e6f9f0';
-      resultEl.style.color = '#065f46';
-      resultEl.innerHTML = '✅ <strong>Server Groq key is valid!</strong> ' + models.length + ' models available:<br>'
-        + models.map(function(m){ return '• ' + m; }).join('<br>');
+      var d = await geminiRes.json();
+      statusHtml += '🔴 <strong>Gemini Server API Key:</strong> Inactive — ' + (d.error || 'Check Vercel Config') + '<br>';
     }
   } catch(e) {
-    resultEl.style.background = '#fde8e8';
-    resultEl.style.color = '#a10000';
-    resultEl.innerHTML = '❌ Network error — ' + e.message;
+    statusHtml += '🔴 <strong>Gemini Server:</strong> Network error — ' + e.message + '<br>';
   }
+
+  // 2. Test Groq
+  try {
+    var groqRes = await fetch('/api/groq-models');
+    if (groqRes.ok) {
+      statusHtml += '🟢 <strong>Groq Server API Key:</strong> Active & Valid (Llama models available)';
+    } else {
+      var d = await groqRes.json();
+      statusHtml += '🔴 <strong>Groq Server API Key:</strong> Inactive — ' + (d.error || 'Check Vercel Config');
+    }
+  } catch(e) {
+    statusHtml += '🔴 <strong>Groq Server:</strong> Network error — ' + e.message;
+  }
+
+  resultEl.style.background = '#f8fafc';
+  resultEl.style.border = '1px solid var(--border)';
+  resultEl.style.color = 'var(--text)';
+  resultEl.innerHTML = statusHtml;
   resultEl.style.display = 'block';
-  btn.textContent = 'Test Key';
+  btn.textContent = 'Test Connections';
   btn.disabled = false;
 }
-// ── CENTRALIZED GROQ PIPELINE ──
-// All AI calls go through callGroq() — routes through /api/groq on Vercel.
-// The GROQ_API_KEY lives in Vercel env vars, never in the browser.
-var GROQ_URL = '/api/groq';
+// ── CENTRALIZED AI ROUTER & PIPELINE ──
+// All AI calls go through callGroq() — routes dynamically to /api/gemini or /api/groq with auto-fallback.
 async function callGroq(systemPrompt, userPrompt, opts) {
   opts = opts || {};
-  var res = await fetch(GROQ_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemPrompt: systemPrompt || null,
-      userPrompt: userPrompt,
-      model: opts.model || GROQ_MODEL,
-      maxTokens: opts.maxTokens || 500,
-      temperature: opts.temperature !== undefined ? opts.temperature : 0.85
-    })
-  });
-  var data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Groq API error ' + res.status);
-  if (data.error) throw new Error(data.error);
-  return data.text;
+  var modelName = opts.model || GROQ_MODEL;
+
+  // Compile an ordered list of fallback models to guarantee success
+  var modelsToTry = [modelName];
+  if (modelName.indexOf('gemini-') === 0) {
+    modelsToTry.push('llama-3.3-70b-versatile');
+    modelsToTry.push('llama-3.1-8b-instant');
+  } else {
+    modelsToTry.push('gemini-2.5-flash');
+    modelsToTry.push('gemini-3.5-flash');
+  }
+
+  var lastError = null;
+  for (var i = 0; i < modelsToTry.length; i++) {
+    var currentModel = modelsToTry[i];
+    var isGemini = currentModel.indexOf('gemini-') === 0;
+    var url = isGemini ? '/api/gemini' : '/api/groq';
+
+    try {
+      var res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemPrompt: systemPrompt || null,
+          userPrompt: userPrompt,
+          model: currentModel,
+          maxTokens: opts.maxTokens || 500,
+          temperature: opts.temperature !== undefined ? opts.temperature : 0.85
+        })
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'AI API error ' + res.status);
+      if (data.error) throw new Error(data.error);
+
+      if (currentModel !== modelName) {
+        console.warn('AI call fell back from ' + modelName + ' to ' + currentModel);
+      }
+      return data.text;
+    } catch (e) {
+      console.warn('AI model ' + currentModel + ' failed: ' + e.message);
+      lastError = e;
+    }
+  }
+
+  throw lastError || new Error('All AI models failed');
+}
+function formatAiText(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+    .replace(/^(#{1,4})\s+(.+)$/gm, '<div style="font-weight:700;margin-top:12px;margin-bottom:4px">$2</div>')
+    .replace(/^[-•]\s+(.+)$/gm, '<div style="padding-left:14px;margin-bottom:3px">• $1</div>')
+    .replace(/\n\n/g, '<br>')
+    .replace(/\n/g, '<br>');
 }
 function saveGroqModel() {
   var sel = document.getElementById('cfg-groq-model');
@@ -1795,17 +1859,19 @@ async function bootDashboard() {
     var loginTs = parseInt(localStorage.getItem('pz_login_ts') || '0');
     var deviceTrusted = rememberedEmail && (Date.now() - loginTs) < SIXTY_DAYS;
 
-    if (!deviceTrusted) {
+    var sessionRestored = false;
+    var hasTokens = localStorage.getItem('pz_session_tokens') || localStorage.getItem('sb-erteibdxzdvsaujptxsd-auth-token');
+    if (hasTokens) {
       // Try restoring full Supabase session (works when token hasn't expired)
-      var sessionRestored = await checkExistingSession();
-      if (sessionRestored) {
-        // Upgrade trust on successful session restore
-        if (_authUser && _authUser.email) {
-          localStorage.setItem('pz_remembered_email', _authUser.email);
-          localStorage.setItem('pz_login_ts', Date.now());
-        }
-        deviceTrusted = true;
+      sessionRestored = await checkExistingSession();
+    }
+    if (sessionRestored) {
+      // Upgrade trust on successful session restore
+      if (_authUser && _authUser.email) {
+        localStorage.setItem('pz_remembered_email', _authUser.email);
+        localStorage.setItem('pz_login_ts', Date.now());
       }
+      deviceTrusted = true;
     }
 
     if (!deviceTrusted) {
@@ -1822,13 +1888,16 @@ async function bootDashboard() {
     // ── STEP 2: UI init (runs only when authed) ──
     var gKey = getGroqKey();
     var cc = localStorage.getItem('countryCode');
-    if(gKey) document.getElementById('cfg-groq-key').value = gKey;
+    var cfgKeyInput = document.getElementById('cfg-groq-key');
+    if(cfgKeyInput && gKey) cfgKeyInput.value = gKey;
     if(cc) { document.getElementById('cfg-country-code').value = cc; COUNTRY_CODE = cc; }
     else document.getElementById('cfg-country-code').value = '91';
     var savedWaLang = localStorage.getItem('waLang');
     if (savedWaLang) { WA_LANG = savedWaLang; var wsel = document.getElementById('cfg-wa-lang'); if(wsel) wsel.value = savedWaLang; }
-    var savedModel = localStorage.getItem('groqModel');
-    if (savedModel) { GROQ_MODEL = savedModel; var msel = document.getElementById('cfg-groq-model'); if(msel) msel.value = savedModel; }
+    var savedModel = localStorage.getItem('groqModel') || 'gemini-2.5-flash';
+    GROQ_MODEL = savedModel;
+    var msel = document.getElementById('cfg-groq-model');
+    if (msel) msel.value = savedModel;
     onFinTypeChange();
     setFinPeriod('all', document.querySelectorAll('.fin-period')[3]);
     renderProfileCard();
@@ -2275,7 +2344,7 @@ function goTo(name, el) {
   if (name==='expenses')       { setTimeout(renderExpenses, 80); }
   if (name==='goals')          { setTimeout(renderGoals, 80); }
   if (name==='notifications')  { setTimeout(renderNotifications, 80); }
-  if (name==='coaches')        { setTimeout(initCommission, 80); }
+  if (name==='coaches')        { setTimeout(function(){ initCommission(); initCoachWorkTracker(); }, 80); }
 }
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
@@ -2606,7 +2675,7 @@ async function generateWeeklySummary() {
       'Here are the stats:\n' + statsMsg,
       { maxTokens: 500 }
     );
-    div.innerHTML = '<div style="font-size:16px; margin-bottom:10px;"><strong>🤖 AI Business Summary:</strong></div><div style="color:var(--text)">' + aiText.replace(/\n/g, '<br/>') + '</div>';
+    div.innerHTML = '<div style="font-size:16px; margin-bottom:10px;"><strong>🤖 AI Business Summary:</strong></div><div style="color:var(--text)">' + formatAiText(aiText) + '</div>';
   } catch(e) {
     div.innerHTML = '<div style="color:var(--danger)">Error generating summary: ' + e.message + '</div>';
     showToast('AI summary failed: ' + e.message, 'error');
@@ -3516,11 +3585,11 @@ async function askBodyAI(cid, rid) {
 
   try {
     var aiText = await callGroq(
-      "You are an expert wellness coach at a nutrition wellness center in India. Analyze this customer's body composition history from their Karada body scanner readings. Explain in simple, friendly language: 1) What changed and whether it is good or bad based on their goal, 2) Why this change likely happened (diet consistency, shake timing, hydration, attendance), 3) Two specific actionable recommendations for the wellness center owner to tell this customer. Keep response under 150 words. Be encouraging but honest. Use Indian context.",
+      "You are an expert wellness coach at a nutrition wellness center in India. Analyze this customer's body composition history from their Karada body scanner readings. Explain in simple, friendly English using short sentences. Format with easy subheadings (using *bold* text) and bullet points, no paragraphs. Include: 1) What changed (good/bad), 2) Why it happened (diet/water/attendance), 3) Two specific next steps. Keep response under 150 words. Use Indian context.",
       statsMsg,
       { maxTokens: 500 }
     );
-    content.innerHTML = '<strong>🤖 AI Analysis:</strong><div style="margin-top:8px">'+aiText.replace(/\n/g,'<br/>')+'</div>';
+    content.innerHTML = '<strong>🤖 AI Analysis:</strong><div style="margin-top:8px">'+formatAiText(aiText)+'</div>';
   } catch(e) {
     content.innerHTML = '<div style="color:var(--danger)">AI Error: '+e.message+'</div>';
     showToast('Body AI error: ' + e.message, 'error');
@@ -3540,7 +3609,7 @@ async function doGroqReport(cid, systemPrompt, userPrompt, title) {
 
   try {
     var aiText = await callGroq(systemPrompt, userPrompt, { maxTokens: 500 });
-    document.getElementById('wai-content').innerHTML = aiText.replace(/\n/g, '<br/>');
+    document.getElementById('wai-content').innerHTML = formatAiText(aiText);
     
     var waBtn = document.getElementById('wai-wa-btn');
     waBtn.style.display = 'inline-block';
@@ -3564,7 +3633,7 @@ async function generateFirstScanReport(cid) {
   if (!recs.length) return;
   var r = recs[0];
   var prompt = "Customer: "+name+", Goal: "+goal+", Baseline scan: weight "+(r.weight||'-')+"kg, fat "+(r.fat_percentage||'-')+"%, muscle "+(r.muscle_percentage||'-')+"%, visceral "+(r.visceral_fat||'-')+", BMR "+(r.bmr||'-')+", BMI "+(r.bmi||'-')+".";
-  var sys = 'You are an expert wellness coach at a nutrition wellness center. A customer just completed their FIRST EVER body scan. Analyze their baseline numbers considering their stated goal. In simple, friendly language: 1) Give a 2-sentence breakdown of what their starting numbers mean, 2) Provide 3 highly specific starting recommendations (diet, water, protein shakes) to kickstart their journey. Keep under 120 words. Be extremely motivating and welcoming.';
+  var sys = 'You are an expert wellness coach at a nutrition wellness center. A customer just completed their FIRST EVER body scan. Analyze their baseline numbers. Explain in simple, friendly English using short sentences. Format with easy subheadings (using *bold* text) and bullet points, no paragraphs. Include: 1) What the starting numbers mean, 2) Three starting recommendations (diet, water, shakes). Keep under 120 words. Be motivating.';
   doGroqReport(cid, sys, prompt, 'First Scan AI Report');
 }
 
@@ -3576,7 +3645,7 @@ async function generateWeeklyReport(cid) {
   if (recs.length < 2) { showToast('Need at least 2 records for a weekly comparison!', 'error'); return; }
   var r1 = recs[0]; var r0 = recs[1]; 
   var prompt = "Customer: "+name+", Goal: "+goal+", Last week: weight "+(r0.weight||'-')+"kg, fat "+(r0.fat_percentage||'-')+"%, muscle "+(r0.muscle_percentage||'-')+"%, visceral "+(r0.visceral_fat||'-')+", BMR "+(r0.bmr||'-')+", BMI "+(r0.bmi||'-')+". This week: weight "+(r1.weight||'-')+"kg, fat "+(r1.fat_percentage||'-')+"%, muscle "+(r1.muscle_percentage||'-')+"%, visceral "+(r1.visceral_fat||'-')+", BMR "+(r1.bmr||'-')+", BMI "+(r1.bmi||'-')+".";
-  var sys = 'You are an expert wellness coach at a nutrition wellness center in India. A customer has done their weekly body scan. Compare their current week results with last week and explain in simple, friendly language: 1) What changed and whether it is good or bad based on their goal, 2) Why this change likely happened (diet, consistency, timing of shakes), 3) Two specific actionable recommendations for the wellness center owner to tell the customer. Keep the response under 150 words. Be encouraging but honest.';
+  var sys = 'You are an expert wellness coach at a nutrition wellness center in India. Compare their weekly body scans. Explain in simple, friendly English using short sentences. Format with easy subheadings (using *bold* text) and bullet points, no paragraphs. Include: 1) What changed (good/bad), 2) Why it happened (diet/water/shake consistency), 3) Two specific next steps for the coach to tell the customer. Keep response under 150 words.';
   doGroqReport(cid, sys, prompt, 'Weekly Progress Report');
 }
 
@@ -10797,11 +10866,11 @@ async function generateBizAIReport() {
     +'- Coaches in network: '+coachCount+'\n'
     +'- Downline centers: '+centerCount+'\n'
     +'- Coach breakdown: '+coachLines+'\n\n'
-    +'Give a 150-word business analysis covering: 1) Overall health of the business, 2) Top 2 strengths, 3) Top 2 urgent issues to fix, 4) One specific action to take this week to grow VP. Be direct, practical, and encouraging. Use Indian business context.';
+    +'Give a 150-word business analysis in simple English using short sentences. Format with easy subheadings (using *bold* text) and bullet points, no paragraphs. Cover: 1) Overall health, 2) Top strengths, 3) Top issues to fix, 4) Specific action item this week to grow VP. Be direct, practical, and encouraging. Use Indian business context.';
 
   try {
     var text = await callGroq(null, prompt, { maxTokens: 300 });
-    resultEl.innerHTML = '<div style="font-weight:600;margin-bottom:8px;font-size:14px">✨ AI Business Report — '+month+'</div><div style="font-size:13px;line-height:1.8">'+text.replace(/\n/g,'<br>')+'</div>';
+    resultEl.innerHTML = '<div style="font-weight:600;margin-bottom:8px;font-size:14px">✨ AI Business Report — '+month+'</div><div style="font-size:13px;line-height:1.8">'+formatAiText(text)+'</div>';
   } catch(e) {
     resultEl.innerHTML = '<div style="color:var(--danger)">Error: '+e.message+'</div>';
     showToast('Business AI error: ' + e.message, 'error');
@@ -13245,6 +13314,150 @@ function saveCommissionRates() {
   showToast('Commission rates saved', 'success');
 }
 
+// ── COACH WORK & ACTIVITY TRACKER ──
+function initCoachWorkTracker() {
+  var sel = document.getElementById('work-tracker-month');
+  if (!sel) return;
+  if (!sel.options.length) {
+    var months = []; var cur = new Date();
+    for (var i = 0; i < 6; i++) {
+      var d = new Date(cur.getFullYear(), cur.getMonth()-i, 1);
+      var val = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      months.push('<option value="'+val+'">'+d.toLocaleString('default',{month:'long',year:'numeric'})+'</option>');
+    }
+    sel.innerHTML = months.join('');
+  }
+  renderCoachWorkTracker();
+}
+
+async function renderCoachWorkTracker() {
+  var sel = document.getElementById('work-tracker-month');
+  var tb = document.getElementById('work-tracker-body');
+  if (!sel || !tb) return;
+
+  var month = sel.value;
+  if (!month) {
+    var d = new Date();
+    month = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  }
+
+  tb.innerHTML = '<tr><td colspan="8"><div class="empty">⏳ Loading activity data for ' + month + '...</div></td></tr>';
+
+  // 1. Fetch coach attendance records for this month
+  var coachAtt = [];
+  try {
+    coachAtt = await dbGet('coach_attendance', 'date', 'date=gte.' + month + '-01&date=lte.' + month + '-31');
+  } catch (e) {
+    console.error("Error loading coach attendance:", e);
+  }
+
+  // 2. We will aggregate stats for the Owner, and for each Coach
+  var coaches = filterByCenter(D.coaches) || [];
+  var ownerCoachId = (OWNER_PROFILE && OWNER_PROFILE.coach_id) || '';
+
+  // Create a list of people to show: Owner (if not already in coaches list) + coaches
+  var list = [];
+  var ownerInCoaches = coaches.some(function(c) { return c.id === ownerCoachId; });
+
+  if (!ownerInCoaches) {
+    list.push({
+      id: ownerCoachId || 'owner',
+      name: (OWNER_PROFILE && OWNER_PROFILE.name) || 'Supervisor (Main Owner)',
+      herbalife_pin: (OWNER_PROFILE && OWNER_PROFILE.next_pin) || 'Supervisor',
+      isOwner: true
+    });
+  }
+
+  coaches.forEach(function(c) {
+    list.push({
+      id: c.id,
+      name: c.name,
+      herbalife_pin: c.herbalife_pin || 'Associate',
+      isOwner: c.id === ownerCoachId
+    });
+  });
+
+  var html = '';
+
+  list.forEach(function(person) {
+    // Get client IDs assigned to this person
+    var myCusts = D.customers.filter(function(c) {
+      var cid = c.coach_id || '';
+      var rid = c.referred_by_id || '';
+      if (person.isOwner) {
+        // Owner gets their assigned clients OR clients with no coach assigned at all
+        var isAssignedToOther = coaches.some(function(co) { return co.id === cid || co.id === rid; });
+        return !isAssignedToOther;
+      } else {
+        return cid === person.id || rid === person.id;
+      }
+    });
+
+    var myCustIds = myCusts.map(function(c) { return c.id; });
+    var activeCusts = myCusts.filter(function(c) { return getDaysLeft(c).active; }).length;
+
+    // Client Attendance Check-ins
+    var checkins = D.attendance.filter(function(a) {
+      return a.date && a.date.substring(0,7) === month && a.status === 'present' && myCustIds.indexOf(a.customer_id) !== -1;
+    }).length;
+
+    // Body Profiles run
+    var bodyProfiles = D.body.filter(function(b) {
+      return b.date && b.date.substring(0,7) === month && myCustIds.indexOf(b.customer_id) !== -1;
+    }).length;
+
+    // Leads added
+    var leadsAdded = (D.leads || []).filter(function(l) {
+      var lCoachId = l.coach_id || '';
+      var yStr = l.created_at || '';
+      var isThisMonth = yStr.substring(0,7) === month;
+      if (!isThisMonth) return false;
+      if (person.isOwner) {
+        var isAssignedToOther = coaches.some(function(co) { return co.id === lCoachId; });
+        return !isAssignedToOther;
+      } else {
+        return lCoachId === person.id;
+      }
+    }).length;
+
+    // Self Attendance (present days)
+    var selfAttDays = coachAtt.filter(function(a) {
+      return a.coach_id === person.id && a.status === 'present';
+    }).length;
+
+    // Actions button: WhatsApp coach
+    var actionsHtml = '';
+    if (!person.isOwner) {
+      var coachRecord = coaches.find(function(c) { return c.id === person.id; });
+      var phone = coachRecord && coachRecord.contact ? coachRecord.contact.replace(/\D/g,'') : '';
+      if (phone.length === 10) phone = COUNTRY_CODE + phone;
+      if (phone) {
+        var waMsg = encodeURIComponent('Hi ' + person.name + '! Here is your activity summary for ' + month + ': Client Check-ins: ' + checkins + ', Body Profiles: ' + bodyProfiles + ', Leads Added: ' + leadsAdded + '. Keep up the great work! 💪');
+        actionsHtml = '<button class="wa-btn" style="font-size:11px;padding:4px 8px" onclick="window.open(\'https://api.whatsapp.com/send?phone=' + phone + '&text=' + waMsg + '\',\'_blank\')">💬 Notify</button>';
+      } else {
+        actionsHtml = '<span style="font-size:11px;color:var(--muted)">No contact</span>';
+      }
+    } else {
+      actionsHtml = '<span class="badge bg" style="font-size:10px">You (Owner)</span>';
+    }
+
+    var selfAttHtml = person.isOwner ? '<span class="badge bg" style="font-size:10px;background:#e0f2fe;color:#0369a1">Always Present</span>' : '<strong>' + selfAttDays + ' days</strong>';
+
+    html += '<tr>'
+      + '<td><strong>' + person.name + '</strong>' + (person.isOwner ? ' <span class="badge bg" style="font-size:9px">Owner</span>' : '') + '</td>'
+      + '<td><span class="badge by" style="font-size:10px">' + person.herbalife_pin + '</span></td>'
+      + '<td style="text-align:center">' + selfAttHtml + '</td>'
+      + '<td style="text-align:center;font-weight:700;color:var(--primary)">' + checkins + '</td>'
+      + '<td style="text-align:center;font-weight:700;color:var(--success)">' + bodyProfiles + '</td>'
+      + '<td style="text-align:center;font-weight:700;color:var(--accent)">' + leadsAdded + '</td>'
+      + '<td style="text-align:center"><strong>' + activeCusts + '</strong> / ' + myCusts.length + '</td>'
+      + '<td>' + actionsHtml + '</td>'
+      + '</tr>';
+  });
+
+  tb.innerHTML = html;
+}
+
 // Helper: days left for supervisor context (uses Supabase data structure)
 function getDaysLeftSv(c) {
   if (!c.pack_type || !c.pack_start_date) return -1;
@@ -15226,6 +15439,7 @@ function openShareCardModal() {
   }).join('');
   
   document.getElementById('share-card-title').value = cust.name + "'s Progress";
+  document.getElementById('share-card-header').value = getCenterName();
   
   openModal('share-card');
   drawProgressCard();
@@ -15245,6 +15459,7 @@ function drawProgressCard() {
   
   var title = document.getElementById('share-card-title').value || "Health Journey";
   var theme = document.getElementById('share-card-theme').value;
+  var headerText = document.getElementById('share-card-header').value || getCenterName();
   
   var grad = ctx.createLinearGradient(0, 0, 1080, 1080);
   if(theme === 'midnight') {
@@ -15267,7 +15482,7 @@ function drawProgressCard() {
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
   ctx.font = 'bold 24px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('PULSEZEN WELLNESS CENTER', 540, 100);
+  ctx.fillText(headerText.toUpperCase(), 540, 100);
   
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 56px Georgia, serif';

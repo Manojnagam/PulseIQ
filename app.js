@@ -1859,17 +1859,19 @@ async function bootDashboard() {
     var loginTs = parseInt(localStorage.getItem('pz_login_ts') || '0');
     var deviceTrusted = rememberedEmail && (Date.now() - loginTs) < SIXTY_DAYS;
 
-    if (!deviceTrusted) {
+    var sessionRestored = false;
+    var hasTokens = localStorage.getItem('pz_session_tokens') || localStorage.getItem('sb-erteibdxzdvsaujptxsd-auth-token');
+    if (hasTokens) {
       // Try restoring full Supabase session (works when token hasn't expired)
-      var sessionRestored = await checkExistingSession();
-      if (sessionRestored) {
-        // Upgrade trust on successful session restore
-        if (_authUser && _authUser.email) {
-          localStorage.setItem('pz_remembered_email', _authUser.email);
-          localStorage.setItem('pz_login_ts', Date.now());
-        }
-        deviceTrusted = true;
+      sessionRestored = await checkExistingSession();
+    }
+    if (sessionRestored) {
+      // Upgrade trust on successful session restore
+      if (_authUser && _authUser.email) {
+        localStorage.setItem('pz_remembered_email', _authUser.email);
+        localStorage.setItem('pz_login_ts', Date.now());
       }
+      deviceTrusted = true;
     }
 
     if (!deviceTrusted) {
