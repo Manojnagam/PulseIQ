@@ -1551,7 +1551,7 @@ var D = { centers:[], customers:[], attendance:[], body:[], finance:[], coaches:
 var _leadTab = 'today';
 
 // ── SUPABASE REST ──
-async function req(method, table, body, filter) {
+async function req(method, table, body, filter, customHeaders) {
   getCredentials();
   filter = filter || '';
   var activeUrl = getActiveSbUrl();
@@ -1575,6 +1575,9 @@ async function req(method, table, body, filter) {
     'Content-Type': 'application/json',
     'Prefer': 'return=representation'
   };
+  if (customHeaders) {
+    Object.assign(headers, customHeaders);
+  }
   var opts = { method: method, headers: headers };
   if (body) opts.body = JSON.stringify(body);
   try {
@@ -5815,10 +5818,28 @@ async function toggleAtt(cid, cname, date, currentStatus) {
     if(existing && existing.status==='present') {
       var curServ = Number(existing.servings) || 1;
       var newServ = curServ + 1;
-      await dbUpdate('attendance', existing.id, {servings:newServ});
+      var payload = {
+        id: existing.id,
+        customer_id: cid,
+        customer_name: cname,
+        date: date,
+        status: 'present',
+        servings: newServ,
+        wellness_center_id: existing.wellness_center_id || null
+      };
+      await req('POST', 'attendance', payload, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
       showToast(cname+' — '+newServ+' servings today','success');
     } else if(existing) {
-      await dbUpdate('attendance', existing.id, {status:'present', servings:1});
+      var payload = {
+        id: existing.id,
+        customer_id: cid,
+        customer_name: cname,
+        date: date,
+        status: 'present',
+        servings: 1,
+        wellness_center_id: existing.wellness_center_id || null
+      };
+      await req('POST', 'attendance', payload, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
       showToast(cname+' — marked present (1 serving)','success');
     } else {
       await dbInsert('attendance', {customer_id:cid, customer_name:cname, date:date, status:'present', servings:1, check_in_time: new Date().toTimeString().slice(0,5)});
@@ -5839,7 +5860,16 @@ async function resetAtt(cid, cname, date) {
   var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
   if(!existing || existing.status!=='present') { delete _attInFlight[key]; return; }
   try {
-    await dbUpdate('attendance', existing.id, {status:'absent', servings:0});
+    var payload = {
+      id: existing.id,
+      customer_id: cid,
+      customer_name: cname,
+      date: date,
+      status: 'absent',
+      servings: 0,
+      wellness_center_id: existing.wellness_center_id || null
+    };
+    await req('POST', 'attendance', payload, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
     showToast(cname+' — attendance removed','info');
     _daysLeftCache = {};
     await loadAttendance(); renderOverview();
@@ -6132,8 +6162,18 @@ async function gridServSave(id, name, date) {
   var pIds = getPersonIds(id);
   var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
   try {
-    if(existing) { await dbUpdate('attendance', existing.id, {status:'present', servings:v}); }
-    else { await dbInsert('attendance', {customer_id:id, customer_name:name, date:date, status:'present', servings:v}); }
+    var payload = {
+      customer_id: id,
+      customer_name: name,
+      date: date,
+      status: 'present',
+      servings: v
+    };
+    if (existing) {
+      payload.id = existing.id;
+      payload.wellness_center_id = existing.wellness_center_id || null;
+    }
+    await req('POST', 'attendance', payload, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
     showToast(name+' — '+v+' serving'+(v!==1?'s':'')+' saved','success');
     _daysLeftCache = {};
     await loadAttendance(); renderOverview();
