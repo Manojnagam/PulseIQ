@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coach Dashboard — Dharani's</title>
+<title>Coach Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -930,7 +930,7 @@ input:focus, select:focus, textarea:focus {
   <!-- SIDEBAR -->
   <div id="sidebar">
     <div class="sb-logo">
-      <h1>🌿 Dharani's</h1>
+      <h1 id="coach-logo-header">🌿 PulseIQ</h1>
       <span>Coach Portal</span>
     </div>
     <div class="sb-greeting" id="sb-greeting-wrap">
@@ -2020,6 +2020,7 @@ var SB_URL = localStorage.getItem('sb_url') || localStorage.getItem('coach_sb_ur
 var SB_KEY = localStorage.getItem('sb_key') || localStorage.getItem('coach_sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
 var COACH_ID   = localStorage.getItem('coachId')   || '';
 var COACH_NAME = localStorage.getItem('coachName') || '';
+var ACTIVE_CENTER_NAME = localStorage.getItem('coach_center_name') || 'PulseIQ';
 var COACH_GENDER = COACH_ID ? (localStorage.getItem('coachGender_' + COACH_ID) || 'male') : 'male';
 var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
 var _leadTab = 'all';
@@ -2051,7 +2052,7 @@ var T = {
     wi_guide2:'\u2728 On the 3rd reading \u2014 drink the water <strong>immediately</strong>. No waiting. The water carries your intention. \uD83D\uDCAA',
     wi_done_btn:'\u2705 Done for today! See you tomorrow.',
     wi_pending_btn:'\uD83D\uDCA7 I did it \u2014 I drank my intention!',
-    affirmation:'I, {name}, am a {icon} {pin} member at Dharani\'s. I attract abundance, health and happiness. I help people transform their lives every single day. Success flows to me naturally.',
+    affirmation:'I, {name}, am a {icon} {pin} member at {center}. I attract abundance, health and happiness. I help people transform their lives every single day. Success flows to me naturally.',
     // buttons
     btn_refresh:'\uD83D\uDD04 Refresh',
   },
@@ -2079,7 +2080,7 @@ var T = {
     wi_guide2:'\u2728 మూడవ సారి చదివిన వెంటనే \u2014 ఆ క్షణంలోనే నీళ్ళు తాగండి. ఆగవద్దు. నీళ్ళు మీ సంకల్పాన్ని మోస్తాయి. \uD83D\uDCAA',
     wi_done_btn:'\u2705 ఈరోజు చేసారు! రేపు కలుద్దాం.',
     wi_pending_btn:'\uD83D\uDCA7 చేసాను \u2014 సంకల్పంతో నీళ్ళు తాగాను!',
-    affirmation:'నేను, {name}, ధరణి\'స్‌లో {icon} {pin} {member}. నేను సమృద్ధి, ఆరోగ్యం మరియు సంతోషాన్ని ఆకర్షిస్తాను. నేను ప్రతిరోజూ ప్రజల జీవితాలను మార్చడంలో సహాయపడతాను. విజయం నాకు సహజంగా వస్తుంది.',
+    affirmation:'నేను, {name}, {center}లో {icon} {pin} {member}. నేను సమృద్ధి, ఆరోగ్యం మరియు సంతోషాన్ని ఆకర్షిస్తాను. నేను ప్రతిరోజూ ప్రజల జీవితాలను మార్చడంలో సహాయపడతాను. విజయం నాకు సహజంగా వస్తుంది.',
     // buttons
     btn_refresh:'\uD83D\uDD04 రిఫ్రెష్',
   }
@@ -2322,6 +2323,14 @@ function startApp() {
   COACH_GENDER = localStorage.getItem('coachGender_' + COACH_ID) || 'male';
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  
+  // Set logo header and document title immediately
+  var logoEl = document.getElementById('coach-logo-header');
+  if (logoEl && ACTIVE_CENTER_NAME) {
+    logoEl.innerHTML = '🌿 ' + ACTIVE_CENTER_NAME;
+  }
+  document.title = ACTIVE_CENTER_NAME + ' — Coach Portal';
+
   document.getElementById('sb-coach-name').textContent = COACH_NAME;
   document.getElementById('sb-avatar').textContent = COACH_NAME.charAt(0).toUpperCase();
   document.getElementById('ov-date').textContent = new Date().toDateString();
@@ -2691,6 +2700,18 @@ async function loadAll() {
     D.leadFollowups   = Array.isArray(fus)       ? fus      : [];
     D.centers         = Array.isArray(centers)   ? centers  : [];
     D.coachProfile    = (Array.isArray(coachRec) && coachRec[0]) ? coachRec[0] : {};
+    
+    // Resolve active center name dynamically
+    var activeCenterId = CENTER_UUID || D.coachProfile.wellness_center_id;
+    var myCenter = D.centers.find(function(c){ return c.id === activeCenterId; });
+    if (myCenter && myCenter.name) {
+      ACTIVE_CENTER_NAME = myCenter.name;
+      localStorage.setItem('coach_center_name', ACTIVE_CENTER_NAME);
+      var logoEl = document.getElementById('coach-logo-header');
+      if (logoEl) logoEl.innerHTML = '🌿 ' + ACTIVE_CENTER_NAME;
+      document.title = ACTIVE_CENTER_NAME + ' — Coach Portal';
+    }
+
     D.walkins         = (Array.isArray(walkins) ? walkins : []).filter(function(w){
       var myCustIds = D.customers.map(function(c){ return c.id; });
       return w.referred_by_id === COACH_ID || myCustIds.indexOf(w.referred_by_id) !== -1;
@@ -2746,7 +2767,7 @@ function renderVisionCard() {
   document.getElementById('vision-card').innerHTML =
     '<div class="vision-card">' +
       '<div class="vision-greeting">' + getGreeting() + ', ' + name + '! 👋</div>' +
-      '<div class="vision-text">"I am a <em>' + targetIcon + ' ' + targetPin + '</em> member at Dharani\'s."</div>' +
+      '<div class="vision-text">"I am a <em>' + targetIcon + ' ' + targetPin + '</em> member at ' + ACTIVE_CENTER_NAME + '."</div>' +
       '<div class="vision-sub">Believe it. Work for it. Own it. 💪</div>' +
     '</div>';
 }
@@ -2805,7 +2826,12 @@ function renderWaterIntentionCard() {
   var streakLabel = s.count >= 30 ? s.count + ' day streak — UNSTOPPABLE!' : s.count >= 7 ? s.count + ' day streak!' : s.count > 0 ? s.count + ' day streak' : 'Start today';
   var affirmationTpl = t('affirmation');
   var memberWord = COACH_GENDER === 'female' ? 'సభ్యురాలిని' : 'సభ్యుడిని';
-  var affirmation = affirmationTpl.replace('{name}', name).replace('{icon}', PIN_ICONS[nextPin] || '⭐').replace('{pin}', nextPin).replace('{member}', memberWord);
+  var affirmation = affirmationTpl
+    .replace('{name}', name)
+    .replace('{icon}', PIN_ICONS[nextPin] || '⭐')
+    .replace('{pin}', nextPin)
+    .replace('{member}', memberWord)
+    .replace('{center}', ACTIVE_CENTER_NAME);
   document.getElementById('water-intention-card').innerHTML =
     '<div class="wi-card">' +
       '<div class="wi-top">' +
@@ -3031,7 +3057,7 @@ function renderInactiveList() {
       var daysAgo = lastAtt ? Math.floor((today - lastAtt) / (1000 * 60 * 60 * 24)) : null;
       var phone = (c.contact || '').replace(/\D/g, '');
       if (phone.length === 10) phone = COUNTRY_CODE + phone;
-      var msg = encodeURIComponent('Hi ' + c.name + '! 🌿 We miss you at Dharani\'s! Your pack is still active. Come in today and let\'s get back on track! 💪');
+      var msg = encodeURIComponent('Hi ' + c.name + '! 🌿 We miss you at ' + ACTIVE_CENTER_NAME + '! Your pack is still active. Come in today and let\'s get back on track! 💪');
       return '<div class="inactive-row">' +
         '<div>' +
           '<div class="ov-name">' + c.name + '</div>' +
@@ -3072,7 +3098,7 @@ function renderOverview() {
       var st = getDaysLeft(c);
       var phone = (c.contact||'').replace(/\D/g,'');
       if(phone.length===10) phone = COUNTRY_CODE + phone;
-      var msg = encodeURIComponent('Hi '+c.name+'! 🌿 Your pack at Dharani\'s is ending in just '+st.days+' serving'+(st.days!==1?'s':'')+'. Renew now to keep your streak going! 💪');
+      var msg = encodeURIComponent('Hi '+c.name+'! 🌿 Your pack at ' + ACTIVE_CENTER_NAME + ' is ending in just '+st.days+' serving'+(st.days!==1?'s':'')+'. Renew now to keep your streak going! 💪');
       return '<div class="ov-row"><div><div class="ov-name">'+c.name+'</div><div class="ov-sub">'+st.days+' servings left</div></div>' +
         (phone ? '<a href="https://api.whatsapp.com/send?phone='+phone+'&text='+msg+'" target="_blank" style="background:#25D366;color:#fff;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none">💬 Remind</a>' : '') +
         '</div>';
@@ -3119,7 +3145,7 @@ function renderCustomers() {
       }
     }
 
-    var waMsg = encodeURIComponent('Hi '+c.name+'! 🌿 Hope you\'re doing great. See you at Dharani\'s today! 💪');
+    var waMsg = encodeURIComponent('Hi '+c.name+'! 🌿 Hope you\'re doing great. See you at ' + ACTIVE_CENTER_NAME + ' today! 💪');
     var dashMsg = encodeURIComponent('Hi '+c.name+'! 🌿 Here\'s your personal wellness dashboard link:\nhttps://pulseiq-app.nagam-kumar.workers.dev/customer.html\n\nLogin with your mobile number and date of birth. Track your progress, attendance & more! 💪');
     
     return '<div class="cust-card">'+
@@ -3602,7 +3628,7 @@ function sendAttWA(custId, custName, date) {
     else if (st.days <= 3) packLine = '🌟 Almost done — just '+st.days+' serving'+(st.days!==1?'s':'')+' left! Ask us about renewal!';
     else if (st.days <= 7) packLine = '💪 Great consistency! Think about renewing early for best results!';
   }
-  var msg = 'Hi '+custName+'! ✅\n\nYour attendance is marked for today ('+date+') at Dharani\'s.\n\n'+progressLine+packLine+'\n\nSee you tomorrow! 💚🌿\n— Dharani\'s';
+  var msg = 'Hi '+custName+'! ✅\n\nYour attendance is marked for today ('+date+') at ' + ACTIVE_CENTER_NAME + '.\n\n'+progressLine+packLine+'\n\nSee you tomorrow! 💚🌿\n— ' + ACTIVE_CENTER_NAME;
   var url = 'https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg);
   var bar = document.getElementById('att-wa-bar');
   document.getElementById('att-wa-text').textContent = '💬 Send WhatsApp to ' + custName + '?';
@@ -4725,8 +4751,8 @@ function renderRenewals() {
     var phone = (c.contact||'').replace(/\D/g,'');
     if (phone.length === 10) phone = COUNTRY_CODE + phone;
     var waMsg = (!st.active || days <= 0)
-      ? 'Hi '+c.name+'! \uD83C\uDF3F\n\nYour wellness pack at Dharani\'s has expired. Come renew and keep the momentum going!\n\nWe miss you! \uD83D\uDC9A'
-      : 'Hi '+c.name+'! \uD83C\uDF3F\n\nJust a heads-up — your pack expires in '+days+' day'+(days!==1?'s':'')+'. Renew early to stay on track with your health goals!\n\nDharani\'s \uD83D\uDC9A';
+      ? 'Hi '+c.name+'! \uD83C\uDF3F\n\nYour wellness pack at ' + ACTIVE_CENTER_NAME + ' has expired. Come renew and keep the momentum going!\n\nWe miss you! \uD83D\uDC9A'
+      : 'Hi '+c.name+'! \uD83C\uDF3F\n\nJust a heads-up — your pack expires in '+days+' day'+(days!==1?'s':'')+'. Renew early to stay on track with your health goals!\n\n' + ACTIVE_CENTER_NAME + ' \uD83D\uDC9A';
     var waUrl = phone ? 'https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(waMsg) : '';
     return '<div class="renew-card '+cls+'">'+
       '<div>'+
@@ -4957,9 +4983,9 @@ function waSelectGroup(group) {
 
 function waSetTemplate(type) {
   var msgs = {
-    renewal:    'Hi {name}! \uD83C\uDF3F\n\nYour wellness pack at Dharani\'s is expiring soon. Renew now to keep your health journey on track!\n\nCall us or walk in anytime. See you soon! \uD83D\uDC9A',
-    motivation: 'Hi {name}! \uD83D\uDCAA\n\nJust a reminder — consistency is the key to lasting results! We\'re cheering for you at Dharani\'s.\n\nKeep showing up — you\'re doing great! \uD83C\uDF3F',
-    inactive:   'Hi {name}! \uD83D\uDE0A\n\nWe\'ve missed you at Dharani\'s! Your health journey is too important to pause.\n\nCome back and let\'s get back on track together. See you soon! \uD83D\uDC9A\uD83C\uDF3F'
+    renewal:    'Hi {name}! \uD83C\uDF3F\n\nYour wellness pack at ' + ACTIVE_CENTER_NAME + ' is expiring soon. Renew now to keep your health journey on track!\n\nCall us or walk in anytime. See you soon! \uD83D\uDC9A',
+    motivation: 'Hi {name}! \uD83D\uDCAA\n\nJust a reminder — consistency is the key to lasting results! We\'re cheering for you at ' + ACTIVE_CENTER_NAME + '.\n\nKeep showing up — you\'re doing great! \uD83C\uDF3F',
+    inactive:   'Hi {name}! \uD83D\uDE0A\n\nWe\'ve missed you at ' + ACTIVE_CENTER_NAME + '! Your health journey is too important to pause.\n\nCome back and let\'s get back on track together. See you soon! \uD83D\uDC9A\uD83C\uDF3F'
   };
   document.getElementById('wa-message').value = msgs[type] || '';
 }
@@ -5049,10 +5075,7 @@ function deleteNote(idx) {
 
 // Helper: get dynamic center name
 function getCenterName() {
-  if (D && D.centers && D.centers.length) {
-    return D.centers[0].name;
-  }
-  return 'Our Wellness Center';
+  return ACTIVE_CENTER_NAME || 'PulseIQ';
 }
 
 // Sub-tab switcher for Coach Body Composition view
@@ -6459,7 +6482,7 @@ sdInit('walkin-ref', 'sd-walkin-ref-input', 'walkin-referred-by-id', null);
         </div>
         <div class="fg">
           <label for="share-card-header">Card Top Header (Center Name)</label>
-          <input type="text" id="share-card-header" value="" oninput="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px" placeholder="e.g. Dharani's / BK's Wellness Studio">
+          <input type="text" id="share-card-header" value="" oninput="drawProgressCard()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px" placeholder="e.g. My Wellness Studio">
         </div>
         <div class="fg">
           <label for="share-card-theme">Card Theme</label>
