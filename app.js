@@ -12484,7 +12484,8 @@ function renderWalkins() {
   var OUT = {checkup:'🔬 Checkup',trial:'📦 Trial Pack',product_sale:'🛒 Product Sale',other:'Other'};
   var OUT_COL = {checkup:'#1d4ed8',trial:'#b07800',product_sale:'#16a34a',other:'var(--muted)'};
   tb.innerHTML = rows.map(function(w) {
-    var refName = w.referred_by_name || (w.referred_by_id ? (findPerson&&findPerson(w.referred_by_id)||'') : '');
+    var refObj = w.referred_by_id ? findPerson(w.referred_by_id) : null;
+    var refName = w.referred_by_name || (refObj ? refObj.name : '');
     var srcLbl = (SRC[w.source]||w.source||'—') + (refName ? '<br><span style="font-size:11px;color:var(--muted)">'+refName+'</span>' : '');
     var outLbl = '<span style="font-weight:600;color:'+(OUT_COL[w.outcome]||'var(--muted)')+'">'+( OUT[w.outcome]||w.outcome||'—')+'</span>'+(w.product_details?'<br><span style="font-size:11px;color:var(--muted)">'+w.product_details+'</span>':'');
     var amt = (w.outcome==='checkup') ? '<span style="color:var(--success);font-size:11px;font-weight:600">Free</span>' : (w.amount_received ? '₹'+Number(w.amount_received).toLocaleString('en-IN') : '—');
