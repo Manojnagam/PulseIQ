@@ -37,6 +37,11 @@
   --glass-blur:blur(16px);
   --cyber-blue:#38bdf8;
   --purple:#a78bfa;
+  
+  /* Zebra rows & hovers */
+  --zebra-bg:rgba(255,255,255,.02);
+  --hover-bg:rgba(255,255,255,.05);
+  --hover-active-bg:rgba(0, 230, 118, 0.15);
 }
 [data-theme="light"]{
   --bg:#f8fafc;
@@ -517,8 +522,8 @@ select option{background-color:var(--surface-solid)!important;color:var(--text)!
 .nav-item:not(.active){border-left:3px solid transparent;padding-left:8px}
 
 /* Table — alternating rows + better hover */
-tbody tr:nth-child(even) td{background:#faf9f7}
-tbody tr:hover td{background:var(--accent-light)!important;transition:background .12s}
+tbody tr:nth-child(even) td{background:var(--zebra-bg)}
+tbody tr:hover td{background:var(--hover-active-bg)!important;transition:background .12s}
 
 /* Scrollbar polish */
 ::-webkit-scrollbar{width:5px;height:5px}
