@@ -1056,14 +1056,11 @@ function _applySwitch(centerId) {
   var _ldMsg = document.getElementById('app-loading-msg');
   if(_ld) { _ld.style.display='flex'; }
   if(_ldMsg) _ldMsg.textContent = 'Loading center data…';
-  // Reload data scoped to new center (2-phase, same as loadAll)
+  // Reload critical data scoped to new center
   Promise.all([loadCustomers(), loadCoaches()])
     .then(function(){
       if(_ldMsg) _ldMsg.textContent = 'Almost ready…';
-      return Promise.all([loadAttendance(), loadFinance(),
-        loadCoupons(), loadPayments(), loadPackHistory(),
-        loadLeads(), loadWalkins(), loadExpenses(), loadInventory()])
-        .then(function(){ return loadBody(); });
+      return Promise.all([loadAttendance(), loadFinance()]);
     })
     .then(function(){
       _daysLeftCache = {};
@@ -1074,12 +1071,27 @@ function _applySwitch(centerId) {
         var og = document.getElementById('ov-main-grid');
         if(og) og.innerHTML = '<div style="padding:32px;text-align:center;color:var(--danger)"><strong>Dashboard error:</strong><br><span style="font-size:12px;font-family:monospace">'+(e&&e.message?e.message:String(e))+'</span><br><br><button onclick="location.reload()" class="btn-p">🔄 Reload</button></div>';
       }
-      if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
-      if(typeof renderCoupons==='function') try { renderCoupons(); } catch(e){}
-      if(typeof renderPayments==='function') try { renderPayments(); } catch(e){}
-      updateCustSelects();
       if(_ld) _ld.style.display='none';
       showToast(centerId ? 'Switched to center' : 'Ready');
+      
+      // Load remaining scoped data in background
+      Promise.all([
+        loadCoupons(), loadPayments(), loadPackHistory(),
+        loadLeads(), loadWalkins(), loadExpenses(), loadInventory()
+      ]).then(function() {
+        return loadBody();
+      }).then(function() {
+        _daysLeftCache = {};
+        try { renderCustomers(); } catch(e){}
+        try { renderCenters(); } catch(e){}
+        try { renderOverview(); } catch(e){}
+        if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
+        if(typeof renderCoupons==='function') try { renderCoupons(); } catch(e){}
+        if(typeof renderPayments==='function') try { renderPayments(); } catch(e){}
+        updateCustSelects();
+      }).catch(function(bgErr) {
+        console.error('Background switch data loading failed:', bgErr);
+      });
     })
     .catch(function(e){
       console.error('_applySwitch failed:', e);
@@ -1663,6 +1675,9 @@ async function doConnect() {
   } catch(e) {
     showErr('Connection failed: ' + e.message);
     SB_URL=null; SB_KEY=null;
+    var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
+    document.getElementById('setup').style.display = 'block';
+    document.getElementById('app').style.display = 'none';
   }
   btn.textContent = 'Connect & Launch Dashboard →'; btn.disabled = false;
 }
@@ -1959,13 +1974,10 @@ async function loadAll() {
     var _ldMsg = document.getElementById('app-loading-msg'); if(_ldMsg) _ldMsg.textContent = 'Connecting to database…';
     await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
     if(_ldMsg) _ldMsg.textContent = 'Loading attendance & finance…';
-    // Phase 2: walkins must load before body (body filter includes walk-in IDs)
-    await Promise.all([loadAttendance(), loadFinance(),
-      loadCoupons(), loadPayments(), loadPackHistory(),
-      loadLeads(), loadWalkins(), loadExpenses(), loadFoods(), loadInventory(), loadContests(), loadAnnouncements(), loadRecurring()]);
-    // Phase 3: body runs after walkins so _custIdsFilter() includes walk-in IDs
-    await loadBody();
-    _daysLeftCache = {};  // all data loaded — recalculate with full attendance
+    // Phase 2: Load critical data for overview screen (attendance, finance, announcements)
+    await Promise.all([loadAttendance(), loadFinance(), loadAnnouncements()]);
+    
+    _daysLeftCache = {};  // initial critical data loaded
     try { await chartPromise; } catch(scErr) {}
     if (typeof Chart === 'undefined') {
       window.Chart = function() {
@@ -1976,13 +1988,11 @@ async function loadAll() {
     try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
     try { renderAnnouncementBanner(); } catch(re){ console.error('renderAnnouncementBanner crash:',re); }
-    try { autoApplyRecurring(); } catch(re){ console.error('autoApplyRecurring crash:',re); }
-    try { loadFollowUps(); } catch(re){ console.error('loadFollowUps crash:',re); }
     applyLang();
     (function(){ var btn=document.getElementById('dark-mode-btn'); if(btn) btn.textContent=localStorage.getItem('svTheme')==='dark'?'☀️':'🌙'; })();
     startAutoPing();
     migrateSvBodyToSupabase();
-    // Hide loading splash — data is ready
+    // Hide loading splash — critical data is ready and dashboard is interactive!
     var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
     // On startup: if PINs exist but no email-auth session, prompt for PIN
     // Skip PIN prompt if user is already authenticated via email OTP
@@ -1990,6 +2000,26 @@ async function loadAll() {
     if (isTrialExpired()) {
       showTrialExpiredScreen();
     }
+    
+    // Phase 3: Load remaining data (non-blocking background load)
+    Promise.all([
+      loadCoupons(), loadPayments(), loadPackHistory(),
+      loadLeads(), loadWalkins(), loadExpenses(), loadFoods(), loadInventory(), loadContests(), loadRecurring()
+    ]).then(function() {
+      return loadBody();
+    }).then(function() {
+      _daysLeftCache = {}; // recalculate with full data
+      try { renderCustomers(); } catch(re){}
+      try { renderOverview(); } catch(re){}
+      if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
+      if(typeof renderCoupons==='function') try { renderCoupons(); } catch(e){}
+      if(typeof renderPayments==='function') try { renderPayments(); } catch(e){}
+      updateCustSelects();
+      try { autoApplyRecurring(); } catch(re){ console.error('autoApplyRecurring crash:',re); }
+      try { loadFollowUps(); } catch(re){ console.error('loadFollowUps crash:',re); }
+    }).catch(function(bgErr) {
+      console.error('Background data loading failed:', bgErr);
+    });
   } catch(e) {
     console.error('loadAll crash:', e);
     // Hide loading splash and show error
