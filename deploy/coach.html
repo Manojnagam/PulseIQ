@@ -1082,6 +1082,8 @@ input:focus, select:focus, textarea:focus {
           <div><div class="pt">My Body Stats</div><div class="ps">Track your personal body composition over time</div></div>
           <button class="btn-p" onclick="openMyBodyModal()">+ Add Today's Stats</button>
         </div>
+        <!-- Profile Details card -->
+        <div class="tcard" id="my-profile-details" style="margin-bottom:16px; display:none;"></div>
         <!-- Ideal targets card -->
         <div class="tcard" id="my-body-ideals" style="margin-bottom:16px"></div>
         <!-- History -->
@@ -2643,7 +2645,7 @@ async function loadAll() {
       dbGet('leads', 'id', 'coach_id=eq.' + COACH_ID),
       dbGet('lead_followups', 'called_at'),
       dbGet('wellness_centers', 'name'),
-      req('coaches?id=eq.' + COACH_ID + '&select=id,name,herbalife_pin')
+      req('coaches?id=eq.' + COACH_ID + '&select=id,name,herbalife_pin,dob,gender,goal,contact,email,join_date,notes,coach_pin')
     ]);
     D.customers       = Array.isArray(custs)    ? custs    : [];
     D.attendance      = Array.isArray(att)       ? att      : [];
@@ -2652,6 +2654,10 @@ async function loadAll() {
     D.leadFollowups   = Array.isArray(fus)       ? fus      : [];
     D.centers         = Array.isArray(centers)   ? centers  : [];
     D.coachProfile    = (Array.isArray(coachRec) && coachRec[0]) ? coachRec[0] : {};
+    if (D.coachProfile && D.coachProfile.gender) {
+      COACH_GENDER = D.coachProfile.gender;
+      localStorage.setItem('coachGender_' + COACH_ID, COACH_GENDER);
+    }
     try {
       var shakes = await dbGet('coach_shakes', 'created_at', 'coach_id=eq.' + COACH_ID);
       D.shakes = Array.isArray(shakes) ? shakes : [];
@@ -4048,15 +4054,20 @@ function openBodyModal(id) {
     var ageVal = '';
 
     // 1. Check latest record in body composition
-    var lastRec = (D.body || []).filter(function(b){ return b.customer_id === _bodySelCustId; }).sort(function(a,b){ return new Date(b.date) - new Date(a.date); })[0];
+    var lastRec;
+    if (_bodySelCustId === COACH_ID) {
+      lastRec = D_MY_BODY[0];
+    } else {
+      lastRec = (D.body || []).filter(function(b){ return b.customer_id === _bodySelCustId; }).sort(function(a,b){ return new Date(b.date) - new Date(a.date); })[0];
+    }
     if (lastRec) {
       if (lastRec.height) heightVal = lastRec.height;
       if (lastRec.age)    ageVal = lastRec.age;
     }
 
-    // 2. Fallback to customer profile height/age/dob
+    // 2. Fallback to customer/coach profile height/age/dob
     if (!heightVal || !ageVal) {
-      var person = _bodySelCustId === COACH_ID ? null : D.customers.find(function(c){ return c.id === _bodySelCustId; });
+      var person = _bodySelCustId === COACH_ID ? D.coachProfile : D.customers.find(function(c){ return c.id === _bodySelCustId; });
       if (person) {
         if (!heightVal && person.height) heightVal = person.height;
         if (!ageVal) {
@@ -5314,9 +5325,38 @@ async function loadMyBodyStats() {
       D_MY_BODY = [];
     }
   }
+  renderMyProfileDetails();
   renderMyBodyIdeals();
   renderMyBodyHistory();
   renderMyWeightChart();
+}
+
+function renderMyProfileDetails() {
+  var el = document.getElementById('my-profile-details');
+  if (!el) return;
+  if (D.coachProfile && D.coachProfile.name) {
+    el.style.display = 'block';
+    var p = D.coachProfile;
+    var genderLabel = p.gender ? (p.gender.charAt(0).toUpperCase() + p.gender.slice(1)) : '—';
+    var dobLabel = p.dob ? new Date(p.dob).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : '—';
+    var joinLabel = p.join_date ? new Date(p.join_date).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : '—';
+    var goalText = { lose_fat:'Lose Fat', stay_fit:'Stay Fit', build_muscle:'Build Muscle', improve_stamina:'Improve Stamina' }[p.goal] || p.goal || '—';
+    
+    el.innerHTML = 
+      '<div style="font-weight:700;font-size:14px;margin-bottom:12px">👤 My Profile Details</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;font-size:13px;color:var(--text)">' +
+        '<div><span style="color:var(--muted)">Name:</span> ' + p.name + '</div>' +
+        '<div><span style="color:var(--muted)">Contact:</span> ' + (p.contact || '—') + '</div>' +
+        '<div><span style="color:var(--muted)">Email:</span> ' + (p.email || '—') + '</div>' +
+        '<div><span style="color:var(--muted)">Gender:</span> ' + genderLabel + '</div>' +
+        '<div><span style="color:var(--muted)">Date of Birth:</span> ' + dobLabel + '</div>' +
+        '<div><span style="color:var(--muted)">Goal:</span> ' + goalText + '</div>' +
+        '<div><span style="color:var(--muted)">Herbalife Pin:</span> ' + (p.herbalife_pin || '—') + '</div>' +
+        '<div><span style="color:var(--muted)">Joined:</span> ' + joinLabel + '</div>' +
+      '</div>';
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 function renderMyBodyIdeals() {
@@ -5590,8 +5630,13 @@ async function loadMyDiet() {
   }
 
   // Load saved goal
-  var savedGoal = localStorage.getItem('myGoal_' + COACH_ID) || 'build_muscle';
-  var savedAge = localStorage.getItem('myAge_' + COACH_ID) || '';
+  var savedGoal = (D.coachProfile && D.coachProfile.goal) || localStorage.getItem('myGoal_' + COACH_ID) || 'build_muscle';
+  var savedAge = '';
+  if (D.coachProfile && D.coachProfile.dob) {
+    savedAge = Math.floor((new Date() - new Date(D.coachProfile.dob)) / (365.25 * 24 * 3600 * 1000));
+  } else {
+    savedAge = localStorage.getItem('myAge_' + COACH_ID) || '';
+  }
   document.getElementById('my-goal').value = savedGoal;
   document.getElementById('my-age').value = savedAge;
   document.getElementById('my-diet-type').value = localStorage.getItem('myDietType_' + COACH_ID) || 'veg';

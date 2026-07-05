@@ -1455,6 +1455,15 @@ async function doLogin() {
     if (!results.length) {
       results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent('91' + mobile) + centerFilter);
     }
+    if (!results.length) {
+      results = await req('GET', 'coaches', null, 'contact=eq.' + encodeURIComponent(mobile) + centerFilter);
+      if (!results.length) {
+        results = await req('GET', 'coaches', null, 'contact=eq.' + encodeURIComponent('91' + mobile) + centerFilter);
+      }
+      if (results.length) {
+        results = results.map(function(c) { return Object.assign({}, c, { isCoach: true }); });
+      }
+    }
     if (!results.length) { errEl.textContent = 'No client found with this number. Contact your coach.'; return; }
 
     var cust = null;
@@ -1503,23 +1512,31 @@ async function loadData() {
   } catch(e) { console.error('attendance load failed', e); }
 
   try {
-    var body = await req('GET', 'body_composition', null, 'customer_id=eq.' + CUST.id + '&order=date.desc');
-    DATA.body = (body || []).filter(function(r){ return r.customer_id === CUST.id; });
+    var tbl = CUST.isCoach ? 'coach_body_composition' : 'body_composition';
+    var col = CUST.isCoach ? 'coach_id' : 'customer_id';
+    var body = await req('GET', tbl, null, col + '=eq.' + CUST.id + '&order=date.desc');
+    DATA.body = (body || []).map(function(r) {
+      if (CUST.isCoach) {
+        return Object.assign({}, r, { customer_id: r.coach_id });
+      }
+      return r;
+    });
   } catch(e) { console.error('body_composition load failed', e); DATA.body = []; }
 
   try {
-    var packs = await req('GET', 'pack_history', null, 'customer_id=eq.' + CUST.id + '&order=start_date.desc');
+    var packs = CUST.isCoach ? [] : await req('GET', 'pack_history', null, 'customer_id=eq.' + CUST.id + '&order=start_date.desc');
     DATA.packs = packs || [];
   } catch(e) { console.error('pack_history load failed', e); }
 
   try {
-    var payRec = await req('GET', 'payments', null, 'person_id=eq.' + CUST.id + '&order=payment_date.desc&limit=1');
+    var payRec = CUST.isCoach ? [] : await req('GET', 'payments', null, 'person_id=eq.' + CUST.id + '&order=payment_date.desc&limit=1');
     DATA.payment = (payRec && payRec[0]) ? payRec[0] : null;
   } catch(e) { console.error('payment load failed', e); }
 
   try {
-    // Find coach by referred_by_id — could be a coach or another customer
-    if (CUST.referred_by_id) {
+    if (CUST.isCoach) {
+      DATA.coach = CUST;
+    } else if (CUST.referred_by_id) {
       var byRef = await req('GET', 'coaches', null, 'id=eq.' + CUST.referred_by_id + '&limit=1');
       if (byRef[0]) {
         DATA.coach = byRef[0];
@@ -1532,7 +1549,7 @@ async function loadData() {
       }
     }
     // Fallback: use external referrer name
-    if (!DATA.coach && CUST.external_referrer_name) {
+    if (!CUST.isCoach && !DATA.coach && CUST.external_referrer_name) {
       DATA.coach = { name: CUST.external_referrer_name, contact: CUST.external_referrer_phone || null, _isCustomer: true };
     }
   } catch(e) { console.error('coach load failed', e); }
@@ -1550,14 +1567,16 @@ async function loadData() {
 
   // Fetch referred count
   try {
-    var referred = await req('GET', 'customers', null, 'referred_by_id=eq.' + CUST.id + '&select=id');
+    var colName = CUST.isCoach ? 'coach_id' : 'referred_by_id';
+    var referred = await req('GET', 'customers', null, colName + '=eq.' + CUST.id + '&select=id');
     DATA.referredCount = referred ? referred.length : 0;
   } catch(e) { console.error('referred load failed', e); DATA.referredCount = 0; }
 
   // Fetch today's food entries for Visual Garden compliance
   try {
     var todayStr = new Date().toISOString().split('T')[0];
-    FL_ENTRIES = await req('GET', 'food_log_entries', null, 'customer_id=eq.' + CUST.id + '&date=eq.' + todayStr + '&order=created_at.asc') || [];
+    var colName = CUST.isCoach ? 'coach_id' : 'customer_id';
+    FL_ENTRIES = await req('GET', 'food_log_entries', null, colName + '=eq.' + CUST.id + '&date=eq.' + todayStr + '&order=created_at.asc') || [];
   } catch(e) { console.error('food logs load failed', e); FL_ENTRIES = []; }
 }
 
@@ -2877,9 +2896,12 @@ async function saveFoodPreferences() {
     if(!confirm('You only have '+count+' protein source(s) available. This may make it hard to hit your protein target. Save anyway?')) return;
   }
   var restrictStr = _foodPrefRestricted.join(', ');
+  var tbl = CUST.isCoach ? 'coaches' : 'customers';
+  var payload = CUST.isCoach ? {personal_food_restrict: restrictStr||null} : {food_restrict: restrictStr||null};
   try {
-    await req('PATCH','customers',{food_restrict: restrictStr||null},'id=eq.'+CUST.id);
-    CUST.food_restrict = restrictStr||null;
+    await req('PATCH', tbl, payload, 'id=eq.'+CUST.id);
+    if (CUST.isCoach) CUST.personal_food_restrict = restrictStr||null;
+    else CUST.food_restrict = restrictStr||null;
     closeFoodPreferences();
     showToast('Saved! Ask your coach to regenerate your diet plan.','success');
   } catch(e){
@@ -4128,6 +4150,12 @@ window.addEventListener('DOMContentLoaded', async function() {
     
     try {
       var results = await req('GET', 'customers', null, 'id=eq.' + encodeURIComponent(savedId));
+      if (!results || !results.length) {
+        results = await req('GET', 'coaches', null, 'id=eq.' + encodeURIComponent(savedId));
+        if (results && results.length) {
+          results = results.map(function(c) { return Object.assign({}, c, { isCoach: true }); });
+        }
+      }
       if (results && results.length) {
         CUST = results[0];
         await launchApp();

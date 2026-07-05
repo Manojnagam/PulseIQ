@@ -779,6 +779,12 @@ async function doLogin() {
   if (!dob) { errEl.textContent = 'Enter your date of birth.'; return; }
   try {
     var results = await req('GET', 'customers', null, 'contact=eq.' + encodeURIComponent(mobile) + '&limit=1');
+    if (!results.length) {
+      results = await req('GET', 'coaches', null, 'contact=eq.' + encodeURIComponent(mobile) + '&limit=1');
+      if (results.length) {
+        results = results.map(function(c) { return Object.assign({}, c, { isCoach: true }); });
+      }
+    }
     if (!results.length) { errEl.textContent = 'No client found with this number. Contact your coach.'; return; }
     var cust = results[0];
     if (!cust.dob || cust.dob !== dob) { errEl.textContent = 'Date of birth does not match. Contact your coach.'; return; }
@@ -802,33 +808,42 @@ async function launchApp() {
 
 async function loadData() {
   try {
-    var att = await req('GET', 'attendance', null, 'customer_id=eq.' + CUST.id + '&order=date.desc');
+    var att = CUST.isCoach ? [] : await req('GET', 'attendance', null, 'customer_id=eq.' + CUST.id + '&order=date.desc');
     DATA.attendance = att || [];
   } catch(e) { console.error('attendance load failed', e); }
 
   try {
-    var body = await req('GET', 'body_composition', null, 'customer_id=eq.' + CUST.id + '&order=date.desc');
-    DATA.body = body || [];
+    var tbl = CUST.isCoach ? 'coach_body_composition' : 'body_composition';
+    var col = CUST.isCoach ? 'coach_id' : 'customer_id';
+    var body = await req('GET', tbl, null, col + '=eq.' + CUST.id + '&order=date.desc');
+    DATA.body = (body || []).map(function(r) {
+      if (CUST.isCoach) {
+        return Object.assign({}, r, { customer_id: r.coach_id });
+      }
+      return r;
+    });
   } catch(e) { console.error('body_composition load failed', e); }
 
   try {
-    var packs = await req('GET', 'pack_history', null, 'customer_id=eq.' + CUST.id + '&order=start_date.desc');
+    var packs = CUST.isCoach ? [] : await req('GET', 'pack_history', null, 'customer_id=eq.' + CUST.id + '&order=start_date.desc');
     DATA.packs = packs || [];
   } catch(e) { console.error('pack_history load failed', e); }
 
   try {
-    var payRec = await req('GET', 'payments', null, 'person_id=eq.' + CUST.id + '&order=payment_date.desc&limit=1');
+    var payRec = CUST.isCoach ? [] : await req('GET', 'payments', null, 'person_id=eq.' + CUST.id + '&order=payment_date.desc&limit=1');
     DATA.payment = (payRec && payRec[0]) ? payRec[0] : null;
   } catch(e) { console.error('payment load failed', e); }
 
   try {
-    // Find coach by referred_by_id (whoever enrolled this customer)
-    if (CUST.referred_by_id) {
+    if (CUST.isCoach) {
+      DATA.coach = CUST;
+    } else if (CUST.referred_by_id) {
+      // Find coach by referred_by_id (whoever enrolled this customer)
       var byRef = await req('GET', 'coaches', null, 'id=eq.' + CUST.referred_by_id + '&limit=1');
       DATA.coach = byRef[0] || null;
     }
     // Fallback: use external referrer name as coach
-    if (!DATA.coach && CUST.external_referrer_name) {
+    if (!CUST.isCoach && !DATA.coach && CUST.external_referrer_name) {
       DATA.coach = { name: CUST.external_referrer_name, contact: CUST.external_referrer_phone || null };
     }
   } catch(e) { console.error('coach load failed', e); }
@@ -1385,7 +1400,13 @@ window.addEventListener('DOMContentLoaded', async function() {
   if (savedId) {
     try {
       var res = await req('GET', 'customers', null, 'id=eq.' + encodeURIComponent(savedId) + '&limit=1');
-      if (res.length) { CUST = res[0]; launchApp(); return; }
+      if (!res || !res.length) {
+        res = await req('GET', 'coaches', null, 'id=eq.' + encodeURIComponent(savedId) + '&limit=1');
+        if (res && res.length) {
+          res = res.map(function(c) { return Object.assign({}, c, { isCoach: true }); });
+        }
+      }
+      if (res && res.length) { CUST = res[0]; launchApp(); return; }
     } catch(e) {}
   }
   document.getElementById('login-screen').style.display = 'flex';
