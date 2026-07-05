@@ -138,6 +138,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .login-field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;transition:color .3s}
 .login-field input,.login-field select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;background:var(--surface-solid);color:var(--text);transition:border .2s, background-color .2s, color .2s}
 .login-field input:focus,.login-field select:focus{border-color:var(--primary)}
+select option{background-color:var(--surface-solid)!important;color:var(--text)!important}
 .login-btn{width:100%;padding:13px;background:var(--primary);color:#090d16;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 4px 12px rgba(45, 90, 61, 0.15)}
 
 .login-btn:hover{background:var(--primary-light);transform:translateY(-1px);box-shadow:0 6px 16px rgba(45, 90, 61, 0.25)}
@@ -952,7 +953,7 @@ input:focus, select:focus, textarea:focus {
       <button class="nav-item" onclick="goTo('finance',this)"><span class="ic">💰</span><span data-t="nav_finance">My Finance</span></button>
       <button class="nav-item" onclick="goTo('finance',this);setTimeout(function(){document.getElementById('coach-pending-payments').scrollIntoView({behavior:'smooth'});},200)" style="padding-left:28px;font-size:12px"><span class="ic">💳</span><span id="pending-pay-nav-label">Pending Payments</span></button>
       <button class="nav-item" onclick="goTo('leads',this)"><span class="ic">📞</span><span data-t="nav_leads">My Leads</span></button>
-      <button class="nav-item" onclick="goTo('walkins',this)"><span class="ic">🚶</span><span data-t="nav_walkins">My Walk-ins</span></button>
+      <button class="nav-item" onclick="goTo('walkins',this)"><span class="ic">🚶</span><span data-t="nav_walkins">Walk-ins</span></button>
       <button class="nav-item" onclick="goTo('renewals',this)"><span class="ic">🔔</span><span data-t="nav_renewals">Renewal Reminders</span></button>
       <button class="nav-item" onclick="goTo('notes',this)"><span class="ic">📝</span><span data-t="nav_notes">Session Notes</span></button>
       <button class="nav-item" onclick="goTo('workout',this)"><span class="ic">🏋️</span><span data-t="nav_workout">Workout Planner</span></button>
@@ -1198,7 +1199,7 @@ input:focus, select:focus, textarea:focus {
     <!-- ── MY WALK-INS ── -->
     <div class="sec" id="sec-walkins">
       <div class="ph">
-        <div><div class="pt" data-t="pt_walkins">My Walk-ins</div><div class="ps" data-t="ps_walkins">Visitors who came for checkup or one-time purchase</div></div>
+        <div><div class="pt" data-t="pt_walkins">Walk-ins</div><div class="ps" data-t="ps_walkins">Visitors who came for checkup or one-time purchase</div></div>
         <button class="btn-p" onclick="openWalkinModal()">+ Add Walk-in</button>
       </div>
       <div class="stats">
@@ -2041,7 +2042,7 @@ var T = {
     nav_overview:'Overview', nav_customers:'My Customers', nav_attendance:'Attendance',
     nav_body:'Body Composition', nav_finance:'My Finance', nav_leads:'My Leads',
     nav_renewals:'Renewal Reminders', nav_notes:'Session Notes',
-    nav_workout:'Workout Planner', nav_bulkwa:'Bulk WhatsApp', nav_walkins:'My Walk-ins',
+    nav_workout:'Workout Planner', nav_bulkwa:'Bulk WhatsApp', nav_walkins:'Walk-ins',
     // sidebar bottom
     btn_logout:'\uD83D\uDEAA Logout',
     btn_lang:'తె',
@@ -2054,7 +2055,7 @@ var T = {
     pt_notes:'Session Notes', ps_notes:'Coaching logs and notes per customer',
     pt_workout:'Workout Planner', ps_workout:'Assign and manage workout plans',
     pt_bulkwa:'Bulk WhatsApp', ps_bulkwa:'Send messages to multiple customers at once',
-    pt_walkins:'My Walk-ins', ps_walkins:'Visitors who came for checkup or one-time purchase',
+    pt_walkins:'Walk-ins', ps_walkins:'Visitors who came for checkup or one-time purchase',
     // water card
     wi_title:'\uD83C\uDF0A Morning Water Intention',
     wi_guide1:'\uD83E\uDD5B Hold your glass of water. Close your eyes. Breathe deeply once. Then read this aloud <strong>3 times</strong> with full feeling:',
