@@ -2166,6 +2166,7 @@ sdInit('coupon-ref', 'coupon-ref-input', 'coupon-ref-person-id', null);
 sdInit('renew-person', 'renew-person-input', 'cr-coach', function(){ calcCouponRenewal(); });
 sdInit('coupon-filter', 'coupon-filter-input', 'coupon-coach-sel', function(){ renderCouponView(); });
 sdInit('shake-person', 'shake-person-input', 'sr-person-id', function(){ showShakeBalance(); });
+sdInit('walkin-ref', 'sd-walkin-ref-input', 'walkin-referred-by-id', null);
 
 function updateCoachSelects() {
   sdSetItems('ref', getAllPersonItems({includeOwner:true, includeOther:true}));
