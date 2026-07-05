@@ -12469,7 +12469,7 @@ function renderWalkins() {
 }
 
 function openWalkinModal(id) {
-  ['walkin-id','walkin-finance-id','walkin-name','walkin-phone','walkin-pincode','walkin-notes','walkin-product'].forEach(function(f){
+  ['walkin-id','walkin-finance-id','walkin-name','walkin-phone','walkin-pincode','walkin-notes','walkin-product','walkin-age','walkin-gender','walkin-height'].forEach(function(f){
     var el=document.getElementById(f); if(el) el.value='';
   });
   document.getElementById('walkin-date').value = new Date().toISOString().slice(0,10);
@@ -12496,6 +12496,9 @@ function openWalkinModal(id) {
       document.getElementById('walkin-amount').value=w.amount_received||'';
       document.getElementById('walkin-product').value=w.product_details||'';
       document.getElementById('walkin-notes').value=w.notes||'';
+      document.getElementById('walkin-age').value=w.age||'';
+      document.getElementById('walkin-gender').value=w.gender||'';
+      document.getElementById('walkin-height').value=w.height||'';
       if(w.referred_by_id){ document.getElementById('walkin-referred-by-id').value=w.referred_by_id; }
       if(w.referred_by_name){ document.getElementById('sd-walkin-ref-input').value=w.referred_by_name; }
       onWalkinSourceChange(); onWalkinOutcomeChange();
@@ -12549,7 +12552,10 @@ async function saveWalkin(){
     product_details:(document.getElementById('walkin-product').value||'').trim(),
     notes:(document.getElementById('walkin-notes').value||'').trim(),
     wellness_center_id:ACTIVE_CENTER||null,
-    center_id:ACTIVE_CENTER||null
+    center_id:ACTIVE_CENTER||null,
+    age: document.getElementById('walkin-age').value ? Number(document.getElementById('walkin-age').value) : null,
+    gender: document.getElementById('walkin-gender').value || null,
+    height: document.getElementById('walkin-height').value ? Number(document.getElementById('walkin-height').value) : null
   };
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Supabase not configured','error');return;}
   var existingFinanceId = document.getElementById('walkin-finance-id') ? document.getElementById('walkin-finance-id').value : '';
@@ -12618,6 +12624,10 @@ function convertWalkinToCustomer(walkinId){
   setTimeout(function(){
     document.getElementById('customer-name').value=w.name||'';
     document.getElementById('customer-contact').value=w.phone||'';
+    if(w.age) document.getElementById('customer-age').value=w.age;
+    if(w.gender) document.getElementById('customer-gender').value=w.gender;
+    if(w.height) document.getElementById('customer-height').value=w.height;
+    if(w.date) document.getElementById('customer-join').value=w.date;
     document.getElementById('customer-modal-title').textContent='👤 Add Customer (from Walk-in)';
     if(w.referred_by_id) sdSetSelected('ref',w.referred_by_id,w.referred_by_name||'');
     showToast('Pre-filled from walk-in — complete pack details & save','success');

@@ -4284,6 +4284,18 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div class="fg"><label for="walkin-phone">Phone</label><input type="tel" id="walkin-phone" placeholder="Mobile number" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
         <div class="fg"><label for="walkin-pincode">Pincode</label><input type="text" id="walkin-pincode" placeholder="Area pincode" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
       </div>
+      <div class="fr">
+        <div class="fg"><label for="walkin-age">Age</label><input type="number" id="walkin-age" placeholder="Age" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="walkin-gender">Gender</label>
+          <select id="walkin-gender" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+            <option value="">Select</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fg"><label for="walkin-height">Height (cm)</label><input type="number" id="walkin-height" placeholder="cm" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
       <div class="fg"><label for="walkin-source">How did they find us?</label>
         <select id="walkin-source" onchange="onWalkinSourceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="">Select source</option>
