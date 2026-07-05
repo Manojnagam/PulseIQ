@@ -132,10 +132,32 @@ create table if not exists leads (
   id uuid primary key default gen_random_uuid(),
   name text,
   phone text,
+  mobile text,
   source text,
   status text default 'new',
   notes text,
+  coach_id uuid references coaches(id),
   wellness_center_id uuid references wellness_centers(id),
+  created_at timestamptz default now()
+);
+
+-- WALK-INS
+create table if not exists walkins (
+  id uuid primary key default gen_random_uuid(),
+  date date,
+  name text not null,
+  phone text,
+  pincode text,
+  source text,
+  referred_by_id uuid,
+  referred_by_name text,
+  outcome text,
+  amount_received numeric default 0,
+  product_details text,
+  notes text,
+  finance_id uuid,
+  wellness_center_id uuid references wellness_centers(id),
+  center_id uuid references wellness_centers(id),
   created_at timestamptz default now()
 );
 
@@ -218,6 +240,7 @@ alter table expenses enable row level security;
 alter table foods enable row level security;
 alter table contests enable row level security;
 alter table contest_participants enable row level security;
+alter table walkins enable row level security;
 
 -- Allow access to all roles (app PIN system controls isolation)
 create policy "anon_all" on wellness_centers for all using (true) with check (true);
@@ -234,6 +257,7 @@ create policy "anon_all" on expenses for all using (true) with check (true);
 create policy "anon_all" on foods for all using (true) with check (true);
 create policy "anon_all" on contests for all using (true) with check (true);
 create policy "anon_all" on contest_participants for all using (true) with check (true);
+create policy "anon_all" on walkins for all using (true) with check (true);
 
 -- ==========================================
 -- LEAD FOLLOWUPS
