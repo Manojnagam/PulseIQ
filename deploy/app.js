@@ -2080,7 +2080,7 @@ function sdInit(dropId, inputId, hiddenId, onPick) {
     if (document.getElementById('sd-list-'+dropId)) return;
     var listEl = document.createElement('div');
     listEl.id = 'sd-list-'+dropId;
-    listEl.style.cssText = 'display:none;position:fixed;max-height:200px;overflow-y:auto;background:#fff;border:1.5px solid var(--primary);border-radius:0 0 8px 8px;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,0.2)';
+    listEl.style.cssText = 'display:none;position:fixed;max-height:200px;overflow-y:auto;background:var(--surface-solid);border:1.5px solid var(--primary);border-radius:0 0 8px 8px;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,0.2)';
     document.body.appendChild(listEl);
     var inp = document.getElementById(inputId);
     if (!inp) return;
@@ -2116,9 +2116,9 @@ function sdRender(dropId, filter) {
   list.style.top = rect.bottom + 'px';
   list.style.left = rect.left + 'px';
   list.style.width = rect.width + 'px';
-  if (!matches.length) { list.innerHTML='<div style="padding:10px 14px;color:var(--muted);font-size:13px;background:#fff">No matches</div>'; list.style.display='block'; return; }
+  if (!matches.length) { list.innerHTML='<div style="padding:10px 14px;color:var(--muted);font-size:13px;background:var(--surface-solid)">No matches</div>'; list.style.display='block'; return; }
   list.innerHTML = matches.map(function(it){
-    return '<div class="ref-item" data-value="'+it.value+'" data-drop="'+dropId+'" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);border-bottom:1px solid var(--surface2);background:#fff" onmousedown="sdPick(this)">'+it.label+'</div>';
+    return '<div class="ref-item" data-value="'+it.value+'" data-drop="'+dropId+'" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border);background:var(--surface-solid)" onmousedown="sdPick(this)">'+it.label+'</div>';
   }).join('');
   list.style.display='block';
 }
@@ -12528,8 +12528,6 @@ function onWalkinSourceChange(){
     var list = D.customers || [];
     if (loggedInCoachId) {
       list = list.filter(function(c){ return c.referred_by_id === loggedInCoachId || c.coach_id === loggedInCoachId; });
-    } else if (ACTIVE_CENTER) {
-      list = list.filter(function(c){ return c.wellness_center_id === ACTIVE_CENTER || c.center_id === ACTIVE_CENTER; });
     }
     persons = list.map(function(c){
       return { value: c.id, label: c.name, search: (c.name||'').toLowerCase() };
@@ -12538,8 +12536,6 @@ function onWalkinSourceChange(){
     var list = D.coaches || [];
     if (loggedInCoachId) {
       list = list.filter(function(c){ return c.id === loggedInCoachId; });
-    } else if (ACTIVE_CENTER) {
-      list = list.filter(function(c){ return c.wellness_center_id === ACTIVE_CENTER || c.center_id === ACTIVE_CENTER; });
     }
     persons = list.map(function(c){
       return { value: c.id, label: c.name + ' 👨‍🏫', search: (c.name||'').toLowerCase() };

@@ -4309,7 +4309,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <div class="fg" id="walkin-referred-wrap" style="display:none">
         <label for="sd-walkin-ref-input">Referred By (who sent them?)</label>
         <div class="sd-wrap" id="sd-walkin-ref" style="position:relative">
-          <input class="sd-input" id="sd-walkin-ref-input" placeholder="Search customer or coach..." autocomplete="off" oninput="sdRender('walkin-ref')" onfocus="sdRender('walkin-ref')" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box">
+          <input class="sd-input" id="sd-walkin-ref-input" placeholder="Search customer or coach..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box">
           <div class="sd-list" id="sd-walkin-ref-list" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:0 0 8px 8px;max-height:160px;overflow-y:auto;z-index:50;display:none"></div>
         </div>
         <input type="hidden" id="walkin-referred-by-id">
