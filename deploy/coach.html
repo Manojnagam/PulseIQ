@@ -2022,6 +2022,13 @@ var SB_KEY = localStorage.getItem('sb_key') || localStorage.getItem('coach_sb_ke
 var COACH_ID   = localStorage.getItem('coachId')   || '';
 var COACH_NAME = localStorage.getItem('coachName') || '';
 var ACTIVE_CENTER_NAME = localStorage.getItem('coach_center_name') || 'PulseIQ';
+function getCoachDisplayName() {
+  if (!COACH_NAME) return ACTIVE_CENTER_NAME || "PulseIQ";
+  var name = COACH_NAME.trim();
+  if (name.toLowerCase().endsWith("'s")) return name;
+  if (name.toLowerCase().endsWith("s")) return name + "'";
+  return name + "'s";
+}
 var COACH_GENDER = COACH_ID ? (localStorage.getItem('coachGender_' + COACH_ID) || 'male') : 'male';
 var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
 var _leadTab = 'all';
@@ -2324,6 +2331,8 @@ function startApp() {
   COACH_GENDER = localStorage.getItem('coachGender_' + COACH_ID) || 'male';
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  
+  ACTIVE_CENTER_NAME = getCoachDisplayName();
   
   // Set logo header and document title immediately
   var logoEl = document.getElementById('coach-logo-header');
@@ -2706,12 +2715,12 @@ async function loadAll() {
     var activeCenterId = CENTER_UUID || D.coachProfile.wellness_center_id;
     var myCenter = D.centers.find(function(c){ return c.id === activeCenterId; });
     if (myCenter && myCenter.name) {
-      ACTIVE_CENTER_NAME = myCenter.name;
-      localStorage.setItem('coach_center_name', ACTIVE_CENTER_NAME);
-      var logoEl = document.getElementById('coach-logo-header');
-      if (logoEl) logoEl.innerHTML = '🌿 ' + ACTIVE_CENTER_NAME;
-      document.title = ACTIVE_CENTER_NAME + ' — Coach Portal';
+      localStorage.setItem('coach_center_name', myCenter.name);
     }
+    ACTIVE_CENTER_NAME = getCoachDisplayName();
+    var logoEl = document.getElementById('coach-logo-header');
+    if (logoEl) logoEl.innerHTML = '🌿 ' + ACTIVE_CENTER_NAME;
+    document.title = ACTIVE_CENTER_NAME + ' — Coach Portal';
 
     D.walkins         = (Array.isArray(walkins) ? walkins : []).filter(function(w){
       var myCustIds = D.customers.map(function(c){ return c.id; });
