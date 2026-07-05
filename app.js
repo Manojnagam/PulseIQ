@@ -1653,8 +1653,8 @@ function _custIdsFilter() {
 
 // ── CONNECT ──
 async function doConnect() {
-  var url = document.getElementById('sb-url').value.trim();
-  var key = document.getElementById('sb-key').value.trim();
+  var url = document.getElementById('sb-url').value.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+  var key = document.getElementById('sb-key').value.replace(/[\u200B-\u200D\uFEFF\s]/g, '').trim();
   var errEl = document.getElementById('setup-err');
   errEl.style.display = 'none';
   if (!url || !key) { showErr('Please enter both URL and Key'); return; }
