@@ -2691,7 +2691,10 @@ async function loadAll() {
     D.leadFollowups   = Array.isArray(fus)       ? fus      : [];
     D.centers         = Array.isArray(centers)   ? centers  : [];
     D.coachProfile    = (Array.isArray(coachRec) && coachRec[0]) ? coachRec[0] : {};
-    D.walkins         = Array.isArray(walkins)   ? walkins  : [];
+    D.walkins         = (Array.isArray(walkins) ? walkins : []).filter(function(w){
+      var myCustIds = D.customers.map(function(c){ return c.id; });
+      return w.referred_by_id === COACH_ID || myCustIds.indexOf(w.referred_by_id) !== -1;
+    });
     if (D.coachProfile && D.coachProfile.gender) {
       COACH_GENDER = D.coachProfile.gender;
       localStorage.setItem('coachGender_' + COACH_ID, COACH_GENDER);
@@ -6356,7 +6359,11 @@ async function loadWalkins() {
   if(!COACH_ID || !isUUID(COACH_ID)) return;
   try{
     var _wiFilter = CENTER_UUID ? 'wellness_center_id=eq.' + CENTER_UUID : '';
-    D.walkins = await dbGet('walkins', 'date', _wiFilter);
+    var res = await dbGet('walkins', 'date', _wiFilter);
+    D.walkins = (Array.isArray(res) ? res : []).filter(function(w){
+      var myCustIds = D.customers.map(function(c){ return c.id; });
+      return w.referred_by_id === COACH_ID || myCustIds.indexOf(w.referred_by_id) !== -1;
+    });
   }catch(e){ D.walkins = []; }
   renderWalkins();
 }
