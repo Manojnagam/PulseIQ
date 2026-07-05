@@ -952,6 +952,7 @@ input:focus, select:focus, textarea:focus {
       <button class="nav-item" onclick="goTo('finance',this)"><span class="ic">💰</span><span data-t="nav_finance">My Finance</span></button>
       <button class="nav-item" onclick="goTo('finance',this);setTimeout(function(){document.getElementById('coach-pending-payments').scrollIntoView({behavior:'smooth'});},200)" style="padding-left:28px;font-size:12px"><span class="ic">💳</span><span id="pending-pay-nav-label">Pending Payments</span></button>
       <button class="nav-item" onclick="goTo('leads',this)"><span class="ic">📞</span><span data-t="nav_leads">My Leads</span></button>
+      <button class="nav-item" onclick="goTo('walkins',this)"><span class="ic">🚶</span><span data-t="nav_walkins">My Walk-ins</span></button>
       <button class="nav-item" onclick="goTo('renewals',this)"><span class="ic">🔔</span><span data-t="nav_renewals">Renewal Reminders</span></button>
       <button class="nav-item" onclick="goTo('notes',this)"><span class="ic">📝</span><span data-t="nav_notes">Session Notes</span></button>
       <button class="nav-item" onclick="goTo('workout',this)"><span class="ic">🏋️</span><span data-t="nav_workout">Workout Planner</span></button>
@@ -1191,6 +1192,39 @@ input:focus, select:focus, textarea:focus {
         <button class="btn-e" id="ltab-joined" onclick="setLeadTab('joined',this)">🎉 Joined</button>
       </div>
       <div id="leads-list"></div>
+    </div>
+
+    <!-- ── MY WALK-INS ── -->
+    <div class="sec" id="sec-walkins">
+      <div class="ph">
+        <div><div class="pt" data-t="pt_walkins">My Walk-ins</div><div class="ps" data-t="ps_walkins">Visitors who came for checkup or one-time purchase</div></div>
+        <button class="btn-p" onclick="openWalkinModal()">+ Add Walk-in</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-ic">📅</div><div class="stat-l">Today</div><div class="stat-v" id="wi-stat-today">0</div></div>
+        <div class="stat"><div class="stat-ic">🔬</div><div class="stat-l">Checkups</div><div class="stat-v" id="wi-stat-checkup">0</div></div>
+        <div class="stat"><div class="stat-ic">📦</div><div class="stat-l">Trial Packs</div><div class="stat-v" id="wi-stat-trial">0</div></div>
+        <div class="stat"><div class="stat-ic">🛒</div><div class="stat-l">Product Sales</div><div class="stat-v" id="wi-stat-sale">0</div></div>
+        <div class="stat"><div class="stat-ic">✅</div><div class="stat-l">Converted</div><div class="stat-v" style="color:var(--success)" id="wi-stat-converted">0</div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <input class="search" id="walkins-search" placeholder="🔍 Search name or phone..." oninput="renderWalkins()" style="flex:1;min-width:160px;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:10px 14px;font-family:inherit;font-size:14px">
+        <select id="walkins-filter-outcome" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)">
+          <option value="">All Outcomes</option>
+          <option value="checkup">🔬 Checkup</option>
+          <option value="trial">📦 Trial Pack</option>
+          <option value="product_sale">🛒 Product Sale</option>
+          <option value="other">Other</option>
+        </select>
+        <input type="date" id="walkins-filter-date" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)" title="Filter by date">
+        <button class="btn-c" onclick="document.getElementById('walkins-filter-date').value='';document.getElementById('walkins-filter-outcome').value='';renderWalkins()">Clear</button>
+      </div>
+      <div class="tcard">
+        <div class="twrap"><table>
+          <thead><tr><th>Date</th><th>Name</th><th>Phone</th><th>Source / Referred By</th><th>Outcome</th><th>Amount</th><th>Notes</th><th>Actions</th></tr></thead>
+          <tbody id="walkins-body"></tbody>
+        </table></div>
+      </div>
     </div>
 
     <!-- ── RENEWAL REMINDERS ── -->
@@ -2077,7 +2111,8 @@ var D = {
   leadFollowups: [],
   centers: [],
   allCoaches: [],  // for center name lookup
-  shakes: []       // coach_shakes log
+  shakes: [],       // coach_shakes log
+  walkins: []      // center/referred walkins
 };
 
 // ══════════════════════════════════════════
@@ -2375,6 +2410,7 @@ function goTo(name, el) {
   if (name === 'body')       { renderBodyCustSelect(); loadMyBodyStats(); switchBodyTab('records', document.getElementById('body-tab-records')); }
   if (name === 'finance')    renderFinance();
   if (name === 'leads')      renderLeads();
+  if (name === 'walkins')    renderWalkins();
   if (name === 'renewals')   renderRenewals();
   if (name === 'notes')      renderNotesSection();
   if (name === 'workout')    { renderWorkoutCustFilter(); renderWorkoutPlans(); }
@@ -2638,14 +2674,15 @@ function getDaysLeft(c) {
 async function loadAll() {
   if (!COACH_ID || !isUUID(COACH_ID)) { showToast('Session error — please log out and log in again', 'error'); return; }
   try {
-    var [custs, att, body, leads, fus, centers, coachRec] = await Promise.all([
+    var [custs, att, body, leads, fus, centers, coachRec, walkins] = await Promise.all([
       req('customers?or=(referred_by_id.eq.' + COACH_ID + ',coach_id.eq.' + COACH_ID + ')&order=name.asc'),
       dbGet('attendance', 'date'),
       dbGet('body_composition', 'date'),
       dbGet('leads', 'id', 'coach_id=eq.' + COACH_ID),
       dbGet('lead_followups', 'called_at'),
       dbGet('wellness_centers', 'name'),
-      req('coaches?id=eq.' + COACH_ID + '&select=id,name,herbalife_pin,dob,gender,goal,contact,email,join_date,notes,coach_pin')
+      req('coaches?id=eq.' + COACH_ID + '&select=id,name,herbalife_pin,dob,gender,goal,contact,email,join_date,notes,coach_pin'),
+      dbGet('walkins', 'date', CENTER_UUID ? 'wellness_center_id=eq.' + CENTER_UUID : '')
     ]);
     D.customers       = Array.isArray(custs)    ? custs    : [];
     D.attendance      = Array.isArray(att)       ? att      : [];
@@ -2654,6 +2691,7 @@ async function loadAll() {
     D.leadFollowups   = Array.isArray(fus)       ? fus      : [];
     D.centers         = Array.isArray(centers)   ? centers  : [];
     D.coachProfile    = (Array.isArray(coachRec) && coachRec[0]) ? coachRec[0] : {};
+    D.walkins         = Array.isArray(walkins)   ? walkins  : [];
     if (D.coachProfile && D.coachProfile.gender) {
       COACH_GENDER = D.coachProfile.gender;
       localStorage.setItem('coachGender_' + COACH_ID, COACH_GENDER);
@@ -2680,6 +2718,7 @@ async function loadAll() {
     renderFinance();
     renderPendingPayments();
     renderLeads();
+    renderWalkins();
     applyLang();
     loadLeaderboard();
   } catch(e) { showToast('Load error: ' + e.message, 'error'); }
@@ -3452,6 +3491,9 @@ async function saveCustomer() {
     }
 
     closeModal('cust');
+    if (newCustId && window._convertingWalkinId) {
+      await _markWalkinConverted(newCustId);
+    }
     _daysLeftCache = {};
     renderCustomers();
     renderOverview();
@@ -5995,6 +6037,332 @@ function renderMyFLEntries() {
     '</div>';
   }).join('');
 }
+
+// ── GENERIC SEARCHABLE DROPDOWN SYSTEM ──
+var _sdData = {};
+
+function sdInit(dropId, inputId, hiddenId, onPick) {
+  _sdData[dropId] = {items:[], inputId:inputId, hiddenId:hiddenId, onPick:onPick||null};
+  function init() {
+    if (document.getElementById('sd-list-'+dropId)) return;
+    var listEl = document.createElement('div');
+    listEl.id = 'sd-list-'+dropId;
+    listEl.style.cssText = 'display:none;position:fixed;max-height:200px;overflow-y:auto;background:var(--surface-solid);border:1.5px solid var(--primary);border-radius:0 0 8px 8px;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,0.2)';
+    document.body.appendChild(listEl);
+    var inp = document.getElementById(inputId);
+    if (!inp) return;
+    inp.addEventListener('focus', function(){ sdRender(dropId, this.value); });
+    inp.addEventListener('input', function(){
+      document.getElementById(hiddenId).value = '';
+      sdRender(dropId, this.value);
+    });
+    inp.addEventListener('blur', function(){
+      var did = dropId;
+      setTimeout(function(){ var l=document.getElementById('sd-list-'+did); if(l) l.style.display='none'; }, 150);
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+}
+
+function sdSetItems(dropId, items) {
+  if (_sdData[dropId]) _sdData[dropId].items = items;
+}
+
+function sdRender(dropId, filter) {
+  var d = _sdData[dropId]; if(!d) return;
+  var list = document.getElementById('sd-list-'+dropId);
+  var inp = document.getElementById(d.inputId);
+  if (!list || !inp) return;
+  var q = (filter||'').toLowerCase();
+  var matches = q ? d.items.filter(function(it){ return it.search.indexOf(q)!==-1 || it.label.toLowerCase().indexOf(q)!==-1; }) : d.items;
+  var rect = inp.getBoundingClientRect();
+  list.style.top = rect.bottom + 'px';
+  list.style.left = rect.left + 'px';
+  list.style.width = rect.width + 'px';
+  if (!matches.length) { list.innerHTML='<div style="padding:10px 14px;color:var(--muted);font-size:13px;background:var(--surface-solid)">No matches</div>'; list.style.display='block'; return; }
+  list.innerHTML = matches.map(function(it){
+    return '<div class="ref-item" data-value="'+it.value+'" data-drop="'+dropId+'" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border);background:var(--surface-solid)" onmousedown="sdPick(this)">'+it.label+'</div>';
+  }).join('');
+  list.style.display='block';
+}
+
+function sdPick(el) {
+  var dropId = el.getAttribute('data-drop');
+  var val = el.getAttribute('data-value');
+  var label = el.textContent;
+  var d = _sdData[dropId]; if(!d) return;
+  document.getElementById(d.hiddenId).value = val;
+  document.getElementById(d.inputId).value = label;
+  document.getElementById('sd-list-'+dropId).style.display = 'none';
+  if (d.onPick) d.onPick(val, label);
+}
+
+function sdSetValue(dropId, value) {
+  var d = _sdData[dropId]; if(!d) return;
+  document.getElementById(d.hiddenId).value = value||'';
+  var match = d.items.find(function(it){ return it.value === value; });
+  document.getElementById(d.inputId).value = match ? match.label : '';
+}
+
+// ── WALK-INS ──
+var _walkinTab = 'all';
+
+function renderWalkins() {
+  var q = ((document.getElementById('walkins-search')||{}).value||'').toLowerCase();
+  var filterOutcome = (document.getElementById('walkins-filter-outcome')||{}).value||'';
+  var filterDate = (document.getElementById('walkins-filter-date')||{}).value||'';
+  var all = D.walkins || [];
+
+  // Stats
+  var todayStrVal = todayStr();
+  var si = document.getElementById('wi-stat-today'); if(si) si.textContent = all.filter(function(w){return w.date===todayStrVal;}).length;
+  si = document.getElementById('wi-stat-checkup'); if(si) si.textContent = all.filter(function(w){return w.outcome==='checkup';}).length;
+  si = document.getElementById('wi-stat-trial'); if(si) si.textContent = all.filter(function(w){return w.outcome==='trial';}).length;
+  si = document.getElementById('wi-stat-sale'); if(si) si.textContent = all.filter(function(w){return w.outcome==='product_sale';}).length;
+  si = document.getElementById('wi-stat-converted'); if(si) si.textContent = all.filter(function(w){return w.converted;}).length;
+
+  var rows = all.filter(function(w) {
+    if(filterOutcome && w.outcome !== filterOutcome) return false;
+    if(filterDate && w.date !== filterDate) return false;
+    return (w.name||'').toLowerCase().includes(q) || (w.phone||'').includes(q);
+  }).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+
+  var tb = document.getElementById('walkins-body');
+  if(!tb) return;
+  if(!rows.length){
+    tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="ei">🚶</div><p>No walk-ins yet. Add your first visitor!</p></div></td></tr>';
+    return;
+  }
+  var SRC = {google:'🔍 Google',customer_referral:'👤 Customer',coach_referral:'👨‍🏫 Coach',owner:'🏢 Owner',other:'Other'};
+  var OUT = {checkup:'🔬 Checkup',trial:'📦 Trial Pack',product_sale:'🛒 Product Sale',other:'Other'};
+  var OUT_COL = {checkup:'#1d4ed8',trial:'#b07800',product_sale:'#16a34a',other:'var(--muted)'};
+  tb.innerHTML = rows.map(function(w) {
+    var refName = w.referred_by_name || '';
+    var srcLbl = (SRC[w.source]||w.source||'—') + (refName ? '<br><span style="font-size:11px;color:var(--muted)">'+refName+'</span>' : '');
+    var outLbl = '<span style="font-weight:600;color:'+(OUT_COL[w.outcome]||'var(--muted)')+'">'+( OUT[w.outcome]||w.outcome||'—')+'</span>'+(w.product_details?'<br><span style="font-size:11px;color:var(--muted)">'+w.product_details+'</span>':'');
+    var amt = (w.outcome==='checkup') ? '<span style="color:var(--success);font-size:11px;font-weight:600">Free</span>' : (w.amount_received ? '₹'+Number(w.amount_received).toLocaleString('en-IN') : '—');
+    var waBtn = w.phone ? '<a class="wa-btn" href="https://api.whatsapp.com/send?phone='+COUNTRY_CODE+w.phone.replace(/\D/g,'')+'&text=Hi+'+encodeURIComponent(w.name||'')+',+thank+you+for+visiting+our+wellness+center!+We+hope+to+see+you+again+soon+%F0%9F%8C%BF" target="_blank" rel="noopener" style="font-size:11px;padding:3px 7px;text-decoration:none">💬 WA</a>' : '';
+    var convertBtn = w.converted
+      ? '<span class="badge bg" style="font-size:10px">✅ Customer</span>'
+      : '<button class="btn-p" style="font-size:11px;padding:3px 7px;background:#8b5cf6" onclick="convertWalkinToCustomer(\''+w.id+'\')">👤 Convert</button>';
+    return '<tr>'
+      +'<td>'+( w.date||'—')+'</td>'
+      +'<td><strong>'+(w.name||'—')+'</strong>'+(w.pincode?'<br><span style="font-size:11px;color:var(--muted)">📍 '+w.pincode+'</span>':'')+'</td>'
+      +'<td>'+(w.phone||'—')+'</td>'
+      +'<td>'+srcLbl+'</td>'
+      +'<td>'+outLbl+'</td>'
+      +'<td>'+amt+'</td>'
+      +'<td>'+(w.notes||'—')+'</td>'
+      +'<td><div class="acts">'+waBtn+' '+convertBtn+' <button class="btn-e" onclick="openWalkinModal(\''+w.id+'\')">Edit</button> <button class="btn-e" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5" onclick="deleteWalkin(\''+w.id+'\')">🗑</button></div></td>'
+      +'</tr>';
+  }).join('');
+}
+
+function openWalkinModal(id) {
+  ['walkin-id','walkin-finance-id','walkin-name','walkin-phone','walkin-pincode','walkin-notes','walkin-product','walkin-age','walkin-gender','walkin-height'].forEach(function(f){
+    var el=document.getElementById(f); if(el) el.value='';
+  });
+  document.getElementById('walkin-date').value = todayStr();
+  document.getElementById('walkin-source').value='';
+  document.getElementById('walkin-outcome').value='';
+  document.getElementById('walkin-amount').value='';
+  document.getElementById('walkin-referred-by-id').value='';
+  document.getElementById('sd-walkin-ref-input').value='';
+  document.getElementById('walkin-referred-wrap').style.display='none';
+  document.getElementById('walkin-amount-wrap').style.display='none';
+  document.getElementById('walkin-modal-title').textContent='🚶 Add Walk-in';
+  if(id) {
+    var w=(D.walkins||[]).find(function(x){return x.id===id;});
+    if(w){
+      document.getElementById('walkin-modal-title').textContent='✏️ Edit Walk-in';
+      document.getElementById('walkin-id').value=w.id;
+      document.getElementById('walkin-finance-id').value=w.finance_id||'';
+      document.getElementById('walkin-date').value=w.date||'';
+      document.getElementById('walkin-name').value=w.name||'';
+      document.getElementById('walkin-phone').value=w.phone||'';
+      document.getElementById('walkin-pincode').value=w.pincode||'';
+      document.getElementById('walkin-source').value=w.source||'';
+      document.getElementById('walkin-outcome').value=w.outcome||'';
+      document.getElementById('walkin-amount').value=w.amount_received||'';
+      document.getElementById('walkin-product').value=w.product_details||'';
+      document.getElementById('walkin-notes').value=w.notes||'';
+      document.getElementById('walkin-age').value=w.age||'';
+      document.getElementById('walkin-gender').value=w.gender||'';
+      document.getElementById('walkin-height').value=w.height||'';
+      if(w.referred_by_id){ document.getElementById('walkin-referred-by-id').value=w.referred_by_id; }
+      if(w.referred_by_name){ document.getElementById('sd-walkin-ref-input').value=w.referred_by_name; }
+      onWalkinSourceChange(); onWalkinOutcomeChange();
+    }
+  }
+  openModal('walkin');
+}
+
+function onWalkinSourceChange(){
+  var src=document.getElementById('walkin-source').value;
+  document.getElementById('walkin-referred-wrap').style.display=(src==='customer_referral'||src==='coach_referral')?'block':'none';
+  document.getElementById('walkin-referred-by-id').value='';
+  document.getElementById('sd-walkin-ref-input').value='';
+  var persons=[];
+
+  if(src==='customer_referral'){
+    var list = D.customers || [];
+    persons = list.map(function(c){
+      return { value: c.id, label: c.name, search: (c.name||'').toLowerCase() };
+    });
+  } else if(src==='coach_referral'){
+    persons = [{ value: COACH_ID, label: COACH_NAME + ' 👨‍🏫', search: (COACH_NAME||'').toLowerCase() }];
+  }
+  sdSetItems('walkin-ref', persons);
+  if (persons.length === 1) {
+    sdSetValue('walkin-ref', persons[0].value);
+  }
+}
+
+function onWalkinOutcomeChange(){
+  var out=document.getElementById('walkin-outcome').value;
+  document.getElementById('walkin-amount-wrap').style.display=(out==='trial'||out==='product_sale'||out==='other')?'block':'none';
+  if(out==='product_sale'||out==='other'){
+    document.getElementById('walkin-product-wrap').style.display='block';
+  } else {
+    document.getElementById('walkin-product-wrap').style.display='none';
+    document.getElementById('walkin-product').value='';
+  }
+  if(out==='checkup'){ document.getElementById('walkin-amount').value=''; }
+}
+
+async function saveWalkin(){
+  var name=(document.getElementById('walkin-name').value||'').trim();
+  if(!name){showToast('Name is required','error');return;}
+  var id=document.getElementById('walkin-id').value;
+  var src=document.getElementById('walkin-source').value;
+  var isRef=src==='customer_referral'||src==='coach_referral';
+  var refId=document.getElementById('walkin-referred-by-id').value;
+  var refName=document.getElementById('sd-walkin-ref-input').value.trim();
+  var data={
+    date:document.getElementById('walkin-date').value,
+    name:name,
+    phone:(document.getElementById('walkin-phone').value||'').trim(),
+    pincode:(document.getElementById('walkin-pincode').value||'').trim(),
+    source:src,
+    referred_by_id:isRef&&refId?refId:null,
+    referred_by_name:isRef&&refName?refName:null,
+    outcome:document.getElementById('walkin-outcome').value,
+    amount_received:Number(document.getElementById('walkin-amount').value)||0,
+    product_details:(document.getElementById('walkin-product').value||'').trim(),
+    notes:(document.getElementById('walkin-notes').value||'').trim(),
+    wellness_center_id:CENTER_UUID||null,
+    center_id:CENTER_UUID||null,
+    age: document.getElementById('walkin-age').value ? Number(document.getElementById('walkin-age').value) : null,
+    gender: document.getElementById('walkin-gender').value || null,
+    height: document.getElementById('walkin-height').value ? Number(document.getElementById('walkin-height').value) : null
+  };
+
+  var existingFinanceId = document.getElementById('walkin-finance-id') ? document.getElementById('walkin-finance-id').value : '';
+  try{
+    var savedW;
+    if(id){
+      await dbUpdate('walkins',id,data);
+      var idx=(D.walkins||[]).findIndex(function(x){return x.id===id;});
+      if(idx!==-1) D.walkins[idx]=Object.assign(D.walkins[idx],data);
+      savedW = Object.assign({id: id}, data);
+      showToast('Walk-in updated','success');
+    }else{
+      var res=await dbInsert('walkins',data);
+      savedW = Array.isArray(res)?res[0]:res;
+      if(savedW) D.walkins.unshift(savedW);
+      showToast('Walk-in saved','success');
+    }
+
+    // Handle finance records
+    var amt = Number(data.amount_received)||0;
+    if(amt > 0){
+      var fData = {
+        type:'income',
+        description:'Walk-in: '+data.name + (data.product_details ? ' ('+data.product_details+')' : ''),
+        amount:amt,
+        category:data.outcome==='trial'?'Trial pack payment':'Walk-in product sale',
+        date:data.date,
+        wellness_center_id:CENTER_UUID||null
+      };
+      if(existingFinanceId){
+        await dbUpdate('finance',existingFinanceId,fData);
+      }else{
+        var fRes = await dbInsert('finance',fData);
+        var fSaved = Array.isArray(fRes)?fRes[0]:fRes;
+        if(fSaved && savedW){
+          await dbUpdate('walkins',savedW.id,{finance_id:fSaved.id});
+          savedW.finance_id = fSaved.id;
+        }
+      }
+    }else if(existingFinanceId){
+      await dbDelete('finance',existingFinanceId);
+      if(savedW) await dbUpdate('walkins',savedW.id,{finance_id:null});
+    }
+
+    closeModal('walkin');
+    renderWalkins();
+  }catch(e){
+    showToast('Failed to save walk-in: '+e.message,'error');
+  }
+}
+
+async function convertWalkinToCustomer(walkinId) {
+  var w = (D.walkins||[]).find(function(x){return x.id===walkinId;});
+  if (!w) return;
+  window._convertingWalkinId = walkinId;
+  openCustModal();
+  setTimeout(function(){
+    document.getElementById('cust-name').value = w.name||'';
+    document.getElementById('cust-contact').value = w.phone||'';
+    if(w.age) document.getElementById('cust-age').value = w.age;
+    if(w.gender) document.getElementById('cust-gender').value = w.gender;
+    if(w.height) document.getElementById('cust-height').value = w.height;
+    if(w.date) document.getElementById('cust-join').value = w.date;
+    document.getElementById('cust-modal-title').textContent = '👤 Add Customer (from Walk-in)';
+    showToast('Pre-filled from walk-in — complete pack details & save', 'success');
+  }, 100);
+}
+
+async function _markWalkinConverted(customerId) {
+  var wid = window._convertingWalkinId;
+  if (!wid) return;
+  window._convertingWalkinId = null;
+  try {
+    await dbUpdate('walkins', wid, { converted: true, converted_customer_id: customerId });
+    await loadWalkins();
+  } catch(e) {}
+}
+
+async function deleteWalkin(id) {
+  if(!confirm('Are you sure you want to delete this walk-in?')) return;
+  var w = (D.walkins||[]).find(function(x){return x.id===id;});
+  if(!w) return;
+  try{
+    if(w.finance_id) await dbDelete('finance', w.finance_id);
+    await dbDelete('walkins', id);
+    D.walkins = D.walkins.filter(function(x){return x.id!==id;});
+    renderWalkins();
+    showToast('Walk-in deleted','success');
+  }catch(e){
+    showToast('Failed to delete: '+e.message,'error');
+  }
+}
+
+async function loadWalkins() {
+  if(!COACH_ID || !isUUID(COACH_ID)) return;
+  try{
+    var _wiFilter = CENTER_UUID ? 'wellness_center_id=eq.' + CENTER_UUID : '';
+    D.walkins = await dbGet('walkins', 'date', _wiFilter);
+  }catch(e){ D.walkins = []; }
+  renderWalkins();
+}
+
+sdInit('walkin-ref', 'sd-walkin-ref-input', 'walkin-referred-by-id', null);
+
 </script>
 
 <!-- Workout Plan Modal -->
@@ -6093,6 +6461,78 @@ function renderMyFLEntries() {
       <div style="display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.2); border-radius:12px; padding:10px; width:320px; height:320px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.3); margin:0 auto;">
         <canvas id="progress-card-canvas" width="1080" height="1080" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></canvas>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Walk-in Modal -->
+<div class="modal-overlay" id="modal-walkin">
+  <div class="modal-box" style="max-width: 500px;">
+    <div class="modal-h">
+      <h3 id="walkin-modal-title">🚶 Add Walk-in</h3>
+      <button class="modal-close" onclick="closeModal('walkin')">✕</button>
+    </div>
+    <div class="mb" style="padding-top:10px">
+      <input type="hidden" id="walkin-id">
+      <input type="hidden" id="walkin-finance-id">
+      <div class="fg-row">
+        <div class="fg"><label for="walkin-date">Date</label><input type="date" id="walkin-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="walkin-name">Full Name *</label><input type="text" id="walkin-name" placeholder="Visitor name" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label for="walkin-phone">Phone</label><input type="tel" id="walkin-phone" placeholder="Mobile number" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="walkin-pincode">Pincode</label><input type="text" id="walkin-pincode" placeholder="Area pincode" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label for="walkin-age">Age</label><input type="number" id="walkin-age" placeholder="Age" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        <div class="fg"><label for="walkin-gender">Gender</label>
+          <select id="walkin-gender" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+            <option value="">Select</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fg"><label for="walkin-height">Height (cm)</label><input type="number" id="walkin-height" placeholder="cm" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+      </div>
+      <div class="fg" style="margin-top:10px"><label for="walkin-source">How did they find us?</label>
+        <select id="walkin-source" onchange="onWalkinSourceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="">Select source</option>
+          <option value="google">🔍 Google</option>
+          <option value="customer_referral">👤 Referred by Customer</option>
+          <option value="coach_referral">👨‍🏫 Referred by Coach</option>
+          <option value="owner">🏢 Center Owner</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="fg" id="walkin-referred-wrap" style="display:none;margin-top:10px">
+        <label for="sd-walkin-ref-input">Referred By (who sent them?)</label>
+        <div class="sd-wrap" id="sd-walkin-ref" style="position:relative">
+          <input class="sd-input" id="sd-walkin-ref-input" placeholder="Search customer or coach..." autocomplete="off" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box">
+          <div class="sd-list" id="sd-walkin-ref-list" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:0 0 8px 8px;max-height:160px;overflow-y:auto;z-index:50;display:none"></div>
+        </div>
+        <input type="hidden" id="walkin-referred-by-id">
+      </div>
+      <div class="fg" style="margin-top:10px"><label for="walkin-outcome">Outcome</label>
+        <select id="walkin-outcome" onchange="onWalkinOutcomeChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="">Select outcome</option>
+          <option value="checkup">🔬 Only Checkup (Free)</option>
+          <option value="trial">📦 3-Day Trial Pack</option>
+          <option value="product_sale">🛒 Product Sale</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div id="walkin-amount-wrap" style="display:none;margin-top:10px">
+        <div class="fg-row">
+          <div class="fg"><label for="walkin-amount">Amount Received (₹)</label><input type="number" id="walkin-amount" placeholder="0" min="0" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+          <div class="fg" id="walkin-product-wrap"><label for="walkin-product">Product / Details</label><input type="text" id="walkin-product" placeholder="What did they buy?" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:10px"><label for="walkin-notes">Notes</label><input type="text" id="walkin-notes" placeholder="Any additional notes..." style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+    </div>
+    <div class="mf" style="margin-top:15px">
+      <button class="btn-c" onclick="closeModal('walkin')">Cancel</button>
+      <button class="btn-p" onclick="saveWalkin()">💾 Save Walk-in</button>
     </div>
   </div>
 </div>
