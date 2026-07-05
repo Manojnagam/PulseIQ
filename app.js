@@ -2076,7 +2076,8 @@ var _sdData = {}; // {dropId: {items:[], onPick:fn}}
 
 function sdInit(dropId, inputId, hiddenId, onPick) {
   _sdData[dropId] = {items:[], inputId:inputId, hiddenId:hiddenId, onPick:onPick||null};
-  document.addEventListener('DOMContentLoaded', function(){
+  function init() {
+    if (document.getElementById('sd-list-'+dropId)) return;
     var listEl = document.createElement('div');
     listEl.id = 'sd-list-'+dropId;
     listEl.style.cssText = 'display:none;position:fixed;max-height:200px;overflow-y:auto;background:#fff;border:1.5px solid var(--primary);border-radius:0 0 8px 8px;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,0.2)';
@@ -2092,7 +2093,12 @@ function sdInit(dropId, inputId, hiddenId, onPick) {
       var did = dropId;
       setTimeout(function(){ var l=document.getElementById('sd-list-'+did); if(l) l.style.display='none'; }, 150);
     });
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 }
 
 function sdSetItems(dropId, items) {
