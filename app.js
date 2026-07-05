@@ -48,36 +48,40 @@ function initAuthClient() {
 }
 
 async function checkExistingSession() {
-  initAuthClient();
-  // Try Supabase's built-in session first
-  var d = await _sbAuth.auth.getSession();
-  if (d.data && d.data.session) {
-    var sess = d.data.session;
-    var exp = sess.expires_at;
-    if (exp && exp < Math.floor(Date.now() / 1000) && sess.refresh_token) {
-      var r = await _sbAuth.auth.setSession({ access_token: sess.access_token, refresh_token: sess.refresh_token });
-      if (r.data && r.data.session) { sess = r.data.session; }
-    }
-    _authSession = sess;
-    _authUser = sess.user;
-    return true;
-  }
-  // Fallback: use manually stored tokens (access_token needed as parseable JWT even if expired)
-  var storedRaw = localStorage.getItem('pz_session_tokens');
-  if (storedRaw) {
-    try {
-      var tokens = JSON.parse(storedRaw);
-      if (tokens.access_token && tokens.refresh_token) {
-        var r2 = await _sbAuth.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
-        if (r2.data && r2.data.session) {
-          _authSession = r2.data.session;
-          _authUser = r2.data.session.user;
-          localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: r2.data.session.access_token, refresh_token: r2.data.session.refresh_token }));
-          return true;
-        }
+  try {
+    initAuthClient();
+    // Try Supabase's built-in session first
+    var d = await _sbAuth.auth.getSession();
+    if (d.data && d.data.session) {
+      var sess = d.data.session;
+      var exp = sess.expires_at;
+      if (exp && exp < Math.floor(Date.now() / 1000) && sess.refresh_token) {
+        var r = await _sbAuth.auth.setSession({ access_token: sess.access_token, refresh_token: sess.refresh_token });
+        if (r.data && r.data.session) { sess = r.data.session; }
       }
-    } catch(e) {}
-    localStorage.removeItem('pz_session_tokens');
+      _authSession = sess;
+      _authUser = sess.user;
+      return true;
+    }
+    // Fallback: use manually stored tokens (access_token needed as parseable JWT even if expired)
+    var storedRaw = localStorage.getItem('pz_session_tokens');
+    if (storedRaw) {
+      try {
+        var tokens = JSON.parse(storedRaw);
+        if (tokens.access_token && tokens.refresh_token) {
+          var r2 = await _sbAuth.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
+          if (r2.data && r2.data.session) {
+            _authSession = r2.data.session;
+            _authUser = r2.data.session.user;
+            localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: r2.data.session.access_token, refresh_token: r2.data.session.refresh_token }));
+            return true;
+          }
+        }
+      } catch(e) {}
+      localStorage.removeItem('pz_session_tokens');
+    }
+  } catch(err) {
+    console.warn('checkExistingSession failed:', err);
   }
   return false;
 }
@@ -252,65 +256,69 @@ async function startApp() {
     var authEl = document.getElementById('sb-auth-user');
     if (authEl) authEl.textContent = '● ' + _authUser.email;
 
-    // Check if this is super admin
-    var superAdminEmail = '';
     try {
-      var settingsRes = await fetch(CENTER_SB_URL + '/rest/v1/app_settings?key=eq.super_admin_email&select=value', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + _authSession.access_token } });
-      var settingsData = await settingsRes.json();
-      superAdminEmail = (Array.isArray(settingsData) && settingsData[0]) ? settingsData[0].value : '';
-    } catch(e) {}
-    var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
-    var isSuperAdmin = (_authUser.user_metadata && _authUser.user_metadata.role === 'super_admin') || _authUser.email === superAdminEmail || HARDCODED_SUPER_ADMINS.indexOf(_authUser.email) !== -1;
-    IS_SUPER_ADMIN = isSuperAdmin;
+      // Check if this is super admin
+      var superAdminEmail = '';
+      try {
+        var settingsRes = await fetch(CENTER_SB_URL + '/rest/v1/app_settings?key=eq.super_admin_email&select=value', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + _authSession.access_token } });
+        var settingsData = await settingsRes.json();
+        superAdminEmail = (Array.isArray(settingsData) && settingsData[0]) ? settingsData[0].value : '';
+      } catch(e) {}
+      var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
+      var isSuperAdmin = (_authUser.user_metadata && _authUser.user_metadata.role === 'super_admin') || _authUser.email === superAdminEmail || HARDCODED_SUPER_ADMINS.indexOf(_authUser.email) !== -1;
+      IS_SUPER_ADMIN = isSuperAdmin;
 
-    if (isSuperAdmin) {
-      // Super admin: clear any center lock from previous session
-      ACTIVE_CENTER = '';
-      localStorage.setItem('activeCenter', '');
-      var _opSA = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
-      delete _opSA.center_name;
-      localStorage.setItem('ownerProfile', JSON.stringify(_opSA));
-      if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _opSA;
-    } else {
-      // Try to auto-link by email if auth_user_id not set yet
-      var jwt = _authSession.access_token;
-      var centersRes = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?select=id,name,owner_id,owner_email', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + jwt } });
-      var centers = await centersRes.json();
-      var myCenter = (Array.isArray(centers) ? centers : []).find(function(c){ return c.owner_id === _authUser.id; })
-                  || (Array.isArray(centers) ? centers : []).find(function(c){ return c.owner_email === _authUser.email; });
+      if (isSuperAdmin) {
+        // Super admin: clear any center lock from previous session
+        ACTIVE_CENTER = '';
+        localStorage.setItem('activeCenter', '');
+        var _opSA = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+        delete _opSA.center_name;
+        localStorage.setItem('ownerProfile', JSON.stringify(_opSA));
+        if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _opSA;
+      } else {
+        // Try to auto-link by email if auth_user_id not set yet
+        var jwt = _authSession.access_token;
+        var centersRes = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?select=id,name,owner_id,owner_email', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + jwt } });
+        var centers = await centersRes.json();
+        var myCenter = (Array.isArray(centers) ? centers : []).find(function(c){ return c.owner_id === _authUser.id; })
+                    || (Array.isArray(centers) ? centers : []).find(function(c){ return c.owner_email === _authUser.email; });
 
-      if (!myCenter) {
-        // Unknown email — access denied
-        document.getElementById('app-loading').style.display = 'none';
-        document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('login-email-state').style.display = 'none';
-        document.getElementById('login-code-state').style.display = 'none';
-        if (!document.getElementById('access-denied')) {
-          document.getElementById('login-screen').querySelector('div').insertAdjacentHTML('beforeend',
-            '<div id="access-denied" style="text-align:center;padding:8px 0"><div style="font-size:40px;margin-bottom:12px">🚫</div><div style="font-size:16px;font-weight:700;color:#dc2626;margin-bottom:8px">Access Denied</div><div style="font-size:13px;color:#6b7280;line-height:1.7">Your email is not linked to any center.<br>Contact your supervisor to get access.</div><button onclick="signOut()" style="margin-top:20px;background:#1a3a28;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Sign Out</button></div>'
-          );
+        if (!myCenter) {
+          // Unknown email — access denied
+          document.getElementById('app-loading').style.display = 'none';
+          document.getElementById('login-screen').style.display = 'flex';
+          document.getElementById('login-email-state').style.display = 'none';
+          document.getElementById('login-code-state').style.display = 'none';
+          if (!document.getElementById('access-denied')) {
+            document.getElementById('login-screen').querySelector('div').insertAdjacentHTML('beforeend',
+              '<div id="access-denied" style="text-align:center;padding:8px 0"><div style="font-size:40px;margin-bottom:12px">🚫</div><div style="font-size:16px;font-weight:700;color:#dc2626;margin-bottom:8px">Access Denied</div><div style="font-size:13px;color:#6b7280;line-height:1.7">Your email is not linked to any center.<br>Contact your supervisor to get access.</div><button onclick="signOut()" style="margin-top:20px;background:#1a3a28;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Sign Out</button></div>'
+            );
+          }
+          return;
         }
-        return;
-      }
 
-      // Auto-link owner_id if not set
-      if (!myCenter.owner_id) {
-        await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?id=eq.' + myCenter.id, {
-          method: 'PATCH',
-          headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ owner_id: _authUser.id })
-        });
+        // Auto-link owner_id if not set
+        if (!myCenter.owner_id) {
+          await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?id=eq.' + myCenter.id, {
+            method: 'PATCH',
+            headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ owner_id: _authUser.id })
+          });
+        }
+        // Lock center owner to their own center
+        ACTIVE_CENTER = myCenter.id;
+        localStorage.setItem('activeCenter', myCenter.id);
+        _centerAuth = { type: 'center', centerId: myCenter.id };
+        sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
+        // Store center name so sidebar shows correctly before loadAll completes
+        var _op = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+        _op.center_name = myCenter.name;
+        localStorage.setItem('ownerProfile', JSON.stringify(_op));
+        if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _op;
       }
-      // Lock center owner to their own center
-      ACTIVE_CENTER = myCenter.id;
-      localStorage.setItem('activeCenter', myCenter.id);
-      _centerAuth = { type: 'center', centerId: myCenter.id };
-      sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
-      // Store center name so sidebar shows correctly before loadAll completes
-      var _op = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
-      _op.center_name = myCenter.name;
-      localStorage.setItem('ownerProfile', JSON.stringify(_op));
-      if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _op;
+    } catch(err) {
+      console.warn('Auto-link check failed:', err);
     }
   }
 
@@ -1417,8 +1425,12 @@ function openFinanceModal() {
 
 // ── OWNER PROFILE ──
 function saveOwnerProfile() {
-  var p = {
-    name: document.getElementById('prof-name').value.trim(),
+  var mpVal = (document.getElementById('prof-master-pin').value||'').trim();
+  if(mpVal && !/^\d{4}$/.test(mpVal)) { showToast('PIN must be exactly 4 digits','error'); return; }
+  var nameVal = document.getElementById('prof-name').value.trim();
+  if (!nameVal) { showToast('Name is required', 'error'); return; }
+  var p = Object.assign({}, OWNER_PROFILE, {
+    name: nameVal,
     gender: document.getElementById('prof-gender').value,
     contact: document.getElementById('prof-contact').value.trim(),
     distributor_id: document.getElementById('prof-hlid').value.trim(),
@@ -1427,12 +1439,8 @@ function saveOwnerProfile() {
     current_pin: document.getElementById('prof-current-pin').value,
     next_pin: document.getElementById('prof-next-pin').value,
     coach_id: document.getElementById('prof-coach-id').value || null,
-    photo: OWNER_PROFILE.photo || null,
-    master_pin: (document.getElementById('prof-master-pin').value||'').trim() || OWNER_PROFILE.master_pin || null
-  };
-  var mpVal = (document.getElementById('prof-master-pin').value||'').trim();
-  if(mpVal && !/^\d{4}$/.test(mpVal)) { showToast('PIN must be exactly 4 digits','error'); return; }
-  if (!p.name) { showToast('Name is required', 'error'); return; }
+    master_pin: mpVal || OWNER_PROFILE.master_pin || null
+  });
   OWNER_PROFILE = p;
   localStorage.setItem('ownerProfile', JSON.stringify(p));
 
@@ -7966,6 +7974,7 @@ async function saveBody() {
     if (!op.sv_body_id) {
       op.sv_body_id = (crypto.randomUUID ? crypto.randomUUID() : 'sv-' + Date.now() + '-' + Math.random().toString(36).slice(2));
       localStorage.setItem('ownerProfile', JSON.stringify(op));
+      OWNER_PROFILE = op;
     }
     var svPayload = {
       customer_id: op.sv_body_id, customer_name: op.name || 'Supervisor',
@@ -10108,6 +10117,7 @@ async function migrateSvBodyToSupabase() {
   if (!op.sv_body_id) {
     op.sv_body_id = (crypto.randomUUID ? crypto.randomUUID() : 'sv-' + Date.now() + '-' + Math.random().toString(36).slice(2));
     localStorage.setItem('ownerProfile', JSON.stringify(op));
+    OWNER_PROFILE = op;
   }
   var svId = op.sv_body_id;
   var existing = (D.body||[]).filter(function(b){ return b.customer_id===svId; }).map(function(b){ return b.date; });
@@ -10245,6 +10255,7 @@ async function generateSvDietPlan() {
     plan.activity = activity;
     op.sv_diet_plan = JSON.stringify(plan);
     localStorage.setItem('ownerProfile', JSON.stringify(op));
+    OWNER_PROFILE = op;
     _svDietDay = null;
     renderSvDietPlan();
     showToast('Diet plan generated!', 'success');
