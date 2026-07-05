@@ -12522,16 +12522,33 @@ function onWalkinSourceChange(){
   document.getElementById('sd-walkin-ref-input').value='';
   // Filter dropdown to only customers or only coaches from the active center
   var persons=[];
+  var loggedInCoachId = (OWNER_PROFILE && OWNER_PROFILE.coach_id) || null;
+
   if(src==='customer_referral'){
-    persons=(D.customers||[]).filter(function(c){
-      return !ACTIVE_CENTER||c.wellness_center_id===ACTIVE_CENTER;
-    }).map(function(c){return{id:c.id,label:c.name};});
+    var list = D.customers || [];
+    if (loggedInCoachId) {
+      list = list.filter(function(c){ return c.referred_by_id === loggedInCoachId || c.coach_id === loggedInCoachId; });
+    } else if (ACTIVE_CENTER) {
+      list = list.filter(function(c){ return c.wellness_center_id === ACTIVE_CENTER || c.center_id === ACTIVE_CENTER; });
+    }
+    persons = list.map(function(c){
+      return { value: c.id, label: c.name, search: (c.name||'').toLowerCase() };
+    });
   } else if(src==='coach_referral'){
-    persons=(D.coaches||[]).filter(function(c){
-      return !ACTIVE_CENTER||c.wellness_center_id===ACTIVE_CENTER;
-    }).map(function(c){return{id:c.id,label:c.name+' 👨‍🏫'};});
+    var list = D.coaches || [];
+    if (loggedInCoachId) {
+      list = list.filter(function(c){ return c.id === loggedInCoachId; });
+    } else if (ACTIVE_CENTER) {
+      list = list.filter(function(c){ return c.wellness_center_id === ACTIVE_CENTER || c.center_id === ACTIVE_CENTER; });
+    }
+    persons = list.map(function(c){
+      return { value: c.id, label: c.name + ' 👨‍🏫', search: (c.name||'').toLowerCase() };
+    });
   }
-  sdSetItems('walkin-ref',persons);
+  sdSetItems('walkin-ref', persons);
+  if (persons.length === 1) {
+    sdSetValue('walkin-ref', persons[0].value);
+  }
 }
 function onWalkinOutcomeChange(){
   var out=document.getElementById('walkin-outcome').value;
