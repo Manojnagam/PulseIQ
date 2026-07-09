@@ -1826,7 +1826,7 @@ async function callGroq(systemPrompt, userPrompt, opts) {
           systemPrompt: systemPrompt || null,
           userPrompt: userPrompt,
           model: currentModel,
-          maxTokens: opts.maxTokens || 500,
+          maxTokens: opts.maxTokens || 2500,
           temperature: opts.temperature !== undefined ? opts.temperature : 0.85
         })
       });
@@ -10324,14 +10324,29 @@ async function generateSvDietPlan() {
     + '"days":{"monday":'+dayTemplate+',"tuesday":'+dayTemplate+',"wednesday":'+dayTemplate+','
     + '"thursday":'+dayTemplate+',"friday":'+dayTemplate+',"saturday":'+dayTemplate+',"sunday":'+dayTemplate+'}}';
 
+function parseAiJson(raw) {
+  if (!raw) throw new Error('AI returned an empty response');
+  var cleaned = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  var firstBrace = cleaned.indexOf('{');
+  var lastBrace = cleaned.lastIndexOf('}');
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    throw new Error('AI did not return valid JSON object');
+  }
+  var jsonSubstring = cleaned.substring(firstBrace, lastBrace + 1);
+  try {
+    return JSON.parse(jsonSubstring);
+  } catch (err) {
+    var noTrailingComma = jsonSubstring.replace(/,\s*([\]}])/g, '$1');
+    return JSON.parse(noTrailingComma);
+  }
+}
+
   var btn = document.getElementById('sv-diet-gen-btn');
   btn.textContent = '⏳ Generating...'; btn.disabled = true;
   _svDietInFlight = true;
   try {
-    var raw = await callGroq(null, prompt, { temperature: 0.3 });
-    var jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('AI did not return valid JSON');
-    var plan = JSON.parse(jsonMatch[0]);
+    var raw = await callGroq(null, prompt, { temperature: 0.2, maxTokens: 4000 });
+    var plan = parseAiJson(raw);
     plan.generated = new Date().toISOString().split('T')[0];
     plan.diet_type = dietType;
     plan.activity = activity;
@@ -14001,11 +14016,8 @@ async function generateDietPlan(custId, silent) {
     '"thursday":'+dayTemplate+',"friday":'+dayTemplate+',"saturday":'+dayTemplate+',"sunday":'+dayTemplate+'}}';
 
   try {
-    var raw = await callGroq(null, prompt, { temperature: 0.3 });
-    // Extract JSON from response
-    var jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if(!jsonMatch) throw new Error('AI did not return valid JSON');
-    var plan = JSON.parse(jsonMatch[0]);
+    var raw = await callGroq(null, prompt, { temperature: 0.2, maxTokens: 4000 });
+    var plan = parseAiJson(raw);
     plan.generated = new Date().toISOString().split('T')[0];
     plan.client_name = c.name;
     // Save to Supabase
