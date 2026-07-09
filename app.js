@@ -2456,8 +2456,8 @@ function autofillBodyHeightAge(custId) {
       if (lastRec.age)    el_a.value = lastRec.age;
     } else {
       var p = JSON.parse(localStorage.getItem('sv_profile')||'{}');
-      if (p.height) el_h.value = p.height;
-      if (p.age)    el_a.value = p.age;
+      if (op.height || p.height) el_h.value = op.height || p.height;
+      if (op.age || p.age)       el_a.value = op.age || p.age;
     }
     return;
   }
@@ -2582,14 +2582,17 @@ function updateCustSelects() {
     var coachOpts = coachesWithPacks.length ? '<optgroup label="── Coaches ──">'+coachesWithPacks.map(function(c){return '<option value="'+c.id+'">'+c.name+' (Coach)</option>';}).join('')+'</optgroup>' : '';
     attSel.innerHTML = '<option value="">Select person</option>' + custOpts + coachOpts;
   }
-  // Body composition — ALL coaches regardless of pack status + walk-ins
+  // Body composition — ALL coaches regardless of pack status + walk-ins + Center Owner / Supervisor
   var bodySel = document.getElementById('body-customer');
   if(bodySel) {
+    var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+    var _svProf = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+    var _ownerName = _opProf.name || _svProf.name || 'Myself (Center Owner)';
     var bCustOpts = _custs.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
     var bCoachOpts = _allCoaches.length ? '<optgroup label="── Coaches ──">'+_allCoaches.map(function(c){return '<option value="'+c.id+'">'+c.name+' (Coach)</option>';}).join('')+'</optgroup>' : '';
     var _walkinList = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER||w.center_id===ACTIVE_CENTER; });
     var bWalkinOpts = _walkinList.length ? '<optgroup label="── Walk-ins ──">'+_walkinList.map(function(w){return '<option value="walkin__'+w.id+'">'+w.name+' 🚶 ('+(w.date||'')+')</option>';}).join('')+'</optgroup>' : '';
-    bodySel.innerHTML = '<option value="">Select person</option><option value="__sv__">👤 Myself (Supervisor)</option>' + bCustOpts + bCoachOpts + bWalkinOpts;
+    bodySel.innerHTML = '<option value="">Select person</option><option value="__sv__">👤 ' + _ownerName + ' (Myself / Owner)</option>' + bCustOpts + bCoachOpts + bWalkinOpts;
   }
   var cCoach = document.getElementById('customer-coach');
   if(cCoach) cCoach.innerHTML = '<option value="">Select coach</option>' + D.coaches.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
@@ -6393,14 +6396,35 @@ function renderBody() {
     return;
   }
 
-  var cust = D.customers.find(function(x){ return x.id === _selectedBodyCustId; })
-    || D.coaches.find(function(x){ return x.id === _selectedBodyCustId; })
-    || (function(){ var w=(D.walkins||[]).find(function(x){return x.id===_selectedBodyCustId;}); return w ? {id:w.id,name:w.name+'  🚶',goal:'',pack_type:'Walk-in'} : null; })();
+  var _opP = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var _svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var _svBodyId = _opP.sv_body_id || '__sv__';
+  var _isSvSelected = (_selectedBodyCustId === '__sv__' || _selectedBodyCustId === _svBodyId);
+
+  var cust = _isSvSelected
+    ? {
+        id: '__sv__',
+        name: (_opP.name || _svP.name || 'Myself (Center Owner)') + ' 👤',
+        gender: _opP.gender || _svP.gender || '',
+        dob: (_opP.age || _svP.age) ? String(new Date().getFullYear() - parseInt(_opP.age || _svP.age)) : null,
+        goal: _opP.goal || _svP.goal || 'Maintenance',
+        pack_type: 'Center Owner'
+      }
+    : D.customers.find(function(x){ return x.id === _selectedBodyCustId; })
+      || D.coaches.find(function(x){ return x.id === _selectedBodyCustId; })
+      || (function(){ var w=(D.walkins||[]).find(function(x){return x.id===_selectedBodyCustId;}); return w ? {id:w.id,name:w.name+'  🚶',goal:'',pack_type:'Walk-in'} : null; })();
   if (!cust) { profileCard.style.display='none'; if(idealCard) idealCard.style.display='none'; emptyPrompt.style.display='block'; recordsWrap.style.display='none'; return; }
 
   // Get all records for this customer sorted oldest→newest
   var sorted = D.body
-    .filter(function(b){ return b.customer_id === _selectedBodyCustId; })
+    .filter(function(b){
+      if (_isSvSelected) {
+        return b.customer_id === '__sv__' || b.customer_id === _svBodyId || (
+          (_opP.name || _svP.name) && b.customer_name && b.customer_name.trim().toLowerCase() === (_opP.name || _svP.name).trim().toLowerCase()
+        );
+      }
+      return b.customer_id === _selectedBodyCustId;
+    })
     .sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
 
   // ── Profile Card ──
@@ -8025,8 +8049,9 @@ async function saveBody() {
       localStorage.setItem('ownerProfile', JSON.stringify(op));
       OWNER_PROFILE = op;
     }
+    var _opName = op.name || (JSON.parse(localStorage.getItem('sv_profile')||'{}')).name || 'Center Owner';
     var svPayload = {
-      customer_id: op.sv_body_id, customer_name: op.name || 'Supervisor',
+      customer_id: op.sv_body_id, customer_name: _opName,
       date: dateVal,
       height: document.getElementById('body-height').value||null,
       age: document.getElementById('body-age-field').value||null,
@@ -8045,7 +8070,7 @@ async function saveBody() {
     try {
       if (id && !isLegacyId) await dbUpdate('body_composition', id, svPayload);
       else await dbInsert('body_composition', svPayload);
-      showToast('Record saved!'); closeModal('body'); await loadBody(); renderSvBody();
+      showToast('Record saved!'); closeModal('body'); await loadBody(); renderSvBody(); renderBody();
     } catch(e) { showToast('Error: '+e.message, 'error'); }
     return;
   }
@@ -10366,11 +10391,15 @@ async function delSvBody(id) {
 function updateBodyCustSelect() {
   var sel = document.getElementById('body-cust-select'); if(!sel) return;
   var prev = sel.value;
+  var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var _svProf = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var _ownerName = _opProf.name || _svProf.name || 'Myself (Center Owner)';
+  var svOpt = '<option value="__sv__">👤 ' + _ownerName + ' (Myself / Owner)</option>';
   var custOpts = D.customers.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
   var coachOpts = D.coaches.length ? '<optgroup label="── Coaches ──">'+D.coaches.map(function(c){return '<option value="'+c.id+'">'+c.name+' 👨‍🏫</option>';}).join('')+'</optgroup>' : '';
   var _wl = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER||w.center_id===ACTIVE_CENTER; });
   var walkinOpts = _wl.length ? '<optgroup label="── Walk-ins ──">'+_wl.map(function(w){return '<option value="walkin__'+w.id+'">'+w.name+' 🚶 ('+(w.date||'')+')</option>';}).join('')+'</optgroup>' : '';
-  sel.innerHTML = '<option value="">— Choose a person —</option>' + custOpts + coachOpts + walkinOpts;
+  sel.innerHTML = '<option value="">— Choose a person —</option>' + svOpt + custOpts + coachOpts + walkinOpts;
   if(prev) sel.value = prev;
 }
 function onBodyCustomerChange() {
@@ -10382,10 +10411,15 @@ function onBodyCustomerChange() {
 function onBodySearch() {
   var q = document.getElementById('body-search').value.toLowerCase().trim();
   var sel = document.getElementById('body-cust-select');
-  if(!q){_selectedBodyCustId=null;sel.value='';renderBody();return;}
+  var _opP = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var _svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var _ownerName = (_opP.name || _svP.name || 'myself').toLowerCase();
   var match = D.customers.find(function(c){return(c.name||'').toLowerCase().includes(q);})
            || D.coaches.find(function(c){return(c.name||'').toLowerCase().includes(q);});
   if(match){_selectedBodyCustId=match.id;sel.value=match.id;}
+  else if (_ownerName.includes(q) || 'myself'.includes(q) || 'owner'.includes(q)) {
+    _selectedBodyCustId = '__sv__'; sel.value = '__sv__';
+  }
   else {
     var wMatch = (D.walkins||[]).find(function(w){return(w.name||'').toLowerCase().includes(q);});
     if(wMatch){_selectedBodyCustId=wMatch.id;sel.value='walkin__'+wMatch.id;}
