@@ -29,9 +29,16 @@ var SB_URL = window.SB_URL || null; var SB_KEY = window.SB_KEY || null;
 var CENTER_SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
 var CENTER_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
 function isCenterSession() { return _centerAuth && _centerAuth.type === 'center'; }
-// Use main Supabase if credentials exist, otherwise fall back to center Supabase (for paying customers)
-function getActiveSbUrl() { return SB_URL || CENTER_SB_URL; }
-function getActiveSbKey() { return (_authSession && _authSession.access_token) || SB_KEY || CENTER_SB_KEY; }
+function getActiveSbUrl() {
+  var u = SB_URL || CENTER_SB_URL;
+  if (!u || u === 'null' || u === 'undefined' || !String(u).startsWith('http')) return CENTER_SB_URL;
+  return String(u).replace(/\/$/, '');
+}
+function getActiveSbKey() {
+  var k = (_authSession && _authSession.access_token) || SB_KEY || CENTER_SB_KEY;
+  if (!k || k === 'null' || k === 'undefined') return CENTER_SB_KEY;
+  return k;
+}
 var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
 var WA_LANG = localStorage.getItem('waLang') || 'English';
 
@@ -90,9 +97,9 @@ async function sendOtpCode() {
   initAuthClient();
   var email = (document.getElementById('login-email').value || '').trim();
   if (!email) { showLoginErr('Please enter your email address.'); return; }
-  // Rate limit: max 3 OTP requests per email per 10 minutes
+  // Rate limit: max 5 OTP requests per email per 10 minutes
   var RL_KEY = 'otp_rl_' + email.toLowerCase();
-  var RL_MAX = 3, RL_WINDOW = 10 * 60 * 1000;
+  var RL_MAX = 5, RL_WINDOW = 10 * 60 * 1000;
   var now = Date.now();
   var attempts = JSON.parse(localStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
   if (attempts.length >= RL_MAX) {
@@ -101,8 +108,6 @@ async function sendOtpCode() {
     showLoginErr('Too many requests. Please wait ' + waitMin + ' minute' + (waitMin > 1 ? 's' : '') + ' before trying again.');
     return;
   }
-  attempts.push(now);
-  localStorage.setItem(RL_KEY, JSON.stringify(attempts));
   var btn = document.getElementById('login-btn');
   btn.textContent = 'Checking…'; btn.disabled = true;
   // Block unregistered emails before sending OTP
@@ -120,15 +125,28 @@ async function sendOtpCode() {
     }
   } catch(e) { /* network error — proceed */ }
   btn.textContent = 'Sending…';
-  var res = await _sbAuth.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } });
-  if (res.error) {
-    showLoginErr(res.error.message);
+  var res = null;
+  for (var attempt = 1; attempt <= 3; attempt++) {
+    res = await _sbAuth.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } });
+    if (!res.error || (res.error.message !== 'Failed to fetch' && String(res.error.message).indexOf('fetch') === -1)) {
+      break;
+    }
+    if (attempt < 3) await new Promise(function(r){ setTimeout(r, attempt * 500); });
+  }
+  if (res && res.error) {
+    var errMsg = res.error.message;
+    if (errMsg === 'Failed to fetch' || String(errMsg).indexOf('fetch') !== -1) {
+      errMsg = 'Network connection error (Failed to fetch). Please check your internet connection or allow erteibdxzdvsaujptxsd.supabase.co if using an ad blocker / Brave Shields.';
+    }
+    showLoginErr(errMsg);
     btn.textContent = 'Send Code →'; btn.disabled = false;
   } else {
+    attempts.push(now);
+    localStorage.setItem(RL_KEY, JSON.stringify(attempts));
     document.getElementById('login-sent-to').textContent = email;
     document.getElementById('login-email-state').style.display = 'none';
     document.getElementById('login-code-state').style.display = 'block';
-    setTimeout(function(){ document.getElementById('login-otp').focus(); }, 100);
+    setTimeout(function(){ var otpEl = document.getElementById('login-otp'); if(otpEl) otpEl.focus(); }, 100);
   }
 }
 
@@ -1441,6 +1459,9 @@ function openFinanceModal() {
   document.getElementById('fin-desc').value='';
   document.getElementById('fin-amount').value='';
   document.getElementById('fin-date').value=new Date().toISOString().split('T')[0];
+  if (typeof updateCenterSelects === 'function') updateCenterSelects();
+  var finCen = document.getElementById('fin-center');
+  if (finCen && ACTIVE_CENTER) finCen.value = ACTIVE_CENTER;
   openModal('finance');
 }
 
@@ -1582,11 +1603,22 @@ function showCoachPinTip() {
   tipBox.style.display = 'block';
 }
 
-// Always get fresh credentials - fallback to localStorage if variables are null
 function getCredentials() {
-  if (!SB_URL) SB_URL = (localStorage.getItem('sb_url') || '').replace(/\/$/, '');
-  if (!SB_KEY) SB_KEY = localStorage.getItem('sb_key') || '';
-  return true; // always proceed — CENTER_SB is the fallback when no main credentials
+  var storedUrl = (localStorage.getItem('sb_url') || '').trim();
+  if (storedUrl && storedUrl !== 'null' && storedUrl !== 'undefined' && storedUrl.startsWith('http')) {
+    SB_URL = storedUrl.replace(/\/$/, '');
+  } else {
+    SB_URL = null;
+    if (storedUrl === 'null' || storedUrl === 'undefined') localStorage.removeItem('sb_url');
+  }
+  var storedKey = (localStorage.getItem('sb_key') || '').trim();
+  if (storedKey && storedKey !== 'null' && storedKey !== 'undefined') {
+    SB_KEY = storedKey;
+  } else {
+    SB_KEY = null;
+    if (storedKey === 'null' || storedKey === 'undefined') localStorage.removeItem('sb_key');
+  }
+  return true;
 }
 var D = { centers:[], customers:[], attendance:[], body:[], finance:[], coaches:[], inventory:[], leads:[], leadFollowups:[], expenses:[], contests:[], contestParticipants:[] };
 var _leadTab = 'today';
@@ -1600,11 +1632,9 @@ async function req(method, table, body, filter, customHeaders) {
   var apikey = '';
   var authBearer = '';
   if (SB_URL && activeUrl === SB_URL) {
-    // Wellness Hub database (custom credentials): query anonymously using SB_KEY
     apikey = SB_KEY;
     authBearer = SB_KEY;
   } else {
-    // PulseZen Centers database (fallback): query using session JWT or anon key
     apikey = CENTER_SB_KEY;
     authBearer = (_authSession && _authSession.access_token) || CENTER_SB_KEY;
   }
@@ -1621,19 +1651,47 @@ async function req(method, table, body, filter, customHeaders) {
   }
   var opts = { method: method, headers: headers };
   if (body) opts.body = JSON.stringify(body);
-  try {
-    var res = await fetch(url, opts);
-    if (res.status === 204) return [];
-    var data = await res.json();
-    if (!res.ok) {
-      console.error('Supabase API Error:', data);
-      throw new Error(data.message || 'HTTP ' + res.status);
+
+  var lastErr = null;
+  for (var attempt = 1; attempt <= 3; attempt++) {
+    try {
+      var res = await fetch(url, opts);
+      if (res.status === 204) return [];
+      var data = await res.json();
+      if (!res.ok) {
+        console.error('Supabase API Error:', data);
+        throw new Error(data.message || data.error || 'HTTP ' + res.status);
+      }
+      return data;
+    } catch (err) {
+      lastErr = err;
+      var isFetchErr = err && (err.message === 'Failed to fetch' || err.name === 'TypeError' || String(err.message).indexOf('fetch') !== -1);
+      if (isFetchErr && attempt < 3) {
+        await new Promise(function(r){ setTimeout(r, attempt * 400); });
+        continue;
+      }
+      if (isFetchErr && activeUrl !== CENTER_SB_URL) {
+        url = CENTER_SB_URL + '/rest/v1/' + table + filter;
+        headers.apikey = CENTER_SB_KEY;
+        headers.Authorization = 'Bearer ' + ((_authSession && _authSession.access_token) || CENTER_SB_KEY);
+        try {
+          var resFallback = await fetch(url, opts);
+          if (resFallback.status === 204) return [];
+          var dataFallback = await resFallback.json();
+          if (resFallback.ok) return dataFallback;
+        } catch(e2) {}
+      }
+      break;
     }
-    return data;
-  } catch (err) {
-    console.error('Supabase Request Failed:', { url, method, body, error: err });
-    throw err;
   }
+  console.error('Supabase Request Failed:', { url, method, body, error: lastErr });
+  if (lastErr && (lastErr.message === 'Failed to fetch' || lastErr.name === 'TypeError')) {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new Error('No internet connection. Please check your network and try again.');
+    }
+    throw new Error('Network request failed (Failed to fetch). Please check connection or allow erteibdxzdvsaujptxsd.supabase.co in shields/adblock.');
+  }
+  throw lastErr;
 }
 async function dbGet(table, order, extraFilter) {
   order = order || 'created_at';
@@ -2065,10 +2123,15 @@ async function loadAll() {
   }
 }
 async function loadCenters() {
-  D.centers = await dbGet('wellness_centers');
+  var res = await dbGet('wellness_centers');
+  if (Array.isArray(res) && res.length > 0) {
+    D.centers = res;
+  } else if (!D.centers || !D.centers.length) {
+    D.centers = Array.isArray(res) ? res : [];
+  }
   // Build in-memory PIN map from DB (single source of truth — works across all devices)
   _DB_PINS = {};
-  D.centers.forEach(function(c){ var p = c.pin || c.center_pin; if(p) _DB_PINS[c.id] = p; });
+  (D.centers || []).forEach(function(c){ var p = c.pin || c.center_pin; if(p) _DB_PINS[c.id] = p; });
   // Load supervisor PIN from app_settings
   try {
     var settings = await dbGet('app_settings', 'key', 'key=eq.supervisor_pin');
@@ -2565,12 +2628,16 @@ function showToast(msg, type) {
 
 // ── HELPERS ──
 function updateCenterSelects() {
+  var centersList = D.centers || [];
   ['customer-center','coach-center'].forEach(function(id){
     var sel = document.getElementById(id);
-    if(sel) sel.innerHTML = '<option value="">Select center</option>' + D.centers.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
+    if(sel) sel.innerHTML = '<option value="">Select center</option>' + centersList.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
   });
   var finCen = document.getElementById('fin-center');
-  if(finCen) finCen.innerHTML = '<option value="">All Centers</option>' + D.centers.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
+  if(finCen) {
+    finCen.innerHTML = '<option value="">All Centers</option>' + centersList.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
+    if (ACTIVE_CENTER) finCen.value = ACTIVE_CENTER;
+  }
 }
 function updateCustSelects() {
   var _custs = filterByCenter(D.customers);
@@ -8225,14 +8292,15 @@ async function saveFinance() {
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
   var id = document.getElementById('fin-id').value;
   var finCenEl = document.getElementById('fin-center');
-  var payload = { type:document.getElementById('fin-type').value, description:document.getElementById('fin-desc').value.trim(), amount:document.getElementById('fin-amount').value, category:document.getElementById('fin-cat').value, date:document.getElementById('fin-date').value, wellness_center_id: (finCenEl && finCenEl.value) || null };
+  var centerVal = (finCenEl && finCenEl.value) || ACTIVE_CENTER || null;
+  var payload = { type:document.getElementById('fin-type').value, description:document.getElementById('fin-desc').value.trim(), amount:document.getElementById('fin-amount').value, category:document.getElementById('fin-cat').value, date:document.getElementById('fin-date').value, wellness_center_id: centerVal };
   if (!payload.amount||!payload.date) { showToast('Amount and date required','error'); return; }
   try {
     if(id) await dbUpdate('finance',id,payload); else await dbInsert('finance',payload);
     auditLog(id?'Updated':'Added','Finance', (payload.type==='income'?'Income':'Expense')+' ₹'+Number(payload.amount).toLocaleString('en-IN')+(payload.description?' — '+payload.description:''));
     showToast(id?'Transaction updated!':'Transaction added!'); closeModal('finance'); await loadFinance(); renderOverview();
   }
-  catch(e) { showToast('Error: '+e.message,'error'); }
+  catch(e) { showToast('Error saving transaction: '+e.message,'error'); }
 }
 function editFinance(id) {
   var f = D.finance.find(function(x){return x.id===id;});

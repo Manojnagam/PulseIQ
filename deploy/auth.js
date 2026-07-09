@@ -115,7 +115,7 @@ async function sendOtpCode() {
   var email = (document.getElementById('login-email').value || '').trim();
   if (!email) { showLoginErr('Please enter your email address.'); return; }
   var RL_KEY = 'otp_rl_' + email.toLowerCase();
-  var RL_MAX = 3, RL_WINDOW = 10 * 60 * 1000;
+  var RL_MAX = 5, RL_WINDOW = 10 * 60 * 1000;
   var now = Date.now();
   var attempts = JSON.parse(localStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
   if (attempts.length >= RL_MAX) {
@@ -124,8 +124,6 @@ async function sendOtpCode() {
     showLoginErr('Too many requests. Please wait ' + waitMin + ' minute' + (waitMin > 1 ? 's' : '') + ' before trying again.');
     return;
   }
-  attempts.push(now);
-  localStorage.setItem(RL_KEY, JSON.stringify(attempts));
   var btn = document.getElementById('login-btn');
   btn.textContent = 'Checking…'; btn.disabled = true;
   try {
@@ -142,15 +140,28 @@ async function sendOtpCode() {
     }
   } catch(e) {}
   btn.textContent = 'Sending…';
-  var res = await _sbAuth.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } });
-  if (res.error) {
-    showLoginErr(res.error.message);
+  var res = null;
+  for (var attempt = 1; attempt <= 3; attempt++) {
+    res = await _sbAuth.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } });
+    if (!res.error || (res.error.message !== 'Failed to fetch' && String(res.error.message).indexOf('fetch') === -1)) {
+      break;
+    }
+    if (attempt < 3) await new Promise(function(r){ setTimeout(r, attempt * 500); });
+  }
+  if (res && res.error) {
+    var errMsg = res.error.message;
+    if (errMsg === 'Failed to fetch' || String(errMsg).indexOf('fetch') !== -1) {
+      errMsg = 'Network connection error (Failed to fetch). Please check your internet connection or allow erteibdxzdvsaujptxsd.supabase.co if using an ad blocker / Brave Shields.';
+    }
+    showLoginErr(errMsg);
     btn.textContent = 'Send Code →'; btn.disabled = false;
   } else {
+    attempts.push(now);
+    localStorage.setItem(RL_KEY, JSON.stringify(attempts));
     document.getElementById('login-sent-to').textContent = email;
     document.getElementById('login-email-state').style.display = 'none';
     document.getElementById('login-code-state').style.display = 'block';
-    setTimeout(function(){ document.getElementById('login-otp').focus(); }, 100);
+    setTimeout(function(){ var otpEl = document.getElementById('login-otp'); if(otpEl) otpEl.focus(); }, 100);
   }
 }
 
