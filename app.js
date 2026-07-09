@@ -126,17 +126,34 @@ async function sendOtpCode() {
   } catch(e) { /* network error — proceed */ }
   btn.textContent = 'Sending…';
   var res = null;
-  for (var attempt = 1; attempt <= 3; attempt++) {
+  var success = false;
+  var errMsg = '';
+  try {
     res = await _sbAuth.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } });
-    if (!res.error || (res.error.message !== 'Failed to fetch' && String(res.error.message).indexOf('fetch') === -1)) {
-      break;
-    }
-    if (attempt < 3) await new Promise(function(r){ setTimeout(r, attempt * 500); });
+    if (!res.error) success = true;
+    else errMsg = res.error.message;
+  } catch(e) {
+    errMsg = e.message || 'Failed to fetch';
   }
-  if (res && res.error) {
-    var errMsg = res.error.message;
+  if (!success && (errMsg === 'Failed to fetch' || String(errMsg).indexOf('fetch') !== -1 || !errMsg)) {
+    try {
+      var restRes = await fetch(CENTER_SB_URL + '/auth/v1/otp', {
+        method: 'POST',
+        headers: { 'apikey': CENTER_SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, create_user: true })
+      });
+      if (restRes.ok) success = true;
+      else {
+        var restData = await restRes.json().catch(function(){ return {}; });
+        errMsg = restData.msg || restData.error_description || 'HTTP ' + restRes.status;
+      }
+    } catch(e2) {
+      errMsg = 'Network connection error (Failed to fetch). If opening from file:// or using an ad blocker / Brave Shields, please allow erteibdxzdvsaujptxsd.supabase.co.';
+    }
+  }
+  if (!success) {
     if (errMsg === 'Failed to fetch' || String(errMsg).indexOf('fetch') !== -1) {
-      errMsg = 'Network connection error (Failed to fetch). Please check your internet connection or allow erteibdxzdvsaujptxsd.supabase.co if using an ad blocker / Brave Shields.';
+      errMsg = 'Network connection error (Failed to fetch). If opening from file:// or using an ad blocker / Brave Shields, please allow erteibdxzdvsaujptxsd.supabase.co.';
     }
     showLoginErr(errMsg);
     btn.textContent = 'Send Code →'; btn.disabled = false;
