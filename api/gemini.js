@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'GEMINI_API_KEY not configured on server. Please configure it in your Vercel Environment Variables.' });
   }
 
-  const { systemPrompt, userPrompt, model, maxTokens, temperature } = req.body || {};
+  const { systemPrompt, userPrompt, model, maxTokens, temperature, responseFormat } = req.body || {};
 
   if (!userPrompt) {
     return res.status(400).json({ error: 'userPrompt is required' });
@@ -36,10 +36,13 @@ export default async function handler(req, res) {
       }
     ],
     generationConfig: {
-      maxOutputTokens: maxTokens || 500,
+      maxOutputTokens: maxTokens || 4000,
       temperature: temperature !== undefined ? temperature : 0.85
     }
   };
+  if (responseFormat && responseFormat.type === 'json_object') {
+    body.generationConfig.responseMimeType = 'application/json';
+  }
 
   if (systemPrompt) {
     body.systemInstruction = {

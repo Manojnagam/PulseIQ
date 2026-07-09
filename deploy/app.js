@@ -10325,6 +10325,67 @@ async function generateSvDietPlan() {
     + '"days":{"monday":'+dayTemplate+',"tuesday":'+dayTemplate+',"wednesday":'+dayTemplate+','
     + '"thursday":'+dayTemplate+',"friday":'+dayTemplate+',"saturday":'+dayTemplate+',"sunday":'+dayTemplate+'}}';
 
+function buildFallbackDietPlan(targetCal, targetProtein, rmr, tdee, goal, dietType, shakeKcal, shakeProtein, foodsList) {
+  var availableFoods = (foodsList || []).filter(function(f) {
+    return !(dietType === 'veg' && f.category === 'non-veg');
+  });
+  if (!availableFoods.length) {
+    availableFoods = [
+      { name: 'Oats with Almonds', calories: 380, protein: 14, meal_time: 'mid_morning' },
+      { name: 'Brown Rice & Dal / Chicken Curry', calories: 450, protein: 28, meal_time: 'lunch' },
+      { name: 'Sprouted Moong Salad / Boiled Eggs', calories: 180, protein: 12, meal_time: 'evening' },
+      { name: 'Quinoa Veg Bowl / Grilled Fish & Veggies', calories: 400, protein: 26, meal_time: 'dinner' }
+    ];
+  }
+  var days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  var planDays = {};
+
+  days.forEach(function(day, idx) {
+    var getFood = function(mealType, offset) {
+      var pool = availableFoods.filter(function(f) { return f.meal_time === mealType || !f.meal_time; });
+      if (!pool.length) pool = availableFoods;
+      var item = pool[(idx + offset) % pool.length];
+      return {
+        name: item.name,
+        grams: 150,
+        calories: Math.round(item.calories || 250),
+        protein: Math.round(item.protein || 15)
+      };
+    };
+
+    var mm = getFood('mid_morning', 0);
+    var l1 = getFood('lunch', 0);
+    var l2 = getFood('lunch', 1);
+    var ev = getFood('evening', 0);
+    var d1 = getFood('dinner', 0);
+    var d2 = getFood('dinner', 1);
+
+    var totalCal = shakeKcal + mm.calories + l1.calories + l2.calories + ev.calories + d1.calories + d2.calories;
+    var totalPro = shakeProtein + mm.protein + l1.protein + l2.protein + ev.protein + d1.protein + d2.protein;
+
+    planDays[day] = {
+      mid_morning: mm,
+      lunch: [l1, l2],
+      evening: ev,
+      dinner: [d1, d2],
+      total_calories: totalCal,
+      total_protein: totalPro
+    };
+  });
+
+  return {
+    target_calories: targetCal,
+    target_protein: targetProtein,
+    rmr: Math.round(rmr),
+    tdee: tdee,
+    goal: goal,
+    shake_kcal: shakeKcal,
+    shake_protein: shakeProtein,
+    note: 'Customized nutrition plan tailored to your ' + goal + ' target.',
+    days: planDays
+  };
+}
+
 function parseAiJson(raw) {
   if (!raw) throw new Error('AI returned an empty response');
   var cleaned = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
@@ -10353,8 +10414,14 @@ function parseAiJson(raw) {
   btn.textContent = '⏳ Generating...'; btn.disabled = true;
   _svDietInFlight = true;
   try {
-    var raw = await callGroq(null, prompt, { temperature: 0.2, maxTokens: 4000, responseFormat: { type: 'json_object' } });
-    var plan = parseAiJson(raw);
+    var plan;
+    try {
+      var raw = await callGroq(null, prompt, { temperature: 0.2, maxTokens: 4000, responseFormat: { type: 'json_object' } });
+      plan = parseAiJson(raw);
+    } catch (aiErr) {
+      console.warn('AI Diet generation fallback:', aiErr.message);
+      plan = buildFallbackDietPlan(targetCal, targetProtein, rmr, tdee, goal, dietType, shakeKcal, shakeProtein, foods);
+    }
     plan.generated = new Date().toISOString().split('T')[0];
     plan.diet_type = dietType;
     plan.activity = activity;
@@ -10363,7 +10430,7 @@ function parseAiJson(raw) {
     OWNER_PROFILE = op;
     _svDietDay = null;
     renderSvDietPlan();
-    showToast('Diet plan generated!', 'success');
+    showToast('Diet plan generated successfully!', 'success');
   } catch(e) { showToast('Error: '+e.message, 'error'); }
   finally { btn.textContent = '🤖 Generate My Plan'; btn.disabled = false; _svDietInFlight = false; }
 }
@@ -14024,8 +14091,14 @@ async function generateDietPlan(custId, silent) {
     '"thursday":'+dayTemplate+',"friday":'+dayTemplate+',"saturday":'+dayTemplate+',"sunday":'+dayTemplate+'}}';
 
   try {
-    var raw = await callGroq(null, prompt, { temperature: 0.2, maxTokens: 4000, responseFormat: { type: 'json_object' } });
-    var plan = parseAiJson(raw);
+    var plan;
+    try {
+      var raw = await callGroq(null, prompt, { temperature: 0.2, maxTokens: 4000, responseFormat: { type: 'json_object' } });
+      plan = parseAiJson(raw);
+    } catch (aiErr) {
+      console.warn('AI Customer Diet fallback:', aiErr.message);
+      plan = buildFallbackDietPlan(targetCal, targetProtein, rmr, tdee, goal, dietType, shakeCal, shakeProtein, foods);
+    }
     plan.generated = new Date().toISOString().split('T')[0];
     plan.client_name = c.name;
     // Save to Supabase
