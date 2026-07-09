@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'GROQ_API_KEY not configured on server' });
   }
 
-  const { systemPrompt, userPrompt, model, maxTokens, temperature } = req.body || {};
+  const { systemPrompt, userPrompt, model, maxTokens, temperature, responseFormat } = req.body || {};
 
   if (!userPrompt) {
     return res.status(400).json({ error: 'userPrompt is required' });
@@ -30,18 +30,21 @@ export default async function handler(req, res) {
   messages.push({ role: 'user', content: userPrompt });
 
   try {
+    const payload = {
+      model: model || 'llama-3.1-8b-instant',
+      messages,
+      max_tokens: maxTokens || 2500,
+      temperature: temperature !== undefined ? temperature : 0.85
+    };
+    if (responseFormat) payload.response_format = responseFormat;
+
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${key}`
       },
-      body: JSON.stringify({
-        model: model || 'llama-3.1-8b-instant',
-        messages,
-        max_tokens: maxTokens || 500,
-        temperature: temperature !== undefined ? temperature : 0.85
-      })
+      body: JSON.stringify(payload)
     });
 
     const data = await groqRes.json();

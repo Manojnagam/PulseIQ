@@ -1827,7 +1827,8 @@ async function callGroq(systemPrompt, userPrompt, opts) {
           userPrompt: userPrompt,
           model: currentModel,
           maxTokens: opts.maxTokens || 2500,
-          temperature: opts.temperature !== undefined ? opts.temperature : 0.85
+          temperature: opts.temperature !== undefined ? opts.temperature : 0.85,
+          responseFormat: opts.responseFormat || null
         })
       });
       var data = await res.json();
@@ -10330,14 +10331,21 @@ function parseAiJson(raw) {
   var firstBrace = cleaned.indexOf('{');
   var lastBrace = cleaned.lastIndexOf('}');
   if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    throw new Error('AI did not return valid JSON object');
+    throw new Error('AI did not return valid JSON structure');
   }
   var jsonSubstring = cleaned.substring(firstBrace, lastBrace + 1);
   try {
     return JSON.parse(jsonSubstring);
-  } catch (err) {
-    var noTrailingComma = jsonSubstring.replace(/,\s*([\]}])/g, '$1');
-    return JSON.parse(noTrailingComma);
+  } catch (err1) {
+    try {
+      var fixed = jsonSubstring
+        .replace(/\/\/.*$/gm, '')
+        .replace(/,\s*([\]}])/g, '$1')
+        .replace(/[\u0000-\u001F]+/g, ' ');
+      return JSON.parse(fixed);
+    } catch (err2) {
+      throw new Error('AI response formatting error: ' + err2.message);
+    }
   }
 }
 
@@ -10345,7 +10353,7 @@ function parseAiJson(raw) {
   btn.textContent = '⏳ Generating...'; btn.disabled = true;
   _svDietInFlight = true;
   try {
-    var raw = await callGroq(null, prompt, { temperature: 0.2, maxTokens: 4000 });
+    var raw = await callGroq(null, prompt, { temperature: 0.2, maxTokens: 4000, responseFormat: { type: 'json_object' } });
     var plan = parseAiJson(raw);
     plan.generated = new Date().toISOString().split('T')[0];
     plan.diet_type = dietType;
@@ -14016,7 +14024,7 @@ async function generateDietPlan(custId, silent) {
     '"thursday":'+dayTemplate+',"friday":'+dayTemplate+',"saturday":'+dayTemplate+',"sunday":'+dayTemplate+'}}';
 
   try {
-    var raw = await callGroq(null, prompt, { temperature: 0.2, maxTokens: 4000 });
+    var raw = await callGroq(null, prompt, { temperature: 0.2, maxTokens: 4000, responseFormat: { type: 'json_object' } });
     var plan = parseAiJson(raw);
     plan.generated = new Date().toISOString().split('T')[0];
     plan.client_name = c.name;
