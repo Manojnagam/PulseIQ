@@ -110,9 +110,15 @@ async function sendOtpCode() {
   }
   var btn = document.getElementById('login-btn');
   btn.textContent = 'Checking…'; btn.disabled = true;
-  // Block unregistered emails before sending OTP
+  async function sbFetch(urlPath, opts) {
+    try {
+      return await fetch(CENTER_SB_URL + urlPath, opts);
+    } catch (e) {
+      return await fetch('/api/sb' + urlPath, opts);
+    }
+  }
   try {
-    var checkRes = await fetch(CENTER_SB_URL + '/rest/v1/rpc/is_registered_email', {
+    var checkRes = await sbFetch('/rest/v1/rpc/is_registered_email', {
       method: 'POST',
       headers: { 'apikey': CENTER_SB_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: email })
@@ -123,7 +129,7 @@ async function sendOtpCode() {
       btn.textContent = 'Send Code →'; btn.disabled = false;
       return;
     }
-  } catch(e) { /* network error — proceed */ }
+  } catch(e) {}
   btn.textContent = 'Sending…';
   var res = null;
   var success = false;
@@ -137,7 +143,7 @@ async function sendOtpCode() {
   }
   if (!success && (errMsg === 'Failed to fetch' || String(errMsg).indexOf('fetch') !== -1 || !errMsg)) {
     try {
-      var restRes = await fetch(CENTER_SB_URL + '/auth/v1/otp', {
+      var restRes = await sbFetch('/auth/v1/otp', {
         method: 'POST',
         headers: { 'apikey': CENTER_SB_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, create_user: true })
@@ -148,12 +154,12 @@ async function sendOtpCode() {
         errMsg = restData.msg || restData.error_description || 'HTTP ' + restRes.status;
       }
     } catch(e2) {
-      errMsg = 'Network connection error (Failed to fetch). If opening from file:// or using an ad blocker / Brave Shields, please allow erteibdxzdvsaujptxsd.supabase.co.';
+      errMsg = 'Network connection error (Failed to fetch). Please check connection or allow erteibdxzdvsaujptxsd.supabase.co.';
     }
   }
   if (!success) {
     if (errMsg === 'Failed to fetch' || String(errMsg).indexOf('fetch') !== -1) {
-      errMsg = 'Network connection error (Failed to fetch). If opening from file:// or using an ad blocker / Brave Shields, please allow erteibdxzdvsaujptxsd.supabase.co.';
+      errMsg = 'Network connection error (Failed to fetch). Please check connection or allow erteibdxzdvsaujptxsd.supabase.co.';
     }
     showLoginErr(errMsg);
     btn.textContent = 'Send Code →'; btn.disabled = false;

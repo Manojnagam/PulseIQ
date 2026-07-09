@@ -1,6 +1,7 @@
 {
   "version": 2,
   "routes": [
+    { "src": "/api/sb/(.*)", "dest": "/api/sb.js" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/coach.html", "dest": "/coach.html" },
     { "src": "/client.html", "dest": "/client.html" },

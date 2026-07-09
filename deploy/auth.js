@@ -126,8 +126,15 @@ async function sendOtpCode() {
   }
   var btn = document.getElementById('login-btn');
   btn.textContent = 'Checking…'; btn.disabled = true;
+  async function sbFetch(urlPath, opts) {
+    try {
+      return await fetch(CENTER_SB_URL + urlPath, opts);
+    } catch (e) {
+      return await fetch('/api/sb' + urlPath, opts);
+    }
+  }
   try {
-    var checkRes = await fetch(CENTER_SB_URL + '/rest/v1/rpc/is_registered_email', {
+    var checkRes = await sbFetch('/rest/v1/rpc/is_registered_email', {
       method: 'POST',
       headers: { 'apikey': CENTER_SB_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: email })
@@ -152,7 +159,7 @@ async function sendOtpCode() {
   }
   if (!success && (errMsg === 'Failed to fetch' || String(errMsg).indexOf('fetch') !== -1 || !errMsg)) {
     try {
-      var restRes = await fetch(CENTER_SB_URL + '/auth/v1/otp', {
+      var restRes = await sbFetch('/auth/v1/otp', {
         method: 'POST',
         headers: { 'apikey': CENTER_SB_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, create_user: true })
@@ -163,12 +170,12 @@ async function sendOtpCode() {
         errMsg = restData.msg || restData.error_description || 'HTTP ' + restRes.status;
       }
     } catch(e2) {
-      errMsg = 'Network connection error (Failed to fetch). If opening from file:// or using an ad blocker / Brave Shields, please allow erteibdxzdvsaujptxsd.supabase.co.';
+      errMsg = 'Network connection error (Failed to fetch). Please check connection or allow erteibdxzdvsaujptxsd.supabase.co.';
     }
   }
   if (!success) {
     if (errMsg === 'Failed to fetch' || String(errMsg).indexOf('fetch') !== -1) {
-      errMsg = 'Network connection error (Failed to fetch). If opening from file:// or using an ad blocker / Brave Shields, please allow erteibdxzdvsaujptxsd.supabase.co.';
+      errMsg = 'Network connection error (Failed to fetch). Please check connection or allow erteibdxzdvsaujptxsd.supabase.co.';
     }
     showLoginErr(errMsg);
     btn.textContent = 'Send Code →'; btn.disabled = false;
@@ -189,7 +196,26 @@ async function verifyOtpCode() {
   if (!token || token.length < 6) { showCodeErr('Please enter the login code.'); return; }
   var btn = document.getElementById('verify-btn');
   btn.textContent = 'Verifying…'; btn.disabled = true;
-  var res = await _sbAuth.auth.verifyOtp({ email: email, token: token, type: 'email' });
+  var res = null;
+  try {
+    res = await _sbAuth.auth.verifyOtp({ email: email, token: token, type: 'email' });
+  } catch(e) {
+    res = { error: { message: 'Failed to fetch' } };
+  }
+  if (res && res.error && (res.error.message === 'Failed to fetch' || String(res.error.message).indexOf('fetch') !== -1)) {
+    try {
+      var restRes = await fetch('/api/sb/auth/v1/verify', {
+        method: 'POST',
+        headers: { 'apikey': CENTER_SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, token: token, type: 'email' })
+      });
+      var restData = await restRes.json();
+      if (restRes.ok && restData.access_token) {
+        await _sbAuth.auth.setSession({ access_token: restData.access_token, refresh_token: restData.refresh_token });
+        res = { data: { session: restData, user: restData.user }, error: null };
+      }
+    } catch(e2) {}
+  }
   if (res.error) {
     showCodeErr(res.error.message === 'Token has expired or is invalid' ? 'Incorrect or expired code. Try again.' : res.error.message);
     btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
@@ -231,7 +257,7 @@ async function loadAndStartDashboard() {
     if (!window.supabase) {
       await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2');
     }
-    await loadScript('app.min.js?v=1.3.6');
+    await loadScript('app.min.js?v=1.3.7');
     if (typeof bootDashboard === 'function') {
       await bootDashboard();
     } else {
