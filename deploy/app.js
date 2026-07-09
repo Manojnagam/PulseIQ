@@ -5879,6 +5879,28 @@ async function applyRecurringNow() {
   await autoApplyRecurring();
 }
 
+var _cardClickTimer = {};
+function handleAttCardClick(cid, cname, date, stst) {
+  var key = cid + '|' + date;
+  if (_cardClickTimer[key]) {
+    clearTimeout(_cardClickTimer[key]);
+    delete _cardClickTimer[key];
+    return;
+  }
+  _cardClickTimer[key] = setTimeout(function() {
+    delete _cardClickTimer[key];
+    toggleAtt(cid, cname, date, stst);
+  }, 280);
+}
+function handleAttCardDblClick(cid, cname, date) {
+  var key = cid + '|' + date;
+  if (_cardClickTimer[key]) {
+    clearTimeout(_cardClickTimer[key]);
+    delete _cardClickTimer[key];
+  }
+  resetAtt(cid, cname, date);
+}
+
 var _attResetTimer = null;
 var _attInFlight = {};
 async function toggleAtt(cid, cname, date, currentStatus) {
@@ -5894,7 +5916,7 @@ async function toggleAtt(cid, cname, date, currentStatus) {
       var newServ = curServ + 1;
       var payload = {
         id: existing.id,
-        customer_id: cid,
+        customer_id: existing.customer_id || cid,
         customer_name: cname,
         date: date,
         status: 'present',
@@ -5905,7 +5927,7 @@ async function toggleAtt(cid, cname, date, currentStatus) {
     } else if(existing) {
       var payload = {
         id: existing.id,
-        customer_id: cid,
+        customer_id: existing.customer_id || cid,
         customer_name: cname,
         date: date,
         status: 'present',
@@ -5930,11 +5952,11 @@ async function resetAtt(cid, cname, date) {
   _attInFlight[key] = true;
   var pIds = getPersonIds(cid);
   var existing = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===date;});
-  if(!existing || existing.status!=='present') { delete _attInFlight[key]; return; }
+  if(!existing || !isPresentStatus(existing.status)) { delete _attInFlight[key]; return; }
   try {
     var payload = {
       id: existing.id,
-      customer_id: cid,
+      customer_id: existing.customer_id || cid,
       customer_name: cname,
       date: date,
       status: 'absent',
@@ -6300,18 +6322,18 @@ function renderAttendance() {
     var st = getDaysLeft(p.obj);
     var bdg = st.days > 3 ? 'bg' : 'br';
     if(stst === 'complementary') {
-      present.push('<div class="att-card" style="border-left:3px solid #f9c74f;cursor:default"><div class="att-card-name">'+p.name+' 🎁</div><div><span class="badge by">Complementary</span></div></div>');
+      present.push('<div class="att-card" style="border-left:3px solid #f9c74f;cursor:pointer" ondblclick="event.stopPropagation();handleAttCardDblClick(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\')"><div class="att-card-name">'+p.name+' 🎁</div><div><span class="badge by">Complementary</span></div></div>');
       return;
     }
     if(stst === 'coupon_shake') {
       var csrv = att ? (Number(att.servings)||1) : 1;
-      present.push('<div class="att-card" style="border-left:3px solid #25D366;cursor:default"><div class="att-card-name">'+p.name+' 🥤</div><div><span class="badge" style="background:#25D366;color:#fff">Free Shake'+(csrv>1?' ×'+csrv:'')+'</span></div></div>');
+      present.push('<div class="att-card" style="border-left:3px solid #25D366;cursor:pointer" ondblclick="event.stopPropagation();handleAttCardDblClick(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\')"><div class="att-card-name">'+p.name+' 🥤</div><div><span class="badge" style="background:#25D366;color:#fff">Free Shake'+(csrv>1?' ×'+csrv:'')+'</span></div></div>');
       return;
     }
     var servBadge = stst==='present' && servings > 1 ? '<span class="badge" style="background:#6366f1;color:#fff;margin-left:6px">×'+servings+'</span>' : '';
-    var resetHtml = stst==='present' ? ' ondblclick="event.stopPropagation();resetAtt(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\')"' : '';
+    var resetHtml = isPresentStatus(stst) ? ' ondblclick="event.stopPropagation();handleAttCardDblClick(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\')"' : '';
     var inactiveBadge = (!p.isCoach && isInactive(p.obj)) ? '<span style="font-size:10px;font-weight:700;background:#fff3cd;color:#92400e;border-radius:20px;padding:1px 7px;margin-left:5px">Inactive</span>' : '';
-    var cardHtml = '<div class="att-card" onclick="toggleAtt(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\',\''+stst+'\')"'+resetHtml+'>' +
+    var cardHtml = '<div class="att-card" onclick="handleAttCardClick(\''+p.id+'\',\''+p.name+'\',\''+todayStr+'\',\''+stst+'\')"'+resetHtml+'>' +
                      '<div class="att-card-name">'+p.name+servBadge+inactiveBadge+'</div>' +
                      '<div><span class="badge '+bdg+'">'+st.used+'/'+st.total+'</span></div>' +
                    '</div>';
