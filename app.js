@@ -10279,12 +10279,20 @@ async function generateSvDietPlan() {
   var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
   var svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
   var svId = op.sv_body_id;
-  var latestBody = svId ? (D.body||[]).filter(function(b){ return b.customer_id===svId; }).sort(function(a,b){ return b.date>a.date?1:-1; })[0] : null;
-  var weight = latestBody ? parseFloat(latestBody.weight) : null;
-  var height = latestBody ? parseFloat(latestBody.height) : null;
-  var age = svP.age ? parseInt(svP.age) : null;
-  var gender = (svP.gender||'').toLowerCase();
-  if (!weight || !height || !age) { showToast('Need weight, height (from body records) and age (from Your Profile) to generate', 'error'); return; }
+  var latestBody = (D.body||[]).filter(function(b){
+    return b.customer_id === '__sv__' || (svId && b.customer_id === svId) || (
+      (op.name || svP.name) && b.customer_name && b.customer_name.trim().toLowerCase() === (op.name || svP.name).trim().toLowerCase()
+    );
+  }).sort(function(a,b){ return new Date(b.date) - new Date(a.date); })[0];
+  var weight = parseFloat((latestBody && latestBody.weight) || op.weight || svP.weight);
+  var height = parseFloat((latestBody && latestBody.height) || op.height || svP.height);
+  var age = parseInt((latestBody && latestBody.age) || op.age || svP.age || 30);
+  var gender = (svP.gender || op.gender || '').toLowerCase();
+  if (!weight || !height) {
+    showToast('Please add your Weight and Height in Body Composition (+ Add My Record) first', 'error');
+    openBodyModalSv();
+    return;
+  }
   var goal = document.getElementById('sv-diet-goal').value;
   var dietType = document.getElementById('sv-diet-type').value;
   var activity = document.getElementById('sv-diet-activity').value;
