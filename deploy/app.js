@@ -1010,6 +1010,12 @@ function getOrgCenterIds(rootId) {
 }
 
 function switchActiveCenter(centerId) {
+  if (window.innerWidth <= 768) {
+    var sb = document.getElementById('sidebar');
+    if (sb && sb.classList.contains('open')) {
+      if (typeof toggleSidebar === 'function') toggleSidebar();
+    }
+  }
   _applySwitch(centerId);
 }
 
@@ -1109,25 +1115,31 @@ function _applySwitch(centerId) {
     });
 }
 
+function isPresentStatus(st) {
+  return st === 'present' || st === 'complementary' || st === 'coupon_shake';
+}
+
 function updateCenterSwitcher() {
   var sel = document.getElementById('center-switcher'); if(!sel) return;
   var prev = sel.value || ACTIVE_CENTER;
-  var isMaster = _centerAuth.type === 'master';
+  var isSuper = typeof isSupervisor === 'function' ? isSupervisor() : true;
+  var isMaster = (_centerAuth && _centerAuth.type === 'master') || isSuper;
   var noPins = !_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0;
-  var isElite = isElitePlan();
+  var isElite = typeof isElitePlan === 'function' && isElitePlan();
+  var canSeeAll = isMaster || isSuper || noPins || isElite;
   // Build options: non-master users only see their authenticated center and downlines
   var opts = '';
-  var orgIds = (_centerAuth.type === 'center') ? getOrgCenterIds(_centerAuth.centerId) : null;
-  if(isMaster || noPins || isElite) {
+  var orgIds = (_centerAuth && _centerAuth.type === 'center') ? getOrgCenterIds(_centerAuth.centerId) : null;
+  if(canSeeAll) {
     opts = '<option value="">All Centers</option>';
   }
-  D.centers.forEach(function(c){
-    if(isMaster || noPins || (orgIds && orgIds.indexOf(c.id) !== -1)) {
-      opts += '<option value="'+c.id+'"'+(c.id===prev?' selected':'')+'>'+c.name+'</option>';
+  (D.centers || []).forEach(function(c){
+    if(canSeeAll || (orgIds && orgIds.indexOf(c.id) !== -1) || (_centerAuth && _centerAuth.centerId === c.id)) {
+      opts += '<option value="'+c.id+'"'+(c.id == prev ? ' selected':'')+'>'+c.name+'</option>';
     }
   });
   sel.innerHTML = opts;
-  if(prev && !D.centers.some(function(c){return c.id===prev;})) { ACTIVE_CENTER=''; localStorage.removeItem('activeCenter'); }
+  if(prev && !(D.centers || []).some(function(c){return c.id == prev;})) { ACTIVE_CENTER=''; localStorage.removeItem('activeCenter'); }
   // Hide supervisor-only nav items for center-PIN users, with plan overrides
   var isSuper = isSupervisor();
   var isElite = isElitePlan();
@@ -1151,51 +1163,60 @@ function updateCenterSwitcher() {
 
 // Helper: filter array by wellness_center_id matching ACTIVE_CENTER
 function filterByCenter(arr) {
-  if(!ACTIVE_CENTER) return arr;
-  return arr.filter(function(item){ return item.wellness_center_id === ACTIVE_CENTER; });
+  if(!ACTIVE_CENTER || !arr) return arr;
+  return arr.filter(function(item){ return item.wellness_center_id == ACTIVE_CENTER || item.center_id == ACTIVE_CENTER; });
 }
 
 // Helper: filter attendance/body by customer's center
 function filterByCenterViaCustomer(arr) {
-  if(!ACTIVE_CENTER) return arr;
-  var custIds = {};
-  D.customers.forEach(function(c){ if(c.wellness_center_id===ACTIVE_CENTER) custIds[c.id]=true; });
-  return arr.filter(function(item){ return custIds[item.customer_id]; });
+  if(!ACTIVE_CENTER || !arr) return arr;
+  var allowedIds = {};
+  (D.customers||[]).forEach(function(c){
+    if(c.wellness_center_id == ACTIVE_CENTER || c.center_id == ACTIVE_CENTER) allowedIds[c.id]=true;
+  });
+  (D.coaches||[]).forEach(function(co){
+    if(co.wellness_center_id == ACTIVE_CENTER || co.center_id == ACTIVE_CENTER) allowedIds[co.id]=true;
+  });
+  return arr.filter(function(item){
+    return (item.wellness_center_id == ACTIVE_CENTER) ||
+           (item.center_id == ACTIVE_CENTER) ||
+           allowedIds[item.customer_id] || allowedIds[item.person_id] || allowedIds[item.coach_id];
+  });
 }
 
 // Helper: filter finance by wellness_center_id (requires finance to have the column)
 // Only show records explicitly assigned to the active center; null records visible to supervisor only
 function filterFinanceByCenter(arr) {
-  if(!ACTIVE_CENTER) return arr;
-  return arr.filter(function(f){ return f.wellness_center_id === ACTIVE_CENTER; });
+  if(!ACTIVE_CENTER || !arr) return arr;
+  return arr.filter(function(f){ return f.wellness_center_id == ACTIVE_CENTER || f.center_id == ACTIVE_CENTER; });
 }
 
 // Helper: filter payments by customer/coach center matching ACTIVE_CENTER
 function filterPaymentsByCenter(arr) {
-  if(!ACTIVE_CENTER) return arr;
+  if(!ACTIVE_CENTER || !arr) return arr;
   var allowedIds = {};
   if (D.customers) D.customers.forEach(function(c){ allowedIds[c.id]=true; });
   if (D.coaches) D.coaches.forEach(function(co){ allowedIds[co.id]=true; });
   return arr.filter(function(p){ 
-    return (p.wellness_center_id === ACTIVE_CENTER) || (p.center_id === ACTIVE_CENTER) || (p.person_id && allowedIds[p.person_id]); 
+    return (p.wellness_center_id == ACTIVE_CENTER) || (p.center_id == ACTIVE_CENTER) || (p.person_id && allowedIds[p.person_id]); 
   });
 }
 
 // Helper: filter coupons by customer/coach center matching ACTIVE_CENTER
 function filterCouponsByCenter(arr) {
-  if(!ACTIVE_CENTER) return arr;
+  if(!ACTIVE_CENTER || !arr) return arr;
   var allowedIds = {};
   if (D.customers) D.customers.forEach(function(c){ allowedIds[c.id]=true; });
   if (D.coaches) D.coaches.forEach(function(co){ allowedIds[co.id]=true; });
   return arr.filter(function(c){ 
-    return (c.wellness_center_id === ACTIVE_CENTER) || (c.coach_id && allowedIds[c.coach_id]); 
+    return (c.wellness_center_id == ACTIVE_CENTER) || (c.coach_id && allowedIds[c.coach_id]); 
   });
 }
 
 // Helper: get the active center's display name
 function getCenterName() {
   if (ACTIVE_CENTER && D && D.centers) {
-    var ac = D.centers.find(function(x){ return x.id === ACTIVE_CENTER; });
+    var ac = D.centers.find(function(x){ return x.id == ACTIVE_CENTER; });
     if (ac && ac.name) return ac.name;
   }
   // Master/supervisor mode — no center lock
@@ -1337,7 +1358,7 @@ function calcMonthlyVP(month, centerId) {
   var vp = 0;
   // From current customers whose pack started this month
   D.customers.forEach(function(c) {
-    if(centerId && c.wellness_center_id !== centerId) return;
+    if(centerId && c.wellness_center_id != centerId && c.center_id != centerId) return;
     if(c.pack_owner_id) return; // linked members don't generate separate VP
     if(c.pack_start_date && c.pack_start_date.substring(0,7) === month) {
       vp += getVPForPack(c.pack_type);
@@ -1347,7 +1368,7 @@ function calcMonthlyVP(month, centerId) {
   (D.packHistory||[]).forEach(function(h) {
     if(centerId) {
       var cust = D.customers.find(function(x){return x.id===h.customer_id;});
-      if(!cust || cust.wellness_center_id !== centerId) return;
+      if(!cust || (cust.wellness_center_id != centerId && cust.center_id != centerId)) return;
     }
     if(h.start_date && h.start_date.substring(0,7) === month) {
       vp += getVPForPack(h.pack_type);
@@ -1355,7 +1376,7 @@ function calcMonthlyVP(month, centerId) {
   });
   // From coaches with packs
   D.coaches.forEach(function(c) {
-    if(centerId && c.wellness_center_id !== centerId) return;
+    if(centerId && c.wellness_center_id != centerId && c.center_id != centerId) return;
     if(c.pack_start_date && c.pack_start_date.substring(0,7) === month) {
       vp += getVPForPack(c.pack_type);
     }
@@ -3879,7 +3900,7 @@ function renderOverview() {
   expiringCusts.sort(function(a,b){return a.days-b.days;});
 
   // ── Today's check-ins ──
-  var attTodayList = _att.filter(function(a){return a.date===todayStr&&a.status==='present';});
+  var attTodayList = _att.filter(function(a){return a.date===todayStr && isPresentStatus(a.status);});
   var attToday = attTodayList.length;
   var checkedInNames = attTodayList.map(function(a){
     var cu = _custs.find(function(x){return x.id===a.customer_id;});
@@ -6011,15 +6032,21 @@ function renderAttGrid() {
     var isConvertedCoach = pIds.length > 1 && D.coaches.some(function(co){ return co.id === c.pack_owner_id; });
     if (isConvertedCoach) return false;
 
-    var hasAttThisMonth = D.attendance.some(function(a){return a.customer_id===c.id&&a.date&&a.date.startsWith(monthStr);});
-    if(hasAttThisMonth) return true; // always show if they actually attended this month
-    if(!getDaysLeft(c).active) return false; // expired pack, no attendance — hide
-    if(isInactive(c) && !ATT_SHOW_INACTIVE) return false; // inactive, toggle off — hide
-    return true;
+    var hasAttThisMonth = D.attendance.some(function(a){
+      return pIds.indexOf(a.customer_id) !== -1 && a.date && a.date.startsWith(monthStr) && isPresentStatus(a.status);
+    });
+    if(hasAttThisMonth) return true; // show if they attended this month
+    if((c.pack_start_date || c.created_at || c.join_date || '').startsWith(monthStr)) return true; // started this month
+    if(getDaysLeft(c).active) return true; // active pack
+    if(ATT_SHOW_INACTIVE) return true;
+    return false;
   }).map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:false}; });
   var coachRows = filterByCenter(D.coaches).filter(function(c){
     var pIds = getPersonIds(c.id);
-    return (c.pack_type && c.pack_start_date) || D.attendance.some(function(a){return pIds.indexOf(a.customer_id) !== -1&&a.date&&a.date.startsWith(monthStr);});
+    var hasAttThisMonth = D.attendance.some(function(a){
+      return pIds.indexOf(a.customer_id) !== -1 && a.date && a.date.startsWith(monthStr) && isPresentStatus(a.status);
+    });
+    return hasAttThisMonth || c.pack_type || c.pack_start_date || c.pack_owner_id || ATT_SHOW_INACTIVE;
   })
     .map(function(c){ return {id:c.id, name:c.name, obj:c, isCoach:true}; });
   var allRows = custRows.concat(coachRows);
@@ -6044,9 +6071,9 @@ function renderAttGrid() {
         var att = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===dStr;});
         var st = att ? att.status : '';
         var servCount = att ? (Number(att.servings) || 1) : 0;
-        var cls = st==='present' ? 'p' : (st==='absent' ? 'a' : (st==='complementary' ? 'c' : ''));
-        var txt = st==='present' ? (servCount > 1 ? servCount : 'P') : (st==='absent' ? 'A' : (st==='complementary' ? '🎁' : '—'));
-        if(st==='present') presentSet.add(dStr);
+        var cls = st==='present' ? 'p' : (st==='absent' ? 'a' : (st==='complementary' ? 'c' : (st==='coupon_shake' ? 'p' : '')));
+        var txt = st==='present' ? (servCount > 1 ? servCount : 'P') : (st==='absent' ? 'A' : (st==='complementary' ? '🎁' : (st==='coupon_shake' ? '🥤' : '—')));
+        if(isPresentStatus(st)) presentSet.add(dStr);
         html += '<td class="att-cell '+cls+'" onclick="gridCellClick(\''+p.id+'\',\''+p.name+'\',\''+dStr+'\',\''+st+'\','+servCount+')">'+txt+'</td>';
       }
       var presentCount = presentSet.size;
@@ -6246,9 +6273,9 @@ function renderAttendance() {
     if (isConvertedCoach) return false;
 
     var packActive = getDaysLeft(c).active;
-    var presentToday = D.attendance.some(function(a){ return a.customer_id===c.id && a.date===todayStr && a.status==='present'; });
+    var presentToday = D.attendance.some(function(a){ return pIds.indexOf(a.customer_id) !== -1 && a.date===todayStr && isPresentStatus(a.status); });
     if (!packActive && !presentToday) return false; // hide expired-pack customers unless present today
-    if (isInactive(c) && !ATT_SHOW_INACTIVE) return false; // hide inactive unless toggled
+    if (isInactive(c) && !ATT_SHOW_INACTIVE && !presentToday) return false; // hide inactive unless toggled or present today
     return (c.name||'').toLowerCase().includes(q);
   });
 
