@@ -8811,8 +8811,8 @@ function renderAnalytics() {
   (function() {
     var el = document.getElementById('analytics-funnel'); if (!el) return;
 
-    var allLeads   = ACTIVE_CENTER ? (D.leads||[]).filter(function(l){ return l.center_id === ACTIVE_CENTER; }) : (D.leads||[]);
-    var allCusts   = ACTIVE_CENTER ? D.customers.filter(function(c){ return c.wellness_center_id === ACTIVE_CENTER; }) : D.customers;
+    var allLeads   = ACTIVE_CENTER ? (D.leads||[]).filter(function(l){ return l.center_id == ACTIVE_CENTER || l.wellness_center_id == ACTIVE_CENTER; }) : (D.leads||[]);
+    var allCusts   = filterByCenter(D.customers);
     var allHistory = D.packHistory || [];
 
     // Stage counts
@@ -10864,14 +10864,14 @@ function renderBizAnalyst() {
   }).map(function(coach) {
     var center = D.centers.find(function(c){ return c.owner_id===coach.id; });
     var cid = center ? center.id : null;
-    var custs = D.customers.filter(function(c){ return c.wellness_center_id===cid; });
+    var custs = D.customers.filter(function(c){ return c.wellness_center_id == cid || c.center_id == cid; });
     var activeCusts = custs.filter(function(c){ return getDaysLeft(c).active; }).length;
     var inactiveCusts = custs.filter(function(c){ return isInactive(c.id); }).length;
     var expiring = custs.filter(function(c){ var st=getDaysLeft(c); return st.active&&st.days<=5; }).length;
     var vp = calcMonthlyVP(month, cid);
     var custIds = custs.map(function(c){return c.id;});
     var monthAtt = D.attendance.filter(function(a){
-      return a.date && a.date.startsWith(month) && a.status==='present' && custIds.indexOf(a.customer_id)>-1;
+      return a.date && a.date.startsWith(month) && isPresentStatus(a.status) && custIds.indexOf(a.customer_id)>-1;
     }).length;
     var renewals = (D.packHistory||[]).filter(function(h){
       return h.start_date&&h.start_date.startsWith(month)&&custIds.indexOf(h.customer_id)>-1;
