@@ -5404,8 +5404,8 @@ function renderCenters() {
     var plan = c.plan_type || 'free';
     var planLabel = PLAN_LABELS[plan] || plan;
     var planColor = PLAN_COLORS[plan] || '#6b7280';
-    var planHtml = '<span style="font-weight:700;color:'+planColor+'">'+planLabel+'</span>';
-    return '<tr><td><strong>'+c.name+'</strong></td><td>'+nidHtml+'</td><td>'+(ownerName)+'</td><td>'+(c.location||'—')+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(c.type==='main'?'bg':c.type==='downline'?'by':'bb')+'">'+c.type+'</span></td><td>'+planHtml+'</td><td>'+pinHtml+'</td><td><div class="acts">'+copyBtn+'<button class="btn-e" onclick="editCenter(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'wellness_centers\',\''+c.id+'\',\'centers\')">Delete</button></div></td></tr>';
+    var trialBtn = isSupervisor() ? '<button class="btn-e" onclick="resetCenterTrial(\''+c.id+'\')" title="Give fresh 14 days free trial starting today" style="background:#eef2ff;color:#4f46e5;border-color:#c7d2fe">🎁 +14d Trial</button>' : '';
+    return '<tr><td><strong>'+c.name+'</strong></td><td>'+nidHtml+'</td><td>'+(ownerName)+'</td><td>'+(c.location||'—')+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(c.type==='main'?'bg':c.type==='downline'?'by':'bb')+'">'+c.type+'</span></td><td>'+planHtml+'</td><td>'+pinHtml+'</td><td><div class="acts">'+copyBtn+trialBtn+'<button class="btn-e" onclick="editCenter(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'wellness_centers\',\''+c.id+'\',\'centers\')">Delete</button></div></td></tr>';
   }).join('');
   document.getElementById('centers-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Centers</div><div class="stat-v">'+D.centers.length+'</div></div><div class="stat"><div class="stat-l">Downline</div><div class="stat-v">'+D.centers.filter(function(c){return c.type==='downline';}).length+'</div></div><div class="stat"><div class="stat-l">Branches</div><div class="stat-v">'+D.centers.filter(function(c){return c.type==='branch';}).length+'</div></div>';
 }
@@ -11313,7 +11313,7 @@ function renderPlanMgmt() {
       +'<td>'+daysText+'</td>'
       +'<td><span style="font-weight:700;color:'+color+'">'+PLAN_LABELS[plan]+'</span></td>'
       +'<td><select id="plan-sel-'+c.id+'" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px">'+opts+'</select></td>'
-      +'<td><button class="btn-p" style="font-size:11px;padding:4px 12px" onclick="saveCenterPlan(\''+c.id+'\')">Save</button></td>'
+      +'<td><div style="display:flex;gap:6px"><button class="btn-p" style="font-size:11px;padding:4px 12px" onclick="saveCenterPlan(\''+c.id+'\')">Save</button><button class="btn-e" style="font-size:11px;padding:4px 10px;background:#e8f5e9;color:#2d5a3d;border-color:#a5d6a7" onclick="resetCenterTrial(\''+c.id+'\')" title="Grant fresh 14 days free trial starting today">🎁 +14d Trial</button></div></td>'
       +'</tr>';
   }).join('');
 }
@@ -11342,9 +11342,43 @@ async function saveCenterPlan(centerId) {
     center.plan_type = newPlan;
     showToast((center.name||'Center')+' upgraded to '+PLAN_LABELS[newPlan]+'!', 'success');
     renderPlanMgmt();
+    try { renderCenters(); } catch(e) {}
     try { updateTrialCountdownBanner(); } catch(e) {}
   } catch(e) {
     showToast('Failed to update plan: '+(e&&e.message?e.message:String(e)), 'error');
+  }
+}
+
+async function resetCenterTrial(centerId) {
+  if (!isSupervisor()) {
+    showToast('Unauthorized: Only super admin can reset trials.', 'error');
+    return;
+  }
+  var center = (D.centers||[]).find(function(c){ return c.id===centerId; });
+  if (!center) return;
+  if (!confirm('Give a fresh 14-day Free Trial to "' + (center.name || 'Center') + '" starting today?')) return;
+  
+  var nowIso = new Date().toISOString();
+  try {
+    var res = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?id=eq.' + centerId, {
+      method: 'PATCH',
+      headers: {
+        'apikey': CENTER_SB_KEY,
+        'Authorization': 'Bearer ' + (_authSession && _authSession.access_token ? _authSession.access_token : CENTER_SB_KEY),
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ plan_type: 'trial', created_at: nowIso })
+    });
+    if (!res.ok) { var err = await res.json(); throw new Error(err.message || 'HTTP ' + res.status); }
+    center.plan_type = 'trial';
+    center.created_at = nowIso;
+    showToast('🎁 Fresh 14-Day Free Trial granted to ' + (center.name || 'Center') + '!', 'success');
+    try { renderCenters(); } catch(e) {}
+    try { renderPlanMgmt(); } catch(e) {}
+    try { updateTrialCountdownBanner(); } catch(e) {}
+  } catch(e) {
+    showToast('Failed to reset trial: ' + (e && e.message ? e.message : String(e)), 'error');
   }
 }
 
