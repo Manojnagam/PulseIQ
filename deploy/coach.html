@@ -6325,20 +6325,42 @@ async function saveWalkin(){
     gender: document.getElementById('walkin-gender').value || null,
     height: document.getElementById('walkin-height').value ? Number(document.getElementById('walkin-height').value) : null
   };
+  if (!data.referred_by_id && COACH_ID) {
+    data.referred_by_id = COACH_ID;
+    data.referred_by_name = COACH_NAME || 'Coach';
+  }
 
   var existingFinanceId = document.getElementById('walkin-finance-id') ? document.getElementById('walkin-finance-id').value : '';
   try{
-    var savedW;
+    var savedW, res;
+    async function execSaveWalkin(payload) {
+      if(id) return await dbUpdate('walkins', id, payload);
+      return await dbInsert('walkins', payload);
+    }
+    try {
+      res = await execSaveWalkin(data);
+    } catch(schemaErr) {
+      var msg = (schemaErr && schemaErr.message) ? String(schemaErr.message) : String(schemaErr);
+      if (msg.indexOf('Could not find the') !== -1 || msg.indexOf('schema cache') !== -1 || msg.indexOf('column') !== -1 || msg.indexOf('PGRST') !== -1) {
+        var cleanData = Object.assign({}, data);
+        delete cleanData.coach_id;
+        delete cleanData.center_id;
+        delete cleanData.age;
+        delete cleanData.gender;
+        delete cleanData.height;
+        res = await execSaveWalkin(cleanData);
+      } else {
+        throw schemaErr;
+      }
+    }
     if(id){
-      await dbUpdate('walkins',id,data);
       var idx=(D.walkins||[]).findIndex(function(x){return x.id===id;});
       if(idx!==-1) D.walkins[idx]=Object.assign(D.walkins[idx],data);
       savedW = Object.assign({id: id}, data);
       showToast('Walk-in updated','success');
     }else{
-      var res=await dbInsert('walkins',data);
       savedW = Array.isArray(res)?res[0]:res;
-      if(savedW) D.walkins.unshift(savedW);
+      if(savedW) D.walkins.unshift(Object.assign({}, data, savedW));
       showToast('Walk-in saved','success');
     }
 
