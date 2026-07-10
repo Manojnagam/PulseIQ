@@ -7347,6 +7347,10 @@ async function saveCenter() {
   var centerName = document.getElementById('center-name').value.trim();
   var networkId = id ? (document.getElementById('center-network-id').value || null) : generateNetworkId(centerName);
   var payload = { name:centerName, location:document.getElementById('center-location').value.trim(), contact:document.getElementById('center-contact').value.trim(), type:document.getElementById('center-type').value, owner_id:ownerId, center_pin: pinVal || null, unavailable_foods: document.getElementById('center-unavailable-foods').value.trim()||null, network_id: networkId, distributor_id: document.getElementById('center-herbalife-id').value.trim()||null };
+  if (isSupervisor()) {
+    var pTypeEl = document.getElementById('center-plan-type');
+    if (pTypeEl && pTypeEl.value) payload.plan_type = pTypeEl.value;
+  }
   // Track profile-owner mapping locally (owner_id is uuid-only in DB)
   var profileCenters = JSON.parse(localStorage.getItem('profileCenterOwner') || '{}');
   if(ownerRaw === 'owner-profile') profileCenters[payload.name] = true;
@@ -7390,6 +7394,12 @@ function editCenter(id) {
   var nid = c.network_id||'';
   document.getElementById('center-network-id').value=nid;
   document.getElementById('center-network-id-row').style.display = nid ? 'block' : 'none';
+  var pRow = document.getElementById('center-plan-row');
+  if (pRow) {
+    pRow.style.display = isSupervisor() ? 'block' : 'none';
+    var pSel = document.getElementById('center-plan-type');
+    if (pSel) pSel.value = c.plan_type || 'free';
+  }
   document.getElementById('center-modal-title').textContent='Edit Wellness Center';
   onCenterTypeChange();
   openModal('center');
@@ -7407,6 +7417,12 @@ function openAddCenter() {
   document.getElementById('center-herbalife-id').value='';
   document.getElementById('center-network-id').value='';
   document.getElementById('center-network-id-row').style.display='none';
+  var pRow = document.getElementById('center-plan-row');
+  if (pRow) {
+    pRow.style.display = isSupervisor() ? 'block' : 'none';
+    var pSel = document.getElementById('center-plan-type');
+    if (pSel) pSel.value = 'trial';
+  }
   document.getElementById('center-modal-title').textContent='Add Wellness Center';
   onCenterTypeChange();
   openModal('center');
@@ -11328,17 +11344,11 @@ async function saveCenterPlan(centerId) {
   var center = (D.centers||[]).find(function(c){ return c.id===centerId; });
   if (!center) return;
   try {
-    var res = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?id=eq.' + centerId, {
-      method: 'PATCH',
-      headers: {
-        'apikey': CENTER_SB_KEY,
-        'Authorization': 'Bearer ' + (_authSession && _authSession.access_token ? _authSession.access_token : CENTER_SB_KEY),
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify({ plan_type: newPlan })
-    });
-    if (!res.ok) { var err = await res.json(); throw new Error(err.message || 'HTTP ' + res.status); }
+    try {
+      await dbUpdate('wellness_centers', centerId, { plan_type: newPlan });
+    } catch(e1) {
+      await req('PATCH', 'wellness_centers', { plan_type: newPlan }, '?id=eq.' + centerId);
+    }
     center.plan_type = newPlan;
     showToast((center.name||'Center')+' upgraded to '+PLAN_LABELS[newPlan]+'!', 'success');
     renderPlanMgmt();
@@ -11360,17 +11370,11 @@ async function resetCenterTrial(centerId) {
   
   var nowIso = new Date().toISOString();
   try {
-    var res = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?id=eq.' + centerId, {
-      method: 'PATCH',
-      headers: {
-        'apikey': CENTER_SB_KEY,
-        'Authorization': 'Bearer ' + (_authSession && _authSession.access_token ? _authSession.access_token : CENTER_SB_KEY),
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify({ plan_type: 'trial', created_at: nowIso })
-    });
-    if (!res.ok) { var err = await res.json(); throw new Error(err.message || 'HTTP ' + res.status); }
+    try {
+      await dbUpdate('wellness_centers', centerId, { plan_type: 'trial', created_at: nowIso });
+    } catch(e1) {
+      await req('PATCH', 'wellness_centers', { plan_type: 'trial', created_at: nowIso }, '?id=eq.' + centerId);
+    }
     center.plan_type = 'trial';
     center.created_at = nowIso;
     showToast('🎁 Fresh 14-Day Free Trial granted to ' + (center.name || 'Center') + '!', 'success');
