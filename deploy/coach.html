@@ -2749,10 +2749,11 @@ async function loadAll() {
       D.payments = Array.isArray(allPay) ? allPay.filter(function(p){ return custIds.indexOf(p.person_id) !== -1; }) : [];
     } catch(e) { D.payments = []; }
     _daysLeftCache    = {};
-    // Filter attendance/body to only this coach's customers + coach themselves
+    // Filter attendance/body to only this coach's customers + walk-ins + coach themselves
     var custIds = D.customers.map(function(c){ return c.id; });
+    var walkinIds = (D.walkins || []).map(function(w){ return w.id; });
     D.attendance = D.attendance.filter(function(a){ return custIds.indexOf(a.customer_id) !== -1; });
-    D.body       = D.body.filter(function(b){ return custIds.indexOf(b.customer_id) !== -1 || b.customer_id === COACH_ID; });
+    D.body       = D.body.filter(function(b){ return custIds.indexOf(b.customer_id) !== -1 || walkinIds.indexOf(b.customer_id) !== -1 || b.customer_id === COACH_ID; });
     renderOverview();
     renderCustomers();
     renderAttendance();
