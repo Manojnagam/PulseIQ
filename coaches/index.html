@@ -2730,7 +2730,10 @@ async function loadAll() {
     if (logoEl) logoEl.innerHTML = '🌿 ' + ACTIVE_CENTER_NAME;
     document.title = ACTIVE_CENTER_NAME + ' — Coach Portal';
 
-    D.walkins         = Array.isArray(walkins) ? walkins : [];
+    D.walkins = (Array.isArray(walkins) ? walkins : []).filter(function(w){
+      var myCustIds = D.customers.map(function(c){ return c.id; });
+      return w.coach_id === COACH_ID || w.referred_by_id === COACH_ID || myCustIds.indexOf(w.referred_by_id) !== -1;
+    });
     if (D.coachProfile && D.coachProfile.gender) {
       COACH_GENDER = D.coachProfile.gender;
       localStorage.setItem('coachGender_' + COACH_ID, COACH_GENDER);
@@ -6314,6 +6317,7 @@ async function saveWalkin(){
     amount_received:Number(document.getElementById('walkin-amount').value)||0,
     product_details:(document.getElementById('walkin-product').value||'').trim(),
     notes:(document.getElementById('walkin-notes').value||'').trim(),
+    coach_id:COACH_ID||null,
     wellness_center_id:CENTER_UUID||null,
     center_id:CENTER_UUID||null,
     age: document.getElementById('walkin-age').value ? Number(document.getElementById('walkin-age').value) : null,
