@@ -12,8 +12,10 @@ create table if not exists wellness_centers (
   center_pin text,
   unavailable_foods text,
   owner_name text,
+  plan_type text default 'trial',
   created_at timestamptz default now()
 );
+alter table wellness_centers add column if not exists plan_type text default 'trial';
 
 -- CUSTOMERS
 create table if not exists customers (

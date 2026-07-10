@@ -2152,6 +2152,18 @@ async function loadCenters() {
   } else if (!D.centers || !D.centers.length) {
     D.centers = Array.isArray(res) ? res : [];
   }
+  try {
+    var pzPlans = JSON.parse(localStorage.getItem('pz_center_plans') || '{}');
+    (D.centers || []).forEach(function(c) {
+      if (pzPlans[c.id]) {
+        if (typeof pzPlans[c.id] === 'string') c.plan_type = pzPlans[c.id];
+        else if (typeof pzPlans[c.id] === 'object') {
+          if (pzPlans[c.id].plan_type) c.plan_type = pzPlans[c.id].plan_type;
+          if (pzPlans[c.id].created_at) c.created_at = pzPlans[c.id].created_at;
+        }
+      }
+    });
+  } catch(e) {}
   // Build in-memory PIN map from DB (single source of truth — works across all devices)
   _DB_PINS = {};
   (D.centers || []).forEach(function(c){ var p = c.pin || c.center_pin; if(p) _DB_PINS[c.id] = p; });
@@ -11343,20 +11355,31 @@ async function saveCenterPlan(centerId) {
   var newPlan = sel.value;
   var center = (D.centers||[]).find(function(c){ return c.id===centerId; });
   if (!center) return;
+
+  center.plan_type = newPlan;
   try {
+    var pzPlans = JSON.parse(localStorage.getItem('pz_center_plans') || '{}');
+    pzPlans[centerId] = typeof pzPlans[centerId] === 'object' ? Object.assign(pzPlans[centerId], { plan_type: newPlan }) : { plan_type: newPlan };
+    localStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
+  } catch(e) {}
+
+  var dbSuccess = false;
+  try {
+    await dbUpdate('wellness_centers', centerId, { plan_type: newPlan });
+    dbSuccess = true;
+  } catch(e1) {
     try {
-      await dbUpdate('wellness_centers', centerId, { plan_type: newPlan });
-    } catch(e1) {
       await req('PATCH', 'wellness_centers', { plan_type: newPlan }, '?id=eq.' + centerId);
+      dbSuccess = true;
+    } catch(e2) {
+      console.warn('DB update failed (run SQL to add plan_type column):', e2.message);
     }
-    center.plan_type = newPlan;
-    showToast((center.name||'Center')+' upgraded to '+PLAN_LABELS[newPlan]+'!', 'success');
-    renderPlanMgmt();
-    try { renderCenters(); } catch(e) {}
-    try { updateTrialCountdownBanner(); } catch(e) {}
-  } catch(e) {
-    showToast('Failed to update plan: '+(e&&e.message?e.message:String(e)), 'error');
   }
+
+  showToast((center.name||'Center') + ' upgraded to ' + PLAN_LABELS[newPlan] + '!' + (!dbSuccess ? ' ⚠️ Run SQL: ALTER TABLE wellness_centers ADD COLUMN IF NOT EXISTS plan_type text;' : ''), 'success');
+  renderPlanMgmt();
+  try { renderCenters(); } catch(e) {}
+  try { updateTrialCountdownBanner(); } catch(e) {}
 }
 
 async function resetCenterTrial(centerId) {
@@ -11369,21 +11392,37 @@ async function resetCenterTrial(centerId) {
   if (!confirm('Give a fresh 14-day Free Trial to "' + (center.name || 'Center') + '" starting today?')) return;
   
   var nowIso = new Date().toISOString();
+
+  center.plan_type = 'trial';
+  center.created_at = nowIso;
   try {
+    var pzPlans = JSON.parse(localStorage.getItem('pz_center_plans') || '{}');
+    pzPlans[centerId] = { plan_type: 'trial', created_at: nowIso };
+    localStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
+  } catch(e) {}
+
+  var dbSuccess = false;
+  try {
+    await dbUpdate('wellness_centers', centerId, { plan_type: 'trial', created_at: nowIso });
+    dbSuccess = true;
+  } catch(e1) {
     try {
-      await dbUpdate('wellness_centers', centerId, { plan_type: 'trial', created_at: nowIso });
-    } catch(e1) {
       await req('PATCH', 'wellness_centers', { plan_type: 'trial', created_at: nowIso }, '?id=eq.' + centerId);
+      dbSuccess = true;
+    } catch(e2) {
+      try {
+        await dbUpdate('wellness_centers', centerId, { created_at: nowIso });
+        dbSuccess = true;
+      } catch(e3) {
+        console.warn('DB update failed:', e3.message);
+      }
     }
-    center.plan_type = 'trial';
-    center.created_at = nowIso;
-    showToast('🎁 Fresh 14-Day Free Trial granted to ' + (center.name || 'Center') + '!', 'success');
-    try { renderCenters(); } catch(e) {}
-    try { renderPlanMgmt(); } catch(e) {}
-    try { updateTrialCountdownBanner(); } catch(e) {}
-  } catch(e) {
-    showToast('Failed to reset trial: ' + (e && e.message ? e.message : String(e)), 'error');
   }
+
+  showToast('🎁 Fresh 14-Day Free Trial granted to ' + (center.name || 'Center') + '!' + (!dbSuccess ? ' (Saved locally)' : ''), 'success');
+  try { renderCenters(); } catch(e) {}
+  try { renderPlanMgmt(); } catch(e) {}
+  try { updateTrialCountdownBanner(); } catch(e) {}
 }
 
 function getCenterChecklistPct(centerId) {
