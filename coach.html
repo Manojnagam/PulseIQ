@@ -2730,10 +2730,7 @@ async function loadAll() {
     if (logoEl) logoEl.innerHTML = '🌿 ' + ACTIVE_CENTER_NAME;
     document.title = ACTIVE_CENTER_NAME + ' — Coach Portal';
 
-    D.walkins         = (Array.isArray(walkins) ? walkins : []).filter(function(w){
-      var myCustIds = D.customers.map(function(c){ return c.id; });
-      return w.referred_by_id === COACH_ID || myCustIds.indexOf(w.referred_by_id) !== -1;
-    });
+    D.walkins         = Array.isArray(walkins) ? walkins : [];
     if (D.coachProfile && D.coachProfile.gender) {
       COACH_GENDER = D.coachProfile.gender;
       localStorage.setItem('coachGender_' + COACH_ID, COACH_GENDER);
@@ -3658,11 +3655,23 @@ function sendAttWA(custId, custName, date) {
 // ══════════════════════════════════════════
 //  BODY COMPOSITION
 // ══════════════════════════════════════════
+function findPersonForBody(id) {
+  if (!id) return null;
+  if (id === COACH_ID) return { id: COACH_ID, name: COACH_NAME + ' (Coach)' };
+  var c = D.customers.find(function(x){ return x.id === id; });
+  if (c) return c;
+  var w = (D.walkins||[]).find(function(x){ return x.id === id; });
+  if (w) return { id: w.id, name: w.name + ' 🚶', contact: w.phone, gender: w.gender };
+  return null;
+}
+
 function renderBodyCustSelect() {
   var sel = document.getElementById('body-cust-sel');
-  sel.innerHTML = '<option value="">— Select a customer —</option>' +
+  var walkinOpts = (D.walkins||[]).length ? '<optgroup label="── Walk-ins ──">' + (D.walkins||[]).map(function(w){ return '<option value="'+w.id+'">'+w.name+' 🚶 ('+(w.date||'')+')</option>'; }).join('') + '</optgroup>' : '';
+  sel.innerHTML = '<option value="">— Select a customer or walk-in —</option>' +
     '<option value="'+COACH_ID+'">👤 My Own Measurements</option>' +
-    D.customers.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+    D.customers.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('') +
+    walkinOpts;
   if (_bodySelCustId) { sel.value = _bodySelCustId; onBodyCustChange(); }
   renderRecheckBadge();
 }
@@ -3671,7 +3680,7 @@ function onBodyCustChange() {
   _bodySelCustId = document.getElementById('body-cust-sel').value;
   var content = document.getElementById('body-content');
   if (!_bodySelCustId) { content.style.display = 'none'; return; }
-  var cust = _bodySelCustId === COACH_ID ? { name: COACH_NAME } : D.customers.find(function(c){ return c.id === _bodySelCustId; });
+  var cust = findPersonForBody(_bodySelCustId);
   content.style.display = 'block';
   document.getElementById('body-cust-name').textContent = cust ? cust.name : '';
   renderBodyRecords();
@@ -3703,7 +3712,7 @@ function renderBodyRecords() {
   var latestVfKg   = parseFloat(latest.visceral_fat) || 0;
 
   // ── Health Score card ──
-  var _hsCust = _bodySelCustId === COACH_ID ? {name: COACH_NAME, contact: '', gender: COACH_GENDER} : (D.customers.find(function(c){ return c.id === _bodySelCustId; }) || {});
+  var _hsCust = findPersonForBody(_bodySelCustId) || {};
   statsEl.innerHTML = buildHealthScoreCard(latest.bmi, latest.fat_percentage, latestVfKg, latest.date, {name: _hsCust.name||'', phone: _hsCust.contact||'', weight: latest.weight, musclePct: latest.muscle_percentage, gender: (_hsCust.gender||'')}) +
     '<div class="stats" style="margin-top:0">' +
     '<div class="stat"><div class="stat-l">Weight</div><div class="stat-v">'+(latest.weight||'—')+'<span style="font-size:13px;font-family:DM Sans,sans-serif"> kg</span></div></div>'+
@@ -4112,7 +4121,7 @@ function openBodyModal(id) {
   var fields = ['body-weight','body-fat','body-muscle','body-bmi','body-visceral','body-notes','body-height','body-age-field','body-subfat','body-bmr','body-age'];
   
   // Prep customer selection
-  var cust = _bodySelCustId === COACH_ID ? { name: '👤 My Own Measurements' } : D.customers.find(function(c){ return c.id === _bodySelCustId; });
+  var cust = findPersonForBody(_bodySelCustId);
   var bodyCustEl = document.getElementById('body-customer');
   if (bodyCustEl) {
     bodyCustEl.innerHTML = '<option value="' + _bodySelCustId + '">' + (cust ? cust.name : '') + '</option>';
@@ -4156,7 +4165,7 @@ function openBodyModal(id) {
 
     // 2. Fallback to customer/coach profile height/age/dob
     if (!heightVal || !ageVal) {
-      var person = _bodySelCustId === COACH_ID ? D.coachProfile : D.customers.find(function(c){ return c.id === _bodySelCustId; });
+      var person = findPersonForBody(_bodySelCustId);
       if (person) {
         if (!heightVal && person.height) heightVal = person.height;
         if (!ageVal) {
@@ -4183,11 +4192,11 @@ function openBodyModal(id) {
 
 async function saveBodyRecord() {
   if (!_bodySelCustId) { showToast('Select a customer first', 'error'); return; }
-  var cust = D.customers.find(function(c){ return c.id === _bodySelCustId; });
+  var cust = findPersonForBody(_bodySelCustId);
   var id = document.getElementById('body-rec-id').value;
   var payload = {
     customer_id:                    _bodySelCustId,
-    customer_name:                  cust ? cust.name : '',
+    customer_name:                  cust ? (cust.name||'').replace(' 🚶','').trim() : '',
     date:                           document.getElementById('body-date').value || todayStr(),
     weight:                         document.getElementById('body-weight').value || null,
     fat_percentage:                 document.getElementById('body-fat').value || null,
@@ -5192,9 +5201,7 @@ var _selectedCardComp = null;
 
 function openShareCardModal() {
   if(!_bodySelCustId) return;
-  var cust = _bodySelCustId === COACH_ID
-    ? { id: COACH_ID, name: COACH_NAME }
-    : D.customers.find(function(x){ return x.id === _bodySelCustId; });
+  var cust = findPersonForBody(_bodySelCustId);
   if(!cust) return;
 
   _selectedCardCust = cust;
@@ -6358,6 +6365,7 @@ async function saveWalkin(){
 
     closeModal('walkin');
     renderWalkins();
+    if(typeof renderBodyCustSelect==='function') renderBodyCustSelect();
   }catch(e){
     showToast('Failed to save walk-in: '+e.message,'error');
   }
