@@ -5416,7 +5416,7 @@ function renderCenters() {
     var plan = c.plan_type || 'free';
     var planLabel = PLAN_LABELS[plan] || plan;
     var planColor = PLAN_COLORS[plan] || '#6b7280';
-    var trialBtn = isSupervisor() ? '<button class="btn-e" onclick="resetCenterTrial(\''+c.id+'\')" title="Give fresh 14 days free trial starting today" style="background:#eef2ff;color:#4f46e5;border-color:#c7d2fe">🎁 +14d Trial</button>' : '';
+    var trialBtn = (IS_SUPER_ADMIN || isSupervisor()) ? '<button class="btn-e" onclick="resetCenterTrial(\''+c.id+'\')" title="Give fresh 14 days free trial starting today" style="background:#eef2ff;color:#4f46e5;border-color:#c7d2fe;font-weight:700">🎁 +14d Trial</button>' : '';
     return '<tr><td><strong>'+c.name+'</strong></td><td>'+nidHtml+'</td><td>'+(ownerName)+'</td><td>'+(c.location||'—')+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(c.type==='main'?'bg':c.type==='downline'?'by':'bb')+'">'+c.type+'</span></td><td>'+planHtml+'</td><td>'+pinHtml+'</td><td><div class="acts">'+copyBtn+trialBtn+'<button class="btn-e" onclick="editCenter(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'wellness_centers\',\''+c.id+'\',\'centers\')">Delete</button></div></td></tr>';
   }).join('');
   document.getElementById('centers-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Centers</div><div class="stat-v">'+D.centers.length+'</div></div><div class="stat"><div class="stat-l">Downline</div><div class="stat-v">'+D.centers.filter(function(c){return c.type==='downline';}).length+'</div></div><div class="stat"><div class="stat-l">Branches</div><div class="stat-v">'+D.centers.filter(function(c){return c.type==='branch';}).length+'</div></div>';
