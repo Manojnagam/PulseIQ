@@ -3665,7 +3665,11 @@ function findPersonForBody(id) {
   var c = D.customers.find(function(x){ return x.id === id; });
   if (c) return c;
   var w = (D.walkins||[]).find(function(x){ return x.id === id; });
-  if (w) return { id: w.id, name: w.name + ' 🚶', contact: w.phone, gender: w.gender };
+  if (w) {
+    var cachedAge = w.age || localStorage.getItem('walkin_age_' + w.id) || null;
+    var cachedHeight = w.height || localStorage.getItem('walkin_height_' + w.id) || null;
+    return Object.assign({}, w, { id: w.id, name: w.name + ' 🚶', contact: w.phone, gender: w.gender, age: cachedAge, height: cachedHeight });
+  }
   return null;
 }
 
@@ -4224,6 +4228,13 @@ async function saveBodyRecord() {
       var res = await dbInsert('body_composition', payload);
       if (Array.isArray(res) && res[0]) D.body.unshift(res[0]);
       showToast('Record saved!');
+    }
+    if (_bodySelCustId && payload.age) localStorage.setItem('walkin_age_' + _bodySelCustId, payload.age);
+    if (_bodySelCustId && payload.height) localStorage.setItem('walkin_height_' + _bodySelCustId, payload.height);
+    var wIdx = (D.walkins||[]).findIndex(function(x){ return x.id === _bodySelCustId; });
+    if (wIdx !== -1) {
+      if (payload.age) D.walkins[wIdx].age = payload.age;
+      if (payload.height) D.walkins[wIdx].height = payload.height;
     }
     closeModal('body');
     renderBodyRecords();
@@ -6363,6 +6374,9 @@ async function saveWalkin(){
       if(savedW) D.walkins.unshift(Object.assign({}, data, savedW));
       showToast('Walk-in saved','success');
     }
+    var wTargetId = id || (savedW && savedW.id);
+    if (wTargetId && data.age) localStorage.setItem('walkin_age_' + wTargetId, data.age);
+    if (wTargetId && data.height) localStorage.setItem('walkin_height_' + wTargetId, data.height);
 
     // Handle finance records
     var amt = Number(data.amount_received)||0;
