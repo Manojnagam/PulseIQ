@@ -1100,34 +1100,48 @@ function verifyPinPrompt() {
 }
 
 function _applySwitch(centerId) {
-  ACTIVE_CENTER = centerId;
-  localStorage.setItem('activeCenter', centerId);
+  ACTIVE_CENTER = centerId || '';
+  if (centerId) {
+    localStorage.setItem('activeCenter', centerId);
+  } else {
+    localStorage.removeItem('activeCenter');
+  }
   _daysLeftCache = {};
   updateSidebarLogo();
   var sel = document.getElementById('center-switcher');
-  if(sel) sel.value = centerId;
-  // Show loading splash during center switch
+  if(sel) sel.value = ACTIVE_CENTER;
+  updateCenterSwitcher();
+  updateCenterSelects();
+
+  // Instant re-render from loaded memory without blocking UI
+  try { renderCustomers(); } catch(e){}
+  try { renderCenters(); } catch(e){}
+  try { renderOverview(); } catch(e){}
+  try { if (typeof renderAnalytics === 'function') renderAnalytics(); } catch(e){}
+
+  // Show non-blocking loading splash or subtle indicator if needed
   var _ld = document.getElementById('app-loading');
   var _ldMsg = document.getElementById('app-loading-msg');
-  if(_ld) { _ld.style.display='flex'; }
+  if(_ld && (!D.customers || !D.customers.length)) { _ld.style.display='flex'; }
   if(_ldMsg) _ldMsg.textContent = 'Loading center data…';
-  // Reload critical data scoped to new center
-  Promise.all([loadCustomers(), loadCoaches()])
+
+  // Load scoped data concurrently for maximum speed
+  var loadJobs = [loadCustomers(), loadCoaches(), loadFinance()];
+  if (!ACTIVE_CENTER) loadJobs.push(loadAttendance());
+  Promise.all(loadJobs)
     .then(function(){
-      if(_ldMsg) _ldMsg.textContent = 'Almost ready…';
-      return Promise.all([loadAttendance(), loadFinance()]);
+      if (ACTIVE_CENTER) {
+        return loadAttendance();
+      }
     })
     .then(function(){
       _daysLeftCache = {};
-      try { renderCustomers(); } catch(e){ console.error('renderCustomers:', e); }
-      try { renderCenters(); } catch(e){ console.error('renderCenters:', e); }
-      try { renderOverview(); } catch(e){
-        console.error('renderOverview:', e);
-        var og = document.getElementById('ov-main-grid');
-        if(og) og.innerHTML = '<div style="padding:32px;text-align:center;color:var(--danger)"><strong>Dashboard error:</strong><br><span style="font-size:12px;font-family:monospace">'+(e&&e.message?e.message:String(e))+'</span><br><br><button onclick="location.reload()" class="btn-p">🔄 Reload</button></div>';
-      }
+      try { renderCustomers(); } catch(e){}
+      try { renderCenters(); } catch(e){}
+      try { renderOverview(); } catch(e){}
+      try { if (typeof renderAnalytics === 'function') renderAnalytics(); } catch(e){}
       if(_ld) _ld.style.display='none';
-      showToast(centerId ? 'Switched to center' : 'Ready');
+      showToast(ACTIVE_CENTER ? 'Switched to center' : 'Showing All Centers');
       
       // Load remaining scoped data in background
       Promise.all([
@@ -1151,8 +1165,6 @@ function _applySwitch(centerId) {
     .catch(function(e){
       console.error('_applySwitch failed:', e);
       if(_ld) _ld.style.display='none';
-      var og = document.getElementById('ov-main-grid');
-      if(og) og.innerHTML = '<div style="padding:32px;text-align:center;color:var(--danger)"><strong>Failed to load center data:</strong><br><span style="font-size:12px;font-family:monospace">'+(e&&e.message?e.message:String(e))+'</span><br><br><button onclick="location.reload()" class="btn-p">🔄 Reload</button></div>';
     });
 }
 
@@ -1162,7 +1174,7 @@ function isPresentStatus(st) {
 
 function updateCenterSwitcher() {
   var sel = document.getElementById('center-switcher'); if(!sel) return;
-  var prev = sel.value || ACTIVE_CENTER;
+  var prev = sel.value || ACTIVE_CENTER || '';
   var isSuper = typeof isSupervisor === 'function' ? isSupervisor() : true;
   var isMaster = (_centerAuth && _centerAuth.type === 'master') || isSuper;
   var noPins = !_DB_SUPERVISOR_PIN && Object.keys(_DB_PINS).length === 0;
@@ -1172,7 +1184,7 @@ function updateCenterSwitcher() {
   var opts = '';
   var orgIds = (_centerAuth && _centerAuth.type === 'center') ? getOrgCenterIds(_centerAuth.centerId) : null;
   if(canSeeAll) {
-    opts = '<option value="">All Centers</option>';
+    opts = '<option value=""'+(!prev ? ' selected':'')+'>All Centers</option>';
   }
   (D.centers || []).forEach(function(c){
     if(canSeeAll || (orgIds && orgIds.indexOf(c.id) !== -1) || (_centerAuth && _centerAuth.centerId === c.id)) {
@@ -1180,7 +1192,8 @@ function updateCenterSwitcher() {
     }
   });
   sel.innerHTML = opts;
-  if(prev && !(D.centers || []).some(function(c){return c.id == prev;})) { ACTIVE_CENTER=''; localStorage.removeItem('activeCenter'); }
+  sel.value = prev;
+  if(prev && !(D.centers || []).some(function(c){return c.id == prev;})) { ACTIVE_CENTER=''; localStorage.removeItem('activeCenter'); sel.value = ''; }
   // Hide supervisor-only nav items for center-PIN users, with plan overrides
   var isSuper = isSupervisor();
   var isElite = isElitePlan();
@@ -2081,12 +2094,36 @@ async function loadAll() {
   var chartPromise = loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js')
     .catch(function(scErr) { console.error('Background Chart.js load failed:', scErr); });
   try {
-    // Phase 1: centers + customers + coaches first (attendance/body need customer IDs for center-scoped query)
+    // ── Instant Startup from Local Dashboard Cache (< 50ms) ──
+    var _cachedDash = null;
+    try {
+      var _rawCache = localStorage.getItem('pq_dashboard_cache_v1');
+      if (_rawCache) _cachedDash = JSON.parse(_rawCache);
+    } catch(ce) {}
+    if (_cachedDash && Array.isArray(_cachedDash.centers) && Array.isArray(_cachedDash.customers)) {
+      D.centers = _cachedDash.centers || [];
+      D.customers = _cachedDash.customers || [];
+      D.coaches = _cachedDash.coaches || [];
+      D.attendance = _cachedDash.attendance || [];
+      D.finance = _cachedDash.finance || [];
+      D.announcements = _cachedDash.announcements || [];
+      _daysLeftCache = {};
+      try { renderCenters(); updateCenterSelects(); updateCenterSwitcher(); } catch(re){}
+      try { renderCustomers(); } catch(re){}
+      try { renderOverview(); } catch(re){}
+      try { renderAnnouncementBanner(); } catch(re){}
+      var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
+    }
+
+    // Phase 1: Load critical overview datasets concurrently in one batch
     var _ldMsg = document.getElementById('app-loading-msg'); if(_ldMsg) _ldMsg.textContent = 'Connecting to database…';
-    await Promise.all([loadCenters(), loadCustomers(), loadCoaches()]);
-    if(_ldMsg) _ldMsg.textContent = 'Loading attendance & finance…';
-    // Phase 2: Load critical data for overview screen (attendance, finance, announcements)
-    await Promise.all([loadAttendance(), loadFinance(), loadAnnouncements()]);
+    var p1Jobs = [loadCenters(), loadCustomers(), loadCoaches(), loadFinance(), loadAnnouncements()];
+    if (!ACTIVE_CENTER) p1Jobs.push(loadAttendance());
+    await Promise.all(p1Jobs);
+    if (ACTIVE_CENTER) {
+      if(_ldMsg) _ldMsg.textContent = 'Loading attendance…';
+      await loadAttendance();
+    }
     
     _daysLeftCache = {};  // initial critical data loaded
     try { await chartPromise; } catch(scErr) {}
@@ -2105,6 +2142,20 @@ async function loadAll() {
     migrateSvBodyToSupabase();
     // Hide loading splash — critical data is ready and dashboard is interactive!
     var _ld = document.getElementById('app-loading'); if(_ld) _ld.style.display='none';
+    
+    // Save snapshot to dashboard cache for instant startup next time
+    try {
+      localStorage.setItem('pq_dashboard_cache_v1', JSON.stringify({
+        ts: Date.now(),
+        centers: D.centers || [],
+        customers: (D.customers || []).slice(0, 300),
+        coaches: (D.coaches || []).slice(0, 100),
+        attendance: (D.attendance || []).slice(0, 300),
+        finance: (D.finance || []).slice(0, 300),
+        announcements: D.announcements || []
+      }));
+    } catch(se) {}
+
     // On startup: if PINs exist but no email-auth session, prompt for PIN
     // Skip PIN prompt if user is already authenticated via email OTP
     if (!_authSession) checkStartupAuth();
@@ -2666,13 +2717,20 @@ function updateCenterSelects() {
   var centersList = D.centers || [];
   ['customer-center','coach-center'].forEach(function(id){
     var sel = document.getElementById(id);
-    if(sel) sel.innerHTML = '<option value="">Select center</option>' + centersList.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
+    if(sel) {
+      var prevVal = sel.value;
+      sel.innerHTML = '<option value="">Select center</option>' + centersList.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
+      if (prevVal) sel.value = prevVal;
+    }
   });
-  var finCen = document.getElementById('fin-center');
-  if(finCen) {
-    finCen.innerHTML = '<option value="">All Centers</option>' + centersList.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
-    if (ACTIVE_CENTER) finCen.value = ACTIVE_CENTER;
-  }
+  ['fin-center','slicer-center'].forEach(function(id){
+    var sel = document.getElementById(id);
+    if(sel) {
+      var prevVal = sel.value || ACTIVE_CENTER || '';
+      sel.innerHTML = '<option value="">All Centers</option>' + centersList.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
+      sel.value = prevVal;
+    }
+  });
 }
 function updateCustSelects() {
   var _custs = filterByCenter(D.customers);
@@ -8578,10 +8636,14 @@ function renderAnalytics() {
   var revTypeFilter = document.getElementById('slicer-revenue-type')?.value || '';
   var metricFilter = document.getElementById('slicer-metric')?.value || 'weight';
 
-  // ── Populate center dropdown once ──
+  // ── Populate center dropdown cleanly while preserving value ──
   var cSel = document.getElementById('slicer-center');
-  if (cSel && cSel.options.length <= 1) {
-    D.centers.forEach(function(ct){ var o=document.createElement('option'); o.value=ct.id; o.textContent=ct.name; cSel.appendChild(o); });
+  if (cSel) {
+    var curVal = cSel.value || '';
+    if (cSel.options.length <= 1 && (D.centers || []).length > 0) {
+      cSel.innerHTML = '<option value="">All Centers</option>' + D.centers.map(function(ct){ return '<option value="'+ct.id+'">'+ct.name+'</option>'; }).join('');
+      cSel.value = curVal;
+    }
   }
 
   // ── Build date range ──
@@ -8599,7 +8661,7 @@ function renderAnalytics() {
     if (packFilter   && c.pack_type !== packFilter)   return false;
     if (goalFilter   && c.goal      !== goalFilter)   return false;
     if (genderFilter && c.gender    !== genderFilter) return false;
-    if (centerFilter && c.wellness_center_id !== centerFilter) return false;
+    if (centerFilter && c.wellness_center_id != centerFilter && c.center_id != centerFilter) return false;
     if (statusFilter === 'active')   return getDaysLeft(c).active;
     if (statusFilter === 'expired')  return !getDaysLeft(c).active;
     if (statusFilter === 'inactive') return isInactive(c.id);
