@@ -257,7 +257,7 @@ async function loadAndStartDashboard() {
     if (!window.supabase) {
       await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2');
     }
-    await loadScript('app.min.js?v=1.4.1');
+    await loadScript('app.min.js?v=1.4.2');
     if (typeof bootDashboard === 'function') {
       await bootDashboard();
     } else {

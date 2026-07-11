@@ -2120,6 +2120,7 @@ async function loadAll() {
     var p1Jobs = [loadCenters(), loadCustomers(), loadCoaches(), loadFinance(), loadAnnouncements()];
     if (!ACTIVE_CENTER) p1Jobs.push(loadAttendance());
     await Promise.all(p1Jobs);
+    try { renderCenters(); updateCenterSelects(); updateCenterSwitcher(); } catch(re){}
     if (ACTIVE_CENTER) {
       if(_ldMsg) _ldMsg.textContent = 'Loading attendance…';
       await loadAttendance();
