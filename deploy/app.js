@@ -1219,7 +1219,7 @@ function updateCenterSwitcher() {
 // Helper: filter array by wellness_center_id matching ACTIVE_CENTER
 function filterByCenter(arr) {
   if(!ACTIVE_CENTER || !arr) return arr;
-  return arr.filter(function(item){ return item.wellness_center_id == ACTIVE_CENTER || item.center_id == ACTIVE_CENTER; });
+  return arr.filter(function(item){ return item.wellness_center_id == ACTIVE_CENTER || item.center_id == ACTIVE_CENTER || (!item.wellness_center_id && !item.center_id); });
 }
 
 // Helper: filter attendance/body by customer's center
@@ -1227,14 +1227,15 @@ function filterByCenterViaCustomer(arr) {
   if(!ACTIVE_CENTER || !arr) return arr;
   var allowedIds = {};
   (D.customers||[]).forEach(function(c){
-    if(c.wellness_center_id == ACTIVE_CENTER || c.center_id == ACTIVE_CENTER) allowedIds[c.id]=true;
+    if(c.wellness_center_id == ACTIVE_CENTER || c.center_id == ACTIVE_CENTER || (!c.wellness_center_id && !c.center_id)) allowedIds[c.id]=true;
   });
   (D.coaches||[]).forEach(function(co){
-    if(co.wellness_center_id == ACTIVE_CENTER || co.center_id == ACTIVE_CENTER) allowedIds[co.id]=true;
+    if(co.wellness_center_id == ACTIVE_CENTER || co.center_id == ACTIVE_CENTER || (!co.wellness_center_id && !co.center_id)) allowedIds[co.id]=true;
   });
   return arr.filter(function(item){
     return (item.wellness_center_id == ACTIVE_CENTER) ||
            (item.center_id == ACTIVE_CENTER) ||
+           (!item.wellness_center_id && !item.center_id) ||
            allowedIds[item.customer_id] || allowedIds[item.person_id] || allowedIds[item.coach_id];
   });
 }
@@ -1243,7 +1244,7 @@ function filterByCenterViaCustomer(arr) {
 // Only show records explicitly assigned to the active center; null records visible to supervisor only
 function filterFinanceByCenter(arr) {
   if(!ACTIVE_CENTER || !arr) return arr;
-  return arr.filter(function(f){ return f.wellness_center_id == ACTIVE_CENTER || f.center_id == ACTIVE_CENTER; });
+  return arr.filter(function(f){ return f.wellness_center_id == ACTIVE_CENTER || f.center_id == ACTIVE_CENTER || (!f.wellness_center_id && !f.center_id); });
 }
 
 // Helper: filter payments by customer/coach center matching ACTIVE_CENTER
@@ -1253,7 +1254,7 @@ function filterPaymentsByCenter(arr) {
   if (D.customers) D.customers.forEach(function(c){ allowedIds[c.id]=true; });
   if (D.coaches) D.coaches.forEach(function(co){ allowedIds[co.id]=true; });
   return arr.filter(function(p){ 
-    return (p.wellness_center_id == ACTIVE_CENTER) || (p.center_id == ACTIVE_CENTER) || (p.person_id && allowedIds[p.person_id]); 
+    return (p.wellness_center_id == ACTIVE_CENTER) || (p.center_id == ACTIVE_CENTER) || (!p.wellness_center_id && !p.center_id) || (p.person_id && allowedIds[p.person_id]); 
   });
 }
 
@@ -1264,7 +1265,7 @@ function filterCouponsByCenter(arr) {
   if (D.customers) D.customers.forEach(function(c){ allowedIds[c.id]=true; });
   if (D.coaches) D.coaches.forEach(function(co){ allowedIds[co.id]=true; });
   return arr.filter(function(c){ 
-    return (c.wellness_center_id == ACTIVE_CENTER) || (c.coach_id && allowedIds[c.coach_id]); 
+    return (c.wellness_center_id == ACTIVE_CENTER) || (c.center_id == ACTIVE_CENTER) || (!c.wellness_center_id && !c.center_id) || (c.coach_id && allowedIds[c.coach_id]); 
   });
 }
 
