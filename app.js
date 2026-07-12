@@ -2119,13 +2119,19 @@ async function loadAll() {
 
     // Phase 1: Load critical overview datasets concurrently in one batch
     var _ldMsg = document.getElementById('app-loading-msg'); if(_ldMsg) _ldMsg.textContent = 'Connecting to database…';
-    var p1Jobs = [loadCenters(), loadCustomers(), loadCoaches(), loadFinance(), loadAnnouncements()];
-    if (!ACTIVE_CENTER) p1Jobs.push(loadAttendance());
+    var p1Jobs = [
+      loadCenters().catch(function(e){ console.error('loadCenters:', e); }),
+      loadCustomers().catch(function(e){ console.error('loadCustomers:', e); }),
+      loadCoaches().catch(function(e){ console.error('loadCoaches:', e); }),
+      loadFinance().catch(function(e){ console.error('loadFinance:', e); }),
+      loadAnnouncements().catch(function(e){ console.error('loadAnnouncements:', e); })
+    ];
+    if (!ACTIVE_CENTER) p1Jobs.push(loadAttendance().catch(function(e){ console.error('loadAttendance:', e); }));
     await Promise.all(p1Jobs);
     try { renderCenters(); updateCenterSelects(); updateCenterSwitcher(); } catch(re){}
     if (ACTIVE_CENTER) {
       if(_ldMsg) _ldMsg.textContent = 'Loading attendance…';
-      await loadAttendance();
+      try { await loadAttendance(); } catch(ae) { console.error('attendance active load err:', ae); }
     }
     
     _daysLeftCache = {};  // initial critical data loaded
@@ -2245,13 +2251,25 @@ function updateSidebarLogo() {
 }
 async function loadCustomers() {
   D.customers = await dbGet('customers', 'created_at', _cFilter());
-  renderCustomers();
+  try { renderCustomers(); } catch(e) {}
+  try { renderOverview(); } catch(e) {}
+  try {
+    var _rawCache = localStorage.getItem('pq_dashboard_cache_v1');
+    var _cd = _rawCache ? JSON.parse(_rawCache) : {};
+    _cd.customers = (D.customers || []).slice(0, 300);
+    localStorage.setItem('pq_dashboard_cache_v1', JSON.stringify(_cd));
+  } catch(e) {}
   updateCustSelects();
   updateCoachSelects();
   updateBodyCustSelect();
   updatePaymentPersonSelect();
 }
-async function loadAttendance() { D.attendance = await dbGet('attendance','date', _custIdsFilter()); _daysLeftCache = {}; renderAttendance(); }
+async function loadAttendance() {
+  D.attendance = await dbGet('attendance','date', _custIdsFilter());
+  _daysLeftCache = {};
+  try { renderAttendance(); } catch(e) {}
+  try { renderOverview(); } catch(e) {}
+}
 
 async function loadBody() {
   getCredentials();
@@ -2269,11 +2287,16 @@ async function loadBody() {
   renderRecheckBadge();
 }
 
-async function loadFinance() { D.finance = await dbGet('finance','date', _cFilter()); renderFinance(); }
+async function loadFinance() {
+  D.finance = await dbGet('finance','date', _cFilter());
+  try { renderFinance(); } catch(e) {}
+  try { renderOverview(); } catch(e) {}
+}
 async function loadCoaches() {
   var _coachFilter = ACTIVE_CENTER ? 'wellness_center_id=eq.' + ACTIVE_CENTER : '';
   D.coaches = await dbGet('coaches', 'created_at', _coachFilter);
-  renderCoaches();
+  try { renderCoaches(); } catch(e) {}
+  try { renderOverview(); } catch(e) {}
   updateCoachSelects();
   updateCouponCoachSelects();
   updateCoachUplineSelects();
