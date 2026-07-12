@@ -626,8 +626,9 @@ function exportAttendanceCSV() {
   );
 }
 function exportBodyCSV() {
+  var linkedIds = _selectedBodyCustId ? getLinkedBodyCustomerIds(_selectedBodyCustId) : null;
   var body = _selectedBodyCustId
-    ? (D.body||[]).filter(function(b){return b.customer_id===_selectedBodyCustId;})
+    ? (D.body||[]).filter(function(b){return linkedIds.indexOf(b.customer_id)!==-1;})
     : (D.body||[]);
   exportCSV(
     ['Customer','Date','Height','Age','Weight','Fat%','Visceral Fat','BMR','BMI','Body Age','Subcu Fat%','Muscle%'],
@@ -3811,7 +3812,8 @@ async function askBodyAI(cid, rid) {
   var c = D.customers.find(function(x){return x.id === cid});
   var goal = c ? (c.goal||'Weight Loss') : 'Unknown';
 
-  var recs = D.body.filter(function(b){return b.customer_id===cid}).sort(function(a,b){return new Date(b.date)-new Date(a.date)}).slice(0,4);
+  var linkedIds = getLinkedBodyCustomerIds(cid);
+  var recs = D.body.filter(function(b){return linkedIds.indexOf(b.customer_id)!==-1}).sort(function(a,b){return new Date(b.date)-new Date(a.date)}).slice(0,4);
   var statsMsg = "Goal: " + goal + "\n\nLast 4 Records (newest first):\n";
   recs.forEach(function(r) {
     statsMsg += "Date: " + r.date +
@@ -3871,7 +3873,8 @@ async function generateFirstScanReport(cid) {
   var c = D.customers.find(function(x){return x.id === cid});
   var goal = c ? (c.goal||'Weight Loss') : 'Unknown';
   var name = c ? (c.name||'Customer') : 'Customer';
-  var recs = D.body.filter(function(b){return b.customer_id===cid}).sort(function(a,b){return new Date(b.date)-new Date(a.date)});
+  var linkedIds = getLinkedBodyCustomerIds(cid);
+  var recs = D.body.filter(function(b){return linkedIds.indexOf(b.customer_id)!==-1}).sort(function(a,b){return new Date(b.date)-new Date(a.date)});
   if (!recs.length) return;
   var r = recs[0];
   var prompt = "Customer: "+name+", Goal: "+goal+", Baseline scan: weight "+(r.weight||'-')+"kg, fat "+(r.fat_percentage||'-')+"%, muscle "+(r.muscle_percentage||'-')+"%, visceral "+(r.visceral_fat||'-')+", BMR "+(r.bmr||'-')+", BMI "+(r.bmi||'-')+".";
@@ -3883,7 +3886,8 @@ async function generateWeeklyReport(cid) {
   var c = D.customers.find(function(x){return x.id === cid});
   var goal = c ? (c.goal||'Weight Loss') : 'Unknown';
   var name = c ? (c.name||'Customer') : 'Customer';
-  var recs = D.body.filter(function(b){return b.customer_id===cid}).sort(function(a,b){return new Date(b.date)-new Date(a.date)});
+  var linkedIds = getLinkedBodyCustomerIds(cid);
+  var recs = D.body.filter(function(b){return linkedIds.indexOf(b.customer_id)!==-1}).sort(function(a,b){return new Date(b.date)-new Date(a.date)});
   if (recs.length < 2) { showToast('Need at least 2 records for a weekly comparison!', 'error'); return; }
   var r1 = recs[0]; var r0 = recs[1]; 
   var prompt = "Customer: "+name+", Goal: "+goal+", Last week: weight "+(r0.weight||'-')+"kg, fat "+(r0.fat_percentage||'-')+"%, muscle "+(r0.muscle_percentage||'-')+"%, visceral "+(r0.visceral_fat||'-')+", BMR "+(r0.bmr||'-')+", BMI "+(r0.bmi||'-')+". This week: weight "+(r1.weight||'-')+"kg, fat "+(r1.fat_percentage||'-')+"%, muscle "+(r1.muscle_percentage||'-')+"%, visceral "+(r1.visceral_fat||'-')+", BMR "+(r1.bmr||'-')+", BMI "+(r1.bmi||'-')+".";
@@ -3895,7 +3899,8 @@ async function generateFullProgressReport(cid) {
   var c = D.customers.find(function(x){return x.id === cid});
   var goal = c ? (c.goal||'Weight Loss') : 'Unknown';
   var name = c ? (c.name||'Customer') : 'Customer';
-  var recs = D.body.filter(function(b){return b.customer_id===cid}).sort(function(a,b){return new Date(b.date)-new Date(a.date)});
+  var linkedIds = getLinkedBodyCustomerIds(cid);
+  var recs = D.body.filter(function(b){return linkedIds.indexOf(b.customer_id)!==-1}).sort(function(a,b){return new Date(b.date)-new Date(a.date)});
   if (recs.length < 3) return;
   var rFirst = recs[recs.length-1];
   var rLast = recs[0];
@@ -6578,7 +6583,8 @@ function renderBody() {
       || (function(){ var w=(D.walkins||[]).find(function(x){return x.id===_selectedBodyCustId;}); return w ? {id:w.id,name:w.name+'  🚶',goal:'',pack_type:'Walk-in'} : null; })();
   if (!cust) { profileCard.style.display='none'; if(idealCard) idealCard.style.display='none'; emptyPrompt.style.display='block'; recordsWrap.style.display='none'; return; }
 
-  // Get all records for this customer sorted oldest→newest
+  // Get all records for this customer (including walk-in history) sorted oldest→newest
+  var linkedBodyIds = getLinkedBodyCustomerIds(_selectedBodyCustId);
   var sorted = D.body
     .filter(function(b){
       if (_isSvSelected) {
@@ -6586,7 +6592,7 @@ function renderBody() {
           (_opP.name || _svP.name) && b.customer_name && b.customer_name.trim().toLowerCase() === (_opP.name || _svP.name).trim().toLowerCase()
         );
       }
-      return b.customer_id === _selectedBodyCustId;
+      return linkedBodyIds.indexOf(b.customer_id) !== -1 || linkedBodyIds.indexOf('walkin__' + b.customer_id) !== -1;
     })
     .sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
 
@@ -6705,8 +6711,10 @@ function renderBody() {
       var arr  = kg !== null ? getArr(kg, pKg, goodWhenDown) : '';
       return '<td style="line-height:1.4">' + main + arr + sub + '</td>';
     }
+    var isWalkinScan = b.customer_id && (b.customer_id.startsWith('walkin__') || (D.walkins||[]).some(function(w){ return w.id === b.customer_id; }));
+    var walkinTag = isWalkinScan ? ' <span class="badge" style="background:#f3e8ff;color:#6b21a8;font-size:9px;margin-left:4px" title="Recorded as Walk-in">🚶 Walk-in</span>' : '';
     return '<tr'+rowStyle+'>'
-      +'<td>'+b.date+(isMostRecent ? ' <span class="badge bg" style="font-size:9px">Latest</span>' : '')+'</td>'
+      +'<td>'+b.date+(isMostRecent ? ' <span class="badge bg" style="font-size:9px">Latest</span>' : '')+walkinTag+'</td>'
       +'<td>'+(cw||'—')+getArr(cw,pw,revWeight)+'</td>'
       +kgCell(cfKg, cf, pfKg, true)
       +'<td>'+(cv!==null?cv:'—')+getArr(cv,pv,false)+'</td>'
@@ -8258,8 +8266,16 @@ async function saveBody() {
   var resolvedCustId = custId;
   var custName = '';
   if (custId && custId.startsWith('walkin__')) {
-    resolvedCustId = custId.slice(8);
-    custName = ((D.walkins||[]).find(function(w){return w.id===resolvedCustId;})||{}).name||'Walk-in';
+    var rawWalkinId = custId.slice(8);
+    var walkinObj = (D.walkins||[]).find(function(w){return w.id === rawWalkinId;});
+    if (walkinObj && walkinObj.converted_customer_id) {
+      resolvedCustId = walkinObj.converted_customer_id;
+      var linkedCust = (D.customers||[]).find(function(c){return c.id === resolvedCustId;});
+      custName = linkedCust ? linkedCust.name : (walkinObj.name||'Walk-in');
+    } else {
+      resolvedCustId = rawWalkinId;
+      custName = (walkinObj||{}).name||'Walk-in';
+    }
   } else {
     custName = (D.customers.find(function(c){return c.id===custId;})
              || D.coaches.find(function(c){return c.id===custId;})||{}).name||'';
@@ -10151,6 +10167,47 @@ function sendWeeklyProgressWA(cid) {
 // BODY COMPOSITION — HELPERS
 // ══════════════════════════════════════════════
 var _selectedBodyCustId = null;
+function getLinkedBodyCustomerIds(personId) {
+  if (!personId) return [];
+  var ids = [personId];
+  var cleanId = personId.startsWith('walkin__') ? personId.slice(8) : personId;
+  if (cleanId !== personId && ids.indexOf(cleanId) === -1) ids.push(cleanId);
+  if (cleanId !== personId && ids.indexOf('walkin__' + cleanId) === -1) ids.push('walkin__' + cleanId);
+
+  var cust = (D.customers||[]).find(function(c){ return c.id === cleanId; })
+          || (D.coaches||[]).find(function(c){ return c.id === cleanId; });
+  if (cust) {
+    var cPhone = cust.contact ? String(cust.contact).replace(/\D/g,'') : '';
+    var cName = cust.name ? cust.name.trim().toLowerCase() : '';
+    (D.walkins||[]).forEach(function(w){
+      var matchId = w.converted_customer_id === cleanId ||
+                    (cPhone && cPhone.length >= 10 && w.phone && String(w.phone).replace(/\D/g,'') === cPhone) ||
+                    (w.converted && cName && w.name && w.name.trim().toLowerCase() === cName);
+      if (matchId) {
+        if (ids.indexOf(w.id) === -1) ids.push(w.id);
+        if (ids.indexOf('walkin__' + w.id) === -1) ids.push('walkin__' + w.id);
+      }
+    });
+  }
+
+  var walkin = (D.walkins||[]).find(function(w){ return w.id === cleanId; });
+  if (walkin) {
+    if (walkin.converted_customer_id && ids.indexOf(walkin.converted_customer_id) === -1) {
+      ids.push(walkin.converted_customer_id);
+    }
+    var wPhone = walkin.phone ? String(walkin.phone).replace(/\D/g,'') : '';
+    var wName = walkin.name ? walkin.name.trim().toLowerCase() : '';
+    (D.customers||[]).forEach(function(c){
+      var matchCust = walkin.converted_customer_id === c.id ||
+                      (wPhone && wPhone.length >= 10 && c.contact && String(c.contact).replace(/\D/g,'') === wPhone) ||
+                      (walkin.converted && wName && c.name && c.name.trim().toLowerCase() === wName);
+      if (matchCust && ids.indexOf(c.id) === -1) {
+        ids.push(c.id);
+      }
+    });
+  }
+  return ids;
+}
 function switchBodyTab(name, el) {
   document.getElementById('body-sec-records').style.display = name==='records'?'block':'none';
   document.getElementById('body-sec-recheck').style.display = name==='recheck'?'block':'none';
@@ -13116,8 +13173,19 @@ async function _markWalkinConverted(customerId){
   window._convertingWalkinId=null;
   try{
     await dbUpdate('walkins',wid,{converted:true,converted_customer_id:customerId});
+    var cust = (D.customers||[]).find(function(c){ return c.id === customerId; });
+    var custName = cust ? cust.name : '';
+    var bodyRecs = (D.body||[]).filter(function(b){ return b.customer_id === wid || b.customer_id === 'walkin__' + wid; });
+    for (var i = 0; i < bodyRecs.length; i++) {
+      var bPayload = { customer_id: customerId };
+      if (custName) bPayload.customer_name = custName;
+      await dbUpdate('body_composition', bodyRecs[i].id, bPayload);
+      bodyRecs[i].customer_id = customerId;
+      if (custName) bodyRecs[i].customer_name = custName;
+    }
     await loadWalkins();
-  }catch(e){}
+    await loadBody();
+  }catch(e){ console.error('Error migrating walkin body composition:', e); }
 }
 
 // ══════════════════════════════════════════════
@@ -14207,7 +14275,8 @@ async function generateDietPlan(custId, silent) {
   if(!c){ if(!silent) showToast('Customer not found','error'); return; }
 
   // Get latest body composition for weight
-  var bodyRecs = D.body.filter(function(b){return b.customer_id===custId;}).sort(function(a,b){return b.date>a.date?1:-1;});
+  var linkedIds = getLinkedBodyCustomerIds(custId);
+  var bodyRecs = D.body.filter(function(b){return linkedIds.indexOf(b.customer_id)!==-1;}).sort(function(a,b){return b.date>a.date?1:-1;});
   var latestWeight = bodyRecs.length ? parseFloat(bodyRecs[0].weight) : null;
   var height = parseFloat(c.height) || null;
   var age = c.age ? parseInt(c.age) : (c.dob ? Math.floor((new Date()-new Date(c.dob))/(365.25*24*3600*1000)) : null);
@@ -15963,8 +16032,9 @@ function openShareCardModal() {
   
   _selectedCardCust = cust;
   
+  var linkedIds = getLinkedBodyCustomerIds(_selectedBodyCustId);
   var sorted = D.body
-    .filter(function(b){ return b.customer_id === _selectedBodyCustId; })
+    .filter(function(b){ return linkedIds.indexOf(b.customer_id) !== -1; })
     .sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
     
   if(sorted.length < 2) {
@@ -15995,7 +16065,8 @@ function drawProgressCard() {
   if(!canvas) return;
   var ctx = canvas.getContext('2d');
   
-  var sorted = D.body.filter(function(b){ return b.customer_id === _selectedBodyCustId; });
+  var linkedIds = getLinkedBodyCustomerIds(_selectedBodyCustId);
+  var sorted = D.body.filter(function(b){ return linkedIds.indexOf(b.customer_id) !== -1; });
   var baseId = document.getElementById('share-scan-from').value;
   var toId = document.getElementById('share-scan-to').value;
   
