@@ -35,7 +35,7 @@ function getActiveSbUrl() {
   return String(u).replace(/\/$/, '');
 }
 function getActiveSbKey() {
-  var k = (_authSession && _authSession.access_token) || SB_KEY || CENTER_SB_KEY;
+  var k = SB_KEY || CENTER_SB_KEY;
   if (!k || k === 'null' || k === 'undefined') return CENTER_SB_KEY;
   return k;
 }
@@ -301,7 +301,7 @@ async function startApp() {
       // Check if this is super admin
       var superAdminEmail = '';
       try {
-        var settingsRes = await fetch(CENTER_SB_URL + '/rest/v1/app_settings?key=eq.super_admin_email&select=value', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + _authSession.access_token } });
+        var settingsRes = await fetch(CENTER_SB_URL + '/rest/v1/app_settings?key=eq.super_admin_email&select=value', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY } });
         var settingsData = await settingsRes.json();
         superAdminEmail = (Array.isArray(settingsData) && settingsData[0]) ? settingsData[0].value : '';
       } catch(e) {}
@@ -320,7 +320,7 @@ async function startApp() {
       } else {
         // Try to auto-link by email if auth_user_id not set yet
         var jwt = _authSession.access_token;
-        var centersRes = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?select=id,name,owner_id,owner_email', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + jwt } });
+        var centersRes = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?select=id,name,owner_id,owner_email', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY } });
         var centers = await centersRes.json();
         var myCenter = (Array.isArray(centers) ? centers : []).find(function(c){ return c.owner_id === _authUser.id; })
                     || (Array.isArray(centers) ? centers : []).find(function(c){ return c.owner_email === _authUser.email; });
@@ -343,7 +343,7 @@ async function startApp() {
         if (!myCenter.owner_id) {
           await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?id=eq.' + myCenter.id, {
             method: 'PATCH',
-            headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json' },
+            headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ owner_id: _authUser.id })
           });
         }
@@ -1674,7 +1674,7 @@ async function req(method, table, body, filter, customHeaders) {
     authBearer = SB_KEY;
   } else {
     apikey = CENTER_SB_KEY;
-    authBearer = (_authSession && _authSession.access_token) || CENTER_SB_KEY;
+    authBearer = CENTER_SB_KEY;
   }
   
   var url = activeUrl + '/rest/v1/' + table + filter;
@@ -1711,7 +1711,7 @@ async function req(method, table, body, filter, customHeaders) {
       if (isFetchErr && activeUrl !== CENTER_SB_URL) {
         url = CENTER_SB_URL + '/rest/v1/' + table + filter;
         headers.apikey = CENTER_SB_KEY;
-        headers.Authorization = 'Bearer ' + ((_authSession && _authSession.access_token) || CENTER_SB_KEY);
+        headers.Authorization = 'Bearer ' + CENTER_SB_KEY;
         try {
           var resFallback = await fetch(url, opts);
           if (resFallback.status === 204) return [];
