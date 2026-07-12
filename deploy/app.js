@@ -30,14 +30,10 @@ var CENTER_SB_URL = 'https://erteibdxzdvsaujptxsd.supabase.co';
 var CENTER_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydGVpYmR4emR2c2F1anB0eHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTE5MjMsImV4cCI6MjA5MDE4NzkyM30.Uh6aHjIx1Vukbk49K4oBqtRlxqTd9UiPXVGfDD7M9e0';
 function isCenterSession() { return _centerAuth && _centerAuth.type === 'center'; }
 function getActiveSbUrl() {
-  var u = SB_URL || CENTER_SB_URL;
-  if (!u || u === 'null' || u === 'undefined' || !String(u).startsWith('http')) return CENTER_SB_URL;
-  return String(u).replace(/\/$/, '');
+  return CENTER_SB_URL;
 }
 function getActiveSbKey() {
-  var k = SB_KEY || CENTER_SB_KEY;
-  if (!k || k === 'null' || k === 'undefined') return CENTER_SB_KEY;
-  return k;
+  return CENTER_SB_KEY;
 }
 var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
 var WA_LANG = localStorage.getItem('waLang') || 'English';
@@ -364,19 +360,12 @@ async function startApp() {
   }
 
   // ── Load app ──
-  var url = localStorage.getItem('sb_url');
-  var key = localStorage.getItem('sb_key');
-  if (url && key) {
-    document.getElementById('sb-url').value = url;
-    document.getElementById('sb-key').value = key;
-    SB_URL = url.replace(/\/$/, '');
-    SB_KEY = key;
-    await doConnect();
-  } else {
-    document.getElementById('setup').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    await loadAll();
-  }
+  try { localStorage.removeItem('sb_url'); localStorage.removeItem('sb_key'); } catch(e){}
+  var setupEl = document.getElementById('setup');
+  var appEl = document.getElementById('app');
+  if (setupEl) setupEl.style.display = 'none';
+  if (appEl) appEl.style.display = 'block';
+  await loadAll();
 }
 var ACTIVE_CENTER = localStorage.getItem('activeCenter') || '';
 
