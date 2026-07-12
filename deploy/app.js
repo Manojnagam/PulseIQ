@@ -2082,11 +2082,13 @@ if (!window.authSplitActive) {
 // ── REFRESH BUTTON ──
 async function refreshDashboard() {
   var btn = document.getElementById('refresh-btn');
-  btn.textContent = '⏳ Refreshing...';
-  btn.disabled = true;
+  if(btn) { btn.textContent = '⏳'; btn.disabled = true; }
+  try { localStorage.removeItem('pq_dashboard_cache_v1'); } catch(e){}
   await loadAll();
-  btn.textContent = '✅ Done!';
-  setTimeout(function(){ btn.textContent = '🔄 Refresh Data'; btn.disabled = false; }, 1500);
+  if(btn) {
+    btn.textContent = '✅';
+    setTimeout(function(){ btn.textContent = '🔄'; btn.disabled = false; }, 1500);
+  }
 }
 
 // ── LOAD ──
