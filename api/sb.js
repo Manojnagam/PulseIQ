@@ -5,14 +5,13 @@ const DEFAULT_TARGET = 'https://erteibdxzdvsaujptxsd.supabase.co';
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'apikey, Authorization, Content-Type, Prefer, x-supabase-target');
-
+  res.setHeader('Access-Control-Allow-Headers', 'apikey, Authorization, Content-Type, Prefer');
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   try {
-    const targetBase = (req.headers['x-supabase-target'] || DEFAULT_TARGET).replace(/\/$/, '');
+    const targetBase = DEFAULT_TARGET.replace(/\/$/, '');
     const path = req.url.replace(/^\/api\/sb/, '');
     const targetUrl = targetBase + path;
 
