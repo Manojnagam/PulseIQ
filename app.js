@@ -1728,12 +1728,16 @@ async function dbGet(table, order, extraFilter) {
 }
 async function dbInsert(table, data) { return req('POST', table, data); }
 async function dbUpdate(table, id, data) {
-  var existing = await req('GET', table, null, '?id=eq.' + id);
-  if (existing && existing[0]) {
-    var merged = Object.assign({}, existing[0], data);
-    return req('POST', table, merged, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
-  } else {
-    throw new Error("Row not found for update");
+  try {
+    return await req('PATCH', table, data, '?id=eq.' + id);
+  } catch(e) {
+    var existing = await req('GET', table, null, '?id=eq.' + id);
+    if (existing && existing[0]) {
+      var merged = Object.assign({}, existing[0], data);
+      return req('POST', table, merged, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
+    } else {
+      throw new Error("Row not found for update");
+    }
   }
 }
 async function dbDelete(table, id) { return req('DELETE', table, null, '?id=eq.' + id); }
@@ -11492,36 +11496,35 @@ async function saveCenterPlan(centerId) {
   var center = (D.centers||[]).find(function(c){ return c.id===centerId; });
   if (!center) return;
 
+  var nowIso = new Date().toISOString();
+  var needNewTrialDate = (newPlan === 'trial') && (!center.created_at || ((Date.now() - safeParseDate(center.created_at)) / 86400000 > 14));
+  if (needNewTrialDate) {
+    center.created_at = nowIso;
+  }
   center.plan_type = newPlan;
+
+  var updatePayload = needNewTrialDate ? { plan_type: newPlan, created_at: nowIso } : { plan_type: newPlan };
+
   try {
     var pzPlans = JSON.parse(localStorage.getItem('pz_center_plans') || '{}');
-    pzPlans[centerId] = typeof pzPlans[centerId] === 'object' ? Object.assign(pzPlans[centerId], { plan_type: newPlan }) : { plan_type: newPlan };
+    pzPlans[centerId] = typeof pzPlans[centerId] === 'object' ? Object.assign(pzPlans[centerId], updatePayload) : updatePayload;
     localStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
   } catch(e) {}
 
   var dbSuccess = false;
   try {
-    await dbUpdate('wellness_centers', centerId, { plan_type: newPlan });
+    await dbUpdate('wellness_centers', centerId, updatePayload);
     dbSuccess = true;
   } catch(e1) {
     try {
-      await req('PATCH', 'wellness_centers', { plan_type: newPlan }, '?id=eq.' + centerId);
+      await req('PATCH', 'wellness_centers', updatePayload, '?id=eq.' + centerId);
       dbSuccess = true;
     } catch(e2) {
-      if (newPlan === 'trial') {
-        try {
-          await dbUpdate('wellness_centers', centerId, { created_at: center.created_at || new Date().toISOString() });
-          dbSuccess = true;
-        } catch(e3) {
-          console.warn('DB update failed:', e3.message);
-        }
-      } else {
-        console.warn('DB update failed (run SQL to add plan_type column):', e2.message);
-      }
+      console.warn('DB update failed:', e2.message);
     }
   }
 
-  showToast((center.name||'Center') + ' upgraded to ' + PLAN_LABELS[newPlan] + '!' + (!dbSuccess ? ' ⚠️ Run SQL: ALTER TABLE wellness_centers ADD COLUMN IF NOT EXISTS plan_type text;' : ''), 'success');
+  showToast((center.name||'Center') + ' upgraded to ' + PLAN_LABELS[newPlan] + (needNewTrialDate ? ' (14 days from today)' : '') + '!' + (!dbSuccess ? ' (Saved locally)' : ''), 'success');
   renderPlanMgmt();
   try { renderCenters(); } catch(e) {}
   try { updateTrialCountdownBanner(); } catch(e) {}
@@ -11555,12 +11558,7 @@ async function resetCenterTrial(centerId) {
       await req('PATCH', 'wellness_centers', { plan_type: 'trial', created_at: nowIso }, '?id=eq.' + centerId);
       dbSuccess = true;
     } catch(e2) {
-      try {
-        await dbUpdate('wellness_centers', centerId, { created_at: nowIso });
-        dbSuccess = true;
-      } catch(e3) {
-        console.warn('DB update failed:', e3.message);
-      }
+      console.warn('DB update failed:', e2.message);
     }
   }
 
