@@ -11508,7 +11508,16 @@ async function saveCenterPlan(centerId) {
       await req('PATCH', 'wellness_centers', { plan_type: newPlan }, '?id=eq.' + centerId);
       dbSuccess = true;
     } catch(e2) {
-      console.warn('DB update failed (run SQL to add plan_type column):', e2.message);
+      if (newPlan === 'trial') {
+        try {
+          await dbUpdate('wellness_centers', centerId, { created_at: center.created_at || new Date().toISOString() });
+          dbSuccess = true;
+        } catch(e3) {
+          console.warn('DB update failed:', e3.message);
+        }
+      } else {
+        console.warn('DB update failed (run SQL to add plan_type column):', e2.message);
+      }
     }
   }
 

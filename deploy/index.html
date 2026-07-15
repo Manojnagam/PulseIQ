@@ -2380,7 +2380,7 @@ input:focus, select:focus, textarea:focus {
         <pre class="sqlbox">create table if not exists wellness_centers (
   id uuid default gen_random_uuid() primary key,
   name text not null, location text, contact text,
-  type text default 'branch',
+  type text default 'branch', plan_type text default 'free',
   created_at timestamptz default now()
 );
 alter table wellness_centers enable row level security;
@@ -2576,7 +2576,8 @@ create policy "allow all" on pack_history for all using (true);
 -- 🌳 COACH + CUSTOMER NEW COLUMNS
 -- ==========================================
 ALTER TABLE wellness_centers
-  ADD COLUMN IF NOT EXISTS owner_id uuid;
+  ADD COLUMN IF NOT EXISTS owner_id uuid,
+  ADD COLUMN IF NOT EXISTS plan_type text default 'free';
 ALTER TABLE coaches
   ADD COLUMN IF NOT EXISTS upline_id uuid,
   ADD COLUMN IF NOT EXISTS pack_type text,
