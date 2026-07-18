@@ -10,5 +10,8 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://app.pulsezen.in/api/:path*" }
   ]
 }
