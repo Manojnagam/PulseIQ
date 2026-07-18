@@ -13197,16 +13197,22 @@ async function _markWalkinConverted(customerId){
     await dbUpdate('walkins',wid,{converted:true,converted_customer_id:customerId});
     var cust = (D.customers||[]).find(function(c){ return c.id === customerId; });
     var custName = cust ? cust.name : '';
-    var bodyRecs = (D.body||[]).filter(function(b){ return b.customer_id === wid || b.customer_id === 'walkin__' + wid; });
-    for (var i = 0; i < bodyRecs.length; i++) {
-      var bPayload = { customer_id: customerId };
-      if (custName) bPayload.customer_name = custName;
-      await dbUpdate('body_composition', bodyRecs[i].id, bPayload);
-      bodyRecs[i].customer_id = customerId;
-      if (custName) bodyRecs[i].customer_name = custName;
+    
+    var dbBodyRecs = await req('GET', 'body_composition', null, 'customer_id=eq.' + wid);
+    
+    if (dbBodyRecs && dbBodyRecs.length > 0) {
+      for (var i = 0; i < dbBodyRecs.length; i++) {
+        var bPayload = { customer_id: customerId };
+        if (custName) bPayload.customer_name = custName;
+        await dbUpdate('body_composition', dbBodyRecs[i].id, bPayload);
+      }
     }
+    
     await loadWalkins();
     await loadBody();
+    
+    if (typeof renderBody === 'function') renderBody();
+    if (typeof renderSvBody === 'function') renderSvBody();
   }catch(e){ console.error('Error migrating walkin body composition:', e); }
 }
 
@@ -16445,3 +16451,147 @@ function shareGroceryListWA() {
   var url = 'https://wa.me/' + (window.COUNTRY_CODE || '91') + _currentGroceryPhone.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent(text);
   window.open(url, '_blank');
 }
+
+// --- AI Finance Insights ---
+let _lastFinanceContext = "";
+let _lastFinanceAiResponse = "";
+
+async function generateFinanceInsights() {
+  var summaryEl = document.getElementById('fin-ai-summary');
+  var followupContainer = document.getElementById('fin-ai-followup-container');
+  var btn = document.querySelector('button[onclick="generateFinanceInsights()"]');
+  
+  if (!getGroqKey()) { showToast('Please set your Groq API Key in Config tab first', 'error'); return; }
+  
+  var rows = typeof _getFinFiltered === 'function' ? _getFinFiltered() : [];
+  if (!rows.length) {
+    summaryEl.innerHTML = '<span style="color:var(--muted)">No transactions in this period to analyze.</span>';
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  summaryEl.innerHTML = '<span style="color:var(--muted)">Analyzing financial data...</span>';
+  followupContainer.style.display = 'none';
+
+  function aggRows(arr) {
+    var inc = 0, exp = 0;
+    var cats = { income: {}, expense: {} };
+    arr.forEach(function(f) {
+      var amt = Number(f.amount) || 0;
+      if (f.type === 'income') inc += amt;
+      else exp += amt;
+      var c = f.category || 'Other';
+      var t = f.type === 'income' ? 'income' : 'expense';
+      cats[t][c] = (cats[t][c] || 0) + amt;
+    });
+    return { inc: inc, exp: exp, net: inc - exp, cats: cats };
+  }
+
+  var curAgg = aggRows(rows);
+
+  var base = typeof ACTIVE_CENTER !== 'undefined' && ACTIVE_CENTER ? (typeof filterFinanceByCenter === 'function' ? filterFinanceByCenter(D.finance) : D.finance) : D.finance;
+  
+  var from = document.getElementById('fin-from') ? document.getElementById('fin-from').value : '';
+  var to = document.getElementById('fin-to') ? document.getElementById('fin-to').value : '';
+  var prevPeriodAgg = null;
+  
+  if (from && to) {
+    var d1 = new Date(from);
+    var d2 = new Date(to);
+    var diffTime = d2.getTime() - d1.getTime();
+    var prevEnd = new Date(d1.getTime() - (24 * 60 * 60 * 1000));
+    var prevStart = new Date(prevEnd.getTime() - diffTime);
+    
+    var prevFromStr = prevStart.toISOString().split('T')[0];
+    var prevToStr = prevEnd.toISOString().split('T')[0];
+    
+    var prevRows = base.filter(function(f){
+      if (!f.date) return false;
+      return f.date >= prevFromStr && f.date <= prevToStr;
+    });
+    prevPeriodAgg = aggRows(prevRows);
+  }
+
+  var monthsData = {};
+  for (var i = 3; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - i);
+    var ym = d.toISOString().slice(0, 7);
+    monthsData[ym] = { income: {}, expense: {} };
+  }
+  
+  base.forEach(function(f) {
+    var ym = (f.date || '').slice(0, 7);
+    if (monthsData[ym]) {
+      var t = f.type === 'income' ? 'income' : 'expense';
+      var c = f.category || 'Other';
+      monthsData[ym][t][c] = (monthsData[ym][t][c] || 0) + (Number(f.amount) || 0);
+    }
+  });
+
+  _lastFinanceContext = "=== CURRENT PERIOD ===\n" +
+                        "Income: " + curAgg.inc + ", Expense: " + curAgg.exp + ", Net: " + curAgg.net + "\n" +
+                        "Income Categories: " + JSON.stringify(curAgg.cats.income) + "\n" +
+                        "Expense Categories: " + JSON.stringify(curAgg.cats.expense) + "\n";
+                        
+  if (prevPeriodAgg) {
+    _lastFinanceContext += "\n=== PREVIOUS PERIOD (same length) ===\n" +
+                           "Income: " + prevPeriodAgg.inc + ", Expense: " + prevPeriodAgg.exp + ", Net: " + prevPeriodAgg.net + "\n" +
+                           "Income Categories: " + JSON.stringify(prevPeriodAgg.cats.income) + "\n" +
+                           "Expense Categories: " + JSON.stringify(prevPeriodAgg.cats.expense) + "\n";
+  }
+  
+  _lastFinanceContext += "\n=== LAST 4 MONTHS CATEGORY TRENDS ===\n" +
+                         JSON.stringify(monthsData) + "\n";
+
+  var sysPrompt = "You are an expert financial advisor for a wellness center owner. Analyze the provided financial summary data. Keep it concise, professional but accessible (no heavy jargon).\n\n" +
+                  "1. Summarize the overall trends (Net profit, Income vs Expense). Compare the current period vs the previous period (% change) if available.\n" +
+                  "2. Identify any category with an unusual trend over the last few months (not just high in isolation).\n" +
+                  "3. Flag genuine anomalies or red flags relative to historical patterns.";
+
+  try {
+    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { maxTokens: 600, temperature: 0.3 });
+    _lastFinanceAiResponse = aiText;
+    summaryEl.innerHTML = typeof formatAiText === 'function' ? formatAiText(aiText) : aiText.replace(/\n/g, '<br>');
+    followupContainer.style.display = 'block';
+  } catch(e) {
+    summaryEl.innerHTML = '<span style="color:var(--danger)">Error generating insights: ' + (e.message || String(e)) + '</span>';
+  }
+  
+  btn.disabled = false;
+  btn.textContent = 'Refresh Insights';
+}
+
+async function askFinanceFollowup() {
+  var inputEl = document.getElementById('fin-ai-question');
+  var q = inputEl.value.trim();
+  if(!q) return;
+  
+  var summaryEl = document.getElementById('fin-ai-summary');
+  var oldHtml = summaryEl.innerHTML;
+  
+  var askBtn = document.querySelector('button[onclick="askFinanceFollowup()"]');
+  askBtn.disabled = true;
+  askBtn.textContent = '...';
+  
+  var sysPrompt = "You are an expert financial advisor. You previously analyzed this financial data:\n" + _lastFinanceContext + "\n\nYour previous analysis:\n" + _lastFinanceAiResponse + "\n\nNow answer the user's follow-up question concisely and directly using this data.";
+  
+  summaryEl.innerHTML = oldHtml + '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)"><strong style="color:var(--primary)">Q: ' + q + '</strong><br><span style="color:var(--muted)">Thinking...</span></div>';
+  
+  try {
+    var aiText = await callGroq(sysPrompt, "User Question: " + q, { maxTokens: 400, temperature: 0.3 });
+    var htmlText = typeof formatAiText === 'function' ? formatAiText(aiText) : aiText.replace(/\n/g, '<br>');
+    summaryEl.innerHTML = oldHtml + '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)"><strong style="color:var(--primary)">Q: ' + q + '</strong><br><div style="margin-top:4px">' + htmlText + '</div></div>';
+    inputEl.value = '';
+    var container = document.getElementById('sec-finance');
+    if (container) container.scrollTop = container.scrollHeight;
+  } catch(e) {
+    summaryEl.innerHTML = oldHtml + '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)"><strong style="color:var(--primary)">Q: ' + q + '</strong><br><span style="color:var(--danger)">Error: ' + (e.message || String(e)) + '</span></div>';
+  }
+  
+  askBtn.disabled = false;
+  askBtn.textContent = 'Ask';
+}
+

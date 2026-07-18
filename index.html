@@ -460,6 +460,10 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
   #sec-profile [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
 }
 
+@media(max-width:480px){
+  .stat-v{font-size: 17px !important;}
+}
+
 /* ── SLICERS ── */
 .slicer-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:18px;box-shadow:var(--shadow)}
 .slicer-bar-inner{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
@@ -1970,6 +1974,24 @@ input:focus, select:focus, textarea:focus {
         <div style="font-weight:700;font-size:13px;margin-bottom:12px">🏢 Monthly P&L by Center</div>
         <div class="twrap"><div id="fin-center-pl-body"></div></div>
       </div>
+      
+      <!-- AI Finance Insights -->
+      <div class="tcard" style="padding:16px;margin-bottom:12px;background:linear-gradient(to right, rgba(16, 185, 129, 0.05), rgba(0, 0, 0, 0));border-left:3px solid var(--primary)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-weight:700;font-size:13px;color:var(--primary)">✨ AI Finance Insights</div>
+          <button class="btn-s" onclick="generateFinanceInsights()" style="font-size:11px;padding:4px 8px">Generate Insights</button>
+        </div>
+        <div id="fin-ai-summary" style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:12px">
+          <span style="color:var(--muted)">Click 'Generate Insights' to analyze your financial trends and flag anomalies.</span>
+        </div>
+        <div id="fin-ai-followup-container" style="display:none;border-top:1px solid var(--border);padding-top:12px">
+          <div style="display:flex;gap:8px">
+            <input type="text" id="fin-ai-question" class="search" style="flex:1;font-size:12px" placeholder="Ask a follow-up question (e.g., 'Why did expenses spike?')">
+            <button class="btn-p" onclick="askFinanceFollowup()" style="font-size:12px;padding:6px 12px">Ask</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Transactions table -->
       <div class="tcard">
         <div class="ttoolbar" style="justify-content:space-between"><input class="search" id="fin-search" placeholder="🔍 Search..." oninput="renderFinance()" style="flex:1"><button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportFinanceCSV()">⬇️ CSV</button></div>

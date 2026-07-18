@@ -2332,6 +2332,25 @@ async function doLogin() {
   }
   localStorage.setItem('coachId',   COACH_ID);
   localStorage.setItem('coachName', COACH_NAME);
+
+  try {
+    var sessRes = await fetch('/api/coach-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coach_id: COACH_ID, pin: pin })
+    });
+    if (sessRes.ok) {
+      var sessData = await sessRes.json();
+      if (sessData.token) {
+        localStorage.setItem('coachSessionToken', sessData.token);
+      }
+    } else {
+      console.warn('coach-session call failed:', await sessRes.text());
+    }
+  } catch (e) {
+    console.warn('Error fetching coach session token:', e);
+  }
+
   startApp();
 }
 

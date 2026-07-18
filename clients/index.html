@@ -1480,6 +1480,25 @@ async function doLogin() {
 
     CUST = cust;
     localStorage.setItem('clientCustId', cust.id);
+
+    try {
+      var sessRes = await fetch('/api/customer-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customer_id: cust.id, contact: mobile, dob: dob })
+      });
+      if (sessRes.ok) {
+        var sessData = await sessRes.json();
+        if (sessData.token) {
+          localStorage.setItem('clientSessionToken', sessData.token);
+        }
+      } else {
+        console.warn('customer-session call failed:', await sessRes.text());
+      }
+    } catch (e) {
+      console.warn('Error fetching customer session token:', e);
+    }
+
     launchApp();
   } catch(e) {
     errEl.textContent = 'Connection error. Try again.';
