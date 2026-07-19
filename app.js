@@ -2170,7 +2170,7 @@ async function loadAll() {
     // Phase 3: Load remaining data (non-blocking background load)
     Promise.all([
       loadCoupons(), loadPayments(), loadPackHistory(),
-      loadLeads(), loadWalkins(), loadExpenses(), loadFoods(), loadInventory(), loadContests(), loadRecurring()
+      loadLeads(), loadWalkins(), loadFoods(), loadInventory(), loadRecurring()
     ]).then(function() {
       return loadBody();
     }).then(function() {
@@ -2589,10 +2589,53 @@ function goTo(name, el) {
   if (name==='leads')     setTimeout(function(){ renderLeadsStats(); renderLeads(); updateLeadCenterSel(); }, 80);
   if (name==='guide')     setTimeout(renderGuide, 80);
   if (name==='finance')        { setTimeout(function(){ setFinPeriod('all', document.querySelector('.fin-period[onclick*="all"]')); }, 80); }
-  if (name==='expenses')       { setTimeout(renderExpenses, 80); }
+  if (name==='expenses') {
+    setTimeout(async function() {
+      window._loadedTabs = window._loadedTabs || {};
+      if (!window._loadedTabs.expenses) {
+        var sec = document.getElementById('sec-expenses');
+        var l = document.createElement('div');
+        l.id = 'expenses-loading-indicator';
+        l.innerHTML = '<div style="padding:40px;text-align:center;color:#666">Loading expenses...</div>';
+        if (sec) sec.prepend(l);
+        try {
+          await loadExpenses();
+          window._loadedTabs.expenses = true;
+        } catch(e) {
+          console.error(e);
+          if (l) l.innerHTML = '<div style="padding:40px;text-align:center;color:red">Failed to load expenses. Please try again.</div>';
+          return;
+        }
+        if (l) l.remove();
+      }
+      renderExpenses();
+    }, 80);
+  }
   if (name==='goals')          { setTimeout(renderGoals, 80); }
   if (name==='notifications')  { setTimeout(renderNotifications, 80); }
   if (name==='coaches')        { setTimeout(function(){ initCommission(); initCoachWorkTracker(); }, 80); }
+  if (name==='contests') {
+    setTimeout(async function() {
+      window._loadedTabs = window._loadedTabs || {};
+      if (!window._loadedTabs.contests) {
+        var sec = document.getElementById('sec-contests');
+        var l = document.createElement('div');
+        l.id = 'contests-loading-indicator';
+        l.innerHTML = '<div style="padding:40px;text-align:center;color:#666">Loading contests...</div>';
+        if (sec) sec.prepend(l);
+        try {
+          await loadContests();
+          window._loadedTabs.contests = true;
+        } catch(e) {
+          console.error(e);
+          if (l) l.innerHTML = '<div style="padding:40px;text-align:center;color:red">Failed to load contests. Please try again.</div>';
+          return;
+        }
+        if (l) l.remove();
+      }
+      renderContests();
+    }, 80);
+  }
 }
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
@@ -6661,7 +6704,7 @@ function renderBody() {
       +' &nbsp;·&nbsp; '+totalSessions+' sessions &nbsp;·&nbsp; 🔥 '+streak+' streak'
     +'</div>'
     +'<div class="body-profile-stats">'
-      +'<div class="body-profile-stat"><div class="body-profile-stat-lbl">Current Weight</div><div class="body-profile-stat-val">'+(latest?latest.weight+' kg':'—')+'</div>'+(wChange?'<div class="body-profile-stat-diff" style="color:'+diffColor(wChange,cust.goal==='Weight Gain')+'">'+fmtDiff(wChange,cust.goal==='Weight Gain',' kg')+'</div>':'')+'</div>'
+      +'<div class="body-profile-stat"><div class="body-profile-stat-lbl">Current Weight</div><div class="body-profile-stat-val">'+(latest?latest.weight+' kg':'—')+'</div>'+(wChange?'<div class="body-profile-stat-diff" style="color:'+diffColor(wChange,cust.goal!=='Weight Gain')+'">'+fmtDiff(wChange,cust.goal!=='Weight Gain',' kg')+'</div>':'')+'</div>'
       +'<div class="body-profile-stat"><div class="body-profile-stat-lbl">Body Fat</div><div class="body-profile-stat-val">'+(latest&&latest.fat_percentage?latest.fat_percentage+'%':'—')+'</div>'+(fChange?'<div class="body-profile-stat-diff" style="color:'+diffColor(fChange,true)+'">'+fmtDiff(fChange,true,' %')+'</div>':'')+'</div>'
       +'<div class="body-profile-stat"><div class="body-profile-stat-lbl">Muscle</div><div class="body-profile-stat-val">'+(latest&&latest.muscle_percentage?latest.muscle_percentage+'%':'—')+'</div>'+(mChange?'<div class="body-profile-stat-diff" style="color:'+diffColor(mChange,false)+'">'+fmtDiff(mChange,false,' %')+'</div>':'')+'</div>'
       +'<div class="body-profile-stat"><div class="body-profile-stat-lbl">BMI</div><div class="body-profile-stat-val">'+(latest?latest.bmi||'—':'—')+'</div></div>'
@@ -6727,7 +6770,7 @@ function renderBody() {
       if (kg === null && !pct) return '<td>—</td>';
       var main = kg !== null ? kg + ' kg' : (pct ? pct + '%' : '—');
       var sub  = (kg !== null && pct) ? '<div style="font-size:11px;color:var(--muted);line-height:1">' + pct + '%</div>' : '';
-      var arr  = kg !== null ? getArr(kg, pKg, goodWhenDown) : '';
+      var arr  = kg !== null ? getArr(kg, pKg, !goodWhenDown) : '';
       return '<td style="line-height:1.4">' + main + arr + sub + '</td>';
     }
     var isWalkinScan = b.customer_id && (b.customer_id.startsWith('walkin__') || (D.walkins||[]).some(function(w){ return w.id === b.customer_id; }));
@@ -8326,7 +8369,7 @@ function editBody(id) {
   document.getElementById('body-fat').value=b.fat_percentage||''; 
   document.getElementById('body-visceral').value=b.visceral_fat||''; 
   document.getElementById('body-bmr').value=b.bmr||''; 
-  var bmiEl=document.getElementById('body-bmi'); bmiEl.value=b.bmi||''; bmiEl.dataset.manual=b.bmi?'1':'';
+  var bmiEl=document.getElementById('body-bmi'); bmiEl.value=b.bmi||''; bmiEl.dataset.manual='';
   document.getElementById('body-age').value=b.body_age||'';
   document.getElementById('body-subfat').value=b.subcutaneous_fat_percentage||''; calcVF();
   document.getElementById('body-muscle').value=b.muscle_percentage||'';
@@ -10288,7 +10331,7 @@ function renderSvBody() {
       '<div class="body-profile-name">'+(p.name||'Supervisor')+'</div>' +
       '<div class="body-profile-meta">'+(p.goal?'🎯 '+p.goal+' &nbsp;·&nbsp; ':'')+sorted.length+' scan'+(sorted.length===1?'':'s')+' total</div>' +
       '<div class="body-profile-stats">' +
-        '<div class="body-profile-stat"><div class="body-profile-stat-lbl">Current Weight</div><div class="body-profile-stat-val">'+(latest.weight?latest.weight+' kg':'—')+'</div>'+(wChange?'<div class="body-profile-stat-diff" style="color:'+svDiffColor(wChange,revWeight)+'">'+svFmt(wChange,' kg')+'</div>':'')+'</div>' +
+        '<div class="body-profile-stat"><div class="body-profile-stat-lbl">Current Weight</div><div class="body-profile-stat-val">'+(latest.weight?latest.weight+' kg':'—')+'</div>'+(wChange?'<div class="body-profile-stat-diff" style="color:'+svDiffColor(wChange,!revWeight)+'">'+svFmt(wChange,' kg')+'</div>':'')+'</div>' +
         '<div class="body-profile-stat"><div class="body-profile-stat-lbl">Body Fat</div><div class="body-profile-stat-val">'+(latest.fat_percentage?latest.fat_percentage+'%':'—')+'</div>'+(fChange?'<div class="body-profile-stat-diff" style="color:'+svDiffColor(fChange,true)+'">'+svFmt(fChange,' %')+'</div>':'')+'</div>' +
         '<div class="body-profile-stat"><div class="body-profile-stat-lbl">Muscle</div><div class="body-profile-stat-val">'+(latest.muscle_percentage?latest.muscle_percentage+'%':'—')+'</div>'+(mChange?'<div class="body-profile-stat-diff" style="color:'+svDiffColor(mChange,false)+'">'+svFmt(mChange,' %')+'</div>':'')+'</div>' +
         '<div class="body-profile-stat"><div class="body-profile-stat-lbl">BMI</div><div class="body-profile-stat-val">'+(latest.bmi||'—')+'</div></div>' +
@@ -10730,7 +10773,7 @@ function editSvBody(id) {
   document.getElementById('body-fat').value=b.fat_percentage||'';
   document.getElementById('body-visceral').value=b.visceral_fat||'';
   document.getElementById('body-bmr').value=b.bmr||'';
-  var bmiEl2=document.getElementById('body-bmi'); bmiEl2.value=b.bmi||''; bmiEl2.dataset.manual=b.bmi?'1':'';
+  var bmiEl2=document.getElementById('body-bmi'); bmiEl2.value=b.bmi||''; bmiEl2.dataset.manual='';
   document.getElementById('body-age').value=b.body_age||'';
   document.getElementById('body-subfat').value=b.subcutaneous_fat_percentage||'';
   document.getElementById('body-muscle').value=b.muscle_percentage||'';
