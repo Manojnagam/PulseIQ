@@ -1,17 +1,16 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/api/sb/(.*)", "dest": "/api/sb.js" },
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/coach.html", "dest": "/coach.html" },
-    { "src": "/client.html", "dest": "/client.html" },
-    { "src": "/register.html", "dest": "/register.html" },
-    { "src": "/register", "dest": "/register.html" },
-    { "src": "/checkin.html", "dest": "/checkin.html" },
-    { "src": "/checkin", "dest": "/checkin.html" },
-    { "src": "/robots.txt", "dest": "/robots.txt" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/sb/(.*)", "destination": "/api/sb.js" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/coach.html", "destination": "/coach.html" },
+    { "source": "/client.html", "destination": "/client.html" },
+    { "source": "/register.html", "destination": "/register.html" },
+    { "source": "/checkin.html", "destination": "/checkin.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
