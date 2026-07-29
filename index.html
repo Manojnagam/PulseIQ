@@ -1040,6 +1040,10 @@ input:focus, select:focus, textarea:focus {
 <script defer src="customer-risk/risk-engine.js"></script>
 <script defer src="customer-risk/risk-renderer.js"></script>
 <script defer src="customer-risk/index.js"></script>
+<script defer src="coach-analytics/metrics-engine.js"></script>
+<script defer src="coach-analytics/scoring-engine.js"></script>
+<script defer src="coach-analytics/analytics-renderer.js"></script>
+<script defer src="coach-analytics/index.js"></script>
 </head>
 <body>
 
@@ -1184,6 +1188,7 @@ input:focus, select:focus, textarea:focus {
         <button class="nav-item" onclick="goTo('analytics',this)"><span class="ic">📈</span><span data-t="nav_analytics">Analytics</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span><span data-t="nav_bizanalyst">Biz Analyst</span></button>
         <button class="nav-item" onclick="goTo('customerrisk',this)" style="border:1.5px solid #ef4444;color:#ef4444;margin-bottom:4px"><span class="ic">🎯</span><span>Customer Risk</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('coachanalytics',this)" style="border:1.5px solid #38bdf8;color:#38bdf8;margin-bottom:4px"><span class="ic">📊</span><span>Coach Analytics</span></button>
         <button class="nav-item" onclick="goTo('notifications',this)"><span class="ic">🔔</span><span data-t="nav_notifications">Notifications</span></button>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
@@ -2331,6 +2336,40 @@ input:focus, select:focus, textarea:focus {
 
       <!-- Customer Risk Feed Container -->
       <div id="risk-profiles-feed"></div>
+    </div>
+    <!-- COACH PERFORMANCE ANALYTICS -->
+    <div class="sec" id="sec-coachanalytics">
+      <div class="ph">
+        <div>
+          <div class="pt">📊 Coach Performance Analytics</div>
+          <div class="ps">Deterministic coach effectiveness scoring & team rankings</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_CoachAnalytics.refreshDashboard()">🔄 Refresh Metrics</button>
+      </div>
+
+      <div id="coach-dashboard-stats" class="stats" style="margin-bottom:20px"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group" style="flex:1;min-width:200px">
+            <span class="slicer-label">🔍 Search Coach</span>
+            <input type="text" class="slicer-input" id="coach-search-input" placeholder="Search coach name or pin..." oninput="PulseIQ_CoachAnalytics.setSearchQuery(this.value)"/>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🔃 Sort Leaderboard</span>
+            <select class="slicer-select" id="coach-sort-select" onchange="PulseIQ_CoachAnalytics.setSortBy(this.value)">
+              <option value="score_desc">Highest Coach Score (0–100)</option>
+              <option value="revenue_desc">Highest Revenue Generated</option>
+              <option value="retention_desc">Highest Retention Rate %</option>
+              <option value="customers_desc">Most Active Members</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coach Performance Cards Feed -->
+      <div id="coach-cards-feed"></div>
     </div>
     <!-- PIN TRACKER -->
     <div class="sec" id="sec-pintracker">
