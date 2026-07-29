@@ -1032,6 +1032,10 @@ input:focus, select:focus, textarea:focus {
 <script defer src="bi/recommendation-engine.js"></script>
 <script defer src="bi/nlg-engine.js"></script>
 <script defer src="bi/index.js"></script>
+<script defer src="action-center/priority-engine.js"></script>
+<script defer src="action-center/action-engine.js"></script>
+<script defer src="action-center/task-renderer.js"></script>
+<script defer src="action-center/index.js"></script>
 </head>
 <body>
 
@@ -1179,6 +1183,7 @@ input:focus, select:focus, textarea:focus {
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
       <div id="g-ops" style="display:none">
+        <button class="nav-item" onclick="goTo('actioncenter',this)" style="border:1.5px solid #27AE60;color:#27AE60;margin-bottom:4px"><span class="ic">⚡</span><span>Action Centre</span></button>
         <button class="nav-item" onclick="goTo('foods',this)"><span class="ic">🥗</span><span>Food Database</span></button>
         <button class="nav-item" onclick="goTo('coupons',this)"><span class="ic">🎟️</span><span data-t="nav_coupons">Coupons</span></button>
         <button class="nav-item" onclick="goTo('payments',this)"><span class="ic">💳</span><span data-t="nav_payments">Payments</span></button>
@@ -2230,6 +2235,53 @@ input:focus, select:focus, textarea:focus {
         <div id="biz-leaderboard"></div>
       </div>
       <div id="biz-content"></div>
+    </div>
+    <!-- ACTION CENTRE -->
+    <div class="sec" id="sec-actioncenter">
+      <div class="ph">
+        <div>
+          <div class="pt">⚡ Action Centre</div>
+          <div class="ps">Operational command centre — automated task priority & daily execution</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_ActionCenter.refreshTasks()">🔄 Refresh Tasks</button>
+      </div>
+
+      <div id="action-center-stats" class="stats" style="margin-bottom:20px"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group">
+            <span class="slicer-label">🔴 Priority</span>
+            <div class="slicer-chip-row">
+              <span class="slicer-chip active" data-ac-filter="priority" data-val="" onclick="PulseIQ_ActionCenter.setFilter('priority','',this)">All</span>
+              <span class="slicer-chip" data-ac-filter="priority" data-val="HIGH" onclick="PulseIQ_ActionCenter.setFilter('priority','HIGH',this)">High 🔴</span>
+              <span class="slicer-chip" data-ac-filter="priority" data-val="MEDIUM" onclick="PulseIQ_ActionCenter.setFilter('priority','MEDIUM',this)">Medium 🟡</span>
+              <span class="slicer-chip" data-ac-filter="priority" data-val="LOW" onclick="PulseIQ_ActionCenter.setFilter('priority','LOW',this)">Low 🟢</span>
+            </div>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🏷️ Category</span>
+            <select class="slicer-select" id="ac-category-filter" onchange="PulseIQ_ActionCenter.setCategoryFilter(this.value)">
+              <option value="">All Categories</option>
+              <option value="Attendance">Attendance</option>
+              <option value="Membership">Membership</option>
+              <option value="Inventory">Inventory</option>
+              <option value="Finance">Finance</option>
+              <option value="BodyComposition">Body Composition</option>
+              <option value="Coach">Coach & Team</option>
+            </select>
+          </div>
+          <div class="slicer-group" style="flex:1;min-width:200px">
+            <span class="slicer-label">🔍 Search Tasks</span>
+            <input type="text" class="slicer-input" id="ac-search-input" placeholder="Search by customer, product, or title..." oninput="PulseIQ_ActionCenter.setSearchQuery(this.value)"/>
+          </div>
+          <button class="slicer-reset" onclick="PulseIQ_ActionCenter.resetFilters()">✕ Reset</button>
+        </div>
+      </div>
+
+      <!-- Task Cards Feed Container -->
+      <div id="action-center-feed"></div>
     </div>
     <!-- PIN TRACKER -->
     <div class="sec" id="sec-pintracker">
