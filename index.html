@@ -1044,6 +1044,10 @@ input:focus, select:focus, textarea:focus {
 <script defer src="coach-analytics/scoring-engine.js"></script>
 <script defer src="coach-analytics/analytics-renderer.js"></script>
 <script defer src="coach-analytics/index.js"></script>
+<script defer src="customer-followup/template-engine.js"></script>
+<script defer src="customer-followup/followup-engine.js"></script>
+<script defer src="customer-followup/queue-renderer.js"></script>
+<script defer src="customer-followup/index.js"></script>
 </head>
 <body>
 
@@ -1194,6 +1198,7 @@ input:focus, select:focus, textarea:focus {
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
       <div id="g-ops" style="display:none">
         <button class="nav-item" onclick="goTo('actioncenter',this)" style="border:1.5px solid #27AE60;color:#27AE60;margin-bottom:4px"><span class="ic">⚡</span><span>Action Centre</span></button>
+        <button class="nav-item" onclick="goTo('customerfollowup',this)" style="border:1.5px solid #25D366;color:#25D366;margin-bottom:4px"><span class="ic">📲</span><span>Follow-up Queue</span></button>
         <button class="nav-item" onclick="goTo('foods',this)"><span class="ic">🥗</span><span>Food Database</span></button>
         <button class="nav-item" onclick="goTo('coupons',this)"><span class="ic">🎟️</span><span data-t="nav_coupons">Coupons</span></button>
         <button class="nav-item" onclick="goTo('payments',this)"><span class="ic">💳</span><span data-t="nav_payments">Payments</span></button>
@@ -2370,6 +2375,63 @@ input:focus, select:focus, textarea:focus {
 
       <!-- Coach Performance Cards Feed -->
       <div id="coach-cards-feed"></div>
+    </div>
+    <!-- AUTOMATED CUSTOMER FOLLOW-UPS -->
+    <div class="sec" id="sec-customerfollowup">
+      <div class="ph">
+        <div>
+          <div class="pt">📲 Customer Follow-up Queue</div>
+          <div class="ps">Structured engagement queue & deterministic message templates — Human Approval Required</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_CustomerFollowup.refreshQueue()">🔄 Refresh Queue</button>
+      </div>
+
+      <div id="followup-dashboard-stats" class="stats" style="margin-bottom:20px"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group">
+            <span class="slicer-label">📋 Approval Status</span>
+            <div class="slicer-chip-row">
+              <span class="slicer-chip active" data-fu-filter="approval" data-val="pending" onclick="PulseIQ_CustomerFollowup.setApprovalFilter('pending',this)">Pending ⏳</span>
+              <span class="slicer-chip" data-fu-filter="approval" data-val="approved" onclick="PulseIQ_CustomerFollowup.setApprovalFilter('approved',this)">Approved ✓</span>
+              <span class="slicer-chip" data-fu-filter="approval" data-val="dismissed" onclick="PulseIQ_CustomerFollowup.setApprovalFilter('dismissed',this)">Dismissed ✕</span>
+              <span class="slicer-chip" data-fu-filter="approval" data-val="all" onclick="PulseIQ_CustomerFollowup.setApprovalFilter('all',this)">All</span>
+            </div>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🔴 Priority</span>
+            <div class="slicer-chip-row">
+              <span class="slicer-chip active" data-fu-filter="priority" data-val="" onclick="PulseIQ_CustomerFollowup.setFilter('priority','',this)">All</span>
+              <span class="slicer-chip" data-fu-filter="priority" data-val="HIGH" onclick="PulseIQ_CustomerFollowup.setFilter('priority','HIGH',this)">High 🔴</span>
+              <span class="slicer-chip" data-fu-filter="priority" data-val="MEDIUM" onclick="PulseIQ_CustomerFollowup.setFilter('priority','MEDIUM',this)">Medium 🟡</span>
+              <span class="slicer-chip" data-fu-filter="priority" data-val="LOW" onclick="PulseIQ_CustomerFollowup.setFilter('priority','LOW',this)">Low 🟢</span>
+            </div>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🏷️ Category</span>
+            <select class="slicer-select" id="fu-category-filter" onchange="PulseIQ_CustomerFollowup.setCategoryFilter(this.value)">
+              <option value="">All Categories</option>
+              <option value="HighRisk">High Risk Churn</option>
+              <option value="Attendance">Missed Attendance</option>
+              <option value="Membership">Membership Expiry</option>
+              <option value="BodyScan">Body Scan Reminder</option>
+              <option value="Milestone">Progress Milestone</option>
+              <option value="Onboarding">New Member Onboarding</option>
+              <option value="Birthday">Birthday Greeting</option>
+            </select>
+          </div>
+          <div class="slicer-group" style="flex:1;min-width:180px">
+            <span class="slicer-label">🔍 Search Queue</span>
+            <input type="text" class="slicer-input" id="fu-search-input" placeholder="Search customer, phone, or text..." oninput="PulseIQ_CustomerFollowup.setSearchQuery(this.value)"/>
+          </div>
+          <button class="slicer-reset" onclick="PulseIQ_CustomerFollowup.resetFilters()">✕ Reset</button>
+        </div>
+      </div>
+
+      <!-- Follow-up Queue Cards Feed -->
+      <div id="followup-queue-feed"></div>
     </div>
     <!-- PIN TRACKER -->
     <div class="sec" id="sec-pintracker">
