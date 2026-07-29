@@ -16,6 +16,7 @@
 6. **Presentation-Only UI Enhancements**: UI improvements must only change presentation (HTML/CSS/UI components/animations).
 7. **Explicit Approval Gate**: If a requested task would require changing business logic, routing, authentication, APIs, or database structure, **STOP and ask for explicit user approval** before implementing.
 8. **No Rewrite Policy**: Never replace a working production module with a rewritten version.
+9. **Additive Business Intelligence Rule**: Business Intelligence modules must be strictly additive. Existing production tables, workflows, APIs, and business logic shall never be replaced or rewritten. New analytics must consume existing data in read-only mode. If persistence is required (cached summaries, forecasts, AI insights, etc.), it must use new additive tables or views. Backward compatibility with all existing production functionality is mandatory.
 
 ---
 
