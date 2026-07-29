@@ -598,6 +598,14 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
   .slicer-bar-inner{flex-direction:column;align-items:stretch}
   .slicer-group{min-width:100% !important;width:100% !important}
   #sec-profile [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
+  [style*="grid-template-columns"],
+  [style*="grid-template-columns:1fr 1fr"],
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="grid-template-columns:repeat"],
+  [style*="grid-template-columns: repeat"] {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
 }
 
 /* ── SLICERS & REPORTS ── */
