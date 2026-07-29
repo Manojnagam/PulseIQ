@@ -1052,6 +1052,11 @@ input:focus, select:focus, textarea:focus {
 <script defer src="goal-tracking/progress-engine.js"></script>
 <script defer src="goal-tracking/dashboard-renderer.js"></script>
 <script defer src="goal-tracking/index.js"></script>
+<script defer src="forecasting/confidence-engine.js"></script>
+<script defer src="forecasting/trend-engine.js"></script>
+<script defer src="forecasting/forecast-engine.js"></script>
+<script defer src="forecasting/dashboard-renderer.js"></script>
+<script defer src="forecasting/index.js"></script>
 </head>
 <body>
 
@@ -1197,6 +1202,7 @@ input:focus, select:focus, textarea:focus {
         <button class="nav-item nav-supervisor-only" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span><span data-t="nav_bizanalyst">Biz Analyst</span></button>
         <button class="nav-item" onclick="goTo('customerrisk',this)" style="border:1.5px solid #ef4444;color:#ef4444;margin-bottom:4px"><span class="ic">🎯</span><span>Customer Risk</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('coachanalytics',this)" style="border:1.5px solid #38bdf8;color:#38bdf8;margin-bottom:4px"><span class="ic">📊</span><span>Coach Analytics</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('forecasting',this)" style="border:1.5px solid #a78bfa;color:#a78bfa;margin-bottom:4px"><span class="ic">📈</span><span>Forecasting</span></button>
         <button class="nav-item" onclick="goTo('notifications',this)"><span class="ic">🔔</span><span data-t="nav_notifications">Notifications</span></button>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
@@ -2477,6 +2483,54 @@ input:focus, select:focus, textarea:focus {
 
       <!-- Target Comparison Table -->
       <div id="goal-comparison-table"></div>
+    </div>
+    <!-- FORECASTING & PREDICTIVE BUSINESS TRENDS -->
+    <div class="sec" id="sec-forecasting">
+      <div class="ph">
+        <div>
+          <div class="pt">📈 Forecasting & Predictive Business Trends</div>
+          <div class="ps">Short-term statistical projections & trend trajectories — Pure Deterministic Math</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_Forecasting.refreshDashboard()">🔄 Recalculate Forecasts</button>
+      </div>
+
+      <div id="forecast-dashboard-stats" class="stats" style="margin-bottom:20px"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group">
+            <span class="slicer-label">⏱️ Forecast Horizon</span>
+            <select class="slicer-select" id="forecast-horizon-select" onchange="PulseIQ_Forecasting.setHorizon(this.value)">
+              <option value="Next 30 Days">Next 30 Days (Short Term)</option>
+              <option value="Next 60 Days">Next 60 Days (Medium Term)</option>
+              <option value="Next 90 Days">Next 90 Days (Quarterly)</option>
+            </select>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🏷️ Domain Category</span>
+            <select class="slicer-select" id="forecast-category-filter" onchange="PulseIQ_Forecasting.setCategoryFilter(this.value)">
+              <option value="">All Categories</option>
+              <option value="Finance">Finance & Revenue</option>
+              <option value="Operations">Operations & Attendance</option>
+              <option value="Growth">Growth & Members</option>
+              <option value="Customer">Customer & Renewals</option>
+              <option value="Inventory">Inventory & Products</option>
+              <option value="Team">Team & Coach Load</option>
+            </select>
+          </div>
+          <div class="slicer-group" style="flex:1;min-width:180px">
+            <span class="slicer-label">🔍 Search Forecast</span>
+            <input type="text" class="slicer-input" id="forecast-search-input" placeholder="Search by metric..." oninput="PulseIQ_Forecasting.setSearchQuery(this.value)"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Forecast Cards Feed Container -->
+      <div id="forecast-cards-feed"></div>
+
+      <!-- Forecast Comparison Table -->
+      <div id="forecast-comparison-table"></div>
     </div>
     <!-- PIN TRACKER -->
     <div class="sec" id="sec-pintracker">
