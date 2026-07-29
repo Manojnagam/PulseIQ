@@ -2574,8 +2574,23 @@ function goTo(name, el) {
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
   var sec = document.getElementById('sec-'+name);
   if (sec) sec.classList.add('active');
-  if (el) el.classList.add('active');
-  if (window.innerWidth <= 768) toggleSidebar();
+  if (el) {
+    el.classList.add('active');
+    try {
+      var pGrp = el.closest ? el.closest('div[id^="g-"]') : el.parentElement;
+      if (pGrp && pGrp.id) {
+        pGrp.style.display = '';
+        var lbl = pGrp.previousElementSibling;
+        if (lbl) lbl.classList.remove('collapsed');
+      }
+    } catch(e) {}
+  }
+  if (window.innerWidth <= 768) {
+    var sb = document.getElementById('sidebar');
+    var sbo = document.getElementById('sb-overlay');
+    if (sb) sb.classList.remove('open');
+    if (sbo) sbo.classList.remove('open');
+  }
   if (name==='foods')      setTimeout(function(){ renderFoodStats(); renderFoods(); }, 80);
   if (name==='attendance') setTimeout(renderAttendance, 80);
   if (name==='analytics') setTimeout(renderAnalytics, 80);

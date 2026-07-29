@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- saved from url=(0050)file:///C:/Users/nagam/Downloads/PulseIQ-v3_2.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <title>PulseZen Dashboard</title>
 <meta name="apple-mobile-web-app-title" content="PulseZen">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -459,19 +459,37 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 .inv-usage-stat-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .inv-usage-stat-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--primary);margin-top:2px}
 @media(max-width:768px){
-  .sidebar{transform:translateX(-100%)}
+  .sidebar{width:285px;max-width:85vw;transform:translateX(-100%);z-index:1000;-webkit-overflow-scrolling:touch}
   .sidebar.open{transform:translateX(0)}
+  .sb-overlay{z-index:999}
   .sb-overlay.open{display:block}
-  .main{margin-left:0;padding:60px 14px 20px}
-  .menu-btn{display:block}
-  .sb-logo h1{font-size:13px}
-  .fr{grid-template-columns:1fr}
-  .ph{flex-direction:column;align-items:flex-start}
+  .main{margin-left:0;padding:64px 12px 24px;width:100%;box-sizing:border-box;overflow-x:hidden}
+  .menu-btn{display:block;z-index:1001}
+  .sb-logo h1{font-size:14px}
+  .sb-nav #g-portals, .sb-nav #g-analytics, .sb-nav #g-ops, .sb-nav #g-setup{display:block !important}
+  .sb-nav .nav-lbl{color:var(--primary-light);font-size:10px}
+  .sb-nav .nav-lbl.collapsed .nav-arrow{transform:rotate(0deg)}
+  .fr{grid-template-columns:1fr !important}
+  .ph{flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:20px}
+  .pt{font-size:22px !important;word-break:break-word}
+  .ps{font-size:12px !important}
+  .stats{grid-template-columns:repeat(2, 1fr) !important;gap:10px !important;margin-bottom:20px}
+  .stat{padding:14px 12px !important}
+  .stat-l{font-size:10px !important}
+  .stat-v{font-size:20px !important}
+  .twrap{overflow-x:auto !important;-webkit-overflow-scrolling:touch !important;max-width:100% !important;border-radius:12px}
+  .slicer-bar-inner{flex-direction:column;align-items:stretch}
+  .slicer-group{min-width:100% !important;width:100% !important}
+  .ov-grid, .ov-grid-3{grid-template-columns:1fr !important;gap:14px}
   #sec-profile [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
 }
 
 @media(max-width:480px){
-  .stat-v{font-size: 17px !important;}
+  .stats{grid-template-columns:repeat(2, 1fr) !important;gap:8px !important}
+  .stat{padding:12px 10px !important}
+  .stat-v{font-size: 18px !important;}
+  .btn-p{width:100%;justify-content:center;padding:10px 16px;font-size:13px}
+  .tcard{padding:16px 12px !important}
 }
 
 /* ── SLICERS & REPORTS ── */
