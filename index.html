@@ -1057,6 +1057,10 @@ input:focus, select:focus, textarea:focus {
 <script defer src="forecasting/forecast-engine.js"></script>
 <script defer src="forecasting/dashboard-renderer.js"></script>
 <script defer src="forecasting/index.js"></script>
+<script defer src="executive-dashboard/overview-engine.js"></script>
+<script defer src="executive-dashboard/widget-engine.js"></script>
+<script defer src="executive-dashboard/dashboard-renderer.js"></script>
+<script defer src="executive-dashboard/index.js"></script>
 </head>
 <body>
 
@@ -1160,9 +1164,8 @@ input:focus, select:focus, textarea:focus {
 
 
 
-<!-- APP -->
 <div id="app" style="display: none;">
-  <nav class="sidebar" id="sidebar">
+<nav class="sidebar" id="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-inner">
         <div class="sb-logo-icon">🌿</div>
@@ -1180,6 +1183,7 @@ input:focus, select:focus, textarea:focus {
       <div class="nav-lbl" onclick="toggleNavGroup('g-mgmt')"><span data-t="nav_management">Management</span><span class="nav-arrow">▾</span></div>
       <div id="g-mgmt">
         <button class="nav-item active" onclick="goTo(&#39;overview&#39;,this)"><span class="ic">🏠</span><span data-t="nav_overview">Overview</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('executivedashboard',this)" style="border:1.5px solid #38bdf8;color:#38bdf8;margin-bottom:4px"><span class="ic">👑</span><span>Executive Command</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo(&#39;centers&#39;,this)"><span class="ic">🏢</span><span data-t="nav_centers">Wellness Centers</span></button>
         <button class="nav-item" onclick="goTo(&#39;coaches&#39;,this)"><span class="ic">👨‍🏫</span><span data-t="nav_coaches">Coaches</span></button>
         <button id="nav-customers" class="nav-item" onclick="goTo(&#39;customers&#39;,this)"><span class="ic">👤</span><span data-t="nav_customers">Customers</span></button>
@@ -2531,6 +2535,22 @@ input:focus, select:focus, textarea:focus {
 
       <!-- Forecast Comparison Table -->
       <div id="forecast-comparison-table"></div>
+    </div>
+    <!-- EXECUTIVE INTELLIGENCE DASHBOARD -->
+    <div class="sec" id="sec-executivedashboard">
+      <div class="ph">
+        <div>
+          <div class="pt">👑 Executive Intelligence Command</div>
+          <div class="ps">Unified executive operations centre — consolidated Phase 2 intelligence briefing</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_ExecutiveDashboard.refreshDashboard()">🔄 Refresh Executive Dashboard</button>
+      </div>
+
+      <!-- Executive Briefing Hero Box -->
+      <div id="exec-briefing-hero"></div>
+
+      <!-- Executive Responsive Widget Grid -->
+      <div id="exec-widget-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px"></div>
     </div>
     <!-- PIN TRACKER -->
     <div class="sec" id="sec-pintracker">
