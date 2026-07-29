@@ -1,8 +1,21 @@
 # PROJECT_RULES.md — GSD Canonical Rules
 
-> **Single Source of Truth** for the Get Shit Done methodology.
+> **Single Source of Truth** for the Get Shit Done methodology and Production Safety.
 > 
 > Model-agnostic. All adapters and extensions reference this file.
+
+---
+
+## 🔒 PRODUCTION SAFETY RULES (STRICT & IMMUTABLE)
+
+1. **Live Production Protection**: PulseIQ is a live production system for an operating wellness center.
+2. **Frozen Business Logic**: Business logic is frozen unless explicitly approved.
+3. **Frozen Database Schema**: Database schema is frozen unless explicitly approved.
+4. **No Unapproved Migrations**: Supabase tables must NEVER be modified without an approved migration plan.
+5. **Backwards Compatibility**: Existing routes and workflows must remain 100% backwards compatible.
+6. **Presentation-Only UI Enhancements**: UI improvements must only change presentation (HTML/CSS/UI components/animations).
+7. **Explicit Approval Gate**: If a requested task would require changing business logic, routing, authentication, APIs, or database structure, **STOP and ask for explicit user approval** before implementing.
+8. **No Rewrite Policy**: Never replace a working production module with a rewritten version.
 
 ---
 
