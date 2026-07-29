@@ -1036,6 +1036,10 @@ input:focus, select:focus, textarea:focus {
 <script defer src="action-center/action-engine.js"></script>
 <script defer src="action-center/task-renderer.js"></script>
 <script defer src="action-center/index.js"></script>
+<script defer src="customer-risk/scoring-engine.js"></script>
+<script defer src="customer-risk/risk-engine.js"></script>
+<script defer src="customer-risk/risk-renderer.js"></script>
+<script defer src="customer-risk/index.js"></script>
 </head>
 <body>
 
@@ -1179,6 +1183,7 @@ input:focus, select:focus, textarea:focus {
       <div id="g-analytics" style="display:none">
         <button class="nav-item" onclick="goTo('analytics',this)"><span class="ic">📈</span><span data-t="nav_analytics">Analytics</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span><span data-t="nav_bizanalyst">Biz Analyst</span></button>
+        <button class="nav-item" onclick="goTo('customerrisk',this)" style="border:1.5px solid #ef4444;color:#ef4444;margin-bottom:4px"><span class="ic">🎯</span><span>Customer Risk</span></button>
         <button class="nav-item" onclick="goTo('notifications',this)"><span class="ic">🔔</span><span data-t="nav_notifications">Notifications</span></button>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
@@ -2282,6 +2287,50 @@ input:focus, select:focus, textarea:focus {
 
       <!-- Task Cards Feed Container -->
       <div id="action-center-feed"></div>
+    </div>
+    <!-- CUSTOMER RISK PREDICTION -->
+    <div class="sec" id="sec-customerrisk">
+      <div class="ph">
+        <div>
+          <div class="pt">🎯 Customer Risk Prediction</div>
+          <div class="ps">Deterministic churn risk scoring & retention directives</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_CustomerRisk.refreshDashboard()">🔄 Recalculate Risk</button>
+      </div>
+
+      <div id="risk-dashboard-stats" class="stats" style="margin-bottom:20px"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group">
+            <span class="slicer-label">🔴 Churn Risk Level</span>
+            <div class="slicer-chip-row">
+              <span class="slicer-chip active" data-risk-filter="level" data-val="" onclick="PulseIQ_CustomerRisk.setFilter('',this)">All</span>
+              <span class="slicer-chip" data-risk-filter="level" data-val="HIGH" onclick="PulseIQ_CustomerRisk.setFilter('HIGH',this)">High Risk 🔴</span>
+              <span class="slicer-chip" data-risk-filter="level" data-val="MEDIUM" onclick="PulseIQ_CustomerRisk.setFilter('MEDIUM',this)">Medium Risk 🟡</span>
+              <span class="slicer-chip" data-risk-filter="level" data-val="LOW" onclick="PulseIQ_CustomerRisk.setFilter('LOW',this)">Low Risk 🟢</span>
+            </div>
+          </div>
+          <div class="slicer-group" style="flex:1;min-width:180px">
+            <span class="slicer-label">🔍 Search Customer</span>
+            <input type="text" class="slicer-input" id="risk-search-input" placeholder="Search by name, phone, or coach..." oninput="PulseIQ_CustomerRisk.setSearchQuery(this.value)"/>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🔃 Sort By</span>
+            <select class="slicer-select" id="risk-sort-select" onchange="PulseIQ_CustomerRisk.setSortBy(this.value)">
+              <option value="score_desc">Highest Risk Score (0–100)</option>
+              <option value="score_asc">Lowest Risk Score</option>
+              <option value="absent_desc">Most Days Absent</option>
+              <option value="name">Customer Name</option>
+            </select>
+          </div>
+          <button class="slicer-reset" onclick="PulseIQ_CustomerRisk.resetFilters()">✕ Reset</button>
+        </div>
+      </div>
+
+      <!-- Customer Risk Feed Container -->
+      <div id="risk-profiles-feed"></div>
     </div>
     <!-- PIN TRACKER -->
     <div class="sec" id="sec-pintracker">
