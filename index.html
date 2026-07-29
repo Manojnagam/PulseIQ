@@ -1048,6 +1048,10 @@ input:focus, select:focus, textarea:focus {
 <script defer src="customer-followup/followup-engine.js"></script>
 <script defer src="customer-followup/queue-renderer.js"></script>
 <script defer src="customer-followup/index.js"></script>
+<script defer src="goal-tracking/target-engine.js"></script>
+<script defer src="goal-tracking/progress-engine.js"></script>
+<script defer src="goal-tracking/dashboard-renderer.js"></script>
+<script defer src="goal-tracking/index.js"></script>
 </head>
 <body>
 
@@ -1199,6 +1203,7 @@ input:focus, select:focus, textarea:focus {
       <div id="g-ops" style="display:none">
         <button class="nav-item" onclick="goTo('actioncenter',this)" style="border:1.5px solid #27AE60;color:#27AE60;margin-bottom:4px"><span class="ic">⚡</span><span>Action Centre</span></button>
         <button class="nav-item" onclick="goTo('customerfollowup',this)" style="border:1.5px solid #25D366;color:#25D366;margin-bottom:4px"><span class="ic">📲</span><span>Follow-up Queue</span></button>
+        <button class="nav-item" onclick="goTo('goaltracking',this)" style="border:1.5px solid #f59e0b;color:#f59e0b;margin-bottom:4px"><span class="ic">🎯</span><span>Goal Tracking</span></button>
         <button class="nav-item" onclick="goTo('foods',this)"><span class="ic">🥗</span><span>Food Database</span></button>
         <button class="nav-item" onclick="goTo('coupons',this)"><span class="ic">🎟️</span><span data-t="nav_coupons">Coupons</span></button>
         <button class="nav-item" onclick="goTo('payments',this)"><span class="ic">💳</span><span data-t="nav_payments">Payments</span></button>
@@ -2432,6 +2437,46 @@ input:focus, select:focus, textarea:focus {
 
       <!-- Follow-up Queue Cards Feed -->
       <div id="followup-queue-feed"></div>
+    </div>
+    <!-- GOAL TRACKING & KPI TARGETS -->
+    <div class="sec" id="sec-goaltracking">
+      <div class="ph">
+        <div>
+          <div class="pt">🎯 Goal Tracking & Strategic KPI Targets</div>
+          <div class="ps">Strategic performance tracking — compare actual operational metrics vs business goals</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_GoalTracking.refreshDashboard()">🔄 Recalculate Goals</button>
+      </div>
+
+      <!-- Strategic Overview Header Box -->
+      <div id="goal-business-overview"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group">
+            <span class="slicer-label">🏷️ Filter Category</span>
+            <select class="slicer-select" id="goal-category-filter" onchange="PulseIQ_GoalTracking.setCategoryFilter(this.value)">
+              <option value="">All Categories</option>
+              <option value="Finance">Finance</option>
+              <option value="Customer">Customer & Renewals</option>
+              <option value="Operations">Operations & Attendance</option>
+              <option value="Growth">Growth & Onboarding</option>
+              <option value="Team">Team & Coach Performance</option>
+            </select>
+          </div>
+          <div class="slicer-group" style="flex:1;min-width:200px">
+            <span class="slicer-label">🔍 Search KPI</span>
+            <input type="text" class="slicer-input" id="goal-search-input" placeholder="Search by KPI name..." oninput="PulseIQ_GoalTracking.setSearchQuery(this.value)"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Target Cards Feed -->
+      <div id="goal-kpi-feed"></div>
+
+      <!-- Target Comparison Table -->
+      <div id="goal-comparison-table"></div>
     </div>
     <!-- PIN TRACKER -->
     <div class="sec" id="sec-pintracker">
