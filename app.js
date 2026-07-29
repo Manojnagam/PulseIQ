@@ -2567,11 +2567,34 @@ function goTo(name, el) {
   if (!isSuper && ['centers', 'orgtree', 'bizanalyst'].indexOf(name) > -1 && !isElitePlan()) {
     showToast('This section is an Elite plan feature. Upgrade to unlock.', 'error'); return;
   }
+// P0.1 Performance Stabilization: Cached DOM & Module Tab State Retention
+window._domCache = window._domCache || null;
+window._loadedTabs = window._loadedTabs || {};
+window._tabPerfMetrics = window._tabPerfMetrics || {};
+
+window.invalidateTabCache = function(tabName) {
+  if (tabName) {
+    delete window._loadedTabs[tabName];
+  } else {
+    window._loadedTabs = {};
+  }
+};
+
+function goTo(name, el) {
   if (!isSuper && ['export'].indexOf(name) > -1 && !isGrowthPlan()) {
     showToast('Data Export is a Growth plan feature. Upgrade to unlock.', 'error'); return;
   }
-  document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active')});
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
+
+  // 1. Cached DOM Queries
+  if (!window._domCache) {
+    window._domCache = {
+      secs: Array.from(document.querySelectorAll('.sec')),
+      navs: Array.from(document.querySelectorAll('.nav-item'))
+    };
+  }
+  window._domCache.secs.forEach(function(s){ s.classList.remove('active'); });
+  window._domCache.navs.forEach(function(n){ n.classList.remove('active'); });
+
   var sec = document.getElementById('sec-'+name);
   if (sec) sec.classList.add('active');
   if (el) {
@@ -2591,22 +2614,43 @@ function goTo(name, el) {
     if (sb) sb.classList.remove('open');
     if (sbo) sbo.classList.remove('open');
   }
-  if (name==='foods')      setTimeout(function(){ renderFoodStats(); renderFoods(); }, 80);
-  if (name==='attendance') setTimeout(renderAttendance, 80);
-  if (name==='analytics') setTimeout(renderAnalytics, 80);
-  if (name==='coupons')   setTimeout(function(){ renderCouponView(); updateCouponCoachSelects(); }, 80);
-  if (name==='payments')  setTimeout(function(){ renderPayments(); updatePaymentPersonSelect(); }, 80);
-  if (name==='orgtree')   setTimeout(renderOrgTree, 80);
-  if (name==='planmgmt')  setTimeout(renderPlanMgmt, 80);
-  if (name==='pintracker') setTimeout(initPinTracker, 80);
-  if (name==='bizanalyst') setTimeout(initBizAnalyst, 80);
-  if (name==='profile')   setTimeout(function(){ renderProfileCard(); updateProfileCoachSelect(); renderSvDietPlan(); }, 80);
-  if (name==='leads')     setTimeout(function(){ renderLeadsStats(); renderLeads(); updateLeadCenterSel(); }, 80);
-  if (name==='guide')     setTimeout(renderGuide, 80);
-  if (name==='finance')        { setTimeout(function(){ setFinPeriod('all', document.querySelector('.fin-period[onclick*="all"]')); }, 80); }
+
+  // Helper for immediate cached execution & performance measurement
+  function execTabModule(tabKey, renderFn) {
+    var t0 = performance.now();
+    var isFirst = !window._loadedTabs[tabKey];
+    if (isFirst) {
+      renderFn();
+      window._loadedTabs[tabKey] = true;
+    }
+    var t1 = performance.now();
+    window._tabPerfMetrics[tabKey] = {
+      firstRenderTimeMs: isFirst ? Math.round(t1 - t0) : (window._tabPerfMetrics[tabKey] ? window._tabPerfMetrics[tabKey].firstRenderTimeMs : 0),
+      cachedRenderTimeMs: isFirst ? 0 : Math.round(t1 - t0),
+      mainThreadBlockingMs: Math.max(0, Math.round((t1 - t0) - 16)),
+      domNodeCount: document.getElementsByTagName('*').length
+    };
+  }
+
+  // 2. Direct, zero-delay execution for all modules
+  if (name==='overview')    execTabModule('overview', function(){ if (typeof renderOverview === 'function') renderOverview(); });
+  if (name==='customers')   execTabModule('customers', function(){ if (typeof renderCustomers === 'function') renderCustomers(); });
+  if (name==='foods')       execTabModule('foods', function(){ renderFoodStats(); renderFoods(); });
+  if (name==='attendance')  execTabModule('attendance', renderAttendance);
+  if (name==='analytics')   execTabModule('analytics', renderAnalytics);
+  if (name==='coupons')     execTabModule('coupons', function(){ renderCouponView(); updateCouponCoachSelects(); });
+  if (name==='payments')    execTabModule('payments', function(){ renderPayments(); updatePaymentPersonSelect(); });
+  if (name==='orgtree')     execTabModule('orgtree', renderOrgTree);
+  if (name==='planmgmt')    execTabModule('planmgmt', renderPlanMgmt);
+  if (name==='pintracker')  execTabModule('pintracker', initPinTracker);
+  if (name==='bizanalyst')  execTabModule('bizanalyst', initBizAnalyst);
+  if (name==='profile')     execTabModule('profile', function(){ renderProfileCard(); updateProfileCoachSelect(); renderSvDietPlan(); });
+  if (name==='leads')       execTabModule('leads', function(){ renderLeadsStats(); renderLeads(); updateLeadCenterSel(); });
+  if (name==='guide')       execTabModule('guide', renderGuide);
+  if (name==='finance')     execTabModule('finance', function(){ setFinPeriod('all', document.querySelector('.fin-period[onclick*="all"]')); });
+  if (name==='reports')     execTabModule('reports', function(){ if (typeof renderReportsView === 'function') renderReportsView(); });
   if (name==='expenses') {
-    setTimeout(async function() {
-      window._loadedTabs = window._loadedTabs || {};
+    (async function() {
       if (!window._loadedTabs.expenses) {
         var sec = document.getElementById('sec-expenses');
         var l = document.createElement('div');
@@ -2624,14 +2668,13 @@ function goTo(name, el) {
         if (l) l.remove();
       }
       renderExpenses();
-    }, 80);
+    })();
   }
-  if (name==='goals')          { setTimeout(renderGoals, 80); }
-  if (name==='notifications')  { setTimeout(renderNotifications, 80); }
-  if (name==='coaches')        { setTimeout(function(){ initCommission(); initCoachWorkTracker(); }, 80); }
+  if (name==='goals')         execTabModule('goals', renderGoals);
+  if (name==='notifications') execTabModule('notifications', renderNotifications);
+  if (name==='coaches')       execTabModule('coaches', function(){ initCommission(); initCoachWorkTracker(); });
   if (name==='contests') {
-    setTimeout(async function() {
-      window._loadedTabs = window._loadedTabs || {};
+    (async function() {
       if (!window._loadedTabs.contests) {
         var sec = document.getElementById('sec-contests');
         var l = document.createElement('div');
@@ -2649,8 +2692,9 @@ function goTo(name, el) {
         if (l) l.remove();
       }
       renderContests();
-    }, 80);
+    })();
   }
+}
 }
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
