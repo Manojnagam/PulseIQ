@@ -554,7 +554,7 @@ function renderGlobalSearch() {
       : r.type === 'coach'
       ? "goTo('coaches',document.querySelector('[onclick*=coaches]'));document.getElementById('ov-global-search').value='';document.getElementById('ov-global-results').style.display='none';"
       : "goTo('centers',document.querySelector('[onclick*=centers]'));document.getElementById('ov-global-search').value='';document.getElementById('ov-global-results').style.display='none';";
-    return '<div onclick="'+onclick+'" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;transition:background .15s" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">'
+    return '<div onclick="'+onclick+'" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;transition:background .15s">'
       + '<div><div style="font-size:13px;font-weight:600;color:var(--text)">'+r.name+'</div><div style="font-size:11px;color:var(--muted);margin-top:1px">'+r.sub+'</div></div>'
       + r.badge
       + '</div>';
@@ -582,52 +582,8 @@ function exportCSV(headers, rows, filename) {
 }
 function exportCustomersCSV() {
   if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Basic plan feature (₹499/mo).', 'error'); return; }
-  var custs = filterByCenter(D.customers);
-  exportCSV(
-    ['Name','Contact','Email','Pack','Start Date','Days Left','Status','Goal','Issues','Coach','Center','Joined'],
-    custs.map(function(c){
-      var st = getDaysLeft(c);
-      return [c.name, c.contact||'', c.email||'', c.pack_type||'', c.start_date||'', st.active?st.days:'Expired', st.active?'Active':'Expired', c.goal||'', c.issues||'', c.coach_name||'', getCenterById(c.wellness_center_id)||'', c.join_date||c.created_at||''];
-    }),
-    'customers'
-  );
-}
-function exportFinanceCSV() {
-  if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Basic plan feature (₹499/mo).', 'error'); return; }
-  var fin = filterFinanceByCenter(D.finance);
-  exportCSV(
-    ['Type','Description','Amount','Category','Date','Center'],
-    fin.map(function(f){
-      return [f.type||'', f.description||'', f.amount||0, f.category||'', f.date||'', getCenterById(f.wellness_center_id)||''];
-    }),
-    'finance'
-  );
-}
-function exportAttendanceCSV() {
-  var att = filterByCenterViaCustomer(D.attendance);
-  exportCSV(
-    ['Customer','Date','Status','Notes'],
-    att.map(function(a){
-      var c = (D.customers||[]).find(function(x){return x.id===a.customer_id;});
-      return [c?c.name:a.customer_id, a.date||'', a.status||'', a.notes||''];
-    }),
-    'attendance'
-  );
-}
-function exportBodyCSV() {
-  var linkedIds = _selectedBodyCustId ? getLinkedBodyCustomerIds(_selectedBodyCustId) : null;
-  var body = _selectedBodyCustId
-    ? (D.body||[]).filter(function(b){return linkedIds.indexOf(b.customer_id)!==-1;})
-    : (D.body||[]);
-  exportCSV(
-    ['Customer','Date','Height','Age','Weight','Fat%','Visceral Fat','BMR','BMI','Body Age','Subcu Fat%','Muscle%'],
-    body.map(function(b){
-      var c = (D.customers||[]).find(function(x){return x.id===b.customer_id;});
-      return [c?c.name:b.customer_id, b.date||'', b.height||'', b.age||'', b.weight||'', b.fat_percentage||'', b.visceral_fat||'', b.bmr||'', b.bmi||'', b.body_age||'', b.subcutaneous_fat_percentage||'', b.muscle_percentage||''];
-    }),
-    'body_composition'
-  );
-}
+
+
 function getCenterById(id) {
   if (!id) return '';
   var c = (D.centers||[]).find(function(x){return x.id===id;}); return c?c.name:'';
@@ -723,7 +679,7 @@ function triggerFirstRevenueCelebration(amount) {
       +'<div style="font-size:72px;margin-bottom:20px;">🏆</div>'
       +'<h2 style="font-size:26px;font-weight:800;color:#fff;margin-bottom:12px;letter-spacing:-0.5px;background:linear-gradient(90deg, #c084fc, #f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">First Revenue Recorded!</h2>'
       +'<p style="font-size:15px;color:#cbd5e1;line-height:1.6;margin-bottom:28px">Congratulations! You just recorded your center\'s first payment of <strong style="color:#22c55e;font-size:18px">₹'+amount+'</strong> on PulseZen. This is the first step toward scaling your wellness business! 🚀</p>'
-      +'<button onclick="document.getElementById(\''+modalId+'\').remove()" style="width:100%;padding:14px;background:linear-gradient(135deg, #a855f7 0%, #ec4899 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(168,85,247,0.4);transition:transform 0.2s" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'translateY(0)\'">Awesome, Let\'s Keep Going! 🌿</button>'
+      +'<button onclick="document.getElementById(\''+modalId+'\').remove()" style="width:100%;padding:14px;background:linear-gradient(135deg, #a855f7 0%, #ec4899 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(168,85,247,0.4);transition:transform 0.2s">Awesome, Let\'s Keep Going! 🌿</button>'
     +'</div>';
     
   el.innerHTML = modalContent;
@@ -2567,35 +2523,37 @@ function goTo(name, el) {
   if (!isSuper && ['centers', 'orgtree', 'bizanalyst'].indexOf(name) > -1 && !isElitePlan()) {
     showToast('This section is an Elite plan feature. Upgrade to unlock.', 'error'); return;
   }
-// P0.1 Performance Stabilization: Cached DOM & Module Tab State Retention
-window._domCache = window._domCache || null;
-window._loadedTabs = window._loadedTabs || {};
-window._tabPerfMetrics = window._tabPerfMetrics || {};
-
-window.invalidateTabCache = function(tabName) {
-  if (tabName) {
-    delete window._loadedTabs[tabName];
-  } else {
-    window._loadedTabs = {};
-  }
-};
-
-function goTo(name, el) {
   if (!isSuper && ['export'].indexOf(name) > -1 && !isGrowthPlan()) {
     showToast('Data Export is a Growth plan feature. Upgrade to unlock.', 'error'); return;
   }
 
-  // 1. Cached DOM Queries
-  if (!window._domCache) {
-    window._domCache = {
-      secs: Array.from(document.querySelectorAll('.sec')),
-      navs: Array.from(document.querySelectorAll('.nav-item'))
-    };
-  }
-  window._domCache.secs.forEach(function(s){ s.classList.remove('active'); });
-  window._domCache.navs.forEach(function(n){ n.classList.remove('active'); });
+  // P0.1 Performance Stabilization: Cached DOM & Module Tab State Retention
+  window._domCache = window._domCache || null;
+  window._loadedTabs = window._loadedTabs || {};
+  window._tabDirty = window._tabDirty || {};
+  window._tabPerfMetrics = window._tabPerfMetrics || {};
+
+  window.invalidateTabCache = function(tabName) {
+    if (tabName) {
+      delete window._loadedTabs[tabName];
+      window._domCache = null;
+    } else {
+      window._loadedTabs = {};
+      window._tabDirty = {};
+      window._domCache = null;
+    }
+  };
+
+  // Single-element targeted class removal (avoids iterating over all DOM sections/navs)
+  var currSec = document.querySelector('.sec.active');
+  var currNav = document.querySelector('.nav-item.active');
+  if (currSec) currSec.classList.remove('active');
+  if (currNav) currNav.classList.remove('active');
 
   var sec = document.getElementById('sec-'+name);
+  if (!sec && window._domCache) {
+    window._domCache = null; // Invalidate cache if section not in current DOM
+  }
   if (sec) sec.classList.add('active');
   if (el) {
     el.classList.add('active');
@@ -2618,10 +2576,11 @@ function goTo(name, el) {
   // Helper for immediate cached execution & performance measurement
   function execTabModule(tabKey, renderFn) {
     var t0 = performance.now();
-    var isFirst = !window._loadedTabs[tabKey];
+    var isFirst = !window._loadedTabs[tabKey] || window._tabDirty[tabKey];
     if (isFirst) {
       renderFn();
       window._loadedTabs[tabKey] = true;
+      delete window._tabDirty[tabKey];
     }
     var t1 = performance.now();
     window._tabPerfMetrics[tabKey] = {
@@ -2632,7 +2591,7 @@ function goTo(name, el) {
     };
   }
 
-  // 2. Direct, zero-delay execution for all modules
+  // Direct execution with caching
   if (name==='overview')    execTabModule('overview', function(){ if (typeof renderOverview === 'function') renderOverview(); });
   if (name==='customers')   execTabModule('customers', function(){ if (typeof renderCustomers === 'function') renderCustomers(); });
   if (name==='foods')       execTabModule('foods', function(){ renderFoodStats(); renderFoods(); });
@@ -2651,23 +2610,24 @@ function goTo(name, el) {
   if (name==='reports')     execTabModule('reports', function(){ if (typeof renderReportsView === 'function') renderReportsView(); });
   if (name==='expenses') {
     (async function() {
-      if (!window._loadedTabs.expenses) {
-        var sec = document.getElementById('sec-expenses');
+      if (!window._loadedTabs.expenses || window._tabDirty.expenses) {
+        var secExp = document.getElementById('sec-expenses');
         var l = document.createElement('div');
         l.id = 'expenses-loading-indicator';
         l.innerHTML = '<div style="padding:40px;text-align:center;color:#666">Loading expenses...</div>';
-        if (sec) sec.prepend(l);
+        if (secExp) secExp.prepend(l);
         try {
           await loadExpenses();
           window._loadedTabs.expenses = true;
+          delete window._tabDirty.expenses;
         } catch(e) {
           console.error(e);
           if (l) l.innerHTML = '<div style="padding:40px;text-align:center;color:red">Failed to load expenses. Please try again.</div>';
           return;
         }
         if (l) l.remove();
+        renderExpenses();
       }
-      renderExpenses();
     })();
   }
   if (name==='goals')         execTabModule('goals', renderGoals);
@@ -2675,26 +2635,26 @@ function goTo(name, el) {
   if (name==='coaches')       execTabModule('coaches', function(){ initCommission(); initCoachWorkTracker(); });
   if (name==='contests') {
     (async function() {
-      if (!window._loadedTabs.contests) {
-        var sec = document.getElementById('sec-contests');
+      if (!window._loadedTabs.contests || window._tabDirty.contests) {
+        var secCnt = document.getElementById('sec-contests');
         var l = document.createElement('div');
         l.id = 'contests-loading-indicator';
         l.innerHTML = '<div style="padding:40px;text-align:center;color:#666">Loading contests...</div>';
-        if (sec) sec.prepend(l);
+        if (secCnt) secCnt.prepend(l);
         try {
           await loadContests();
           window._loadedTabs.contests = true;
+          delete window._tabDirty.contests;
         } catch(e) {
           console.error(e);
           if (l) l.innerHTML = '<div style="padding:40px;text-align:center;color:red">Failed to load contests. Please try again.</div>';
           return;
         }
         if (l) l.remove();
+        renderContests();
       }
-      renderContests();
     })();
   }
-}
 }
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
@@ -3815,108 +3775,7 @@ async function generateWellnessScanReport() {
   }
 }
 
-// ── FINANCE AI INSIGHTS ──
-async function generateFinanceInsights() {
-  if (!getGroqKey()) { showToast('Please setup Groq API Key in SQL/Config section', 'error'); return; }
-  var btn = document.getElementById('fin-ai-btn');
-  var outEl = document.getElementById('fin-ai-output');
-  btn.disabled = true; btn.textContent = 'Analyzing...';
-  outEl.style.display = 'block';
-  outEl.innerHTML = '<div class="tcard" style="padding:20px;border-left:4px solid #4f46e5"><div style="color:var(--muted);font-size:13px">✨ AI is analyzing your financial data...</div></div>';
-
-  // Build rich data summary for AI (finance has no customer_id, so use D.finance directly)
-  var fin = D.finance;
-  var from = document.getElementById('fin-from').value;
-  var to   = document.getElementById('fin-to').value;
-  var filtered = fin.filter(function(f){ return (!from||f.date>=from) && (!to||f.date<=to); });
-
-  var totalInc = filtered.filter(function(f){return f.type==='income';}).reduce(function(s,f){return s+Number(f.amount);},0);
-  var totalExp = filtered.filter(function(f){return f.type==='expense';}).reduce(function(s,f){return s+Number(f.amount);},0);
-  var net = totalInc - totalExp;
-  var margin = totalInc > 0 ? Math.round((net/totalInc)*100) : 0;
-
-  // Category breakdown
-  var incCats = {}, expCats = {};
-  filtered.forEach(function(f){
-    var c = f.category||'Other';
-    if(f.type==='income') incCats[c]=(incCats[c]||0)+Number(f.amount);
-    else expCats[c]=(expCats[c]||0)+Number(f.amount);
-  });
-
-  // Monthly trend (last 6 months)
-  var monthMap = {};
-  fin.forEach(function(f){
-    var ym=(f.date||'').slice(0,7); if(!ym) return;
-    if(!monthMap[ym]) monthMap[ym]={inc:0,exp:0};
-    if(f.type==='income') monthMap[ym].inc+=Number(f.amount);
-    else monthMap[ym].exp+=Number(f.amount);
-  });
-  var months = Object.keys(monthMap).sort().slice(-6);
-  var trendLines = months.map(function(m){ return m+': Income ₹'+monthMap[m].inc+', Expense ₹'+monthMap[m].exp+', Net ₹'+(monthMap[m].inc-monthMap[m].exp); }).join('\n');
-
-  // Customer context
-  var totalCusts = D.customers.length;
-  var activeCusts = D.customers.filter(function(c){ return getDaysLeft(c).active; }).length;
-  var expiring3 = D.customers.filter(function(c){ var s=getDaysLeft(c); return s.active && s.days<=3; }).length;
-
-  var period = (from && to) ? from+' to '+to : 'selected period';
-  var dataMsg = [
-    '=== WELLNESS CENTER FINANCIAL REPORT ('+period+') ===',
-    '',
-    'OVERVIEW:',
-    '- Total Income: ₹'+totalInc.toLocaleString('en-IN'),
-    '- Total Expense: ₹'+totalExp.toLocaleString('en-IN'),
-    '- Net Profit: ₹'+net.toLocaleString('en-IN'),
-    '- Profit Margin: '+margin+'%',
-    '- Total Customers: '+totalCusts+' (Active: '+activeCusts+', Expiring in 3 days: '+expiring3+')',
-    '',
-    'INCOME BY CATEGORY:',
-    Object.entries(incCats).map(function(e){return '- '+e[0]+': ₹'+e[1];}).join('\n'),
-    '',
-    'EXPENSE BY CATEGORY:',
-    Object.entries(expCats).map(function(e){return '- '+e[0]+': ₹'+e[1];}).join('\n'),
-    '',
-    'MONTHLY TREND (last 6 months):',
-    trendLines || 'No monthly data available',
-    '',
-    'TRANSACTIONS: '+filtered.length+' total in this period'
-  ].join('\n');
-
-  var systemPrompt = [
-    'You are a sharp financial advisor for a wellness/health center business in India.',
-    'Analyze the financial data provided and give practical, specific insights.',
-    'Structure your response with these sections:',
-    '1. 📊 PERFORMANCE SUMMARY (2-3 sentences on overall health)',
-    '2. 🔍 KEY OBSERVATIONS (3-4 bullet points — specific numbers, what is good/bad)',
-    '3. ⚠️ RISK AREAS (1-2 concerns based on the data)',
-    '4. 💡 ACTION RECOMMENDATIONS (3 specific, actionable steps the owner should take)',
-    '5. 🎯 NEXT MONTH FOCUS (one clear priority)',
-    'Be direct, use actual numbers from the data, avoid generic advice.',
-    'Keep total response under 400 words.'
-  ].join('\n');
-
-  try {
-    var aiText = await callGroq(systemPrompt, dataMsg, { maxTokens: 800, temperature: 0.4 });
-    // Render with nice formatting
-    var html = aiText
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^(#{1,3})\s+(.+)$/gm, '<div style="font-weight:700;margin-top:12px;margin-bottom:4px">$2</div>')
-      .replace(/^[-•]\s+(.+)$/gm, '<div style="padding-left:14px;margin-bottom:3px">• $1</div>')
-      .replace(/\n\n/g, '<br>')
-      .replace(/\n/g, '<br>');
-    outEl.innerHTML = '<div class="tcard" style="padding:20px;border-left:4px solid #4f46e5">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
-        '<div style="font-weight:700;font-size:14px;color:#4f46e5">✨ AI Financial Insights <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:6px">via '+GROQ_MODEL+'</span></div>'+
-        '<button onclick="document.getElementById(\'fin-ai-output\').style.display=\'none\'" style="border:none;background:none;font-size:16px;cursor:pointer;color:var(--muted)">✕</button>'+
-      '</div>'+
-      '<div style="font-size:13px;line-height:1.8;color:var(--text)">'+html+'</div>'+
-    '</div>';
-  } catch(e) {
-    outEl.innerHTML = '<div class="tcard" style="padding:16px;border-left:4px solid var(--danger)"><strong>Error:</strong> '+e.message+'</div>';
-    showToast('Finance AI error: ' + e.message, 'error');
-  }
-  btn.disabled = false; btn.textContent = '✨ AI Insights';
-}
+// ── FINANCE AI INSIGHTS ── (Active implementation uses #fin-ai-summary at line ~16561)
 
 var _aiInFlight = {};
 async function askBodyAI(cid, rid) {
@@ -7310,7 +7169,7 @@ function renderFinance() {
         {label:'Expense',data:months.map(function(m){return monthMap[m].exp;}),backgroundColor:'rgba(255, 23, 68, 0.7)',borderRadius:4},
         {label:'Net',data:months.map(function(m){return monthMap[m].inc-monthMap[m].exp;}),type:'line',borderColor:'#00e676',pointBackgroundColor:'#00e676',backgroundColor:'transparent',tension:0.4,pointRadius:4,borderWidth:2}
       ]},
-      options:{responsive:true,plugins:{legend:{labels:{font:{size:11},color:'#94a3b8'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#94a3b8'}},y:{grid:{color:'rgba(255, 255, 255, 0.07)'},ticks:{font:{size:11},color:'#94a3b8',callback:function(v){return '₹'+Number(v).toLocaleString('en-IN');}}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},color:'#94a3b8'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#94a3b8'}},y:{grid:{color:'rgba(255, 255, 255, 0.07)'},ticks:{font:{size:11},color:'#94a3b8',callback:function(v){return '₹'+Number(v).toLocaleString('en-IN');}}}}}
     });
   }
 
@@ -7344,7 +7203,7 @@ function renderFinance() {
       };
       var fmt = function(n){ return '₹'+Math.round(n).toLocaleString('en-IN'); };
       var mLabels = plMonths.map(function(m){ var d=new Date(m+'-01'); return d.toLocaleString('en-IN',{month:'short',year:'2-digit'}); });
-      var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">'
+      var html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">'
         + '<thead><tr style="border-bottom:2px solid var(--border)">'
         + '<th style="text-align:left;padding:6px 8px;color:var(--muted)">Center</th>'
         + mLabels.map(function(l){ return '<th style="text-align:right;padding:6px 8px;color:var(--muted)" colspan="3">'+l+'</th>'; }).join('')
@@ -7365,7 +7224,7 @@ function renderFinance() {
                 }).join('')
               + '</tr>';
           }).join('')
-        + '</tbody></table>';
+        + '</tbody></table></div>';
       plBody.innerHTML = html;
     }
   } else if (plCard) { plCard.style.display = 'none'; }
@@ -8888,6 +8747,7 @@ function renderAnalytics() {
       data:{labels:months, datasets:revDatasets},
       options:{
         responsive:true,
+        maintainAspectRatio:false,
         plugins:{
           legend:{position:'bottom', labels:{color:'#94a3b8'}},
           tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': ₹'+Number(ctx.raw||0).toLocaleString('en-IN');}}}
@@ -9024,7 +8884,7 @@ function renderAnalytics() {
   if (document.getElementById('chart-attendance')) {
     _charts['attendance'] = new Chart(document.getElementById('chart-attendance'),{
       type:'bar', data:{labels:days,datasets:[{label:'Check-ins',data:dayCounts,backgroundColor:'rgba(0, 230, 118, 0.75)',borderRadius:4}]},
-      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8'}}, x:{grid:{display:false}, ticks:{color:'#94a3b8'}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8'}}, x:{grid:{display:false}, ticks:{color:'#94a3b8'}}}}
     });
   }
 
@@ -9043,7 +8903,7 @@ function renderAnalytics() {
     _charts['streaks'] = new Chart(document.getElementById('chart-streaks'),{
       type:'doughnut',
       data:{labels:Object.keys(streakBuckets),datasets:[{data:Object.values(streakBuckets),backgroundColor:['#ff1744','#ffd600','#00e676','#38bdf8','#a78bfa'],borderWidth:2}]},
-      options:{responsive:true,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}}}
     });
   }
 
@@ -9072,7 +8932,7 @@ function renderAnalytics() {
     _charts['packs'] = new Chart(document.getElementById('chart-packs'),{
       type:'pie',
       data:{labels:Object.keys(packMap),datasets:[{data:Object.values(packMap),backgroundColor:['#00e676','#38bdf8','#ffd600','#a78bfa','#ff1744','#f8fafc'],borderWidth:2}]},
-      options:{responsive:true,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}}}
     });
   }
 
@@ -9093,7 +8953,7 @@ function renderAnalytics() {
     _charts['weightloss'] = new Chart(document.getElementById('chart-weightloss'),{
       type:'line',
       data:{labels:monthsW,datasets:[{label:metricLabel,data:avgMet,borderColor:metricColor,backgroundColor:metricColor+'15',tension:0.35,fill:true,pointBackgroundColor:metricColor,pointRadius:5}]},
-      options:{responsive:true,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}, scales:{y:{beginAtZero:false, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8'}}, x:{grid:{display:false}, ticks:{color:'#94a3b8'}}}},spanGaps:true}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}, scales:{y:{beginAtZero:false, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8'}}, x:{grid:{display:false}, ticks:{color:'#94a3b8'}}}},spanGaps:true}
     });
   }
 
@@ -9127,15 +8987,15 @@ function renderAnalytics() {
     if (crEl) _charts['center-revenue'] = new Chart(crEl, {
       type: 'bar',
       data: { labels: centerLabels, datasets: [{ label: 'Revenue (₹)', data: revData, backgroundColor: colors.slice(0, centerLabels.length), borderRadius: 6 }] },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return '₹'+v.toLocaleString('en-IN'); } } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return '₹'+v.toLocaleString('en-IN'); } } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
     });
     if (caEl) _charts['center-attendance'] = new Chart(caEl, {
       type: 'bar',
       data: { labels: centerLabels, datasets: [{ label: 'Check-ins', data: attData, backgroundColor: colors.slice(0, centerLabels.length), borderRadius: 6 }] },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
     });
     var tbl = document.getElementById('analytics-center-table');
-    if (tbl) tbl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    if (tbl) tbl.innerHTML = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;border-collapse:collapse;font-size:12px">'
       + '<thead><tr style="border-bottom:2px solid var(--border)">'
       + '<th style="text-align:left;padding:6px 8px;color:var(--muted)">Center</th>'
       + '<th style="text-align:right;padding:6px 8px;color:var(--muted)">Customers</th>'
@@ -9150,7 +9010,7 @@ function renderAnalytics() {
           + '<td style="text-align:right;padding:7px 8px;font-weight:700;color:var(--success)">₹'+r.rev.toLocaleString('en-IN')+'</td>'
           + '</tr>';
       }).join('')
-      + '</tbody></table>';
+      + '</tbody></table></div>';
   })();
 
   // ── Conversion Funnel ──
@@ -9289,7 +9149,7 @@ function renderAnalytics() {
 
     // Chart
     var cid = 'renewal-rate-chart';
-    el.innerHTML = '<canvas id="'+cid+'" height="120" style="margin-bottom:14px"></canvas><div id="renewal-rate-table"></div>';
+    el.innerHTML = '<div style="position:relative;height:220px;width:100%;margin-bottom:14px"><canvas id="'+cid+'"></canvas></div><div id="renewal-rate-table"></div>';
     destroyChart(cid);
     var canvas = document.getElementById(cid);
     if (canvas) {
@@ -9311,6 +9171,7 @@ function renderAnalytics() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
             y: { min: 0, max: 100, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return v+'%'; }, font: { size: 11 } } },
@@ -9323,7 +9184,7 @@ function renderAnalytics() {
     // Table
     var tbl = document.getElementById('renewal-rate-table');
     if (tbl) {
-      tbl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      tbl.innerHTML = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;border-collapse:collapse;font-size:12px">'
         + '<thead><tr style="border-bottom:2px solid var(--border)">'
         + '<th style="text-align:left;padding:5px 8px;color:var(--muted)">Month</th>'
         + '<th style="text-align:center;padding:5px 8px;color:var(--muted)">Expired</th>'
@@ -9347,7 +9208,7 @@ function renderAnalytics() {
               + '</td>'
               + '</tr>';
           }).join('')
-        + '</tbody></table>'
+        + '</tbody></table></div>'
         + '<div style="font-size:10px;color:var(--muted);margin-top:8px">🟢 ≥70% good &nbsp; 🟡 40–69% watch &nbsp; 🔴 &lt;40% churn risk. Renewal detected via pack_history records.</div>';
     }
   })();
@@ -10241,7 +10102,7 @@ function sendWeeklyProgressWA(cid) {
   var wTotal = (Number(latest.weight)           - Number(first.weight)).toFixed(1);
   var fTotal = (Number(latest.fat_percentage)   - Number(first.fat_percentage)).toFixed(1);
 
-  function fmt(val, goodWhenNeg) {
+  function fmtProgress(val, goodWhenNeg) {
     var n = Number(val);
     if (n === 0) return '→ No change';
     var better = goodWhenNeg ? n < 0 : n > 0;
@@ -10256,13 +10117,13 @@ function sendWeeklyProgressWA(cid) {
     '_' + c.name + ' | ' + latest.date + '_\n\n' +
 
     '📊 *This Week vs Last Week:*\n' +
-    '• Weight: *' + latest.weight + 'kg* (' + fmt(wDiff, true) + ')\n' +
-    '• Body Fat: *' + latest.fat_percentage + '%* (' + fmt(fDiff, true) + ')\n' +
-    '• Muscle: *' + latest.muscle_percentage + '%* (' + fmt(mDiff, false) + ')\n\n' +
+    '• Weight: *' + latest.weight + 'kg* (' + fmtProgress(wDiff, true) + ')\n' +
+    '• Body Fat: *' + latest.fat_percentage + '%* (' + fmtProgress(fDiff, true) + ')\n' +
+    '• Muscle: *' + latest.muscle_percentage + '%* (' + fmtProgress(mDiff, false) + ')\n\n' +
 
     '🏁 *Total Journey Progress:*\n' +
-    '• Weight: ' + fmt(wTotal, true) + ' from start\n' +
-    '• Body Fat: ' + fmt(fTotal, true) + ' from start\n\n' +
+    '• Weight: ' + fmtProgress(wTotal, true) + ' from start\n' +
+    '• Body Fat: ' + fmtProgress(fTotal, true) + ' from start\n\n' +
 
     '🔥 *Current Streak: ' + streak + ' day' + (streak===1?'':'s') + '*\n\n' +
 
@@ -15523,10 +15384,10 @@ function openContestDetail(id) {
         return '<div style="margin-bottom:24px">' +
           '<div style="font-size:14px;font-weight:700;margin-bottom:8px">' + catLabel + ' Pool: <span style="color:var(--success)">₹' + pool + '</span>' + 
             (seniorAmt > 0 ? ' <span style="font-size:12px;color:var(--muted);font-weight:normal">(Net: ₹' + netPool + ' after senior share)</span>' : '') + '</div>' +
-          '<table class="tbl" style="max-width:480px">' +
+          '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="tbl" style="max-width:480px">' +
             '<thead><tr><th>Slot</th><th>Share %</th><th>Gross Prize</th>' + (seniorAmt > 0 ? '<th>Net Prize</th>' : '') + '</tr></thead>' +
             '<tbody>' + rows + '</tbody>' +
-          '</table>' +
+          '</table></div>' +
           '</div>';
       };
 

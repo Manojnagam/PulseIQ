@@ -615,14 +615,20 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 .slicer-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-family:'Space Grotesk',sans-serif}
 .slicer-select,.slicer-input,input[type="date"]{color-scheme:dark;padding:10px 14px;border:1.5px solid rgba(255, 255, 255, 0.12);border-radius:12px;font-family:inherit;font-size:13.5px;color:var(--text);background:rgba(9, 9, 11, 0.65);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);cursor:pointer}
 .slicer-select:focus,.slicer-input:focus,input[type="date"]:focus{outline:none;border-color:var(--primary);background:rgba(24, 24, 27, 0.95);box-shadow:0 0 0 3px rgba(39, 174, 96, 0.25)}
-.slicer-chip-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.slicer-chip{padding:7px 14px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid rgba(255, 255, 255, 0.1);background:rgba(255, 255, 255, 0.05);color:var(--muted);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);white-space:nowrap}
+.slicer-chip-row{display:flex;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:8px;align-items:center;padding-bottom:4px;max-width:100%}
+.slicer-chip{padding:7px 14px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid rgba(255, 255, 255, 0.1);background:rgba(255, 255, 255, 0.05);color:var(--muted);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);white-space:nowrap;user-select:none;-webkit-tap-highlight-color:transparent}
 .slicer-chip.active{background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border-color:transparent;font-weight:700;box-shadow:0 4px 14px -2px rgba(39, 174, 96, 0.4)}
-.slicer-chip:hover:not(.active){background:rgba(255, 255, 255, 0.12);color:var(--text);transform:translateY(-1px)}
-.slicer-reset{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(239, 68, 68, 0.3);background:rgba(239, 68, 68, 0.15);color:#ef4444;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1)}
-.slicer-reset:hover{background:rgba(239, 68, 68, 0.25);transform:translateY(-1px);box-shadow:0 4px 12px rgba(239, 68, 68, 0.2)}
+@media (hover: hover) {
+  .slicer-chip:hover:not(.active){background:rgba(255, 255, 255, 0.12);color:var(--text);transform:translateY(-1px)}
+  .slicer-reset:hover{background:rgba(239, 68, 68, 0.25);transform:translateY(-1px);box-shadow:0 4px 12px rgba(239, 68, 68, 0.2)}
+  .report-card:hover,.ws-report-card:hover{transform:translateY(-3px);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65), 0 0 15px rgba(39, 174, 96, 0.15);border-color:rgba(39, 174, 96, 0.35)}
+  #sec-export .tcard:hover{transform:translateY(-3px);border-color:rgba(39, 174, 96, 0.4);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65), 0 0 20px rgba(39, 174, 96, 0.15)}
+}
+.slicer-chip:active:not(.active){background:rgba(255, 255, 255, 0.18);transform:scale(0.98)}
+.slicer-reset{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(239, 68, 68, 0.3);background:rgba(239, 68, 68, 0.15);color:#ef4444;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);user-select:none;-webkit-tap-highlight-color:transparent}
+.slicer-reset:active{background:rgba(239, 68, 68, 0.35);transform:scale(0.98)}
 .report-card,.ws-report-card{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:16px;padding:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
-.report-card:hover,.ws-report-card:hover{transform:translateY(-3px);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65), 0 0 15px rgba(39, 174, 96, 0.15);border-color:rgba(39, 174, 96, 0.35)}
+.report-card:active,.ws-report-card:active,#sec-export .tcard:active{transform:scale(0.99)}
 #sec-export .tcard{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
 #sec-export .tcard:hover{transform:translateY(-3px);border-color:rgba(39, 174, 96, 0.4);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65), 0 0 20px rgba(39, 174, 96, 0.15)}
 #sec-export .tcard[style*="dashed"]{background:linear-gradient(135deg, rgba(39, 174, 96, 0.08) 0%, rgba(24, 24, 27, 0.85) 100%);border:2px dashed rgba(39, 174, 96, 0.5) !important}
@@ -777,7 +783,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 .btp-subtab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .btp-subtab:hover:not(.active){border-color:var(--primary);color:var(--primary)}
 /* Tracker table */
-.tracker-wrap{overflow-x:auto}
+.tracker-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tracker-tbl{width:100%;border-collapse:collapse;min-width:700px}
 .tracker-tbl th{background:var(--surface2);padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;white-space:nowrap;text-align:center}
 .tracker-tbl th:first-child{text-align:left}
@@ -1290,7 +1296,7 @@ input:focus, select:focus, textarea:focus {
         <input type="checkbox" id="remember-device" checked style="width:17px;height:17px;accent-color:#27AE60;cursor:pointer;border-radius:4px">
         <span style="font-size:13px;color:var(--text);font-weight:500">Remember this device</span>
       </label>
-      <button id="login-btn" onclick="sendOtpCode()" style="width:100%;padding:15px;background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.4)" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 25px -4px rgba(39, 174, 96, 0.55)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 6px 20px -4px rgba(39, 174, 96, 0.4)'">Send Code →</button>
+      <button id="login-btn" onclick="sendOtpCode()" style="width:100%;padding:15px;background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.4)">Send Code →</button>
       <div id="login-error" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.12);border-radius:10px;font-size:13px;color:#ef4444;border-left:3.5px solid #ef4444;font-weight:500"></div>
     </div>
     <!-- Step 2: Code input -->
@@ -1302,9 +1308,9 @@ input:focus, select:focus, textarea:focus {
       </div>
       <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:block;margin-bottom:8px">6-Digit Code</label>
       <input type="text" id="login-otp" placeholder="······" maxlength="8" inputmode="numeric" onkeydown="if(event.key==='Enter')verifyOtpCode()" style="width:100%;padding:14px;border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;font-size:24px;font-family:inherit;margin-bottom:14px;outline:none;text-align:center;letter-spacing:10px;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);background:rgba(9, 9, 11, 0.6);color:var(--text);font-weight:700" onfocus="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(39, 174, 96, 0.2)'" onblur="this.style.borderColor='rgba(255,255,255,0.12)';this.style.boxShadow='none'">
-      <button id="verify-btn" onclick="verifyOtpCode()" style="width:100%;padding:15px;background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.4)" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 25px -4px rgba(39, 174, 96, 0.55)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 6px 20px -4px rgba(39, 174, 96, 0.4)'">Verify & Sign In →</button>
+      <button id="verify-btn" onclick="verifyOtpCode()" style="width:100%;padding:15px;background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.4)">Verify & Sign In →</button>
       <div id="login-code-error" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.12);border-radius:10px;font-size:13px;color:#ef4444;border-left:3.5px solid #ef4444;font-weight:500"></div>
-      <button onclick="document.getElementById('login-code-state').style.display='none';document.getElementById('login-email-state').style.display='block';document.getElementById('login-btn').textContent='Send Code →';document.getElementById('login-btn').disabled=false" style="width:100%;margin-top:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 16px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">← Change email</button>
+      <button onclick="document.getElementById('login-code-state').style.display='none';document.getElementById('login-email-state').style.display='block';document.getElementById('login-btn').textContent='Send Code →';document.getElementById('login-btn').disabled=false" style="width:100%;margin-top:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 16px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s">← Change email</button>
     </div>
     <div style="margin-top:30px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);text-align:center;font-size:12px;color:var(--muted)">Powered by <strong style="color:var(--text)">PulseZen</strong> · Wellness Intelligence Platform</div>
   </div>
@@ -1975,7 +1981,7 @@ input:focus, select:focus, textarea:focus {
           </div>
           <button class="btn-p" onclick="downloadMonthlyAttendanceCSV()" style="font-size:12px;padding:6px 14px;background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer">📥 Download CSV</button>
         </div>
-        <div class="att-grid"><table id="att-grid-table"></table></div>
+        <div class="att-grid" style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table id="att-grid-table"></table></div>
       </div>
 
       <!-- Coach Attendance View -->
@@ -2310,17 +2316,17 @@ input:focus, select:focus, textarea:focus {
             <div style="font-family:'DM Serif Display',serif;font-size:16px">💰 Revenue Trend</div>
             <select class="slicer-select" id="slicer-revenue-type" onchange="renderAnalytics()" style="width:auto;font-size:11px;padding:4px 8px"><option value="">Both</option><option value="income">Income</option><option value="expense">Expense</option></select>
           </div>
-          <canvas id="chart-revenue" height="160"></canvas>
+          <div style="position:relative;height:160px;width:100%"><canvas id="chart-revenue"></canvas></div>
           <div id="analytics-forecast" style="margin-top:14px"></div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px">📅 Peak Days</div><canvas id="chart-attendance" height="160"></canvas></div>
-        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px">🏃 Streak Distribution</div><canvas id="chart-streaks" height="160"></canvas></div>
+        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px">📅 Peak Days</div><div style="position:relative;height:160px;width:100%"><canvas id="chart-attendance"></canvas></div></div>
+        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px">🏃 Streak Distribution</div><div style="position:relative;height:160px;width:100%"><canvas id="chart-streaks"></canvas></div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
         <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:10px">⭐ Top Referrers</div><div id="analytics-referrers"></div></div>
-        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:10px">📦 Pack Distribution</div><canvas id="chart-packs" height="180"></canvas></div>
+        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:10px">📦 Pack Distribution</div><div style="position:relative;height:180px;width:100%"><canvas id="chart-packs"></canvas></div></div>
       </div>
       <!-- Pack Renewal Forecast -->
       <div class="tcard" style="padding:20px;margin-bottom:16px">
@@ -3466,8 +3472,8 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div style="position:relative;display:inline-block" id="wc-dropdown-wrap">
           <button onclick="var m=document.getElementById('wc-menu');m.style.display=m.style.display==='block'?'none':'block'" style="background:#e8f4fd;color:#1a6fa0;border:1.5px solid #b3d4f5;border-radius:8px;padding:7px 14px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">💧 Water Cans ▾</button>
           <div id="wc-menu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;min-width:210px;overflow:hidden">
-            <div onclick="quickAddWaterCans('home');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='#f5f2ee'" onmouseout="this.style.background=''">🏠 Home</div>
-            <div onclick="quickAddWaterCans('center');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px" onmouseover="this.style.background='#f5f2ee'" onmouseout="this.style.background=''" id="wc-center-btn">🌿 Wellness Center</div>
+            <div onclick="quickAddWaterCans('home');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)">🏠 Home</div>
+            <div onclick="quickAddWaterCans('center');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px" id="wc-center-btn">🌿 Wellness Center</div>
           </div>
         </div>
         <button class="btn-p" onclick="openExpenseModal()">+ Add Expense</button>
@@ -5150,7 +5156,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
           <button class="btn-p" style="flex:1; background:var(--accent); border-color:var(--accent); color:#1a2e1f; font-weight:700" onclick="copyProgressCardToClipboard()">📋 Copy Image</button>
         </div>
       </div>
-      <div style="display:flex; justify-content:center; align-items:center; background:#f0ede8; border-radius:12px; padding:10px; width:320px; height:320px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.05); margin:0 auto;">
+      <div style="display:flex; justify-content:center; align-items:center; background:#f0ede8; border-radius:12px; padding:10px; width:100%; max-width:320px; aspect-ratio:1/1; height:auto; box-shadow:inset 0 2px 6px rgba(0,0,0,0.05); margin:0 auto;">
         <canvas id="progress-card-canvas" width="1080" height="1080" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></canvas>
       </div>
     </div>
