@@ -2289,7 +2289,7 @@ async function loadBody() {
 }
 
 async function loadFinance() {
-  D.finance = await dbGet('finance','date', _cFilter());
+  D.finance = await dbGetAll('finance','date');
   try { renderFinance(); } catch(e) {}
   try { renderOverview(); } catch(e) {}
 }
