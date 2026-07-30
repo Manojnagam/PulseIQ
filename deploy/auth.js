@@ -301,10 +301,10 @@ async function loadAndStartDashboard() {
     await initAuthClient();
     if (typeof bootDashboard !== 'function') {
       try {
-        await loadScript('app.min.js?v=1.4.7', 30000);
+        await loadScript('app.min.js?v=1.4.8', 30000);
       } catch (scriptErr) {
         console.warn('app.min.js load failed, trying app.js fallback:', scriptErr);
-        await loadScript('app.js?v=1.4.7', 30000);
+        await loadScript('app.js?v=1.4.8', 30000);
       }
     }
     if (typeof bootDashboard === 'function') {
