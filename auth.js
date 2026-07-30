@@ -99,7 +99,7 @@ async function checkExistingSession() {
     window._authUser = sess.user;
     return true;
   }
-  var storedRaw = localStorage.getItem('pz_session_tokens');
+  var storedRaw = safeStorage.getItem('pz_session_tokens');
   if (storedRaw) {
     try {
       var tokens = JSON.parse(storedRaw);
@@ -110,12 +110,12 @@ async function checkExistingSession() {
           _authUser = r2.data.session.user;
           window._authSession = r2.data.session;
           window._authUser = r2.data.session.user;
-          localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: r2.data.session.access_token, refresh_token: r2.data.session.refresh_token }));
+          safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: r2.data.session.access_token, refresh_token: r2.data.session.refresh_token }));
           return true;
         }
       }
     } catch(e) {}
-    localStorage.removeItem('pz_session_tokens');
+    safeStorage.removeItem('pz_session_tokens');
   }
   return false;
 }
@@ -137,9 +137,9 @@ async function signOut() {
   if (_sbAuth) await _sbAuth.auth.signOut();
   _authUser = null; _authSession = null;
   window._authUser = null; window._authSession = null;
-  localStorage.removeItem('pz_session_tokens');
-  localStorage.removeItem('pz_remembered_email');
-  localStorage.removeItem('pz_login_ts');
+  safeStorage.removeItem('pz_session_tokens');
+  safeStorage.removeItem('pz_remembered_email');
+  safeStorage.removeItem('pz_login_ts');
   location.reload();
 }
 
@@ -151,7 +151,7 @@ async function sendOtpCode() {
   var RL_KEY = 'otp_rl_' + email.toLowerCase();
   var RL_MAX = 5, RL_WINDOW = 10 * 60 * 1000;
   var now = Date.now();
-  var attempts = JSON.parse(localStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
+  var attempts = JSON.parse(safeStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
   if (attempts.length >= RL_MAX) {
     var waitMs = RL_WINDOW - (now - attempts[0]);
     var waitMin = Math.ceil(waitMs / 60000);
@@ -215,7 +215,7 @@ async function sendOtpCode() {
     btn.textContent = 'Send Code →'; btn.disabled = false;
   } else {
     attempts.push(now);
-    localStorage.setItem(RL_KEY, JSON.stringify(attempts));
+    safeStorage.setItem(RL_KEY, JSON.stringify(attempts));
     document.getElementById('login-sent-to').textContent = email;
     document.getElementById('login-email-state').style.display = 'none';
     document.getElementById('login-code-state').style.display = 'block';
@@ -306,14 +306,14 @@ async function loadAndStartDashboard() {
 
   try {
     await initAuthClient();
-    if (typeof bootDashboard !== 'function') {
+    if (typeof window.bootDashboard !== 'function') {
       try {
         await loadScript('app.min.js?v=1.4.8', 30000);
       } catch (scriptErr) {
         console.warn('app.min.js load failed:', scriptErr);
       }
     }
-    if (typeof bootDashboard !== 'function') {
+    if (typeof window.bootDashboard !== 'function') {
       try {
         console.warn('bootDashboard missing after app.min.js, attempting app.js fallback...');
         await loadScript('app.js?v=1.4.8', 30000);
@@ -321,8 +321,8 @@ async function loadAndStartDashboard() {
         console.error('app.js fallback load failed:', fallbackErr);
       }
     }
-    if (typeof bootDashboard === 'function') {
-      await bootDashboard();
+    if (typeof window.bootDashboard === 'function') {
+      await window.bootDashboard();
       clearTimeout(splashTimer);
     } else {
       console.error('bootDashboard function not found');

@@ -97,7 +97,7 @@ async function checkExistingSession() {
       return true;
     }
     // Fallback: use manually stored tokens (access_token needed as parseable JWT even if expired)
-    var storedRaw = localStorage.getItem('pz_session_tokens');
+    var storedRaw = safeStorage.getItem('pz_session_tokens');
     if (storedRaw) {
       try {
         var tokens = JSON.parse(storedRaw);
@@ -106,12 +106,12 @@ async function checkExistingSession() {
           if (r2.data && r2.data.session) {
             _authSession = r2.data.session;
             _authUser = r2.data.session.user;
-            localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: r2.data.session.access_token, refresh_token: r2.data.session.refresh_token }));
+            safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: r2.data.session.access_token, refresh_token: r2.data.session.refresh_token }));
             return true;
           }
         }
       } catch(e) {}
-      localStorage.removeItem('pz_session_tokens');
+      safeStorage.removeItem('pz_session_tokens');
     }
   } catch(err) {
     console.warn('checkExistingSession failed:', err);
@@ -127,7 +127,7 @@ async function sendOtpCode() {
   var RL_KEY = 'otp_rl_' + email.toLowerCase();
   var RL_MAX = 5, RL_WINDOW = 10 * 60 * 1000;
   var now = Date.now();
-  var attempts = JSON.parse(localStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
+  var attempts = JSON.parse(safeStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
   if (attempts.length >= RL_MAX) {
     var waitMs = RL_WINDOW - (now - attempts[0]);
     var waitMin = Math.ceil(waitMs / 60000);
@@ -191,7 +191,7 @@ async function sendOtpCode() {
     btn.textContent = 'Send Code →'; btn.disabled = false;
   } else {
     attempts.push(now);
-    localStorage.setItem(RL_KEY, JSON.stringify(attempts));
+    safeStorage.setItem(RL_KEY, JSON.stringify(attempts));
     document.getElementById('login-sent-to').textContent = email;
     document.getElementById('login-email-state').style.display = 'none';
     document.getElementById('login-code-state').style.display = 'block';
@@ -215,11 +215,11 @@ async function verifyOtpCode() {
     // Remember this device if checkbox is checked
     var rememberCb = document.getElementById('remember-device');
     if (!rememberCb || rememberCb.checked) {
-      localStorage.setItem('pz_remembered_email', email);
-      localStorage.setItem('pz_login_ts', String(Date.now()));
+      safeStorage.setItem('pz_remembered_email', email);
+      safeStorage.setItem('pz_login_ts', String(Date.now()));
     }
     if (res.data.session && res.data.session.refresh_token) {
-      localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
+      safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
     }
     await startApp();
   }
@@ -239,17 +239,17 @@ function showLoginErr(msg) {
 async function signOut() {
   if (_sbAuth) await _sbAuth.auth.signOut();
   _authUser = null; _authSession = null;
-  localStorage.removeItem('pz_session_tokens');
-  localStorage.removeItem('pz_remembered_email');
-  localStorage.removeItem('pz_login_ts');
+  safeStorage.removeItem('pz_session_tokens');
+  safeStorage.removeItem('pz_remembered_email');
+  safeStorage.removeItem('pz_login_ts');
   location.reload();
 }
 
 var IS_SUPER_ADMIN = false;
-var ACTIVE_CENTER = localStorage.getItem('activeCenter') || '';
+var ACTIVE_CENTER = safeStorage.getItem('activeCenter') || '';
 
 // ── LANGUAGE / TRANSLATIONS ──
-var LANG = localStorage.getItem('svLang') || 'en';
+var LANG = safeStorage.getItem('svLang') || 'en';
 var T = {
   en: {
     // sidebar groups
@@ -303,17 +303,17 @@ async function startApp() {
   if (window.location.hash) history.replaceState(null, '', window.location.pathname);
 
   // ── Super admin fast-path: check remembered email even without a real auth session ──
-  var _currentEmail = (_authUser && _authUser.email) || (_authSession && _authSession.user && _authSession.user.email) || localStorage.getItem('pz_remembered_email') || '';
+  var _currentEmail = (_authUser && _authUser.email) || (_authSession && _authSession.user && _authSession.user.email) || safeStorage.getItem('pz_remembered_email') || '';
   var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
   if (HARDCODED_SUPER_ADMINS.indexOf(_currentEmail) !== -1) {
     IS_SUPER_ADMIN = true;
     ACTIVE_CENTER = '';
-    localStorage.setItem('activeCenter', '');
+    safeStorage.setItem('activeCenter', '');
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
-    var _opQ = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+    var _opQ = JSON.parse(safeStorage.getItem('ownerProfile') || '{}');
     delete _opQ.center_name;
-    localStorage.setItem('ownerProfile', JSON.stringify(_opQ));
+    safeStorage.setItem('ownerProfile', JSON.stringify(_opQ));
     if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _opQ;
     try { renderProfileCard(); } catch(e) {}
   }
@@ -338,10 +338,10 @@ async function startApp() {
       if (isSuperAdmin) {
         // Super admin: clear any center lock from previous session
         ACTIVE_CENTER = '';
-        localStorage.setItem('activeCenter', '');
-        var _opSA = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+        safeStorage.setItem('activeCenter', '');
+        var _opSA = JSON.parse(safeStorage.getItem('ownerProfile') || '{}');
         delete _opSA.center_name;
-        localStorage.setItem('ownerProfile', JSON.stringify(_opSA));
+        safeStorage.setItem('ownerProfile', JSON.stringify(_opSA));
         if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _opSA;
       } else {
         // Try to auto-link by email if auth_user_id not set yet
@@ -375,13 +375,13 @@ async function startApp() {
         }
         // Lock center owner to their own center
         ACTIVE_CENTER = myCenter.id;
-        localStorage.setItem('activeCenter', myCenter.id);
+        safeStorage.setItem('activeCenter', myCenter.id);
         _centerAuth = { type: 'center', centerId: myCenter.id };
         sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
         // Store center name so sidebar shows correctly before loadAll completes
-        var _op = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+        var _op = JSON.parse(safeStorage.getItem('ownerProfile') || '{}');
         _op.center_name = myCenter.name;
-        localStorage.setItem('ownerProfile', JSON.stringify(_op));
+        safeStorage.setItem('ownerProfile', JSON.stringify(_op));
         if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _op;
       }
     } catch(err) {
@@ -390,17 +390,17 @@ async function startApp() {
   }
 
   // ── Load app ──
-  try { localStorage.removeItem('sb_url'); localStorage.removeItem('sb_key'); } catch(e){}
+  try { localStorage.removeItem('sb_url'); safeStorage.removeItem('sb_key'); } catch(e){}
   var setupEl = document.getElementById('setup');
   var appEl = document.getElementById('app');
   if (setupEl) setupEl.style.display = 'none';
   if (appEl) appEl.style.display = 'block';
   await loadAll();
 }
-var ACTIVE_CENTER = localStorage.getItem('activeCenter') || '';
+var ACTIVE_CENTER = safeStorage.getItem('activeCenter') || '';
 
 // ── LANGUAGE / TRANSLATIONS ──
-var LANG = localStorage.getItem('svLang') || 'en';
+var LANG = safeStorage.getItem('svLang') || 'en';
 var T = {
   en: {
     // sidebar groups
@@ -535,7 +535,7 @@ function applyLang() {
 }
 function toggleLang() {
   LANG = LANG === 'en' ? 'te' : 'en';
-  localStorage.setItem('svLang', LANG);
+  safeStorage.setItem('svLang', LANG);
   applyLang();
 }
 
@@ -612,9 +612,12 @@ function exportCSV(headers, rows, filename) {
 }
 function exportCustomersCSV() {
   if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Basic plan feature (₹499/mo).', 'error'); return; }
-
-
-function fmt(n) { return '₹' + Math.round(n || 0).toLocaleString('en-IN'); }
+  var headers = ['ID', 'Name', 'Phone', 'Email', 'Center', 'Plan', 'Status', 'Joined Date'];
+  var rows = (D.customers || []).map(function(c) {
+    return [c.id, c.name, c.phone || '', c.email || '', getCenterById(c.center_id), c.plan || '', c.status || '', c.created_at || ''];
+  });
+  exportCSV(headers, rows, 'customers');
+}
 function getCenterById(id) {
   if (!id) return '';
   var c = (D.centers||[]).find(function(x){return x.id===id;}); return c?c.name:'';
@@ -992,12 +995,12 @@ function toggleDarkMode() {
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   var next = isDark ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('svTheme', next);
+  safeStorage.setItem('svTheme', next);
   var btn = document.getElementById('dark-mode-btn');
   if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
 }
 (function applyTheme() {
-  var t = localStorage.getItem('svTheme') || 'dark';
+  var t = safeStorage.getItem('svTheme') || 'dark';
   document.documentElement.setAttribute('data-theme', t);
   var btn = document.getElementById('dark-mode-btn');
   if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
@@ -1043,7 +1046,7 @@ function verifyPinPrompt() {
   var targetCenter = _pendingSwitchCenter;
 
   // Check supervisor PIN — DB first, localStorage fallback
-  var supervisorPin = _DB_SUPERVISOR_PIN || (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin || '';
+  var supervisorPin = _DB_SUPERVISOR_PIN || (JSON.parse(safeStorage.getItem('ownerProfile') || '{}')).master_pin || '';
   if(supervisorPin && entered === supervisorPin) {
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
@@ -1079,9 +1082,9 @@ function verifyPinPrompt() {
 function _applySwitch(centerId) {
   ACTIVE_CENTER = centerId || '';
   if (centerId) {
-    localStorage.setItem('activeCenter', centerId);
+    safeStorage.setItem('activeCenter', centerId);
   } else {
-    localStorage.removeItem('activeCenter');
+    safeStorage.removeItem('activeCenter');
   }
   _daysLeftCache = {};
   updateSidebarLogo();
@@ -1170,7 +1173,7 @@ function updateCenterSwitcher() {
   });
   sel.innerHTML = opts;
   sel.value = prev;
-  if(prev && !(D.centers || []).some(function(c){return c.id == prev;})) { ACTIVE_CENTER=''; localStorage.removeItem('activeCenter'); sel.value = ''; }
+  if(prev && !(D.centers || []).some(function(c){return c.id == prev;})) { ACTIVE_CENTER=''; safeStorage.removeItem('activeCenter'); sel.value = ''; }
   // Hide supervisor-only nav items for center-PIN users, with plan overrides
   var isSuper = isSupervisor();
   var isElite = isElitePlan();
@@ -1253,12 +1256,12 @@ function getCenterName() {
   }
   // Master/supervisor mode — no center lock
   if (_centerAuth && _centerAuth.type === 'master') return 'PulseZen Network';
-  var op = (typeof OWNER_PROFILE !== 'undefined') ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+  var op = (typeof OWNER_PROFILE !== 'undefined') ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile') || '{}');
   if (op && op.center_name) return op.center_name;
   if (D && D.centers && D.centers.length) return D.centers[0].name;
   return 'Our Wellness Center';
 }
-var OWNER_PROFILE = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+var OWNER_PROFILE = JSON.parse(safeStorage.getItem('ownerProfile') || '{}');
 
 function checkStartupAuth() {
   var hasCenterPins = Object.keys(_DB_PINS).length > 0;
@@ -1278,7 +1281,7 @@ function checkStartupAuth() {
   }
   if(_centerAuth.type === 'center' && _centerAuth.centerId && _DB_PINS[_centerAuth.centerId]) {
     ACTIVE_CENTER = _centerAuth.centerId;
-    localStorage.setItem('activeCenter', _centerAuth.centerId);
+    safeStorage.setItem('activeCenter', _centerAuth.centerId);
     // Don't reload data — just re-render with center filter (data already loaded)
     try { renderOverview(); } catch(e){}
     try { renderCustomers(); } catch(e){}
@@ -1498,7 +1501,7 @@ function saveOwnerProfile() {
     master_pin: mpVal || OWNER_PROFILE.master_pin || null
   });
   OWNER_PROFILE = p;
-  localStorage.setItem('ownerProfile', JSON.stringify(p));
+  safeStorage.setItem('ownerProfile', JSON.stringify(p));
 
   // Route PIN to the right place based on who is saving
   var isCenterUser = _centerAuth.type === 'center' && _centerAuth.centerId;
@@ -1552,7 +1555,7 @@ function loadProfilePhoto(event) {
   var reader = new FileReader();
   reader.onload = function(e) {
     OWNER_PROFILE.photo = e.target.result;
-    localStorage.setItem('ownerProfile', JSON.stringify(OWNER_PROFILE));
+    safeStorage.setItem('ownerProfile', JSON.stringify(OWNER_PROFILE));
     var img = document.getElementById('prof-photo-preview');
     img.src = e.target.result; img.style.display = 'block';
     var cardPhoto = document.getElementById('prof-card-photo');
@@ -1618,19 +1621,19 @@ function showCoachPinTip() {
 }
 
 function getCredentials() {
-  var storedUrl = (localStorage.getItem('sb_url') || '').trim();
+  var storedUrl = (safeStorage.getItem('sb_url') || '').trim();
   if (storedUrl && storedUrl !== 'null' && storedUrl !== 'undefined' && storedUrl.startsWith('http')) {
     SB_URL = storedUrl.replace(/\/$/, '');
   } else {
     SB_URL = null;
-    if (storedUrl === 'null' || storedUrl === 'undefined') localStorage.removeItem('sb_url');
+    if (storedUrl === 'null' || storedUrl === 'undefined') safeStorage.removeItem('sb_url');
   }
-  var storedKey = (localStorage.getItem('sb_key') || '').trim();
+  var storedKey = (safeStorage.getItem('sb_key') || '').trim();
   if (storedKey && storedKey !== 'null' && storedKey !== 'undefined') {
     SB_KEY = storedKey;
   } else {
     SB_KEY = null;
-    if (storedKey === 'null' || storedKey === 'undefined') localStorage.removeItem('sb_key');
+    if (storedKey === 'null' || storedKey === 'undefined') safeStorage.removeItem('sb_key');
   }
   return true;
 }
@@ -1748,7 +1751,7 @@ function _cFilter(field) {
 function _custIdsFilter() {
   if (!ACTIVE_CENTER) return '';
   var ids = D.customers.map(function(c){ return c.id; });
-  var svId = (JSON.parse(localStorage.getItem('ownerProfile')||'{}')).sv_body_id;
+  var svId = (JSON.parse(safeStorage.getItem('ownerProfile')||'{}')).sv_body_id;
   if (svId) ids.push(svId);
   D.coaches.forEach(function(c){ if(c.id) ids.push(c.id); });
   (D.walkins||[]).forEach(function(w){ if(w.id) ids.push(w.id); });
@@ -1772,8 +1775,8 @@ async function doConnect() {
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
     });
     if (res.status === 401) { showErr('Invalid API Key. Check your anon key.'); SB_URL=null; SB_KEY=null; btn.textContent='Connect & Launch Dashboard →'; btn.disabled=false; return; }
-    localStorage.setItem('sb_url', url);
-    localStorage.setItem('sb_key', key);
+    safeStorage.setItem('sb_url', url);
+    safeStorage.setItem('sb_key', key);
     document.getElementById('setup').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     await loadAll();
@@ -1791,15 +1794,15 @@ function showErr(msg) {
   el.textContent = msg; el.style.display = 'block';
 }
 function doDisconnect() {
-  localStorage.removeItem('sb_url'); localStorage.removeItem('sb_key');
+  safeStorage.removeItem('sb_url'); safeStorage.removeItem('sb_key');
   SB_URL=null; SB_KEY=null;
   document.getElementById('setup').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
-var GROQ_MODEL = localStorage.getItem('groqModel') || 'gemini-2.5-flash';
+var GROQ_MODEL = safeStorage.getItem('groqModel') || 'gemini-2.5-flash';
 if (GROQ_MODEL === 'gemini-1.5-flash' || GROQ_MODEL === 'llama-3.1-8b-instant') {
   GROQ_MODEL = 'gemini-2.5-flash';
-  localStorage.setItem('groqModel', GROQ_MODEL);
+  safeStorage.setItem('groqModel', GROQ_MODEL);
 }
 var DEFAULT_GROQ_KEY = ''; // set in deploy/index.html — not stored in repo
 function getGroqKey() { return 'server-side'; }
@@ -1821,7 +1824,7 @@ function saveGroqKey() {
   var el = document.getElementById('cfg-groq-key');
   if (el) {
     var key = el.value.trim();
-    localStorage.setItem('groqKey', key);
+    safeStorage.setItem('groqKey', key);
     showToast('Groq API Key saved successfully!', 'success');
   }
 }
@@ -1937,19 +1940,19 @@ function saveGroqModel() {
   var sel = document.getElementById('cfg-groq-model');
   if (!sel) return;
   GROQ_MODEL = sel.value;
-  localStorage.setItem('groqModel', GROQ_MODEL);
+  safeStorage.setItem('groqModel', GROQ_MODEL);
   showToast('AI model set to: ' + GROQ_MODEL, 'success');
 }
 function saveCountryCode() {
   var code = document.getElementById('cfg-country-code').value.trim().replace(/\D/g,'');
   if (!code) { showToast('Enter a valid country code (digits only)', 'error'); return; }
-  localStorage.setItem('countryCode', code);
+  safeStorage.setItem('countryCode', code);
   COUNTRY_CODE = code;
   showToast('Country code saved: +' + code, 'success');
 }
 function saveWaLang() {
   var lang = document.getElementById('cfg-wa-lang').value;
-  localStorage.setItem('waLang', lang);
+  safeStorage.setItem('waLang', lang);
   WA_LANG = lang;
   showToast('Default WhatsApp language set to: ' + lang, 'success');
 }
@@ -1979,7 +1982,7 @@ async function bootDashboard() {
       _sbAuth.auth.onAuthStateChange(function(event, session) {
         if (event === 'TOKEN_REFRESHED' && session) {
           _authSession = session;
-          localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
+          safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
         }
         if (event === 'SIGNED_IN' && session) {
           _authSession = session;
@@ -1989,12 +1992,12 @@ async function bootDashboard() {
 
     // ── "Remember this device" — valid for 60 days ──
     var SIXTY_DAYS = 60 * 24 * 60 * 60 * 1000;
-    var rememberedEmail = localStorage.getItem('pz_remembered_email');
-    var loginTs = parseInt(localStorage.getItem('pz_login_ts') || '0');
+    var rememberedEmail = safeStorage.getItem('pz_remembered_email');
+    var loginTs = parseInt(safeStorage.getItem('pz_login_ts') || '0');
     var deviceTrusted = rememberedEmail && (Date.now() - loginTs) < SIXTY_DAYS;
 
     var sessionRestored = false;
-    var hasTokens = localStorage.getItem('pz_session_tokens') || localStorage.getItem('sb-erteibdxzdvsaujptxsd-auth-token');
+    var hasTokens = safeStorage.getItem('pz_session_tokens') || safeStorage.getItem('sb-erteibdxzdvsaujptxsd-auth-token');
     if (hasTokens) {
       // Try restoring full Supabase session (works when token hasn't expired)
       sessionRestored = await checkExistingSession();
@@ -2002,8 +2005,8 @@ async function bootDashboard() {
     if (sessionRestored) {
       // Upgrade trust on successful session restore
       if (_authUser && _authUser.email) {
-        localStorage.setItem('pz_remembered_email', _authUser.email);
-        localStorage.setItem('pz_login_ts', Date.now());
+        safeStorage.setItem('pz_remembered_email', _authUser.email);
+        safeStorage.setItem('pz_login_ts', Date.now());
       }
       deviceTrusted = true;
     }
@@ -2021,14 +2024,14 @@ async function bootDashboard() {
 
     // ── STEP 2: UI init (runs only when authed) ──
     var gKey = getGroqKey();
-    var cc = localStorage.getItem('countryCode');
+    var cc = safeStorage.getItem('countryCode');
     var cfgKeyInput = document.getElementById('cfg-groq-key');
     if(cfgKeyInput && gKey) cfgKeyInput.value = gKey;
     if(cc) { document.getElementById('cfg-country-code').value = cc; COUNTRY_CODE = cc; }
     else document.getElementById('cfg-country-code').value = '91';
-    var savedWaLang = localStorage.getItem('waLang');
+    var savedWaLang = safeStorage.getItem('waLang');
     if (savedWaLang) { WA_LANG = savedWaLang; var wsel = document.getElementById('cfg-wa-lang'); if(wsel) wsel.value = savedWaLang; }
-    var savedModel = localStorage.getItem('groqModel') || 'gemini-2.5-flash';
+    var savedModel = safeStorage.getItem('groqModel') || 'gemini-2.5-flash';
     GROQ_MODEL = savedModel;
     var msel = document.getElementById('cfg-groq-model');
     if (msel) msel.value = savedModel;
@@ -2083,7 +2086,7 @@ async function loadAll() {
     // ── Instant Startup from Local Dashboard Cache (< 50ms) ──
     var _cachedDash = null;
     try {
-      var _rawCache = localStorage.getItem('pq_dashboard_cache_v1');
+      var _rawCache = safeStorage.getItem('pq_dashboard_cache_v1');
       if (_rawCache) _cachedDash = JSON.parse(_rawCache);
     } catch(ce) {}
     if (_cachedDash && Array.isArray(_cachedDash.centers) && Array.isArray(_cachedDash.customers)) {
@@ -2130,7 +2133,7 @@ async function loadAll() {
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
     try { renderAnnouncementBanner(); } catch(re){ console.error('renderAnnouncementBanner crash:',re); }
     applyLang();
-    (function(){ var btn=document.getElementById('dark-mode-btn'); if(btn) btn.textContent=localStorage.getItem('svTheme')==='dark'?'☀️':'🌙'; })();
+    (function(){ var btn=document.getElementById('dark-mode-btn'); if(btn) btn.textContent=safeStorage.getItem('svTheme')==='dark'?'☀️':'🌙'; })();
     startAutoPing();
     migrateSvBodyToSupabase();
     // Hide loading splash — critical data is ready and dashboard is interactive!
@@ -2138,7 +2141,7 @@ async function loadAll() {
     
     // Save snapshot to dashboard cache for instant startup next time
     try {
-      localStorage.setItem('pq_dashboard_cache_v1', JSON.stringify({
+      safeStorage.setItem('pq_dashboard_cache_v1', JSON.stringify({
         ts: Date.now(),
         centers: D.centers || [],
         customers: (D.customers || []).slice(0, 300),
@@ -2197,7 +2200,7 @@ async function loadCenters() {
     D.centers = Array.isArray(res) ? res : [];
   }
   try {
-    var pzPlans = JSON.parse(localStorage.getItem('pz_center_plans') || '{}');
+    var pzPlans = JSON.parse(safeStorage.getItem('pz_center_plans') || '{}');
     (D.centers || []).forEach(function(c) {
       if (pzPlans[c.id]) {
         if (typeof pzPlans[c.id] === 'string') c.plan_type = pzPlans[c.id];
@@ -2238,10 +2241,10 @@ async function loadCustomers() {
   try { renderCustomers(); } catch(e) {}
   try { renderOverview(); } catch(e) {}
   try {
-    var _rawCache = localStorage.getItem('pq_dashboard_cache_v1');
+    var _rawCache = safeStorage.getItem('pq_dashboard_cache_v1');
     var _cd = _rawCache ? JSON.parse(_rawCache) : {};
     _cd.customers = (D.customers || []).slice(0, 300);
-    localStorage.setItem('pq_dashboard_cache_v1', JSON.stringify(_cd));
+    safeStorage.setItem('pq_dashboard_cache_v1', JSON.stringify(_cd));
   } catch(e) {}
   updateCustSelects();
   updateCoachSelects();
@@ -2714,14 +2717,14 @@ function autofillBodyHeightAge(custId) {
 
   // 1. Supervisor (Myself)
   if (custId === '__sv__') {
-    var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+    var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
     var svId = op.sv_body_id;
     var lastRec = svId ? (D.body||[]).filter(function(b){return b.customer_id===svId;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0] : null;
     if (lastRec) {
       if (lastRec.height) el_h.value = lastRec.height;
       if (lastRec.age)    el_a.value = lastRec.age;
     } else {
-      var p = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+      var p = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
       if (op.height || p.height) el_h.value = op.height || p.height;
       if (op.age || p.age)       el_a.value = op.age || p.age;
     }
@@ -2862,8 +2865,8 @@ function updateCustSelects() {
   // Body composition — ALL coaches regardless of pack status + walk-ins + Center Owner / Supervisor
   var bodySel = document.getElementById('body-customer');
   if(bodySel) {
-    var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-    var _svProf = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+    var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+    var _svProf = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
     var _ownerName = _opProf.name || _svProf.name || 'Myself (Center Owner)';
     var bCustOpts = _custs.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
     var bCoachOpts = _allCoaches.length ? '<optgroup label="── Coaches ──">'+_allCoaches.map(function(c){return '<option value="'+c.id+'">'+c.name+' (Coach)</option>';}).join('')+'</optgroup>' : '';
@@ -4054,8 +4057,8 @@ function renderOverview() {
       });
       if (cPayments.length > 0 && targetId) {
         var celebKey = 'celebratedFirstRevenue_' + targetId;
-        if (!localStorage.getItem(celebKey)) {
-          localStorage.setItem(celebKey, 'true');
+        if (!safeStorage.getItem(celebKey)) {
+          safeStorage.setItem(celebKey, 'true');
           var firstPayVal = cPayments[0].amount_paid || 0;
           setTimeout(function() { triggerFirstRevenueCelebration(firstPayVal); }, 1000);
         }
@@ -5467,7 +5470,7 @@ function getCenterOwnerName(c) {
     else if (email === 'bharathkumarnagam07@gmail.com') name = 'Nagam Venkata Bharath Kumar';
   }
   if (name === '—') {
-    var _pcOwner = JSON.parse(localStorage.getItem('profileCenterOwner') || '{}');
+    var _pcOwner = JSON.parse(safeStorage.getItem('profileCenterOwner') || '{}');
     if (_pcOwner[c.name] && OWNER_PROFILE && OWNER_PROFILE.name) name = OWNER_PROFILE.name;
   }
   return name === '—' ? (c.owner_name || c.owner_email || '—') : name;
@@ -5478,7 +5481,7 @@ function renderCenters() {
   var q = document.getElementById('centers-search').value.toLowerCase();
   var rows = D.centers.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.location||'').toLowerCase().includes(q); });
   var tb = document.getElementById('centers-body');
-  var _pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
+  var _pins = JSON.parse(safeStorage.getItem('centerPins') || '{}');
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">🏢</div><p>No centers found. Add your first one!</p></div></td></tr>'; }
   else tb.innerHTML = rows.map(function(c){
     var ownerName = getCenterOwnerName(c);
@@ -6029,7 +6032,7 @@ async function autoApplyRecurring() {
   var today = new Date();
   var ym = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
   var lsKey = 'recurringApplied_' + ym;
-  if (localStorage.getItem(lsKey)) return; // already applied this month on this device
+  if (safeStorage.getItem(lsKey)) return; // already applied this month on this device
   var todayStr = today.toISOString().split('T')[0];
   var applied = 0;
   for (var i = 0; i < items.length; i++) {
@@ -6048,7 +6051,7 @@ async function autoApplyRecurring() {
       applied++;
     } catch(e) { /* skip duplicates or errors silently */ }
   }
-  localStorage.setItem(lsKey, '1');
+  safeStorage.setItem(lsKey, '1');
   if (applied > 0) {
     await loadFinance();
     showToast(applied + ' recurring expense(s) auto-added for ' + ym, 'success');
@@ -6058,7 +6061,7 @@ async function autoApplyRecurring() {
 // Manual "Apply This Month Now" button
 async function applyRecurringNow() {
   var ym = new Date().toISOString().slice(0,7);
-  localStorage.removeItem('recurringApplied_' + ym); // reset guard so it re-applies
+  safeStorage.removeItem('recurringApplied_' + ym); // reset guard so it re-applies
   closeModal('recurring-expenses');
   await autoApplyRecurring();
 }
@@ -6577,8 +6580,8 @@ function renderBody() {
     return;
   }
 
-  var _opP = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-  var _svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var _opP = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+  var _svP = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var _svBodyId = _opP.sv_body_id || '__sv__';
   var _isSvSelected = (_selectedBodyCustId === '__sv__' || _selectedBodyCustId === _svBodyId);
 
@@ -7062,10 +7065,10 @@ function sendDailySummaryWA() {
   var msg = lines.join('\n');
 
   // Get supervisor's own phone from first center owner contact or prompt
-  var myPhone = localStorage.getItem('supervisorPhone') || '';
+  var myPhone = safeStorage.getItem('supervisorPhone') || '';
   if (!myPhone) {
     myPhone = prompt('Enter your WhatsApp number (with country code, e.g. 917981614593) to receive summaries:') || '';
-    if (myPhone) localStorage.setItem('supervisorPhone', myPhone.replace(/\D/g,''));
+    if (myPhone) safeStorage.setItem('supervisorPhone', myPhone.replace(/\D/g,''));
   }
   myPhone = myPhone.replace(/\D/g,'');
 
@@ -7445,10 +7448,10 @@ async function saveCenter() {
     if (pTypeEl && pTypeEl.value) payload.plan_type = pTypeEl.value;
   }
   // Track profile-owner mapping locally (owner_id is uuid-only in DB)
-  var profileCenters = JSON.parse(localStorage.getItem('profileCenterOwner') || '{}');
+  var profileCenters = JSON.parse(safeStorage.getItem('profileCenterOwner') || '{}');
   if(ownerRaw === 'owner-profile') profileCenters[payload.name] = true;
   else delete profileCenters[payload.name];
-  localStorage.setItem('profileCenterOwner', JSON.stringify(profileCenters));
+  safeStorage.setItem('profileCenterOwner', JSON.stringify(profileCenters));
   if (!payload.name) { showToast('Center name is required','error'); return; }
   try {
     if(id) await dbUpdate('wellness_centers',id,payload); else await dbInsert('wellness_centers',payload);
@@ -7456,7 +7459,7 @@ async function saveCenter() {
     if(payload.type === 'main' && payload.name) {
       OWNER_PROFILE.center_name = payload.name;
       if(payload.location) OWNER_PROFILE.center_location = payload.location;
-      localStorage.setItem('ownerProfile', JSON.stringify(OWNER_PROFILE));
+      safeStorage.setItem('ownerProfile', JSON.stringify(OWNER_PROFILE));
     }
     auditLog(id?'Updated':'Added','Center',payload.name+(payload.location?' — '+payload.location:''));
     showToast(id?'Center updated!':'Center added!'); closeModal('center'); await loadCenters(); renderOverview();
@@ -7970,9 +7973,12 @@ function editAttendance(id) {
 }
 
 // ── SAVE BODY ──
-document.getElementById('body-customer').addEventListener('change', function() {
-  autofillBodyHeightAge(this.value);
-});
+var bodyCustEl = document.getElementById('body-customer');
+if (bodyCustEl) {
+  bodyCustEl.addEventListener('change', function() {
+    autofillBodyHeightAge(this.value);
+  });
+}
 
 function calcBody() {
   var weight    = parseFloat(document.getElementById('body-weight').value);
@@ -8243,13 +8249,13 @@ async function saveBody() {
 
   if (custId === '__sv__') {
     getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
-    var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+    var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
     if (!op.sv_body_id) {
       op.sv_body_id = (crypto.randomUUID ? crypto.randomUUID() : 'sv-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-      localStorage.setItem('ownerProfile', JSON.stringify(op));
+      safeStorage.setItem('ownerProfile', JSON.stringify(op));
       OWNER_PROFILE = op;
     }
-    var _opName = op.name || (JSON.parse(localStorage.getItem('sv_profile')||'{}')).name || 'Center Owner';
+    var _opName = op.name || (JSON.parse(safeStorage.getItem('sv_profile')||'{}')).name || 'Center Owner';
     var svPayload = {
       customer_id: op.sv_body_id, customer_name: _opName,
       date: dateVal,
@@ -8492,13 +8498,13 @@ function auditLog(action, entity, detail) {
     if (ctr) actor = ctr.name + ' (coach login)';
   }
   var entry = { ts: new Date().toISOString(), actor: actor, action: action, entity: entity, detail: detail, centerId: ACTIVE_CENTER || null };
-  var log = JSON.parse(localStorage.getItem('auditLog') || '[]');
+  var log = JSON.parse(safeStorage.getItem('auditLog') || '[]');
   log.unshift(entry);
   if (log.length > 500) log = log.slice(0, 500);
-  localStorage.setItem('auditLog', JSON.stringify(log));
+  safeStorage.setItem('auditLog', JSON.stringify(log));
 }
 function renderAuditLog() {
-  var log = JSON.parse(localStorage.getItem('auditLog') || '[]');
+  var log = JSON.parse(safeStorage.getItem('auditLog') || '[]');
   var q = (document.getElementById('audit-search')||{}).value || '';
   var ef = (document.getElementById('audit-filter')||{}).value || '';
   q = q.toLowerCase();
@@ -10241,10 +10247,10 @@ function saveSvProfile() {
     gender: (document.getElementById('sv-gender')||{}).value||'',
     goal:   (document.getElementById('sv-goal')||{}).value||'Weight Loss'
   };
-  localStorage.setItem('sv_profile', JSON.stringify(p));
+  safeStorage.setItem('sv_profile', JSON.stringify(p));
 }
 function loadSvProfile() {
-  var p = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var p = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var n=document.getElementById('sv-name');   if(n) n.value=p.name||'';
   var a=document.getElementById('sv-age');    if(a) a.value=p.age||'';
   var h=document.getElementById('sv-height'); if(h) h.value=p.height||'';
@@ -10252,7 +10258,7 @@ function loadSvProfile() {
   var gl=document.getElementById('sv-goal');  if(gl&&p.goal) gl.value=p.goal;
 }
 function renderSvBody() {
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   var svId = op.sv_body_id;
   var recs = svId ? (D.body||[]).filter(function(b){ return b.customer_id===svId; }) : [];
   var tb=document.getElementById('sv-body-body');
@@ -10261,7 +10267,7 @@ function renderSvBody() {
   if(!tb||!empty||!wrap) return;
   if(!recs.length){ empty.style.display='block'; wrap.style.display='none'; return; }
   empty.style.display='none'; wrap.style.display='block';
-  var p=JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var p=JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var revWeight=(p.goal||'Weight Loss')==='Weight Gain';
   var sorted=recs.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
   // ── Health Score Card ──
@@ -10269,14 +10275,14 @@ function renderSvBody() {
   var scoreEl=document.getElementById('sv-body-score-card');
   if(scoreEl && latest) {
     var lVfKg=parseFloat(latest.visceral_fat)||0;
-    var svPhone=(JSON.parse(localStorage.getItem('sv_profile')||'{}')).phone||'';
+    var svPhone=(JSON.parse(safeStorage.getItem('sv_profile')||'{}')).phone||'';
     var wChange=(first&&latest&&first.weight&&latest.weight)?(Number(latest.weight)-Number(first.weight)).toFixed(1):null;
     var fChange=(first&&latest&&first.fat_percentage&&latest.fat_percentage)?(Number(latest.fat_percentage)-Number(first.fat_percentage)).toFixed(1):null;
     var mChange=(first&&latest&&first.muscle_percentage&&latest.muscle_percentage)?(Number(latest.muscle_percentage)-Number(first.muscle_percentage)).toFixed(1):null;
     function svDiffColor(val,goodWhenNeg){if(val===null)return'rgba(255,255,255,.6)';var n=Number(val);if(n===0)return'rgba(255,255,255,.6)';return(goodWhenNeg?n<0:n>0)?'#a8e6b8':'#f4a7a0';}
     function svFmt(val,unit){if(val===null)return'—';return(Number(val)>0?'+':'')+val+(unit||'');}
     // Ideal card — build synthetic cust from sv_profile
-    var svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+    var svP = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
     var svCust = { name: op.name||'Supervisor', gender: svP.gender||'', dob: svP.age ? String(new Date().getFullYear() - parseInt(svP.age)) : null };
     renderIdealCard(svCust, latest, 'sv-ideal-card');
     scoreEl.innerHTML = svBuildHealthScoreCard(latest.bmi, latest.fat_percentage, lVfKg, latest.date, {name:op.name||'Supervisor', phone:svPhone, weight:latest.weight, musclePct:latest.muscle_percentage, gender:svP.gender||''}) +
@@ -10333,7 +10339,7 @@ function renderSvBody() {
   }).join('');
 }
 async function autoRecoverSvBodyIfNeeded() {
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   if (op.sv_body_id) return; // already linked, nothing to do
   getCredentials();
   if (!getActiveSbUrl() || !(SB_KEY || CENTER_SB_KEY)) return;
@@ -10377,7 +10383,7 @@ async function autoRecoverSvBodyIfNeeded() {
       selectedId = groupKeys[idx];
     }
     op.sv_body_id = selectedId;
-    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    safeStorage.setItem('ownerProfile', JSON.stringify(op));
     OWNER_PROFILE = op;
     await loadBody();
     renderSvBody();
@@ -10395,7 +10401,7 @@ async function recoverSvBodyRecords() {
     .concat((D.coaches||[]).map(function(c){return c.id;}))
     .concat((D.walkins||[]).map(function(w){return w.id;}))
   );
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   if (op.sv_body_id) knownIds.add(op.sv_body_id);
   // Fetch ALL body_composition records directly (no customer_id filter)
   try {
@@ -10430,7 +10436,7 @@ async function recoverSvBodyRecords() {
     if (isNaN(idx) || idx < 0 || idx >= groupKeys.length) { showToast('Invalid selection','error'); return; }
     var selectedId = groupKeys[idx];
     op.sv_body_id = selectedId;
-    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    safeStorage.setItem('ownerProfile', JSON.stringify(op));
     OWNER_PROFILE = op;
     showToast('Profile linked! Loading records…', 'success');
     await loadBody();
@@ -10440,13 +10446,13 @@ async function recoverSvBodyRecords() {
   }
 }
 async function migrateSvBodyToSupabase() {
-  var old = JSON.parse(localStorage.getItem('sv_body_records')||'[]');
+  var old = JSON.parse(safeStorage.getItem('sv_body_records')||'[]');
   if (!old.length) return;
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) return;
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   if (!op.sv_body_id) {
     op.sv_body_id = (crypto.randomUUID ? crypto.randomUUID() : 'sv-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    safeStorage.setItem('ownerProfile', JSON.stringify(op));
     OWNER_PROFILE = op;
   }
   var svId = op.sv_body_id;
@@ -10466,7 +10472,7 @@ async function migrateSvBodyToSupabase() {
     } catch(e) {}
   }
   if (toMigrate.length) {
-    localStorage.removeItem('sv_body_records');
+    safeStorage.removeItem('sv_body_records');
     await loadBody(); renderSvBody();
     showToast(toMigrate.length + ' old supervisor body record(s) migrated to Supabase ✓', 'success');
   }
@@ -10476,7 +10482,7 @@ var _svDietInFlight = false;
 
 function renderSvDietPlan() {
   var el = document.getElementById('sv-diet-output'); if (!el) return;
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   var plan = op.sv_diet_plan ? JSON.parse(op.sv_diet_plan) : null;
   if (!plan) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 0">No plan yet — fill in Goal, Diet Type and Activity Level, then click Generate My Plan.</div>'; return; }
   // Restore dropdown selections from saved plan
@@ -10532,8 +10538,8 @@ async function generateSvDietPlan() {
   if (_svDietInFlight) return;
   if (!getGroqKey()) { showToast('Set Groq API key in SQL/Config section first', 'error'); return; }
   if (!D_FOODS.length) { showToast('Add foods to the Food Database first', 'error'); return; }
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-  var svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+  var svP = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var svId = op.sv_body_id;
   var latestBody = (D.body||[]).filter(function(b){
     return b.customer_id === '__sv__' || (svId && b.customer_id === svId) || (
@@ -10681,7 +10687,7 @@ function parseAiJson(raw) {
     plan.diet_type = dietType;
     plan.activity = activity;
     op.sv_diet_plan = JSON.stringify(plan);
-    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    safeStorage.setItem('ownerProfile', JSON.stringify(op));
     OWNER_PROFILE = op;
     _svDietDay = null;
     renderSvDietPlan();
@@ -10700,7 +10706,7 @@ function openBodyModalSv() {
   });
   document.getElementById('body-age-field').value='';
   // Auto-fill height and age from latest body record (stored in Supabase via body_composition)
-  var op=JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op=JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   var svId=op.sv_body_id;
   var lastRec=svId ? (D.body||[]).filter(function(b){return b.customer_id===svId;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0] : null;
   if(lastRec) {
@@ -10708,14 +10714,14 @@ function openBodyModalSv() {
     if(lastRec.age)    document.getElementById('body-age-field').value=lastRec.age;
   } else {
     // First scan — fallback to My Profile fields
-    var p=JSON.parse(localStorage.getItem('sv_profile')||'{}');
+    var p=JSON.parse(safeStorage.getItem('sv_profile')||'{}');
     if(p.height) document.getElementById('body-height').value=p.height;
     if(p.age)    document.getElementById('body-age-field').value=p.age;
   }
   openModal('body');
 }
 function editSvBody(id) {
-  var op=JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op=JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   var b=(D.body||[]).find(function(x){return x.id===id && x.customer_id===op.sv_body_id;}); if(!b) return;
   document.getElementById('body-id').value=b.id;
   document.getElementById('body-customer').value='__sv__';
@@ -10744,8 +10750,8 @@ async function delSvBody(id) {
 function updateBodyCustSelect() {
   var sel = document.getElementById('body-cust-select'); if(!sel) return;
   var prev = sel.value;
-  var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-  var _svProf = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+  var _svProf = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var _ownerName = _opProf.name || _svProf.name || 'Myself (Center Owner)';
   var svOpt = '<option value="__sv__">👤 ' + _ownerName + ' (Myself / Owner)</option>';
   var custOpts = D.customers.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
@@ -10764,8 +10770,8 @@ function onBodyCustomerChange() {
 function onBodySearch() {
   var q = document.getElementById('body-search').value.toLowerCase().trim();
   var sel = document.getElementById('body-cust-select');
-  var _opP = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-  var _svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var _opP = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+  var _svP = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var _ownerName = (_opP.name || _svP.name || 'myself').toLowerCase();
   var match = D.customers.find(function(c){return(c.name||'').toLowerCase().includes(q);})
            || D.coaches.find(function(c){return(c.name||'').toLowerCase().includes(q);});
@@ -11027,7 +11033,7 @@ var _origRenderCustomers = typeof renderCustomers === 'function' ? renderCustome
 // ══════════════════════════════════════════════
 function updateCoachUplineSelects(excludeId){
   excludeId = excludeId || '';
-  var ownerName = (JSON.parse(localStorage.getItem('ownerProfile')||'{}')).name || 'You (Root)';
+  var ownerName = (JSON.parse(safeStorage.getItem('ownerProfile')||'{}')).name || 'You (Root)';
   var opts='<option value="">'+ownerName+' (Root — You)</option>'+D.coaches
     .filter(function(c){ return !excludeId || c.id !== excludeId; })
     .map(function(c){
@@ -11502,9 +11508,9 @@ async function saveCenterPlan(centerId) {
   var updatePayload = needNewTrialDate ? { plan_type: newPlan, created_at: nowIso } : { plan_type: newPlan };
 
   try {
-    var pzPlans = JSON.parse(localStorage.getItem('pz_center_plans') || '{}');
+    var pzPlans = JSON.parse(safeStorage.getItem('pz_center_plans') || '{}');
     pzPlans[centerId] = typeof pzPlans[centerId] === 'object' ? Object.assign(pzPlans[centerId], updatePayload) : updatePayload;
-    localStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
+    safeStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
   } catch(e) {}
 
   var dbSuccess = false;
@@ -11540,9 +11546,9 @@ async function resetCenterTrial(centerId) {
   center.plan_type = 'trial';
   center.created_at = nowIso;
   try {
-    var pzPlans = JSON.parse(localStorage.getItem('pz_center_plans') || '{}');
+    var pzPlans = JSON.parse(safeStorage.getItem('pz_center_plans') || '{}');
     pzPlans[centerId] = { plan_type: 'trial', created_at: nowIso };
-    localStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
+    safeStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
   } catch(e) {}
 
   var dbSuccess = false;
@@ -12292,7 +12298,7 @@ function toggleUpiQR() {
     
     // Load saved UPI ID for this center from localStorage
     var centerId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId) || 'default';
-    var savedUpiMap = JSON.parse(localStorage.getItem('center_upi_ids') || '{}');
+    var savedUpiMap = JSON.parse(safeStorage.getItem('center_upi_ids') || '{}');
     var upiInput = document.getElementById('inst-upi-id');
     
     if (upiInput && !upiInput.value) {
@@ -12329,9 +12335,9 @@ function generateAndShowQR() {
   
   // Save to localStorage
   var centerId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId) || 'default';
-  var savedUpiMap = JSON.parse(localStorage.getItem('center_upi_ids') || '{}');
+  var savedUpiMap = JSON.parse(safeStorage.getItem('center_upi_ids') || '{}');
   savedUpiMap[centerId] = upiId;
-  localStorage.setItem('center_upi_ids', JSON.stringify(savedUpiMap));
+  safeStorage.setItem('center_upi_ids', JSON.stringify(savedUpiMap));
   
   // Amount to pay: if inst-amount is set, use it; otherwise use full balance
   var amt = Number(document.getElementById('inst-amount').value);
@@ -13588,16 +13594,16 @@ async function loadExpenses() {
   D.expenses = rows.map(expFromDB);
 }
 async function migrateExpensesFromLocalStorage() {
-  var local = JSON.parse(localStorage.getItem('supervisorExpenses') || '[]');
+  var local = JSON.parse(safeStorage.getItem('supervisorExpenses') || '[]');
   if (!local.length) return;
   var existingIds = D.expenses.map(function(e){ return e.id; });
   var toMigrate = local.filter(function(e){ return !existingIds.includes(e.id); });
-  if (!toMigrate.length) { localStorage.removeItem('supervisorExpenses'); return; }
+  if (!toMigrate.length) { safeStorage.removeItem('supervisorExpenses'); return; }
   showToast('Migrating ' + toMigrate.length + ' expenses to cloud...', 'info');
   for (var i = 0; i < toMigrate.length; i++) {
     try { await dbInsert('expenses', expToDB(toMigrate[i])); } catch(err) { console.error('migrate expense', err); }
   }
-  localStorage.removeItem('supervisorExpenses');
+  safeStorage.removeItem('supervisorExpenses');
   var rows = await dbGet('expenses', 'date');
   D.expenses = rows.map(expFromDB);
   showToast('Expenses migrated to cloud!');
@@ -13630,7 +13636,7 @@ function openExpenseModal(id) {
 function quickAddWaterCans(loc) {
   var key    = loc === 'home' ? 'waterCansHomeAmt' : 'waterCansCenterAmt';
   var label  = loc === 'home' ? 'Water Can — Home' : 'Water Can — ' + getCenterName();
-  var lastAmt = localStorage.getItem(key) || '10';
+  var lastAmt = safeStorage.getItem(key) || '10';
   openExpenseModal();
   document.getElementById('exp-cat').value    = 'Water Cans';
   document.getElementById('exp-desc').value   = label;
@@ -13658,8 +13664,8 @@ async function saveExpense() {
   var centerName = '';
   if (centerId) { var cc = D.centers.find(function(c){ return c.id === centerId; }); centerName = cc ? cc.name : ''; }
   if (cat === 'Water Cans') {
-    if (desc.indexOf('Home') !== -1) localStorage.setItem('waterCansHomeAmt', amount);
-    else localStorage.setItem('waterCansCenterAmt', amount);
+    if (desc.indexOf('Home') !== -1) safeStorage.setItem('waterCansHomeAmt', amount);
+    else safeStorage.setItem('waterCansCenterAmt', amount);
   }
   var financeData = { type: 'expense', category: cat, amount: amount, description: desc, date: date, wellness_center_id: centerId || null };
   try {
@@ -13829,7 +13835,7 @@ function renderCommission() {
   if (!sel) return;
   var month = sel.value;
   if (!month) { var d = new Date(); month = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
-  var rates = JSON.parse(localStorage.getItem('commissionRates') || '{}');
+  var rates = JSON.parse(safeStorage.getItem('commissionRates') || '{}');
   var defRate = parseFloat(rates.default !== undefined ? rates.default : 10) / 100;
 
   var data = D.coaches.map(function(coach) {
@@ -13918,7 +13924,7 @@ function renderCommission() {
 }
 
 function openCommissionSettings() {
-  var rates = JSON.parse(localStorage.getItem('commissionRates') || '{}');
+  var rates = JSON.parse(safeStorage.getItem('commissionRates') || '{}');
   document.getElementById('comm-rate-default').value = rates.default !== undefined ? rates.default : 10;
   var packTypes = [];
   D.customers.forEach(function(c){ if(c.pack_type && packTypes.indexOf(c.pack_type)===-1) packTypes.push(c.pack_type); });
@@ -13942,7 +13948,7 @@ function saveCommissionRates() {
     var v = inp.value.trim();
     if(v !== '') rates[inp.dataset.pack] = parseFloat(v);
   });
-  localStorage.setItem('commissionRates', JSON.stringify(rates));
+  safeStorage.setItem('commissionRates', JSON.stringify(rates));
   closeModal('commission-rates');
   renderCommission();
   showToast('Commission rates saved', 'success');
@@ -14105,7 +14111,7 @@ function getDaysLeftSv(c) {
 //  GOAL SETTING
 // ══════════════════════════════════════════
 function getGoals() {
-  return JSON.parse(localStorage.getItem('supervisorGoals') || '{}');
+  return JSON.parse(safeStorage.getItem('supervisorGoals') || '{}');
 }
 function saveGoals() {
   var goals = getGoals();
@@ -14115,7 +14121,7 @@ function saveGoals() {
   goals[ym].revenue     = parseInt(document.getElementById('goal-revenue').value) || 0;
   goals[ym].attendance  = parseInt(document.getElementById('goal-attendance').value) || 0;
   goals[ym].leads       = parseInt(document.getElementById('goal-leads').value) || 0;
-  localStorage.setItem('supervisorGoals', JSON.stringify(goals));
+  safeStorage.setItem('supervisorGoals', JSON.stringify(goals));
   renderGoals();
   showToast('Goals saved!');
 }
@@ -16589,6 +16595,5 @@ async function askFinanceFollowup() {
   
   askBtn.disabled = false;
   askBtn.textContent = 'Ask';
-}
 }
 
