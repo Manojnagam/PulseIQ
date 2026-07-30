@@ -1716,6 +1716,20 @@ async function dbGet(table, order, extraFilter) {
   try { var r = await req('GET', table, null, qs); return Array.isArray(r) ? r : []; }
   catch(e) { console.error(table, e); return []; }
 }
+async function dbGetAll(table, order, extraFilter) {
+  var all = [];
+  var offset = 0;
+  var limit = 1000;
+  while(true) {
+    var ext = (extraFilter ? extraFilter + '&' : '') + 'limit=' + limit + '&offset=' + offset;
+    var page = await dbGet(table, order, ext);
+    if (!page || page.length === 0) break;
+    all = all.concat(page);
+    if (page.length < limit) break;
+    offset += limit;
+  }
+  return all;
+}
 async function dbInsert(table, data) { return req('POST', table, data); }
 async function dbUpdate(table, id, data) {
   try {
@@ -2237,7 +2251,7 @@ function updateSidebarLogo() {
   if (wcBtn) wcBtn.textContent = '🌿 ' + cn;
 }
 async function loadCustomers() {
-  D.customers = await dbGet('customers', 'created_at', _cFilter());
+  D.customers = await dbGetAll('customers', 'created_at', _cFilter());
   try { renderCustomers(); } catch(e) {}
   try { renderOverview(); } catch(e) {}
   try {
@@ -11714,7 +11728,7 @@ function renderOrgTree(){
 async function loadCoupons(){
   getCredentials();if(!getActiveSbUrl()||!getActiveSbKey())return;
   try{
-    var r=await dbGet('coupons','created_at');
+    var r=await dbGetAll('coupons','created_at');
     var rawCoupons=Array.isArray(r)?r:[];
     D.coupons=filterCouponsByCenter(rawCoupons);
   }
@@ -11972,7 +11986,7 @@ async function saveShakeRedemption(){
 async function loadPayments(){
   getCredentials();if(!getActiveSbUrl()||!getActiveSbKey())return;
   try{
-    var r=await dbGet('payments','payment_date');
+    var r=await dbGetAll('payments','payment_date');
     var rawPayments=Array.isArray(r)?r:[];
     D.payments=filterPaymentsByCenter(rawPayments);
   }
@@ -12951,7 +12965,7 @@ async function executePromotion() {
 // ══════════════════════════════════════════════
 
 async function loadWalkins() {
-  D.walkins = await dbGet('walkins', 'created_at');
+  D.walkins = await dbGetAll('walkins', 'created_at');
   renderWalkins();
   updateCustSelects();
   updateBodyCustSelect();
@@ -13223,7 +13237,7 @@ async function _markWalkinConverted(customerId){
 // ══════════════════════════════════════════════
 
 async function loadLeads() {
-  D.leads = await dbGet('leads', 'id');
+  D.leads = await dbGetAll('leads', 'id');
   D.leadFollowups = await dbGet('lead_followups', 'called_at');
   renderLeadsStats();
   renderLeads();
@@ -14675,7 +14689,7 @@ async function _doBulkGenerate() {
     if(!res.ok) throw new Error(data.error || 'Edge function error ' + res.status);
 
     // Reload customers so diet_plan fields reflect what the edge function saved
-    var fresh = await dbGet('customers', '*');
+    var fresh = await dbGetAll('customers', '*');
     if(fresh) D.customers = fresh;
 
     renderCustomers();
