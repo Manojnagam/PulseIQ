@@ -16,7 +16,7 @@ window.safeStorage = window.safeStorage || (function() {
   };
 })();
 
-function loadScript(src) {
+function loadScript(src, timeoutMs) {
   return new Promise(function(resolve, reject) {
     if (document.querySelector('script[src="' + src + '"]')) {
       resolve();
@@ -28,7 +28,7 @@ function loadScript(src) {
       s.onload = null;
       s.onerror = null;
       reject(new Error('Timeout loading ' + src));
-    }, 10000);
+    }, timeoutMs || 30000);
     s.onload = function() {
       clearTimeout(timer);
       resolve();
@@ -56,11 +56,23 @@ var OWNER_PROFILE = null;
 async function initAuthClient() {
   if (_sbAuth) return;
   if (!window.supabase) {
-    await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2');
+    try {
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2', 15000);
+    } catch (err1) {
+      console.warn('Primary Supabase CDN (jsDelivr) failed/timed out, trying unpkg:', err1);
+      try {
+        await loadScript('https://unpkg.com/@supabase/supabase-js@2.108.2/dist/umd/supabase.js', 15000);
+      } catch (err2) {
+        console.warn('Secondary Supabase CDN (unpkg) failed/timed out, trying cdnjs:', err2);
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.48.1/umd/supabase.min.js', 15000);
+      }
+    }
   }
-  _sbAuth = window.supabase.createClient(CENTER_SB_URL, CENTER_SB_KEY, {
-    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
-  });
+  if (window.supabase) {
+    _sbAuth = window.supabase.createClient(CENTER_SB_URL, CENTER_SB_KEY, {
+      auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+    });
+  }
 }
 
 async function checkExistingSession() {
@@ -262,7 +274,7 @@ async function loadAndStartDashboard() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-loading').style.display = 'flex';
   
-  // Safety timeout: ensure loading splash never freezes black on mobile
+  // Safety timeout: ensure loading splash never freezes black on mobile (30s)
   var splashTimer = setTimeout(function() {
     var al = document.getElementById('app-loading');
     if (al && getComputedStyle(al).display !== 'none') {
@@ -273,11 +285,11 @@ async function loadAndStartDashboard() {
         var appEl = document.getElementById('app');
         if (!appEl || (appEl.style.display !== 'block' && appEl.style.display !== 'grid')) {
           ls.style.display = 'flex';
-          showLoginErr('Startup took too long. Please check your connection and tap Send Code or reload.');
+          showLoginErr('Startup took too long. Check mobile signal and <button onclick="loadAndStartDashboard()" style="background:#27AE60;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-weight:700;cursor:pointer;margin-left:6px">Retry 🔄</button>');
         }
       }
     }
-  }, 8000);
+  }, 30000);
 
   window._sbAuth = _sbAuth;
   window._authUser = _authUser;
@@ -286,28 +298,28 @@ async function loadAndStartDashboard() {
   window.SB_KEY = SB_KEY;
 
   try {
-    if (!window.supabase) {
+    await initAuthClient();
+    if (typeof bootDashboard !== 'function') {
       try {
-        await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2');
-      } catch (cdnErr) {
-        console.warn('Primary Supabase CDN failed, trying unpkg fallback:', cdnErr);
-        await loadScript('https://unpkg.com/@supabase/supabase-js@2.108.2/dist/umd/supabase.js');
+        await loadScript('app.min.js?v=1.4.7', 30000);
+      } catch (scriptErr) {
+        console.warn('app.min.js load failed, trying app.js fallback:', scriptErr);
+        await loadScript('app.js?v=1.4.7', 30000);
       }
     }
-    await loadScript('app.min.js?v=1.4.7');
     if (typeof bootDashboard === 'function') {
       await bootDashboard();
       clearTimeout(splashTimer);
     } else {
-      console.error('bootDashboard function not found in app.min.js');
+      console.error('bootDashboard function not found');
       throw new Error('bootDashboard function missing');
     }
   } catch (err) {
     clearTimeout(splashTimer);
-    console.error('Failed to load app.min.js:', err);
+    console.error('Failed to load application scripts:', err);
     var al = document.getElementById('app-loading'); if (al) al.style.display = 'none';
     var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'flex';
-    showLoginErr('Failed to load application scripts. Please check your internet connection and try again.');
+    showLoginErr('Failed to load application scripts. <button onclick="loadAndStartDashboard()" style="margin-left:8px;background:#27AE60;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-weight:700;cursor:pointer">Retry 🔄</button>');
   }
 }
 
