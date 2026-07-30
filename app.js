@@ -584,6 +584,7 @@ function exportCustomersCSV() {
   if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Basic plan feature (₹499/mo).', 'error'); return; }
 
 
+function fmt(n) { return '₹' + Math.round(n || 0).toLocaleString('en-IN'); }
 function getCenterById(id) {
   if (!id) return '';
   var c = (D.centers||[]).find(function(x){return x.id===id;}); return c?c.name:'';
