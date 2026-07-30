@@ -4654,10 +4654,9 @@ function renderCoaches() {
   var rows = _coaches.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.contact||'').toLowerCase().includes(q); });
   var tb = document.getElementById('coaches-body');
   if (!rows.length) { tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">👨‍🏫</div><p>No coaches found. Add your first one!</p></div></td></tr>'; }
-  else window._limCoach = window._limCoach || 50;
-  var __fullRows = rows;
-  rows = rows.slice(0, window._limCoach);
-  tb.innerHTML = rows.map(function(c){
+  else {
+    window._limCoach = window._limCoach || 50;
+    tb.innerHTML = rows.slice(0, window._limCoach).map(function(c){
     var refs = D.customers.filter(function(cust){return cust.referred_by_id===c.id;}).length;
     var st = c.status||'Active';
     var pinHtml = c.herbalife_pin ? '<span style="font-size:10px;background:var(--info-light);color:var(--info-text);padding:2px 7px;border-radius:10px;font-weight:600;display:block;margin-top:3px">'+c.herbalife_pin+'</span>' : '';
@@ -4670,9 +4669,8 @@ function renderCoaches() {
     var renewBtn = c.pack_type ? '<button class="btn-p" style="font-size:11px;padding:3px 8px;margin-right:4px" onclick="openRenewForCoach(\''+c.id+'\')">🔄 Renew</button>' : '';
     var promoteBtn = '<button class="btn-p" style="font-size:11px;padding:3px 8px;background:#7c3aed;border-color:#7c3aed;margin-right:4px" onclick="openPromoteModal(\''+c.id+'\')" title="Promote to Supervisor — Open New Center">🏆 Promote</button>';
     return '<tr><td><strong>'+c.name+'</strong>'+pinHtml+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(st==='Active'?'bg':'br')+'">'+st+'</span></td><td>'+(c.upline||'—')+'</td><td>'+refs+'</td><td>'+(c.join_date||'—')+'</td><td><div class="acts">'+promoteBtn+payBtn+renewBtn+'<button class="btn-e" onclick="editCoach(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'coaches\',\''+c.id+'\',\'coaches\')">Delete</button></div></td></tr>';
-  }).join('');;
-  if(__fullRows.length > window._limCoach) {
-    tb.innerHTML += '<tr><td colspan="7" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCoach+=50;renderCoaches()">⬇️ Load More (' + (__fullRows.length - window._limCoach) + ' remaining)</button></td></tr>';
+  }).join('');
+    if(rows.length > window._limCoach) { tb.innerHTML += '<tr><td colspan="7" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCoach+=50;renderCoaches()">⬇️ Load More (' + (rows.length - window._limCoach) + ' remaining)</button></td></tr>'; }
   }
   document.getElementById('coaches-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Coaches</div><div class="stat-v">'+_coaches.length+'</div></div><div class="stat"><div class="stat-l">Active</div><div class="stat-v">'+_coaches.filter(function(c){return (c.status||'Active')==='Active';}).length+'</div></div>';
 }
@@ -7167,12 +7165,10 @@ function renderFinance() {
   var rows = _getFinFiltered();
   var tb = document.getElementById('fin-body');
   if (!rows.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="ei">💰</div><p>No transactions yet.</p></div></td></tr>'; }
-  else window._limFin = window._limFin || 50;
-  var __fullRows = rows;
-  rows = rows.slice(0, window._limFin);
-  tb.innerHTML = rows.map(function(f){ return '<tr class="'+f.type+'-row"><td><span class="badge '+(f.type==='income'?'bg':'br')+'">'+f.type+'</span></td><td>'+(f.description||'—')+'</td><td><strong>₹'+Number(f.amount).toLocaleString('en-IN')+'</strong></td><td>'+(f.category||'—')+'</td><td>'+f.date+'</td><td><div class="acts"><button class="btn-e" onclick="editFinance(\''+f.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'finance\',\''+f.id+'\',\'finance\')">Delete</button></div></td></tr>'; }).join('');;
-  if(__fullRows.length > window._limFin) {
-    tb.innerHTML += '<tr><td colspan="6" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limFin+=50;renderFinance()">⬇️ Load More (' + (__fullRows.length - window._limFin) + ' remaining)</button></td></tr>';
+  else {
+    window._limFin = window._limFin || 50;
+    tb.innerHTML = rows.slice(0, window._limFin).map(function(f){ return '<tr class="'+f.type+'-row"><td><span class="badge '+(f.type==='income'?'bg':'br')+'">'+f.type+'</span></td><td>'+(f.description||'—')+'</td><td><strong>₹'+Number(f.amount).toLocaleString('en-IN')+'</strong></td><td>'+(f.category||'—')+'</td><td>'+f.date+'</td><td><div class="acts"><button class="btn-e" onclick="editFinance(\''+f.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'finance\',\''+f.id+'\',\'finance\')">Delete</button></div></td></tr>'; }).join('');
+    if(rows.length > window._limFin) { tb.innerHTML += '<tr><td colspan="6" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limFin+=50;renderFinance()">⬇️ Load More (' + (rows.length - window._limFin) + ' remaining)</button></td></tr>'; }
   }
   var inc = rows.filter(function(f){return f.type==='income';}).reduce(function(s,f){return s+Number(f.amount);},0);
   var exp = rows.filter(function(f){return f.type==='expense';}).reduce(function(s,f){return s+Number(f.amount);},0);
@@ -11856,9 +11852,7 @@ function renderCoupons(){
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">🎟️</div><p>No coupons yet.</p></div></td></tr>';return;}
   rows.sort(function(a,b){return new Date(b.date||b.created_at)-new Date(a.date||a.created_at);});
   window._limCoup = window._limCoup || 50;
-  var __fullRows = rows;
-  rows = rows.slice(0, window._limCoup);
-  tb.innerHTML=rows.map(function(r){
+  tb.innerHTML = rows.slice(0, window._limCoup).map(function(r){
     var person=findPerson(r.coach_id);
     var pName=person?person.name:r.coach_id;
     var pBadge=person?(' <span class="badge '+(person.type==='coach'?'bg':'ms-green')+'" style="font-size:9px">'+person.type+'</span>'):'';
@@ -11867,10 +11861,8 @@ function renderCoupons(){
       +'<td><span class="badge '+(r.type==='earn'?'bg':'br')+'">'+(r.type==='earn'?'Earned':'Used')+'</span></td>'
       +'<td>'+(r.date||'—')+'</td><td>'+(r.referred_person||'—')+'</td>'
       +'<td><button class="btn-d" onclick="delCoupon(\''+r.id+'\')">Del</button></td></tr>';
-  }).join('');;
-  if(__fullRows.length > window._limCoup) {
-    tb.innerHTML += '<tr><td colspan="7" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCoup+=50;renderCoupons()">⬇️ Load More (' + (__fullRows.length - window._limCoup) + ' remaining)</button></td></tr>';
-  }
+  }).join('');
+  if(rows.length > window._limCoup) { tb.innerHTML += '<tr><td colspan="7" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCoup+=50;renderCoupons()">⬇️ Load More (' + (rows.length - window._limCoup) + ' remaining)</button></td></tr>'; }
   // Stats: scoped to active center
   var statsPersonIds={};
   allCoupons.forEach(function(x){ statsPersonIds[x.coach_id]=true; });
@@ -12038,9 +12030,7 @@ function renderPayments(){
   rows.sort(function(a,b){return new Date(b.payment_date)-new Date(a.payment_date);});
   var today=new Date().toISOString().split('T')[0];
   window._limPay = window._limPay || 50;
-  var __fullRows = rows;
-  rows = rows.slice(0, window._limPay);
-  tb.innerHTML=rows.map(function(p){
+  tb.innerHTML = rows.slice(0, window._limPay).map(function(p){
     var total=Number(p.total_amount),paid=Number(p.amount_paid),bal=Math.max(0,total-paid);
     var pct=total>0?Math.round((paid/total)*100):100;
     var isOverdue=bal>0&&p.due_date&&p.due_date<today;
@@ -12058,10 +12048,8 @@ function renderPayments(){
       +(bal>0&&p.person_id?'<button class="wa-btn" style="font-size:11px;padding:3px 7px" onclick="sendPaymentWA(\''+p.id+'\')">💬</button> ':'')
       +'<button class="btn-e" onclick="editPayment(\''+p.id+'\')">Edit</button>'
       +'<button class="btn-d" onclick="delPayment(\''+p.id+'\')">Del</button></div></td></tr>';
-  }).join('');;
-  if(__fullRows.length > window._limPay) {
-    tb.innerHTML += '<tr><td colspan="9" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limPay+=50;renderPayments()">⬇️ Load More (' + (__fullRows.length - window._limPay) + ' remaining)</button></td></tr>';
-  }
+  }).join('');
+  if(rows.length > window._limPay) { tb.innerHTML += '<tr><td colspan="9" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limPay+=50;renderPayments()">⬇️ Load More (' + (rows.length - window._limPay) + ' remaining)</button></td></tr>'; }
   var totalBal=allPayments.reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0);
   var overdueCount=allPayments.filter(function(p){return Math.max(0,Number(p.total_amount)-Number(p.amount_paid))>0&&p.due_date&&p.due_date<today;}).length;
   var el=document.getElementById('payment-stats');
@@ -12534,10 +12522,9 @@ function renderCustomers() {
   var tb = document.getElementById('customers-body');
   var todayMMDD = new Date().toISOString().slice(5,10);
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">👤</div><p>No customers found.</p></div></td></tr>'; }
-  else window._limCust = window._limCust || 50;
-  var __fullRows = rows;
-  rows = rows.slice(0, window._limCust);
-  tb.innerHTML = rows.map(function(c){
+  else {
+    window._limCust = window._limCust || 50;
+    tb.innerHTML = rows.slice(0, window._limCust).map(function(c){
     var st = getDaysLeft(c);
     var streak = getStreak(c.id);
     var bdg = st.days > 3 ? 'bg' : (st.days > 0 ? 'by' : 'br');
@@ -12571,10 +12558,7 @@ function renderCustomers() {
     var coachBadge = enrollCoach ? '<span class="badge" style="background:var(--info-light);color:var(--info-text);font-size:9px;display:block;margin-top:2px">👨‍🏫 '+enrollCoach.name+'</span>' : '';
     var risk = getChurnRisk(c.id);
     var riskBadge = risk.label ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;display:block;margin-top:2px;'+(risk.level==='critical'?'background:var(--danger-light);color:var(--text-danger)':'background:var(--warning-light);color:var(--warning-text)')+'" title="'+risk.reasons.join(', ')+'">'+risk.label+'</span>' : '';
-    var msBadges = getMilestones(c.id).slice(-2).map(function(m){ return '<span class="milestone-badge ms-gold" style="font-size:9px;display:inline-block;margin-top:2px">'+m.icon+' '+m.label+'</span>'; }).join('');;
-  if(__fullRows.length > window._limCust) {
-    tb.innerHTML += '<tr><td colspan="9" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCust+=50;renderCustomers()">⬇️ Load More (' + (__fullRows.length - window._limCust) + ' remaining)</button></td></tr>';
-  }
+    var msBadges = getMilestones(c.id).slice(-2).map(function(m){ return '<span class="milestone-badge ms-gold" style="font-size:9px;display:inline-block;margin-top:2px">'+m.icon+' '+m.label+'</span>'; }).join('');
     var issuesDisplay = c.issues ? '<div style="font-size:11px;color:var(--danger);margin-top:2px" title="Issues: '+c.issues+'">⚠️ Issues: '+c.issues+'</div>' : '';
     return '<tr>'
       +'<td><strong>'+c.name+bdayFlag+'</strong>'+noDobBadge+freeDay+sharedBadge+memberBadge+coachBadge+riskBadge+issuesDisplay+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
@@ -12598,6 +12582,8 @@ function renderCustomers() {
         +'<button class="btn-d" onclick="delRecord(\'customers\',\''+c.id+'\',\'customers\')">Delete</button>'
       +'</div></td></tr>';
   }).join('');
+    if(rows.length > window._limCust) { tb.innerHTML += '<tr><td colspan="9" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCust+=50;renderCustomers()">⬇️ Load More (' + (rows.length - window._limCust) + ' remaining)</button></td></tr>'; }
+  }
   var active=_custs.filter(function(c){return getDaysLeft(c).active;}).length;
   var expiring=_custs.filter(function(c){var s=getDaysLeft(c);return s.active&&s.days<=3;}).length;
   var stars=_custs.filter(function(c){return _custs.filter(function(x){return x.referred_by_id===c.id;}).length>=2;}).length;
@@ -13033,9 +13019,7 @@ function renderWalkins() {
   var OUT = {checkup:'🔬 Checkup',trial:'📦 Trial Pack',product_sale:'🛒 Product Sale',other:'Other'};
   var OUT_COL = {checkup:'#1d4ed8',trial:'#b07800',product_sale:'#16a34a',other:'var(--muted)'};
   window._limWalk = window._limWalk || 50;
-  var __fullRows = rows;
-  rows = rows.slice(0, window._limWalk);
-  tb.innerHTML = rows.map(function(w) {
+  tb.innerHTML = rows.slice(0, window._limWalk).map(function(w) {
     var refObj = w.referred_by_id ? findPerson(w.referred_by_id) : null;
     var refName = w.referred_by_name || (refObj ? refObj.name : '');
     var srcLbl = (SRC[w.source]||w.source||'—') + (refName ? '<br><span style="font-size:11px;color:var(--muted)">'+refName+'</span>' : '');
@@ -13055,10 +13039,8 @@ function renderWalkins() {
       +'<td style="max-width:140px;font-size:12px;color:var(--muted)">'+(w.notes||'—')+'</td>'
       +'<td><div class="acts">'+waBtn+' '+convertBtn+' <button class="btn-e" onclick="openWalkinModal(\''+w.id+'\')">Edit</button> <button class="btn-e" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5" onclick="deleteWalkin(\''+w.id+'\')">🗑</button></div></td>'
       +'</tr>';
-  }).join('');;
-  if(__fullRows.length > window._limWalk) {
-    tb.innerHTML += '<tr><td colspan="8" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limWalk+=50;renderWalkins()">⬇️ Load More (' + (__fullRows.length - window._limWalk) + ' remaining)</button></td></tr>';
-  }
+  }).join('');
+  if(rows.length > window._limWalk) { tb.innerHTML += '<tr><td colspan="8" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limWalk+=50;renderWalkins()">⬇️ Load More (' + (rows.length - window._limWalk) + ' remaining)</button></td></tr>'; }
 }
 
 function openWalkinModal(id) {
