@@ -205,11 +205,10 @@ async function verifyOtpCode() {
   if (!token || token.length < 6) { showCodeErr('Please enter the login code.'); return; }
   var btn = document.getElementById('verify-btn');
   btn.textContent = 'Verifying…'; btn.disabled = true;
-  var res = await _sbAuth.auth.verifyOtp({ email: email, token: token, type: 'email' });
-  if (res.error) {
-    showCodeErr(res.error.message === 'Token has expired or is invalid' ? 'Incorrect or expired code. Try again.' : res.error.message);
-    btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
-  } else {
+  try {
+    var res = await _sbAuth.auth.verifyOtp({ email: email, token: token, type: 'email' });
+    if (res.error) throw res.error;
+    
     _authSession = res.data.session;
     _authUser = res.data.user;
     // Remember this device if checkbox is checked
@@ -222,6 +221,9 @@ async function verifyOtpCode() {
       safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
     }
     await startApp();
+  } catch (e) {
+    showCodeErr(e.message === 'Token has expired or is invalid' ? 'Incorrect or expired code. Try again.' : e.message);
+    btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
   }
 }
 
