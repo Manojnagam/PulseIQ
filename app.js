@@ -128,6 +128,11 @@ async function sendOtpCode() {
   var RL_MAX = 5, RL_WINDOW = 10 * 60 * 1000;
   var now = Date.now();
   var attempts = JSON.parse(safeStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
+  var lastAttempt = attempts.length > 0 ? Math.max.apply(null, attempts) : 0;
+  if (now - lastAttempt < 30000) {
+    showLoginErr('Please wait 30 seconds before requesting a new code.');
+    return;
+  }
   if (attempts.length >= RL_MAX) {
     var waitMs = RL_WINDOW - (now - attempts[0]);
     var waitMin = Math.ceil(waitMs / 60000);
