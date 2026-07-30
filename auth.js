@@ -308,7 +308,7 @@ async function loadAndStartDashboard() {
     await initAuthClient();
     if (typeof window.bootDashboard !== 'function') {
       try {
-        await loadScript('app.min.js?v=1.4.8', 30000);
+        await loadScript('app.min.js?v=1.5.0', 30000);
       } catch (scriptErr) {
         console.warn('app.min.js load failed:', scriptErr);
       }
@@ -316,7 +316,7 @@ async function loadAndStartDashboard() {
     if (typeof window.bootDashboard !== 'function') {
       try {
         console.warn('bootDashboard missing after app.min.js, attempting app.js fallback...');
-        await loadScript('app.js?v=1.4.8', 30000);
+        await loadScript('app.js?v=1.5.0', 30000);
       } catch (fallbackErr) {
         console.error('app.js fallback load failed:', fallbackErr);
       }
