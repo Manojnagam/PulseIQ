@@ -225,6 +225,8 @@ async function verifyOtpCode() {
     if (res.data.session && res.data.session.refresh_token) {
       safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
     }
+    btn.textContent = 'Verify & Sign In →'; 
+    btn.disabled = false;
     await startApp();
   } catch (e) {
     showCodeErr(e.message === 'Token has expired or is invalid' ? 'Incorrect or expired code. Try again.' : e.message);
