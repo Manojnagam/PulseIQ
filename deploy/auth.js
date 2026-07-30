@@ -18,23 +18,30 @@ window.safeStorage = window.safeStorage || (function() {
 
 function loadScript(src, timeoutMs) {
   return new Promise(function(resolve, reject) {
-    if (document.querySelector('script[src="' + src + '"]')) {
-      resolve();
-      return;
+    var existing = document.querySelector('script[src="' + src + '"]');
+    if (existing) {
+      if (existing.getAttribute('data-loaded') === 'true') {
+        resolve();
+        return;
+      }
+      existing.remove();
     }
     var s = document.createElement('script');
     s.src = src;
     var timer = setTimeout(function() {
       s.onload = null;
       s.onerror = null;
+      if (s.parentNode) s.parentNode.removeChild(s);
       reject(new Error('Timeout loading ' + src));
     }, timeoutMs || 30000);
     s.onload = function() {
       clearTimeout(timer);
+      s.setAttribute('data-loaded', 'true');
       resolve();
     };
     s.onerror = function() {
       clearTimeout(timer);
+      if (s.parentNode) s.parentNode.removeChild(s);
       reject(new Error('Failed to load ' + src));
     };
     document.head.appendChild(s);
@@ -303,8 +310,15 @@ async function loadAndStartDashboard() {
       try {
         await loadScript('app.min.js?v=1.4.8', 30000);
       } catch (scriptErr) {
-        console.warn('app.min.js load failed, trying app.js fallback:', scriptErr);
+        console.warn('app.min.js load failed:', scriptErr);
+      }
+    }
+    if (typeof bootDashboard !== 'function') {
+      try {
+        console.warn('bootDashboard missing after app.min.js, attempting app.js fallback...');
         await loadScript('app.js?v=1.4.8', 30000);
+      } catch (fallbackErr) {
+        console.error('app.js fallback load failed:', fallbackErr);
       }
     }
     if (typeof bootDashboard === 'function') {
@@ -319,7 +333,8 @@ async function loadAndStartDashboard() {
     console.error('Failed to load application scripts:', err);
     var al = document.getElementById('app-loading'); if (al) al.style.display = 'none';
     var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'flex';
-    showLoginErr('Failed to load application scripts. <button onclick="loadAndStartDashboard()" style="margin-left:8px;background:#27AE60;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-weight:700;cursor:pointer">Retry 🔄</button>');
+    var errMsg = err && err.message ? err.message : 'Unknown error';
+    showLoginErr('Failed to load application scripts (' + errMsg + '). <button onclick="loadAndStartDashboard()" style="margin-left:8px;background:#27AE60;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-weight:700;cursor:pointer">Retry 🔄</button>');
   }
 }
 

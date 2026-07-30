@@ -58,16 +58,31 @@ var _sbAuth = window._sbAuth || null;
 var _authUser = window._authUser || null;
 var _authSession = window._authSession || null;
 
-function initAuthClient() {
-  if (_sbAuth) return;
-  _sbAuth = window.supabase.createClient(CENTER_SB_URL, CENTER_SB_KEY, {
-    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
-  });
+async function initAuthClient() {
+  if (_sbAuth) return _sbAuth;
+  if (!window.supabase) {
+    try {
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2', 15000);
+    } catch (err1) {
+      try {
+        await loadScript('https://unpkg.com/@supabase/supabase-js@2.108.2/dist/umd/supabase.js', 15000);
+      } catch (err2) {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.48.1/umd/supabase.min.js', 15000);
+      }
+    }
+  }
+  if (window.supabase) {
+    _sbAuth = window.supabase.createClient(CENTER_SB_URL, CENTER_SB_KEY, {
+      auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+    });
+  }
+  return _sbAuth;
 }
 
 async function checkExistingSession() {
   try {
-    initAuthClient();
+    await initAuthClient();
+    if (!_sbAuth) return false;
     // Try Supabase's built-in session first
     var d = await _sbAuth.auth.getSession();
     if (d.data && d.data.session) {
@@ -1941,7 +1956,7 @@ function saveWaLang() {
 async function bootDashboard() {
   try {
     // ── STEP 1: Auth check ──
-    initAuthClient();
+    await initAuthClient();
 
     if (window.Chart) {
       Chart.defaults.color = '#94a3b8';
@@ -1960,15 +1975,17 @@ async function bootDashboard() {
     }
 
     // Token refresh listener (keeps pz_session_tokens fresh while tab is open)
-    _sbAuth.auth.onAuthStateChange(function(event, session) {
-      if (event === 'TOKEN_REFRESHED' && session) {
-        _authSession = session;
-        localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
-      }
-      if (event === 'SIGNED_IN' && session) {
-        _authSession = session;
-      }
-    });
+    if (_sbAuth && _sbAuth.auth) {
+      _sbAuth.auth.onAuthStateChange(function(event, session) {
+        if (event === 'TOKEN_REFRESHED' && session) {
+          _authSession = session;
+          localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
+        }
+        if (event === 'SIGNED_IN' && session) {
+          _authSession = session;
+        }
+      });
+    }
 
     // ── "Remember this device" — valid for 60 days ──
     var SIXTY_DAYS = 60 * 24 * 60 * 60 * 1000;
