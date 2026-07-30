@@ -3354,7 +3354,7 @@ function runPaymentAgent() {
     emptyMsg: 'No outstanding payments — all cleared!',
     items: items,
     labelFn:    function(x){ return x.p.person_name||'Unknown'; },
-    subLabelFn: function(x){ return '₹'+x.bal.toLocaleString('en-IN')+' due'+(x.p.due_date?' by '+x.p.due_date:''); },
+    subLabelFn: function(x){ return '₹'+x.bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' due'+(x.p.due_date?' by '+x.p.due_date:''); },
     urgencyFn:  function(x){ return x.p.due_date&&x.p.due_date<today ? '🔴 Overdue' : '⚠️ Pending'; },
     phoneFn: function(x){ return x.cust ? (x.cust.contact||'').replace(/\D/g,'')||null : null; },
     langFn:  function(x){ return (x.cust&&x.cust.preferred_language)||WA_LANG||'English'; },
@@ -3538,12 +3538,12 @@ async function runFinanceAnalystAgent() {
   // ── Build Groq context ──
   var context =
     'WELLNESS CENTER FINANCIAL DATA — '+curMon+'\n\n'+
-    'THIS MONTH:\nIncome: ₹'+curInc.toLocaleString('en-IN')+'\nExpenses: ₹'+curExp.toLocaleString('en-IN')+'\nNet Profit: ₹'+netProfit.toLocaleString('en-IN')+'\nProfit Margin: '+margin+'%\n\n'+
-    'LAST MONTH ('+lastMon+'):\nIncome: ₹'+lastInc.toLocaleString('en-IN')+'\nExpenses: ₹'+lastExp.toLocaleString('en-IN')+'\nNet: ₹'+lastNet.toLocaleString('en-IN')+'\n\n'+
-    'TWO MONTHS AGO ('+twoMon+'):\nIncome: ₹'+twoInc.toLocaleString('en-IN')+'\n\n'+
+    'THIS MONTH:\nIncome: ₹'+curInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\nExpenses: ₹'+curExp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\nNet Profit: ₹'+netProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\nProfit Margin: '+margin+'%\n\n'+
+    'LAST MONTH ('+lastMon+'):\nIncome: ₹'+lastInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\nExpenses: ₹'+lastExp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\nNet: ₹'+lastNet.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\n\n'+
+    'TWO MONTHS AGO ('+twoMon+'):\nIncome: ₹'+twoInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\n\n'+
     (growth!==null?'REVENUE GROWTH vs last month: '+growth+'%\n\n':'')+
-    'EXPENSE BREAKDOWN THIS MONTH:\n'+Object.keys(expCat).map(function(k){ return '- '+k+': ₹'+expCat[k].toLocaleString('en-IN'); }).join('\n')+'\n\n'+
-    'UNCOLLECTED PENDING PAYMENTS: ₹'+pending.toLocaleString('en-IN')+'\n\n'+
+    'EXPENSE BREAKDOWN THIS MONTH:\n'+Object.keys(expCat).map(function(k){ return '- '+k+': ₹'+expCat[k].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }).join('\n')+'\n\n'+
+    'UNCOLLECTED PENDING PAYMENTS: ₹'+pending.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\n\n'+
     'BUSINESS METRICS:\nActive customers: '+activeCnt+'\nNew this month: '+newCnt+'\nExpiring in 7 days: '+expiring7+'\nLow/out-of-stock products: '+lowStock+'\n\n'+
     'CONTEXT: Small nutrition wellness center, India, sole proprietor owner.';
 
@@ -3573,9 +3573,9 @@ function _renderFinanceReport(text, netProfit, income, expenses, pending, growth
   var growthNum = parseFloat(growth);
   var summaryHtml =
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">'+
-    _finCard('Net Profit','₹'+netProfit.toLocaleString('en-IN'), netProfit>=0?'#166534':'#dc2626', netProfit>=0?'#f0fdf4':'#fef2f2', netProfit>=0?'#86efac':'#fca5a5')+
+    _finCard('Net Profit','₹'+netProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), netProfit>=0?'#166534':'#dc2626', netProfit>=0?'#f0fdf4':'#fef2f2', netProfit>=0?'#86efac':'#fca5a5')+
     _finCard('Revenue Growth', growth===null?'N/A':(growthNum>=0?'+':'')+growth+'%', growthNum>=0?'#166534':'#dc2626','#fffbeb','#fcd34d')+
-    _finCard('Uncollected','₹'+pending.toLocaleString('en-IN'),'#1e40af','#eff6ff','#93c5fd')+
+    _finCard('Uncollected','₹'+pending.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}),'#1e40af','#eff6ff','#93c5fd')+
     _finCard('Expense Ratio', income>0?((expenses/income)*100).toFixed(0)+'%':'0%','#9d174d','#fdf2f8','#f9a8d4')+
     '</div>';
 
@@ -4052,7 +4052,7 @@ function renderOverview() {
         var estVal = pendingLeads.length * 2000;
         var textEl = document.getElementById('leads-revenue-text');
         if (textEl) {
-          textEl.textContent = 'You have ' + pendingLeads.length + ' pending leads waiting. Estimated potential revenue: ₹' + estVal.toLocaleString('en-IN') + ' (at ₹2,000/client).';
+          textEl.textContent = 'You have ' + pendingLeads.length + ' pending leads waiting. Estimated potential revenue: ₹' + estVal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' (at ₹2,000/client).';
         }
         leadsRevenueBanner.style.display = 'flex';
       } else {
@@ -4184,9 +4184,9 @@ function renderOverview() {
   // ── Revenue Row ──
   document.getElementById('ov-revenue-row').innerHTML =
     '<div class="ov-rev-row">'+
-      '<div class="ov-rev-card inc"><div class="ov-rev-lbl">Income ('+currentMonth+')</div><div class="ov-rev-val">₹'+mInc.toLocaleString('en-IN')+'</div></div>'+
-      '<div class="ov-rev-card exp"><div class="ov-rev-lbl">Expenses ('+currentMonth+')</div><div class="ov-rev-val">₹'+mExp.toLocaleString('en-IN')+'</div></div>'+
-      '<div class="ov-rev-card net"><div class="ov-rev-lbl">Net Profit</div><div class="ov-rev-val">'+(mNet>=0?'+':'')+' ₹'+mNet.toLocaleString('en-IN')+'</div></div>'+
+      '<div class="ov-rev-card inc"><div class="ov-rev-lbl">Income ('+currentMonth+')</div><div class="ov-rev-val">₹'+mInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '<div class="ov-rev-card exp"><div class="ov-rev-lbl">Expenses ('+currentMonth+')</div><div class="ov-rev-val">₹'+mExp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '<div class="ov-rev-card net"><div class="ov-rev-lbl">Net Profit</div><div class="ov-rev-val">'+(mNet>=0?'+':'')+' ₹'+mNet.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '</div>';
 
   // ── Customer Health Score Rankings ──
@@ -4292,10 +4292,10 @@ function renderOverview() {
       var dueLabel = p.overdue ? '<div class="ov-row-sub" style="color:var(--danger)">⚠️ Overdue — due '+p.due+'</div>' : '<div class="ov-row-sub">Due: '+(p.due||'No date')+'</div>';
       var waBtn = '';
       if(p.phone) {
-        var waMsg = encodeURIComponent('Hi '+p.name+'! 👋\n\nThis is a friendly reminder that ₹'+p.bal.toLocaleString('en-IN')+' is pending for your '+p.desc+' at '+getCenterName()+'.'+(p.due?'\n\nDue date: '+p.due:'')+(p.overdue?'\n\n⚠️ Your payment is overdue. Please clear it at your earliest convenience.':'\n\nKindly arrange the payment at your next visit. Thank you! 🙏'));
+        var waMsg = encodeURIComponent('Hi '+p.name+'! 👋\n\nThis is a friendly reminder that ₹'+p.bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' is pending for your '+p.desc+' at '+getCenterName()+'.'+(p.due?'\n\nDue date: '+p.due:'')+(p.overdue?'\n\n⚠️ Your payment is overdue. Please clear it at your earliest convenience.':'\n\nKindly arrange the payment at your next visit. Thank you! 🙏'));
         waBtn = '<button class="wa-btn" style="font-size:11px;padding:3px 8px;margin-left:8px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+p.phone+'&text='+waMsg+'\',\'_blank\')" title="Send payment reminder">💬 Remind</button>';
       }
-      return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">'+p.name+'</div>'+dueLabel+'</div><div class="ov-row-actions" style="display:flex;align-items:center;gap:4px"><span style="font-weight:700;color:var(--danger);font-size:14px">₹'+p.bal.toLocaleString('en-IN')+'</span>'+waBtn+'</div></div>';
+      return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">'+p.name+'</div>'+dueLabel+'</div><div class="ov-row-actions" style="display:flex;align-items:center;gap:4px"><span style="font-weight:700;color:var(--danger);font-size:14px">₹'+p.bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span>'+waBtn+'</div></div>';
     }).join('');
     if(pendingPay.length>8) leftHtml += '<div style="text-align:center;padding-top:8px"><span class="ov-link" onclick="goTo(\'payments\',document.querySelector(\'[onclick*=payments]\'))">View all '+pendingPay.length+' pending →</span></div>';
     leftHtml += '</div></div>';
@@ -4449,7 +4449,7 @@ function renderOverview() {
   rightHtml += '<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">'
     +'<div style="flex:1;text-align:center;background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">This Month</div><div style="font-family:DM Serif Display,serif;font-size:22px;color:var(--primary)">'+walkinsMonth.length+'</div></div>'
     +'<div style="flex:1;text-align:center;background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Converted</div><div style="font-family:DM Serif Display,serif;font-size:22px;color:var(--success)">'+walkinsMonth.filter(function(w){return w.converted;}).length+'</div></div>'
-    +(walkinRevMonth>0?'<div style="flex:1;text-align:center;background:#f0fdf4;border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Revenue</div><div style="font-family:DM Serif Display,serif;font-size:18px;color:var(--success)">₹'+walkinRevMonth.toLocaleString('en-IN')+'</div></div>':'')
+    +(walkinRevMonth>0?'<div style="flex:1;text-align:center;background:#f0fdf4;border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Revenue</div><div style="font-family:DM Serif Display,serif;font-size:18px;color:var(--success)">₹'+walkinRevMonth.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>':'')
     +'</div>';
   // Today's walk-ins list
   if(!walkinsToday.length){
@@ -4459,7 +4459,7 @@ function renderOverview() {
     rightHtml += walkinsToday.map(function(w){
       var outIcon = OUT_ICON[w.outcome]||'📝';
       var outColor = w.outcome==='product_sale'?'var(--success)':w.outcome==='trial'?'#b07800':'#1d4ed8';
-      var amt = w.amount_received>0?'<span style="font-weight:700;color:var(--success);font-size:13px">₹'+Number(w.amount_received).toLocaleString('en-IN')+'</span>':'<span style="font-size:11px;color:var(--success)">Free</span>';
+      var amt = w.amount_received>0?'<span style="font-weight:700;color:var(--success);font-size:13px">₹'+Number(w.amount_received).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span>':'<span style="font-size:11px;color:var(--success)">Free</span>';
       return '<div class="ov-row"><div class="ov-row-info">'
         +'<div class="ov-row-name">'+w.name+(w.converted?'<span class="badge bg" style="font-size:9px;margin-left:6px">✅</span>':'')+'</div>'
         +'<div class="ov-row-sub"><span style="color:'+outColor+'">'+outIcon+' '+(w.outcome||'—').replace('_',' ')+'</span>'+(w.pincode?' · 📍'+w.pincode:'')+'</div>'
@@ -4486,7 +4486,7 @@ function renderOverview() {
         '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'+
           '<span style="color:var(--muted)">'+label+'</span>'+
           '<span style="font-weight:700;color:'+(pct>=100?'var(--success)':'var(--text)')+'">'+
-            (unit||'')+actual.toLocaleString('en-IN')+' / '+(unit||'')+target.toLocaleString('en-IN')+
+            (unit||'')+actual.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' / '+(unit||'')+target.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+
             (pct>=100?' ✅':' ('+pct+'%)')+
           '</span>'+
         '</div>'+
@@ -4898,7 +4898,7 @@ function renderStockInHistory() {
   var sorted = D.stockIn.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   tb.innerHTML = sorted.map(function(r){
     var p = getProductById(r.product_id);
-    return '<tr><td>'+r.date+'</td><td><strong>'+(r.product_name||r.product_id)+'</strong></td><td style="color:var(--muted);font-size:12px">'+(p?p.category:'—')+'</td><td>'+r.quantity+'</td><td>'+(r.unit||'—')+'</td><td>'+(r.cost_price?'₹'+Number(r.cost_price).toLocaleString('en-IN'):'—')+'</td><td>'+(r.expiry_date||'—')+'</td><td>'+(r.notes||'—')+'</td><td><div class="acts"><button class="btn-e" onclick="editStockIn(\''+r.id+'\')">Edit</button><button class="btn-d" onclick="delStockIn(\''+r.id+'\')">Delete</button></div></td></tr>';
+    return '<tr><td>'+r.date+'</td><td><strong>'+(r.product_name||r.product_id)+'</strong></td><td style="color:var(--muted);font-size:12px">'+(p?p.category:'—')+'</td><td>'+r.quantity+'</td><td>'+(r.unit||'—')+'</td><td>'+(r.cost_price?'₹'+Number(r.cost_price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}):'—')+'</td><td>'+(r.expiry_date||'—')+'</td><td>'+(r.notes||'—')+'</td><td><div class="acts"><button class="btn-e" onclick="editStockIn(\''+r.id+'\')">Edit</button><button class="btn-d" onclick="delStockIn(\''+r.id+'\')">Delete</button></div></td></tr>';
   }).join('');
 }
 
@@ -4909,7 +4909,7 @@ function renderStockOutHistory() {
   if (!D.stockOut || !D.stockOut.length) { tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">➖</div><p>No stock out records yet.</p></div></td></tr>'; return; }
   var sorted = D.stockOut.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   tb.innerHTML = sorted.map(function(r){
-    return '<tr><td>'+r.date+'</td><td><strong>'+(r.product_name||r.product_id)+'</strong></td><td>'+r.quantity+'</td><td>'+(r.unit||'—')+'</td><td>'+(r.sale_price?'₹'+Number(r.sale_price).toLocaleString('en-IN'):'—')+'</td><td>'+(r.notes||'—')+'</td><td><div class="acts"><button class="btn-e" onclick="editStockOut(\''+r.id+'\')">Edit</button><button class="btn-d" onclick="delStockOut(\''+r.id+'\')">Delete</button></div></td></tr>';
+    return '<tr><td>'+r.date+'</td><td><strong>'+(r.product_name||r.product_id)+'</strong></td><td>'+r.quantity+'</td><td>'+(r.unit||'—')+'</td><td>'+(r.sale_price?'₹'+Number(r.sale_price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}):'—')+'</td><td>'+(r.notes||'—')+'</td><td><div class="acts"><button class="btn-e" onclick="editStockOut(\''+r.id+'\')">Edit</button><button class="btn-d" onclick="delStockOut(\''+r.id+'\')">Delete</button></div></td></tr>';
   }).join('');
 }
 
@@ -6005,7 +6005,7 @@ function renderRecurringList() {
     + items.map(function(r){
         return '<tr style="border-bottom:1px solid var(--border)">'
           + '<td style="padding:6px 8px;font-weight:600">'+r.name+'</td>'
-          + '<td style="padding:6px 8px;text-align:right;color:var(--danger)">₹'+Number(r.amount).toLocaleString('en-IN')+'</td>'
+          + '<td style="padding:6px 8px;text-align:right;color:var(--danger)">₹'+Number(r.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
           + '<td style="padding:6px 8px;text-align:center;color:var(--muted)">'+r.day_of_month+'</td>'
           + '<td style="padding:6px 8px;color:var(--muted)">'+r.category+'</td>'
           + '<td style="padding:6px 8px;text-align:right"><button class="btn-c" style="color:var(--danger);font-size:11px;padding:3px 8px" onclick="deleteRecurring(\''+r.id+'\')">Delete</button></td>'
@@ -7167,7 +7167,7 @@ function renderFinance() {
   if (!rows.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="ei">💰</div><p>No transactions yet.</p></div></td></tr>'; }
   else {
     window._limFin = window._limFin || 50;
-    tb.innerHTML = rows.slice(0, window._limFin).map(function(f){ return '<tr class="'+f.type+'-row"><td><span class="badge '+(f.type==='income'?'bg':'br')+'">'+f.type+'</span></td><td>'+(f.description||'—')+'</td><td><strong>₹'+Number(f.amount).toLocaleString('en-IN')+'</strong></td><td>'+(f.category||'—')+'</td><td>'+f.date+'</td><td><div class="acts"><button class="btn-e" onclick="editFinance(\''+f.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'finance\',\''+f.id+'\',\'finance\')">Delete</button></div></td></tr>'; }).join('');
+    tb.innerHTML = rows.slice(0, window._limFin).map(function(f){ return '<tr class="'+f.type+'-row"><td><span class="badge '+(f.type==='income'?'bg':'br')+'">'+f.type+'</span></td><td>'+(f.description||'—')+'</td><td><strong>₹'+Number(f.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong></td><td>'+(f.category||'—')+'</td><td>'+f.date+'</td><td><div class="acts"><button class="btn-e" onclick="editFinance(\''+f.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'finance\',\''+f.id+'\',\'finance\')">Delete</button></div></td></tr>'; }).join('');
     if(rows.length > window._limFin) { tb.innerHTML += '<tr><td colspan="6" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limFin+=50;renderFinance()">⬇️ Load More (' + (rows.length - window._limFin) + ' remaining)</button></td></tr>'; }
   }
   var inc = rows.filter(function(f){return f.type==='income';}).reduce(function(s,f){return s+Number(f.amount);},0);
@@ -7178,9 +7178,9 @@ function renderFinance() {
   var to   = document.getElementById('fin-to').value;
   var periodLabel = (from && to) ? from + ' → ' + to : (from ? 'From ' + from : (to ? 'Until ' + to : 'All dates'));
   document.getElementById('fin-stats').innerHTML =
-    '<div class="stat"><div class="stat-l">Total Income<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:2px">📅 '+periodLabel+'</div></div><div class="stat-v" style="color:var(--success)">₹'+inc.toLocaleString('en-IN')+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Total Expense</div><div class="stat-v" style="color:var(--danger)">₹'+exp.toLocaleString('en-IN')+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="color:'+(net>=0?'var(--primary)':'var(--danger)')+'">₹'+net.toLocaleString('en-IN')+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Total Income<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:2px">📅 '+periodLabel+'</div></div><div class="stat-v" style="color:var(--success)">₹'+inc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Total Expense</div><div class="stat-v" style="color:var(--danger)">₹'+exp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="color:'+(net>=0?'var(--primary)':'var(--danger)')+'">₹'+net.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Profit Margin</div><div class="stat-v" id="fin-margin" style="color:'+(margin>=0?'var(--primary)':'var(--danger)')+'">'+margin+'%</div></div>';
   // ── Category breakdown ──
   function catBreakdown(type) {
@@ -7198,7 +7198,7 @@ function renderFinance() {
       var pct = total > 0 ? Math.round((e[1]/total)*100) : 0;
       return '<div style="margin-bottom:8px">'+
         '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'+
-          '<span>'+e[0]+'</span><span style="font-weight:600">₹'+e[1].toLocaleString('en-IN')+' <span style="color:var(--muted)">('+pct+'%)</span></span>'+
+          '<span>'+e[0]+'</span><span style="font-weight:600">₹'+e[1].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' <span style="color:var(--muted)">('+pct+'%)</span></span>'+
         '</div>'+
         '<div style="height:5px;border-radius:3px;background:var(--border)"><div style="height:5px;border-radius:3px;background:'+color+';width:'+pct+'%"></div></div>'+
       '</div>';
@@ -7227,7 +7227,7 @@ function renderFinance() {
         {label:'Expense',data:months.map(function(m){return monthMap[m].exp;}),backgroundColor:'rgba(255, 23, 68, 0.7)',borderRadius:4},
         {label:'Net',data:months.map(function(m){return monthMap[m].inc-monthMap[m].exp;}),type:'line',borderColor:'#00e676',pointBackgroundColor:'#00e676',backgroundColor:'transparent',tension:0.4,pointRadius:4,borderWidth:2}
       ]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},color:'#94a3b8'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#94a3b8'}},y:{grid:{color:'rgba(255, 255, 255, 0.07)'},ticks:{font:{size:11},color:'#94a3b8',callback:function(v){return '₹'+Number(v).toLocaleString('en-IN');}}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},color:'#94a3b8'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#94a3b8'}},y:{grid:{color:'rgba(255, 255, 255, 0.07)'},ticks:{font:{size:11},color:'#94a3b8',callback:function(v){return '₹'+Number(v).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});}}}}}
     });
   }
 
@@ -7259,7 +7259,7 @@ function renderFinance() {
         if (cid==='unassigned') return 'Unassigned';
         var c = D.centers.find(function(x){return x.id===cid;}); return c ? c.name : cid.slice(0,8);
       };
-      var fmt = function(n){ return '₹'+Math.round(n).toLocaleString('en-IN'); };
+      var fmt = function(n){ return '₹'+Math.round(n).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
       var mLabels = plMonths.map(function(m){ var d=new Date(m+'-01'); return d.toLocaleString('en-IN',{month:'short',year:'2-digit'}); });
       var html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">'
         + '<thead><tr style="border-bottom:2px solid var(--border)">'
@@ -7710,13 +7710,13 @@ async function saveCustomer() {
       var _custCenter = payload.wellness_center_id || null;
       if (payMode === 'full') {
         await dbInsert('finance', { type:'income', description:custName+' — Pack sale', amount:packPrice, category:'Pack sale to customer', date:today, wellness_center_id:_custCenter });
-        showToast('Customer added + ₹'+packPrice.toLocaleString('en-IN')+' income recorded!', 'success');
+        showToast('Customer added + ₹'+packPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' income recorded!', 'success');
       } else if (payMode === 'partial') {
         var paidNow = Number(document.getElementById('customer-paid-now').value)||0;
         var dueDate = document.getElementById('customer-due-date').value||null;
         await dbInsert('payments', { person_id:custId, person_name:custName, total_amount:packPrice, amount_paid:paidNow, payment_date:today, due_date:dueDate, description:payload.pack_type||'Pack', notes:'Auto-created on customer add', center_id:_custCenter });
         if (paidNow > 0) await dbInsert('finance', { type:'income', description:custName+' — Partial pack payment', amount:paidNow, category:'Pack sale to customer', date:today, wellness_center_id:_custCenter });
-        showToast('Customer added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
+        showToast('Customer added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), 'success');
       } else {
         var dueDateNone = document.getElementById('customer-due-date') ? document.getElementById('customer-due-date').value||null : null;
         await dbInsert('payments', { person_id:custId, person_name:custName, total_amount:packPrice, amount_paid:0, payment_date:today, due_date:dueDateNone, description:payload.pack_type||'Pack', notes:'Auto-created on customer add', center_id:_custCenter });
@@ -8407,13 +8407,13 @@ async function saveCoach() {
       var _coachCenter = payload.wellness_center_id || null;
       if (payMode === 'full') {
         await dbInsert('finance', { type:'income', description:coachName+' — Coach pack sale', amount:packPrice, category:'Coach pack payment', date:today, wellness_center_id:_coachCenter });
-        showToast('Coach added + ₹'+packPrice.toLocaleString('en-IN')+' income recorded!', 'success');
+        showToast('Coach added + ₹'+packPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' income recorded!', 'success');
       } else if (payMode === 'partial') {
         var paidNow = Number((document.getElementById('coach-paid-now')||{value:0}).value)||0;
         var dueDate = (document.getElementById('coach-due-date')||{value:''}).value||null;
         await dbInsert('payments', { person_id:coachId, person_name:coachName, total_amount:packPrice, amount_paid:paidNow, payment_date:today, due_date:dueDate, description:(payload.pack_type||'Coach Pack'), notes:'Coach pack payment', center_id:_coachCenter });
         if (paidNow > 0) await dbInsert('finance', { type:'income', description:coachName+' — Partial coach pack payment', amount:paidNow, category:'Coach pack payment', date:today, wellness_center_id:_coachCenter });
-        showToast('Coach added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
+        showToast('Coach added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), 'success');
       } else {
         var dueDateNone = (document.getElementById('coach-due-date')||{value:''}).value||null;
         await dbInsert('payments', { person_id:coachId, person_name:coachName, total_amount:packPrice, amount_paid:0, payment_date:today, due_date:dueDateNone, description:(payload.pack_type||'Coach Pack'), notes:'Coach pack payment', center_id:_coachCenter });
@@ -8465,7 +8465,7 @@ async function saveFinance() {
   if (!payload.amount||!payload.date) { showToast('Amount and date required','error'); return; }
   try {
     if(id) await dbUpdate('finance',id,payload); else await dbInsert('finance',payload);
-    auditLog(id?'Updated':'Added','Finance', (payload.type==='income'?'Income':'Expense')+' ₹'+Number(payload.amount).toLocaleString('en-IN')+(payload.description?' — '+payload.description:''));
+    auditLog(id?'Updated':'Added','Finance', (payload.type==='income'?'Income':'Expense')+' ₹'+Number(payload.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+(payload.description?' — '+payload.description:''));
     showToast(id?'Transaction updated!':'Transaction added!'); closeModal('finance'); await loadFinance(); renderOverview();
   }
   catch(e) { showToast('Error saving transaction: '+e.message,'error'); }
@@ -8760,9 +8760,9 @@ function renderAnalytics() {
 
   document.getElementById('analytics-kpis').innerHTML =
     '<div class="stat"><div class="stat-l">Customers<span class="analytics-badge">'+totalCusts+'</span></div><div class="stat-v" style="color:'+(retentionRate>=70?'var(--success)':'var(--danger)')+'">'+retentionRate+'% retention</div></div>'+
-    '<div class="stat"><div class="stat-l">Revenue (period)</div><div class="stat-v" style="font-size:18px;color:var(--success)">₹'+totalIncome.toLocaleString('en-IN')+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Expense (period)</div><div class="stat-v" style="font-size:18px;color:var(--danger)">₹'+totalExpense.toLocaleString('en-IN')+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="font-size:18px;color:'+(totalIncome-totalExpense>=0?'var(--primary)':'var(--danger)')+'">₹'+(totalIncome-totalExpense).toLocaleString('en-IN')+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Revenue (period)</div><div class="stat-v" style="font-size:18px;color:var(--success)">₹'+totalIncome.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Expense (period)</div><div class="stat-v" style="font-size:18px;color:var(--danger)">₹'+totalExpense.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="font-size:18px;color:'+(totalIncome-totalExpense>=0?'var(--primary)':'var(--danger)')+'">₹'+(totalIncome-totalExpense).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">⭐ Star Customers</div><div class="stat-v" style="color:#b07800">'+stars+'</div></div>';
 
   // ── Retention bars ──
@@ -8811,10 +8811,10 @@ function renderAnalytics() {
         maintainAspectRatio:false,
         plugins:{
           legend:{position:'bottom', labels:{color:'#94a3b8'}},
-          tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': ₹'+Number(ctx.raw||0).toLocaleString('en-IN');}}}
+          tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': ₹'+Number(ctx.raw||0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});}}}
         },
         scales:{
-          y:{beginAtZero:true, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8', callback:function(v){return '₹'+v.toLocaleString('en-IN');}}},
+          y:{beginAtZero:true, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8', callback:function(v){return '₹'+v.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});}}},
           x:{grid:{display:false}, ticks:{color:'#94a3b8'}}
         }
       }
@@ -8849,17 +8849,17 @@ function renderAnalytics() {
       '<div style="display:flex;gap:12px;flex-wrap:wrap">' +
       (incF ? '<div style="flex:1;min-width:120px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px">' +
         '<div style="font-size:11px;color:#166534;font-weight:600">Projected Income</div>' +
-        '<div style="font-size:20px;font-weight:700;color:#16a34a;margin:2px 0">₹' + incF.next.toLocaleString('en-IN') + '</div>' +
-        '<div style="font-size:11px;color:var(--muted)">' + trendArrow(incF.slope) + ' ' + (incF.slope >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(incF.slope)).toLocaleString('en-IN') + '/mo trend</div>' +
+        '<div style="font-size:20px;font-weight:700;color:#16a34a;margin:2px 0">₹' + incF.next.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
+        '<div style="font-size:11px;color:var(--muted)">' + trendArrow(incF.slope) + ' ' + (incF.slope >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(incF.slope)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '/mo trend</div>' +
         '</div>' : '') +
       (expF ? '<div style="flex:1;min-width:120px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px">' +
         '<div style="font-size:11px;color:#991b1b;font-weight:600">Projected Expense</div>' +
-        '<div style="font-size:20px;font-weight:700;color:#e74c3c;margin:2px 0">₹' + expF.next.toLocaleString('en-IN') + '</div>' +
-        '<div style="font-size:11px;color:var(--muted)">' + trendArrow(expF.slope) + ' ' + (expF.slope >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(expF.slope)).toLocaleString('en-IN') + '/mo trend</div>' +
+        '<div style="font-size:20px;font-weight:700;color:#e74c3c;margin:2px 0">₹' + expF.next.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
+        '<div style="font-size:11px;color:var(--muted)">' + trendArrow(expF.slope) + ' ' + (expF.slope >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(expF.slope)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '/mo trend</div>' +
         '</div>' : '') +
       (incF && expF ? '<div style="flex:1;min-width:120px;background:' + (netF >= 0 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (netF >= 0 ? '#bbf7d0' : '#fecaca') + ';border-radius:10px;padding:10px 14px">' +
         '<div style="font-size:11px;color:' + (netF >= 0 ? '#166534' : '#991b1b') + ';font-weight:600">Projected Net Profit</div>' +
-        '<div style="font-size:20px;font-weight:700;color:' + (netF >= 0 ? '#16a34a' : '#e74c3c') + ';margin:2px 0">₹' + netF.toLocaleString('en-IN') + '</div>' +
+        '<div style="font-size:20px;font-weight:700;color:' + (netF >= 0 ? '#16a34a' : '#e74c3c') + ';margin:2px 0">₹' + netF.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
         '<div style="font-size:11px;color:var(--muted)">Based on linear trend</div>' +
         '</div>' : '') +
       '</div>' +
@@ -8916,20 +8916,20 @@ function renderAnalytics() {
       + '</div>'
       + '<div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:10px;padding:14px">'
       +   '<div style="font-size:11px;color:#7e22ce;font-weight:700;margin-bottom:4px">Avg Pack Price</div>'
-      +   '<div style="font-size:22px;font-weight:800;color:#9333ea">₹'+avgPackPrice.toLocaleString('en-IN')+'</div>'
+      +   '<div style="font-size:22px;font-weight:800;color:#9333ea">₹'+avgPackPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div>'
       +   '<div style="font-size:11px;color:var(--muted)">from income records</div>'
       + '</div>'
       + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
       + '<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:12px;padding:16px">'
       +   '<div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:6px">📅 '+tmLabel+' Forecast</div>'
-      +   '<div style="font-size:28px;font-weight:800;color:#16a34a">₹'+forecastThis.toLocaleString('en-IN')+'</div>'
-      +   '<div style="font-size:11px;color:#166534;margin-top:4px">'+expiringThisMonth.length+' packs × '+renewalRate+'% × ₹'+avgPackPrice.toLocaleString('en-IN')+'</div>'
+      +   '<div style="font-size:28px;font-weight:800;color:#16a34a">₹'+forecastThis.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div>'
+      +   '<div style="font-size:11px;color:#166534;margin-top:4px">'+expiringThisMonth.length+' packs × '+renewalRate+'% × ₹'+avgPackPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div>'
       + '</div>'
       + '<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:12px;padding:16px">'
       +   '<div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:6px">📅 '+nmLabel+' Forecast</div>'
-      +   '<div style="font-size:28px;font-weight:800;color:#2563eb">₹'+forecastNext.toLocaleString('en-IN')+'</div>'
-      +   '<div style="font-size:11px;color:#1d4ed8;margin-top:4px">'+expiringNextMonth.length+' packs × '+renewalRate+'% × ₹'+avgPackPrice.toLocaleString('en-IN')+'</div>'
+      +   '<div style="font-size:28px;font-weight:800;color:#2563eb">₹'+forecastNext.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div>'
+      +   '<div style="font-size:11px;color:#1d4ed8;margin-top:4px">'+expiringNextMonth.length+' packs × '+renewalRate+'% × ₹'+avgPackPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div>'
       + '</div>'
       + '</div>'
       + '<div style="font-size:10px;color:var(--muted);margin-top:10px">* Based on historical renewal rate and average pack price from income records. Actual results may vary.</div>';
@@ -9048,7 +9048,7 @@ function renderAnalytics() {
     if (crEl) _charts['center-revenue'] = new Chart(crEl, {
       type: 'bar',
       data: { labels: centerLabels, datasets: [{ label: 'Revenue (₹)', data: revData, backgroundColor: colors.slice(0, centerLabels.length), borderRadius: 6 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return '₹'+v.toLocaleString('en-IN'); } } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return '₹'+v.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); } } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
     });
     if (caEl) _charts['center-attendance'] = new Chart(caEl, {
       type: 'bar',
@@ -9068,7 +9068,7 @@ function renderAnalytics() {
           + '<td style="padding:7px 8px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:'+r.color+';display:inline-block"></span>'+r.name+'</td>'
           + '<td style="text-align:right;padding:7px 8px">'+r.custs+'</td>'
           + '<td style="text-align:right;padding:7px 8px">'+r.att+'</td>'
-          + '<td style="text-align:right;padding:7px 8px;font-weight:700;color:var(--success)">₹'+r.rev.toLocaleString('en-IN')+'</td>'
+          + '<td style="text-align:right;padding:7px 8px;font-weight:700;color:var(--success)">₹'+r.rev.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
           + '</tr>';
       }).join('')
       + '</tbody></table></div>';
@@ -9458,7 +9458,7 @@ function renderAnalytics() {
         + 'generate <span style="color:#4ade80">80%</span> of revenue'
       + '</div>'
       + '<div style="font-size:12px;opacity:.65;margin-top:6px">'
-        + 'Total: ₹' + grandTotal.toLocaleString('en-IN') + ' across ' + custRevenue.length + ' customers'
+        + 'Total: ₹' + grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' across ' + custRevenue.length + ' customers'
       + '</div>'
     + '</div>';
 
@@ -9469,7 +9469,7 @@ function renderAnalytics() {
     paretoData.forEach(function(d) {
       var widthPct = (1 / custRevenue.length) * 100;
       var color = d.rank <= eightyCount ? '#16a34a' : '#94a3b8';
-      html += '<div style="position:absolute;left:' + ((d.rank-1)/custRevenue.length*100) + '%;width:' + widthPct + '%;height:100%;background:' + color + ';border-right:1px solid #fff" title="' + d.name + ': ₹' + d.revenue.toLocaleString('en-IN') + '"></div>';
+      html += '<div style="position:absolute;left:' + ((d.rank-1)/custRevenue.length*100) + '%;width:' + widthPct + '%;height:100%;background:' + color + ';border-right:1px solid #fff" title="' + d.name + ': ₹' + d.revenue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '"></div>';
     });
     // 80% line
     html += '<div style="position:absolute;left:' + eightyPct + '%;top:-4px;bottom:-4px;width:2px;background:#e74c3c;z-index:2"></div>';
@@ -9493,7 +9493,7 @@ function renderAnalytics() {
         + '<td style="font-weight:700;color:' + (isTop ? '#16a34a' : 'var(--muted)') + '">' + d.rank + '</td>'
         + '<td><strong>' + d.name + '</strong>' + (isTop ? ' <span style="background:#d1fae5;color:#065f46;border-radius:8px;padding:1px 6px;font-size:10px">Top 80%</span>' : '') + '</td>'
         + '<td style="font-size:12px;color:var(--muted)">' + d.packType + '</td>'
-        + '<td style="font-weight:700">₹' + d.revenue.toLocaleString('en-IN') + '</td>'
+        + '<td style="font-weight:700">₹' + d.revenue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>'
         + '<td style="text-align:center">' + revPct + '%</td>'
         + '<td><div style="display:flex;align-items:center;gap:6px">'
           + '<div style="flex:1;background:#e2e8f0;border-radius:4px;height:6px"><div style="background:' + (isTop ? '#16a34a' : '#94a3b8') + ';height:100%;width:' + d.cumRevPct + '%"></div></div>'
@@ -9562,22 +9562,22 @@ function renderAnalytics() {
     var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px">'
       + '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.4px">Overall ARPU</div>'
-        + '<div style="font-size:24px;font-weight:700;color:#16a34a;margin:4px 0">₹' + overallARPU.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:24px;font-weight:700;color:#16a34a;margin:4px 0">₹' + overallARPU.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">avg per active user/month</div>'
       + '</div>'
       + '<div style="background:' + (trend >= 0 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (trend >= 0 ? '#bbf7d0' : '#fecaca') + ';border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:' + (trend >= 0 ? '#166534' : '#991b1b') + ';text-transform:uppercase;letter-spacing:.4px">Period Trend</div>'
-        + '<div style="font-size:24px;font-weight:700;color:' + (trend >= 0 ? '#16a34a' : '#e74c3c') + ';margin:4px 0">' + (trend >= 0 ? '▲' : '▼') + ' ₹' + Math.abs(trend).toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:24px;font-weight:700;color:' + (trend >= 0 ? '#16a34a' : '#e74c3c') + ';margin:4px 0">' + (trend >= 0 ? '▲' : '▼') + ' ₹' + Math.abs(trend).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">first vs last month in period</div>'
       + '</div>'
       + '<div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#6b21a8;text-transform:uppercase;letter-spacing:.4px">Best Month</div>'
-        + '<div style="font-size:18px;font-weight:700;color:#7c3aed;margin:4px 0">₹' + maxARPU.arpu.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:18px;font-weight:700;color:#7c3aed;margin:4px 0">₹' + maxARPU.arpu.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">' + maxARPU.label + '</div>'
       + '</div>'
       + '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.4px">Lowest Month</div>'
-        + '<div style="font-size:18px;font-weight:700;color:#ea580c;margin:4px 0">₹' + minARPU.arpu.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:18px;font-weight:700;color:#ea580c;margin:4px 0">₹' + minARPU.arpu.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">' + minARPU.label + '</div>'
       + '</div>'
     + '</div>';
@@ -9592,9 +9592,9 @@ function renderAnalytics() {
       var isCurrent = r.ym === now;
       html += '<tr' + (isCurrent ? ' style="font-weight:700"' : '') + '>'
         + '<td>' + r.label + (isCurrent ? ' <span style="background:#dbeafe;color:#1e40af;border-radius:8px;padding:1px 6px;font-size:10px">current</span>' : '') + '</td>'
-        + '<td>₹' + r.income.toLocaleString('en-IN') + '</td>'
+        + '<td>₹' + r.income.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>'
         + '<td style="text-align:center">' + r.activeCount + '</td>'
-        + '<td style="font-weight:700;color:' + (r.arpu ? '#16a34a' : 'var(--muted)') + '">' + (r.arpu ? '₹' + r.arpu.toLocaleString('en-IN') : '—') + '</td>'
+        + '<td style="font-weight:700;color:' + (r.arpu ? '#16a34a' : 'var(--muted)') + '">' + (r.arpu ? '₹' + r.arpu.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—') + '</td>'
         + '<td><div style="background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden"><div style="background:#16a34a;height:100%;width:' + pct + '%"></div></div></td>'
         + '</tr>';
     });
@@ -9609,7 +9609,7 @@ function renderAnalytics() {
         var avgA = byPack[pt].count > 0 ? Math.round(byPack[pt].income / byPack[pt].count) : 0;
         html += '<div style="background:var(--surface2);border-radius:8px;padding:8px 14px;font-size:12px">'
           + '<span style="font-weight:700">' + pt + '</span>'
-          + ' &nbsp;·&nbsp; ₹' + avgA.toLocaleString('en-IN') + ' avg'
+          + ' &nbsp;·&nbsp; ₹' + avgA.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' avg'
           + ' <span style="color:var(--muted)">(' + byPack[pt].count + ')</span></div>';
       });
       html += '</div>';
@@ -9660,22 +9660,22 @@ function renderAnalytics() {
     var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px">'
       + '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.4px">Avg CLV</div>'
-        + '<div style="font-size:22px;font-weight:700;color:#16a34a;margin:4px 0">₹' + avgCLV.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:22px;font-weight:700;color:#16a34a;margin:4px 0">₹' + avgCLV.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">per customer</div>'
       + '</div>'
       + '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.4px">Avg Monthly Spend</div>'
-        + '<div style="font-size:22px;font-weight:700;color:#2563eb;margin:4px 0">₹' + avgMonthly.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:22px;font-weight:700;color:#2563eb;margin:4px 0">₹' + avgMonthly.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">avg ' + avgTenure + ' months tenure</div>'
       + '</div>'
       + '<div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#6b21a8;text-transform:uppercase;letter-spacing:.4px">Top Customer</div>'
         + '<div style="font-size:16px;font-weight:700;color:#7c3aed;margin:4px 0">' + maxCLV.name + '</div>'
-        + '<div style="font-size:11px;color:var(--muted)">₹' + maxCLV.clv.toLocaleString('en-IN') + ' · ' + maxCLV.renewals + ' renewal' + (maxCLV.renewals !== 1 ? 's' : '') + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">₹' + maxCLV.clv.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' · ' + maxCLV.renewals + ' renewal' + (maxCLV.renewals !== 1 ? 's' : '') + '</div>'
       + '</div>'
       + '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.4px">Total Revenue (CLV)</div>'
-        + '<div style="font-size:22px;font-weight:700;color:#ea580c;margin:4px 0">₹' + totalCLV.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:22px;font-weight:700;color:#ea580c;margin:4px 0">₹' + totalCLV.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">' + clvData.length + ' customers</div>'
       + '</div>'
     + '</div>';
@@ -9687,7 +9687,7 @@ function renderAnalytics() {
       var avg = Math.round(byPack[pt].total / byPack[pt].count);
       html += '<div style="background:var(--surface2);border-radius:8px;padding:8px 14px;font-size:12px">'
         + '<span style="font-weight:700">'+pt+'</span>'
-        + ' &nbsp;·&nbsp; Avg ₹' + avg.toLocaleString('en-IN')
+        + ' &nbsp;·&nbsp; Avg ₹' + avg.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})
         + ' <span style="color:var(--muted)">('+byPack[pt].count+' customers)</span></div>';
     });
     html += '</div></div>';
@@ -9703,8 +9703,8 @@ function renderAnalytics() {
         + '<td>' + d.packType + '</td>'
         + '<td style="text-align:center">' + d.renewals + '</td>'
         + '<td style="text-align:center">' + d.tenureMonths + ' mo</td>'
-        + '<td style="font-weight:700;color:#16a34a">₹' + d.clv.toLocaleString('en-IN') + '</td>'
-        + '<td style="color:var(--muted)">₹' + avgMo.toLocaleString('en-IN') + '</td>'
+        + '<td style="font-weight:700;color:#16a34a">₹' + d.clv.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>'
+        + '<td style="color:var(--muted)">₹' + avgMo.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>'
         + '</tr>';
     });
     html += '</tbody></table></div>'
@@ -9896,7 +9896,7 @@ function renderAnalytics() {
         + '<td><span style="background:'+s.seg.bg+';color:'+s.seg.c+';border-radius:12px;padding:2px 9px;font-size:11px;font-weight:700">'+s.seg.emoji+' '+s.seg.label+'</span></td>'
         + '<td>' + (s.recencyDays === 999 ? '—' : s.recencyDays + 'd ago') + '</td>'
         + '<td>' + s.freqPerWeek + '</td>'
-        + '<td>' + (s.monetary ? '₹' + s.monetary.toLocaleString('en-IN') : '—') + '</td>'
+        + '<td>' + (s.monetary ? '₹' + s.monetary.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—') + '</td>'
         + '<td style="text-align:center;font-weight:700;color:' + (s.rScore>=4?'#16a34a':s.rScore<=2?'#e74c3c':'#b07800') + '">' + s.rScore + '</td>'
         + '<td style="text-align:center;font-weight:700;color:' + (s.fScore>=4?'#16a34a':s.fScore<=2?'#e74c3c':'#b07800') + '">' + s.fScore + '</td>'
         + '<td style="text-align:center;font-weight:700;color:' + (s.mScore>=4?'#16a34a':s.mScore<=2?'#e74c3c':'#b07800') + '">' + s.mScore + '</td>'
@@ -9935,8 +9935,8 @@ function renderAnalytics() {
     var html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">';
     html += kpiCard('Total Walk-ins', total, '#2563eb');
     html += kpiCard('Converted', converted + ' (' + convPct + '%)', '#16a34a');
-    html += kpiCard('Product Revenue', '₹' + productRev.toLocaleString('en-IN'), '#d97706');
-    html += kpiCard('Avg Sale', paidCount ? '₹' + avgSale.toLocaleString('en-IN') : '—', '#7c3aed');
+    html += kpiCard('Product Revenue', '₹' + productRev.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), '#d97706');
+    html += kpiCard('Avg Sale', paidCount ? '₹' + avgSale.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—', '#7c3aed');
     html += '</div>';
 
     function kpiCard(label, val, color) {
@@ -9996,7 +9996,7 @@ function renderAnalytics() {
       html += '<div style="margin-bottom:8px">'
         + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">'
         + '<span>' + o.label + '</span>'
-        + '<strong>' + cnt + (rev > 0 ? ' · ₹' + rev.toLocaleString('en-IN') : '') + '</strong>'
+        + '<strong>' + cnt + (rev > 0 ? ' · ₹' + rev.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '') + '</strong>'
         + '</div>'
         + '<div style="background:var(--bg2);border-radius:4px;height:8px"><div style="background:' + o.color + ';width:' + pct + '%;height:8px;border-radius:4px;transition:width 0.4s"></div></div>'
         + '</div>';
@@ -10850,7 +10850,7 @@ function showCustomerJourney(cid){
     return'<div class="pack-item"><div class="pack-dot '+dotCls+'" style="top:10px">'+(isCur?'▶':i===0?'★':'✓')+'</div>'
       +'<div class="pack-card'+(isCur?' active-pack':'')+'">'
       +'<div style="display:flex;justify-content:space-between"><strong style="font-size:13px">'+(p.pack_type||'—')+(i===0?' <span style="font-size:10px;color:var(--accent)">FIRST</span>':'')+(isCur?' <span class="badge bg" style="font-size:9px">ACTIVE</span>':'')+'</strong>'
-      +(p.price?'<span style="font-weight:700;color:var(--primary);font-size:13px">₹'+Number(p.price).toLocaleString('en-IN')+'</span>':'')
+      +(p.price?'<span style="font-weight:700;color:var(--primary);font-size:13px">₹'+Number(p.price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span>':'')
       +'</div><div style="font-size:11px;color:var(--muted);margin-top:4px">📅 '+(p.start_date||'—')+(p.notes?' · '+p.notes:'')+'</div>'
       +'</div></div>';
   }).join('')+'</div>':'<div style="color:var(--muted);font-size:13px">No pack history yet.</div>';
@@ -10861,7 +10861,7 @@ function showCustomerJourney(cid){
   var totalSpent=(allPacks.reduce(function(s,p){return s+Number(p.price||0);},0));
   document.getElementById('pack-journey-stats').innerHTML=[
     {lbl:'Total Packs',val:allPacks.length},
-    {lbl:'Total Spent',val:totalSpent>0?'₹'+totalSpent.toLocaleString('en-IN'):'—'},
+    {lbl:'Total Spent',val:totalSpent>0?'₹'+totalSpent.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}):'—'},
     {lbl:'Sessions',val:sessions},
     {lbl:'Days With Us',val:daysW!==null?daysW+' days':'—'},
     {lbl:'Weight Change',val:wLost!==null?(Number(wLost)>0?'+':'')+wLost+' kg':'—'},
@@ -10944,14 +10944,14 @@ async function saveRenewal(){
     if(price){
       if(payMode==='full'){
         await dbInsert('finance',{type:'income',description:displayName+' — Pack renewal',amount:price,category:finCategory,date:today,wellness_center_id:_renewCenter});
-        showToast('Pack renewed + ₹'+price.toLocaleString('en-IN')+' income recorded! 🎉');
+        showToast('Pack renewed + ₹'+price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' income recorded! 🎉');
       } else if(payMode==='partial'){
         if(paidNow>0) await dbInsert('finance',{type:'income',description:displayName+' — Partial renewal payment',amount:paidNow,category:finCategory,date:today,wellness_center_id:_renewCenter});
         await dbInsert('payments',{person_id:cid,person_name:displayName,total_amount:price,amount_paid:paidNow,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — balance due',center_id:_renewCenter});
-        showToast('Pack renewed! Balance ₹'+(price-paidNow).toLocaleString('en-IN')+' due. 🎉');
+        showToast('Pack renewed! Balance ₹'+(price-paidNow).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' due. 🎉');
       } else {
         await dbInsert('payments',{person_id:cid,person_name:displayName,total_amount:price,amount_paid:0,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — not yet paid',center_id:_renewCenter});
-        showToast('Pack renewed! ₹'+price.toLocaleString('en-IN')+' payment pending. 🎉');
+        showToast('Pack renewed! ₹'+price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' payment pending. 🎉');
       }
       await loadPayments(); await loadFinance();
     } else {
@@ -10963,7 +10963,7 @@ async function saveRenewal(){
     await loadPackHistory();renderOverview();
 
     if(c&&c.contact){
-      var balMsg = payMode==='full' ? 'Payment received in full. ✅' : payMode==='partial' ? 'Partial payment received. Balance ₹'+(price-paidNow).toLocaleString('en-IN')+' due.' : 'Payment of ₹'+(price||0).toLocaleString('en-IN')+' pending.';
+      var balMsg = payMode==='full' ? 'Payment received in full. ✅' : payMode==='partial' ? 'Partial payment received. Balance ₹'+(price-paidNow).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' due.' : 'Payment of ₹'+(price||0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' pending.';
       var msg='🌿 *Pack Renewed!*\n\nHi *'+displayName+'*! 🎉\n\nYour *'+packType+'* starts *'+startDate+'*.\n'+balMsg+'\n\nThank you for continuing your wellness journey! 💪\n\n_Your '+getCenterName()+' Family_ 💚';
       var phone=c.contact.replace(/\D/g,'');if(phone.length===10)phone=COUNTRY_CODE+phone;
       setTimeout(function(){if(confirm('Send WhatsApp renewal confirmation to '+displayName+'?'))window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');},400);
@@ -10976,7 +10976,7 @@ function openRefundModal(cid) {
   if (!c) return;
   document.getElementById('refund-cust-id').value = c.id;
   document.getElementById('refund-cust-name').textContent = c.name;
-  document.getElementById('refund-curr-pack').textContent = 'Pack: '+(c.pack_type||'None')+' · Started: '+(c.pack_start_date||'—')+(c.pack_price?' · ₹'+Number(c.pack_price).toLocaleString('en-IN'):'');
+  document.getElementById('refund-curr-pack').textContent = 'Pack: '+(c.pack_type||'None')+' · Started: '+(c.pack_start_date||'—')+(c.pack_price?' · ₹'+Number(c.pack_price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}):'');
   document.getElementById('refund-amount').value = c.pack_price || '';
   document.getElementById('refund-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('refund-reason').value = '';
@@ -11017,7 +11017,7 @@ async function saveRefund() {
       await dbUpdate('customers', cid, {pack_type:null, pack_start_date:null, pack_price:null});
     }
     auditLog('Refund','Customer',(c?c.name:'')+(amount>0?' — ₹'+amount+' refunded':'')+' — '+reason);
-    showToast('Refund recorded'+(clearPack?' & pack cleared':'')+'! ₹'+amount.toLocaleString('en-IN')+' logged as expense.','success');
+    showToast('Refund recorded'+(clearPack?' & pack cleared':'')+'! ₹'+amount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' logged as expense.','success');
     closeModal('refund-pack');
     await loadFinance(); await loadCustomers();
     if (pending) await loadPayments();
@@ -11137,20 +11137,20 @@ function renderPinTracker() {
 
   // ── Personal VP ──
   html += '<div class="pin-card"><h3>💪 Personal Volume Points</h3>';
-  html += '<div class="pin-metric"><span class="pin-metric-label">Your Center VP</span><span class="pin-metric-val" style="color:'+(pGap===0?'var(--success)':'var(--primary)')+'">'+personalVP.toLocaleString('en-IN')+'</span></div>';
-  html += '<div class="pin-metric"><span class="pin-metric-label">Required</span><span style="font-size:14px;color:var(--muted)">'+req.personalVP.toLocaleString('en-IN')+' VP</span></div>';
+  html += '<div class="pin-metric"><span class="pin-metric-label">Your Center VP</span><span class="pin-metric-val" style="color:'+(pGap===0?'var(--success)':'var(--primary)')+'">'+personalVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span></div>';
+  html += '<div class="pin-metric"><span class="pin-metric-label">Required</span><span style="font-size:14px;color:var(--muted)">'+req.personalVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' VP</span></div>';
   html += '<div class="pin-progress"><div class="pin-fill" style="width:'+pVPPct+'%;background:'+(pVPPct>=100?'var(--success)':pVPPct>=60?'var(--accent)':'var(--danger)')+'"><span class="pin-fill-label">'+pVPPct+'%</span></div></div>';
-  if(pGap > 0) html += '<div class="pin-gap">📌 Need <strong>'+pGap.toLocaleString('en-IN')+' more VP</strong> — that\'s about <strong>'+pCustsNeeded+' more Standard pack customers</strong> from your center this month.</div>';
+  if(pGap > 0) html += '<div class="pin-gap">📌 Need <strong>'+pGap.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' more VP</strong> — that\'s about <strong>'+pCustsNeeded+' more Standard pack customers</strong> from your center this month.</div>';
   else html += '<div class="pin-action">✅ Personal VP target met!</div>';
   html += '</div>';
 
   // ── Organizational VP ──
   html += '<div class="pin-card"><h3>🌐 Organizational Volume Points</h3>';
-  html += '<div class="pin-metric"><span class="pin-metric-label">Downline VP</span><span class="pin-metric-val" style="color:'+(oGap===0?'var(--success)':'var(--primary)')+'">'+orgVP.toLocaleString('en-IN')+'</span></div>';
-  html += '<div class="pin-metric"><span class="pin-metric-label">Required</span><span style="font-size:14px;color:var(--muted)">'+req.orgVP.toLocaleString('en-IN')+' VP</span></div>';
+  html += '<div class="pin-metric"><span class="pin-metric-label">Downline VP</span><span class="pin-metric-val" style="color:'+(oGap===0?'var(--success)':'var(--primary)')+'">'+orgVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span></div>';
+  html += '<div class="pin-metric"><span class="pin-metric-label">Required</span><span style="font-size:14px;color:var(--muted)">'+req.orgVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' VP</span></div>';
   html += '<div class="pin-progress"><div class="pin-fill" style="width:'+oVPPct+'%;background:'+(oVPPct>=100?'var(--success)':oVPPct>=30?'var(--accent)':'var(--danger)')+'"><span class="pin-fill-label">'+oVPPct+'%</span></div></div>';
   if(oGap > 0) {
-    html += '<div class="pin-gap">📌 Need <strong>'+oGap.toLocaleString('en-IN')+' more VP</strong> from downline centers — about <strong>'+oCustsNeeded+' more pack sales</strong> across your organization.</div>';
+    html += '<div class="pin-gap">📌 Need <strong>'+oGap.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' more VP</strong> from downline centers — about <strong>'+oCustsNeeded+' more pack sales</strong> across your organization.</div>';
   } else {
     html += '<div class="pin-action">✅ Organizational VP target met!</div>';
   }
@@ -11212,10 +11212,10 @@ function renderPinTracker() {
   if(!allMet) {
     html += '<div class="pin-card" style="border-left:4px solid var(--primary)"><h3>🚀 Action Plan for '+targetPin+'</h3><div class="pin-action" style="background:none;border:none;padding:0">';
     var actions = [];
-    if(pGap > 0) actions.push('📍 <strong>Your center</strong>: Add '+pCustsNeeded+' more customers with Standard/Premium packs to hit '+req.personalVP.toLocaleString('en-IN')+' personal VP');
+    if(pGap > 0) actions.push('📍 <strong>Your center</strong>: Add '+pCustsNeeded+' more customers with Standard/Premium packs to hit '+req.personalVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' personal VP');
     if(oGap > 0) {
       var perCenter = D.centers.length > 1 ? Math.ceil(oCustsNeeded / (D.centers.length - 1)) : oCustsNeeded;
-      actions.push('📍 <strong>Downline</strong>: Each center needs ~'+perCenter+' more pack sales to collectively close the '+oGap.toLocaleString('en-IN')+' VP gap');
+      actions.push('📍 <strong>Downline</strong>: Each center needs ~'+perCenter+' more pack sales to collectively close the '+oGap.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' VP gap');
     }
     if(flGap > 0) actions.push('📍 <strong>Coach development</strong>: Help '+flGap+' first-line coach'+(flGap>1?'es':'')+' reach '+reqPinLevel+' — review their VP and customer pipeline');
     if(req.associates > 0 && activeAssociates < req.associates) actions.push('📍 <strong>Associates</strong>: Recruit '+(req.associates-activeAssociates)+' more active associates generating personal volume');
@@ -11263,7 +11263,7 @@ function renderBizAnalyst() {
 
   document.getElementById('biz-org-summary').innerHTML =
     '<div class="stats" style="margin-bottom:0">' +
-    '<div class="stat"><div class="stat-ic">⚡</div><div class="stat-l">Total Org VP ('+month+')</div><div class="stat-v" style="color:var(--primary)">'+totalVP.toLocaleString('en-IN')+'</div></div>' +
+    '<div class="stat"><div class="stat-ic">⚡</div><div class="stat-l">Total Org VP ('+month+')</div><div class="stat-v" style="color:var(--primary)">'+totalVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>' +
     '<div class="stat"><div class="stat-ic">🏠</div><div class="stat-l">Your Center VP</div><div class="stat-v">'+totalPersonalVP+'</div></div>' +
     '<div class="stat"><div class="stat-ic">🌐</div><div class="stat-l">Downline VP</div><div class="stat-v">'+totalOrgVP+'</div></div>' +
     '<div class="stat"><div class="stat-ic">✅</div><div class="stat-l">Active Customers</div><div class="stat-v" style="color:var(--success)">'+allActiveCusts+'</div></div>' +
@@ -11328,7 +11328,7 @@ function renderBizAnalyst() {
           '<span style="color:var(--success);font-weight:700">+'+d.newThis+'</span>'+
           '<div><span style="font-weight:700">'+d.attRate+'%</span><div class="cp-bar-wrap"><div class="cp-bar" style="width:'+d.attRate+'%"></div></div></div>'+
           '<span>'+d.leads+'</span>'+
-          '<div><span style="font-weight:700;color:var(--success);font-size:12px">₹'+d.centerRev.toLocaleString('en-IN')+'</span><div class="cp-bar-wrap"><div class="cp-bar" style="width:'+revBarW+'%;background:#16a34a"></div></div></div>'+
+          '<div><span style="font-weight:700;color:var(--success);font-size:12px">₹'+d.centerRev.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span><div class="cp-bar-wrap"><div class="cp-bar" style="width:'+revBarW+'%;background:#16a34a"></div></div></div>'+
         '</div>';
       });
       lbEl.innerHTML = lbRows.join('');
@@ -11372,7 +11372,7 @@ function renderBizAnalyst() {
             +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:16px;font-weight:700;color:var(--primary)">'+d.vp+'</div><div style="font-size:10px;color:var(--muted)">VP</div></div>'
             +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:16px;font-weight:700;color:var(--success)">'+d.activeCusts+'</div><div style="font-size:10px;color:var(--muted)">active</div></div>'
             +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:16px;font-weight:700;color:'+(d.inactiveCusts?'var(--danger)':'var(--success)')+'">'+d.inactiveCusts+'</div><div style="font-size:10px;color:var(--muted)">inactive</div></div>'
-            +'<div style="background:'+(net>=0?'#f0fdf4':'#fef2f2')+';border-radius:8px;padding:8px 4px"><div style="font-size:13px;font-weight:700;color:'+(net>=0?'#16a34a':'#e74c3c')+'">₹'+Math.round(rev).toLocaleString('en-IN')+'</div><div style="font-size:10px;color:var(--muted)">revenue</div></div>'
+            +'<div style="background:'+(net>=0?'#f0fdf4':'#fef2f2')+';border-radius:8px;padding:8px 4px"><div style="font-size:13px;font-weight:700;color:'+(net>=0?'#16a34a':'#e74c3c')+'">₹'+Math.round(rev).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div><div style="font-size:10px;color:var(--muted)">revenue</div></div>'
             +'</div>';
         })()
 
@@ -11708,11 +11708,11 @@ function renderOrgTree(){
     '<div style="display:flex; gap:24px; flex-wrap:wrap; text-align:left">' +
       '<div>' +
         '<div style="font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase;">Current Month (Actual)</div>' +
-        '<div style="font-size:22px; font-weight:800; color:var(--primary); margin-top:2px">₹' + Math.round(networkRevenue).toLocaleString('en-IN') + '</div>' +
+        '<div style="font-size:22px; font-weight:800; color:var(--primary); margin-top:2px">₹' + Math.round(networkRevenue).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
       '</div>' +
       '<div>' +
         '<div style="font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase;">Next Month (Projected)</div>' +
-        '<div style="font-size:22px; font-weight:800; color:var(--accent); margin-top:2px">₹' + Math.round(projectedRevenue).toLocaleString('en-IN') + '</div>' +
+        '<div style="font-size:22px; font-weight:800; color:var(--accent); margin-top:2px">₹' + Math.round(projectedRevenue).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
       '</div>' +
     '</div>' +
   '</div>';
@@ -11907,7 +11907,7 @@ function calcCouponRenewal(){
   var discount=actualUse*perShake;
   bd.style.display='block';
   bd.innerHTML='<div style="font-weight:700;margin-bottom:8px;color:var(--primary)">💰 Calculation</div>'
-    +'<div class="coupon-row"><span>Pack Price</span><strong>₹'+price.toLocaleString('en-IN')+'</strong></div>'
+    +'<div class="coupon-row"><span>Pack Price</span><strong>₹'+price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong></div>'
     +'<div class="coupon-row"><span>Per Shake Value</span><strong>₹'+perShake.toFixed(2)+'</strong></div>'
     +'<div class="coupon-row"><span>Available Coupons</span><strong style="color:var(--accent)">'+bal.balance+'</strong></div>'
     +'<div class="coupon-row"><span>Coupons Used ('+actualUse+')</span><strong style="color:var(--danger)">-₹'+discount.toFixed(0)+'</strong></div>'
@@ -12013,7 +12013,7 @@ function calcBalance(){
   var total=Number(document.getElementById('payment-total').value)||0;
   var paid=Number(document.getElementById('payment-paid').value)||0;
   var el=document.getElementById('payment-balance-preview');
-  if(el){el.textContent='₹'+Math.max(0,total-paid).toLocaleString('en-IN');el.style.color=paid<total?'var(--danger)':'var(--success)';}
+  if(el){el.textContent='₹'+Math.max(0,total-paid).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});el.style.color=paid<total?'var(--danger)':'var(--success)';}
 }
 function renderPayments(){
   var q=(document.getElementById('payment-search')||{value:''}).value.toLowerCase();
@@ -12037,9 +12037,9 @@ function renderPayments(){
     var badge=bal===0?'<span class="badge bg">Paid</span>':(isOverdue?'<span class="badge br">Overdue</span>':'<span class="badge by">Pending</span>');
     return'<tr style="'+(isOverdue?'background:var(--danger-light)':'')+'">'
       +'<td><strong>'+(p.person_name||'—')+'</strong></td><td>'+(p.description||'—')+'</td>'
-      +'<td>₹'+total.toLocaleString('en-IN')+'</td>'
-      +'<td style="color:var(--success)">₹'+paid.toLocaleString('en-IN')+'</td>'
-      +'<td style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</td>'
+      +'<td>₹'+total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+      +'<td style="color:var(--success)">₹'+paid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+      +'<td style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
       +'<td><div class="payment-bar"><div class="payment-fill'+(isOverdue?' overdue':'')+'" style="width:'+pct+'%"></div></div><span style="font-size:10px;color:var(--muted)">'+pct+'%</span></td>'
       +'<td>'+(p.due_date||'—')+'</td><td>'+badge+'</td>'
       +'<td><div class="acts">'
@@ -12053,7 +12053,7 @@ function renderPayments(){
   var totalBal=allPayments.reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0);
   var overdueCount=allPayments.filter(function(p){return Math.max(0,Number(p.total_amount)-Number(p.amount_paid))>0&&p.due_date&&p.due_date<today;}).length;
   var el=document.getElementById('payment-stats');
-  if(el)el.innerHTML='<div class="stat"><div class="stat-l">Outstanding</div><div class="stat-v" style="color:var(--danger)">₹'+totalBal.toLocaleString('en-IN')+'</div></div>'
+  if(el)el.innerHTML='<div class="stat"><div class="stat-l">Outstanding</div><div class="stat-v" style="color:var(--danger)">₹'+totalBal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'
     +'<div class="stat"><div class="stat-l">Overdue</div><div class="stat-v" style="color:var(--danger)">'+overdueCount+'</div></div>'
     +'<div class="stat"><div class="stat-l">Records</div><div class="stat-v">'+allPayments.length+'</div></div>';
 }
@@ -12064,7 +12064,7 @@ async function convertToWalkin(paymentId) {
   var amountPaid = Number(p.amount_paid) || 0;
   var name = p.person_name || '—';
 
-  if (!confirm('Convert ' + name + ' to a Walk-in?\n\nThis will:\n1. Create a Walk-in product sale record for ₹' + amountPaid.toLocaleString('en-IN') + '.\n2. Clear their outstanding payment balance to ₹0.\n3. Change their customer pack type to "Walk-in" (preserving their body composition scans).')) {
+  if (!confirm('Convert ' + name + ' to a Walk-in?\n\nThis will:\n1. Create a Walk-in product sale record for ₹' + amountPaid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '.\n2. Clear their outstanding payment balance to ₹0.\n3. Change their customer pack type to "Walk-in" (preserving their body composition scans).')) {
     return;
   }
 
@@ -12120,7 +12120,7 @@ function openCoachPaymentSetup(coachId) {
   document.getElementById('cps-info').innerHTML =
     '<strong>'+c.name+'</strong><br>'+
     'Pack: <strong>'+(c.pack_type||'—')+'</strong> &nbsp;|&nbsp; '+
-    'Pack Price: <strong style="color:var(--primary)">₹'+Number(c.pack_price).toLocaleString('en-IN')+'</strong>'+
+    'Pack Price: <strong style="color:var(--primary)">₹'+Number(c.pack_price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong>'+
     (c.pack_start_date ? '<br>Started: '+c.pack_start_date : '');
   document.getElementById('cps-pay-mode').value = 'full';
   document.getElementById('cps-paid-now-box').style.display = 'none';
@@ -12145,7 +12145,7 @@ function updateCpsPreview() {
   var paid = Number(document.getElementById('cps-paid-now').value)||0;
   var bal = total - paid;
   var el = document.getElementById('cps-balance-preview');
-  if(el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</strong>';
+  if(el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong>';
 }
 async function saveCoachPaymentSetup() {
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
@@ -12159,13 +12159,13 @@ async function saveCoachPaymentSetup() {
     if (mode === 'full') {
       await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:packPrice, payment_date:payDate, description:c.pack_type||'Coach Pack', notes:'Coach pack — full payment', center_id:c.wellness_center_id||null });
       await dbInsert('finance', { type:'income', description:c.name+' — Coach pack sale', amount:packPrice, category:'Coach pack payment', date:payDate, wellness_center_id:c.wellness_center_id||null });
-      showToast('Payment recorded! ₹'+packPrice.toLocaleString('en-IN')+' income logged.', 'success');
+      showToast('Payment recorded! ₹'+packPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' income logged.', 'success');
     } else if (mode === 'partial') {
       var paidNow = Number(document.getElementById('cps-paid-now').value)||0;
       var dueDate = document.getElementById('cps-due-date').value||null;
       await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:paidNow, payment_date:payDate, due_date:dueDate, description:c.pack_type||'Coach Pack', notes:'Coach pack — partial', center_id:c.wellness_center_id||null });
       if (paidNow > 0) await dbInsert('finance', { type:'income', description:c.name+' — Partial coach pack payment', amount:paidNow, category:'Coach pack payment', date:payDate, wellness_center_id:c.wellness_center_id||null });
-      showToast('Payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
+      showToast('Payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), 'success');
     } else {
       var dueDateNone = document.getElementById('cps-due-date').value||null;
       await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:0, payment_date:payDate, due_date:dueDateNone, description:c.pack_type||'Coach Pack', notes:'Coach pack — pending', center_id:c.wellness_center_id||null });
@@ -12206,7 +12206,7 @@ function updateCoachBalancePreview() {
   var paid = Number((document.getElementById('coach-paid-now')||{value:0}).value)||0;
   var bal = total - paid;
   var el = document.getElementById('coach-balance-preview');
-  if(el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</strong>';
+  if(el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong>';
 }
 
 function openNewCustomerModal() {
@@ -12279,7 +12279,7 @@ function updateCustBalancePreview() {
   var paid = Number((document.getElementById('customer-paid-now')||{value:0}).value)||0;
   var bal = total - paid;
   var el = document.getElementById('cust-balance-preview');
-  if (el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</strong>';
+  if (el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong>';
 }
 
 // ── INSTALLMENT PAYMENT ──
@@ -12294,9 +12294,9 @@ function openInstallmentModal(paymentId) {
   document.getElementById('inst-balance-preview').style.display='none';
   document.getElementById('inst-info').innerHTML =
     '<strong>'+(p.person_name||'Customer')+'</strong> — '+(p.description||'Pack')+'<br>'+
-    'Total: <strong>₹'+total.toLocaleString('en-IN')+'</strong> &nbsp;|&nbsp; '+
-    'Paid: <span style="color:var(--success)">₹'+paid.toLocaleString('en-IN')+'</span> &nbsp;|&nbsp; '+
-    'Remaining: <span style="color:var(--danger)">₹'+bal.toLocaleString('en-IN')+'</span>';
+    'Total: <strong>₹'+total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong> &nbsp;|&nbsp; '+
+    'Paid: <span style="color:var(--success)">₹'+paid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span> &nbsp;|&nbsp; '+
+    'Remaining: <span style="color:var(--danger)">₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span>';
 
   // Reset UPI QR Code Section
   var upiContainer = document.getElementById('inst-upi-container');
@@ -12400,7 +12400,7 @@ function updateInstPreview() {
   var newBal = total - newPaid;
   var el = document.getElementById('inst-balance-preview');
   el.style.display='block';
-  el.innerHTML = 'After this payment: Paid <strong style="color:var(--success)">₹'+newPaid.toLocaleString('en-IN')+'</strong> &nbsp;|&nbsp; Balance <strong style="color:'+(newBal>0?'var(--danger)':'var(--success)')+'">₹'+Math.max(0,newBal).toLocaleString('en-IN')+'</strong>'+(newBal<=0?' &nbsp;<span style="color:var(--success)">✅ Fully paid!</span>':'');
+  el.innerHTML = 'After this payment: Paid <strong style="color:var(--success)">₹'+newPaid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong> &nbsp;|&nbsp; Balance <strong style="color:'+(newBal>0?'var(--danger)':'var(--success)')+'">₹'+Math.max(0,newBal).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong>'+(newBal<=0?' &nbsp;<span style="color:var(--success)">✅ Fully paid!</span>':'');
 }
 async function saveInstallment() {
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
@@ -12417,7 +12417,7 @@ async function saveInstallment() {
     await dbUpdate('payments', pid, { amount_paid: newPaid, notes: (p.notes?p.notes+'; ':'')+date+': ₹'+adding+(notes?' ('+notes+')':'') });
     var _instPerson = D.customers.find(function(x){return x.id===p.person_id;}) || D.coaches.find(function(x){return x.id===p.person_id;});
     await dbInsert('finance', { type:'income', description:(p.person_name||'Customer')+' — '+(p.description||'Pack')+' installment', amount:adding, category:'Pack sale to customer', date:date, wellness_center_id:(_instPerson&&_instPerson.wellness_center_id)||null });
-    showToast('₹'+adding.toLocaleString('en-IN')+' recorded + income logged!', 'success');
+    showToast('₹'+adding.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' recorded + income logged!', 'success');
     closeModal('installment');
     await loadPayments(); await loadFinance(); renderOverview();
   } catch(e) { showToast('Error: '+e.message,'error'); }
@@ -12467,7 +12467,7 @@ function sendPaymentWA(pid){
   var phone=(person&&person.contact?person.contact:'').replace(/\D/g,'');
   if(phone.length===10)phone=COUNTRY_CODE+phone;
   if(!phone){showToast('No contact number','error');return;}
-  var msg='🌿 *Payment Reminder — '+getCenterName()+'*\n\nHi *'+p.person_name+'*! 😊\n\n📋 *'+p.description+'*\n✅ Paid: ₹'+Number(p.amount_paid).toLocaleString('en-IN')+'\n⚠️ Balance: *₹'+bal.toLocaleString('en-IN')+'*\n'+(p.due_date?'📅 Due: *'+p.due_date+'*\n':'')+'\nPlease clear at earliest. Thank you! 🙏\n\n_'+getCenterName()+'_ 💚';
+  var msg='🌿 *Payment Reminder — '+getCenterName()+'*\n\nHi *'+p.person_name+'*! 😊\n\n📋 *'+p.description+'*\n✅ Paid: ₹'+Number(p.amount_paid).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\n⚠️ Balance: *₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'*\n'+(p.due_date?'📅 Due: *'+p.due_date+'*\n':'')+'\nPlease clear at earliest. Thank you! 🙏\n\n_'+getCenterName()+'_ 💚';
   window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
 function checkOverduePayments(){
@@ -12475,7 +12475,7 @@ function checkOverduePayments(){
   var overdue=(D.payments||[]).filter(function(p){return Math.max(0,Number(p.total_amount)-Number(p.amount_paid))>0&&p.due_date&&p.due_date<today;});
   var el=document.getElementById('overdue-alert');
   if(!el){el=document.createElement('div');el.id='overdue-alert';var ov=document.getElementById('overview-stats');if(ov)ov.parentNode.insertBefore(el,ov);}
-  el.innerHTML=overdue.length?'<div style="background:var(--danger-light);border:1px solid var(--danger);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-weight:700;color:var(--danger)">⚠️ '+overdue.length+' overdue payment'+(overdue.length>1?'s':'')+' — ₹'+overdue.reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0).toLocaleString('en-IN')+' outstanding</span></div>':'';
+  el.innerHTML=overdue.length?'<div style="background:var(--danger-light);border:1px solid var(--danger);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-weight:700;color:var(--danger)">⚠️ '+overdue.length+' overdue payment'+(overdue.length>1?'s':'')+' — ₹'+overdue.reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' outstanding</span></div>':'';
 }
 
 // ══════════════════════════════════════════════
@@ -13024,7 +13024,7 @@ function renderWalkins() {
     var refName = w.referred_by_name || (refObj ? refObj.name : '');
     var srcLbl = (SRC[w.source]||w.source||'—') + (refName ? '<br><span style="font-size:11px;color:var(--muted)">'+refName+'</span>' : '');
     var outLbl = '<span style="font-weight:600;color:'+(OUT_COL[w.outcome]||'var(--muted)')+'">'+( OUT[w.outcome]||w.outcome||'—')+'</span>'+(w.product_details?'<br><span style="font-size:11px;color:var(--muted)">'+w.product_details+'</span>':'');
-    var amt = (w.outcome==='checkup') ? '<span style="color:var(--success);font-size:11px;font-weight:600">Free</span>' : (w.amount_received ? '₹'+Number(w.amount_received).toLocaleString('en-IN') : '—');
+    var amt = (w.outcome==='checkup') ? '<span style="color:var(--success);font-size:11px;font-weight:600">Free</span>' : (w.amount_received ? '₹'+Number(w.amount_received).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—');
     var waBtn = w.phone ? '<a class="wa-btn" href="https://api.whatsapp.com/send?phone='+COUNTRY_CODE+w.phone.replace(/\D/g,'')+'&text=Hi+'+encodeURIComponent(w.name||'')+',+thank+you+for+visiting+our+wellness+center!+We+hope+to+see+you+again+soon+%F0%9F%8C%BF" target="_blank" rel="noopener" style="font-size:11px;padding:3px 7px;text-decoration:none">💬 WA</a>' : '';
     var convertBtn = w.converted
       ? '<span class="badge bg" style="font-size:10px">✅ Customer</span>'
@@ -13166,7 +13166,7 @@ async function saveWalkin(){
         // Amount newly added on edit — create finance record and link it
         var newFin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:'Walk-in product sale',date:data.date,wellness_center_id:data.wellness_center_id||null});
         if(newFin && newFin[0] && newFin[0].id) await dbUpdate('walkins', id, {finance_id: newFin[0].id});
-        showToast('Walk-in updated · ₹'+data.amount_received.toLocaleString('en-IN')+' added to finance ✅','success');
+        showToast('Walk-in updated · ₹'+data.amount_received.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' added to finance ✅','success');
       } else {
         showToast('Walk-in updated','success');
       }
@@ -13178,7 +13178,7 @@ async function saveWalkin(){
         if(fin && fin[0] && fin[0].id && savedWalkin && savedWalkin[0] && savedWalkin[0].id){
           await dbUpdate('walkins', savedWalkin[0].id, {finance_id: fin[0].id});
         }
-        showToast('Walk-in saved · ₹'+data.amount_received.toLocaleString('en-IN')+' added to finance ✅','success');
+        showToast('Walk-in saved · ₹'+data.amount_received.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' added to finance ✅','success');
       } else {
         showToast('Walk-in saved ✅','success');
       }
@@ -13916,7 +13916,7 @@ function renderCommission() {
   }
 
   var html = '<div class="stats" style="margin-bottom:12px">'
-    +'<div class="stat"><div class="stat-ic">💰</div><div class="stat-l">Total Payout</div><div class="stat-v" style="color:var(--primary)">₹'+grandTotal.toLocaleString('en-IN')+'</div></div>'
+    +'<div class="stat"><div class="stat-ic">💰</div><div class="stat-l">Total Payout</div><div class="stat-v" style="color:var(--primary)">₹'+grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'
     +'<div class="stat"><div class="stat-ic">👨‍🏫</div><div class="stat-l">Coaches</div><div class="stat-v">'+data.length+'</div></div>'
     +'<div class="stat"><div class="stat-ic">🔄</div><div class="stat-l">Total Renewals</div><div class="stat-v">'+data.reduce(function(s,d){return s+d.renewCount;},0)+'</div></div>'
     +'<div class="stat"><div class="stat-ic">🆕</div><div class="stat-l">New Enrollments</div><div class="stat-v">'+data.reduce(function(s,d){return s+d.newCount;},0)+'</div></div>'
@@ -13930,15 +13930,15 @@ function renderCommission() {
   data.forEach(function(d, i) {
     var medal = i===0&&d.total>0?'🥇 ':i===1&&d.total>0?'🥈 ':i===2&&d.total>0?'🥉 ':'';
     var phone = (d.coach.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
-    var msg = encodeURIComponent('Hi '+d.coach.name+'! Your commission for '+month+' is ready: ₹'+d.total.toLocaleString('en-IN')+' ('+d.newCount+' new + '+d.renewCount+' renewals). Thank you! 🙏');
+    var msg = encodeURIComponent('Hi '+d.coach.name+'! Your commission for '+month+' is ready: ₹'+d.total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' ('+d.newCount+' new + '+d.renewCount+' renewals). Thank you! 🙏');
     html += '<tr>'
       +'<td><strong>'+medal+d.coach.name+'</strong><div style="font-size:11px;color:var(--muted)">'+(d.coach.herbalife_pin||'Associate')+'</div></td>'
       +'<td>'+d.totalCusts+'</td>'
       +'<td style="color:var(--success);font-weight:700">+'+d.newCount+'</td>'
       +'<td>'+d.renewCount+'</td>'
-      +'<td>₹'+d.newEarnings.toLocaleString('en-IN')+'</td>'
-      +'<td>₹'+d.renewalEarnings.toLocaleString('en-IN')+'</td>'
-      +'<td style="font-weight:700;color:var(--primary)"><div style="display:flex;align-items:center;gap:6px">₹'+d.total.toLocaleString('en-IN')
+      +'<td>₹'+d.newEarnings.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+      +'<td>₹'+d.renewalEarnings.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+      +'<td style="font-weight:700;color:var(--primary)"><div style="display:flex;align-items:center;gap:6px">₹'+d.total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})
         +(phone&&d.total>0?' <button class="wa-btn" style="font-size:10px;padding:2px 7px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+msg+'\',\'_blank\')" title="Notify coach">💬</button>':'')
       +'</div></td>'
       +'</tr>';
@@ -13946,9 +13946,9 @@ function renderCommission() {
 
   html += '<tr style="background:var(--surface2);font-weight:700">'
     +'<td colspan="4" style="text-align:right;font-size:13px">Grand Total</td>'
-    +'<td>₹'+data.reduce(function(s,d){return s+d.newEarnings;},0).toLocaleString('en-IN')+'</td>'
-    +'<td>₹'+data.reduce(function(s,d){return s+d.renewalEarnings;},0).toLocaleString('en-IN')+'</td>'
-    +'<td style="color:var(--primary)">₹'+grandTotal.toLocaleString('en-IN')+'</td>'
+    +'<td>₹'+data.reduce(function(s,d){return s+d.newEarnings;},0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+    +'<td>₹'+data.reduce(function(s,d){return s+d.renewalEarnings;},0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+    +'<td style="color:var(--primary)">₹'+grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
     +'</tr>';
 
   html += '</tbody></table></div>';
