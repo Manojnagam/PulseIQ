@@ -5618,7 +5618,7 @@ async function renderCoachAttSummary() {
   var y = parseInt(month.split('-')[0]), m = parseInt(month.split('-')[1]);
   var d = new Date(y, m-1, 1);
   while(d.getMonth() === m-1 && d.toISOString().split('T')[0] <= today) { daysInMonth++; d.setDate(d.getDate()+1); }
-  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+  el.innerHTML = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;border-collapse:collapse;font-size:13px">'
     + '<thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--muted)">Coach</th><th style="text-align:center;padding:6px 8px;color:var(--muted)">Present</th><th style="text-align:center;padding:6px 8px;color:var(--muted)">Absent</th><th style="text-align:center;padding:6px 8px;color:var(--muted)">Rate</th></tr></thead><tbody>'
     + coaches.map(function(c) {
         var present = recs.filter(function(r){ return r.coach_id===c.id && r.status==='present'; }).length;
@@ -5632,7 +5632,7 @@ async function renderCoachAttSummary() {
           + '<td style="text-align:center;padding:7px 8px;font-weight:700;color:'+color+'">'+rate+'%</td>'
           + '</tr>';
       }).join('')
-    + '</tbody></table>'
+    + '</tbody></table></div>'
     + '<div style="font-size:11px;color:var(--muted);margin-top:8px">Based on '+daysInMonth+' working day(s) so far in '+month+'</div>';
 }
 
@@ -5694,7 +5694,7 @@ async function renderAnnouncementHistory() {
   // Sort newest first
   all.sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
   var today = new Date().toISOString().split('T')[0];
-  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+  el.innerHTML = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;border-collapse:collapse;font-size:13px">'
     + '<thead><tr style="border-bottom:2px solid var(--border)">'
     + '<th style="text-align:left;padding:6px 8px;color:var(--muted)">Title</th>'
     + '<th style="text-align:left;padding:6px 8px;color:var(--muted)">Message</th>'
@@ -5716,7 +5716,7 @@ async function renderAnnouncementHistory() {
           + '<td style="padding:7px 8px"><button class="btn-d" style="font-size:11px;padding:3px 8px" onclick="deleteAnnouncement(\''+a.id+'\')">Delete</button></td>'
           + '</tr>';
       }).join('')
-    + '</tbody></table>';
+    + '</tbody></table></div>';
 }
 
 async function deleteAnnouncement(id) {
@@ -5942,7 +5942,7 @@ function renderRecurringList() {
   var el = document.getElementById('recurring-list'); if (!el) return;
   var items = D.recurring || [];
   if (!items.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No recurring expenses set up yet.</div>'; return; }
-  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+  el.innerHTML = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;border-collapse:collapse;font-size:13px">'
     + '<thead><tr style="border-bottom:2px solid var(--border)">'
     + '<th style="text-align:left;padding:5px 8px;color:var(--muted)">Name</th>'
     + '<th style="text-align:right;padding:5px 8px;color:var(--muted)">₹</th>'
@@ -5958,7 +5958,7 @@ function renderRecurringList() {
           + '<td style="padding:6px 8px;text-align:right"><button class="btn-c" style="color:var(--danger);font-size:11px;padding:3px 8px" onclick="deleteRecurring(\''+r.id+'\')">Delete</button></td>'
           + '</tr>';
       }).join('')
-    + '</tbody></table>';
+    + '</tbody></table></div>';
 }
 
 async function saveRecurring() {
