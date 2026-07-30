@@ -35,8 +35,23 @@ function getActiveSbUrl() {
 function getActiveSbKey() {
   return CENTER_SB_KEY;
 }
-var COUNTRY_CODE = localStorage.getItem('countryCode') || '91';
-var WA_LANG = localStorage.getItem('waLang') || 'English';
+window.safeStorage = window.safeStorage || (function() {
+  var _mem = {};
+  return {
+    getItem: function(k) {
+      try { return localStorage.getItem(k); } catch(e) { return _mem[k] !== undefined ? _mem[k] : null; }
+    },
+    setItem: function(k, v) {
+      try { localStorage.setItem(k, v); } catch(e) { _mem[k] = String(v); }
+    },
+    removeItem: function(k) {
+      try { localStorage.removeItem(k); } catch(e) { delete _mem[k]; }
+    }
+  };
+})();
+
+var COUNTRY_CODE = safeStorage.getItem('countryCode') || '91';
+var WA_LANG = safeStorage.getItem('waLang') || 'English';
 
 // ── AUTH ──
 var _sbAuth = window._sbAuth || null;
@@ -16557,5 +16572,6 @@ async function askFinanceFollowup() {
   
   askBtn.disabled = false;
   askBtn.textContent = 'Ask';
+}
 }
 

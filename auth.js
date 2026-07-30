@@ -1,6 +1,21 @@
 // ── AUTH SPLIT LIGHTWEIGHT INITIALIZER ──
 window.authSplitActive = true;
 
+window.safeStorage = window.safeStorage || (function() {
+  var _mem = {};
+  return {
+    getItem: function(k) {
+      try { return localStorage.getItem(k); } catch(e) { return _mem[k] !== undefined ? _mem[k] : null; }
+    },
+    setItem: function(k, v) {
+      try { localStorage.setItem(k, v); } catch(e) { _mem[k] = String(v); }
+    },
+    removeItem: function(k) {
+      try { localStorage.removeItem(k); } catch(e) { delete _mem[k]; }
+    }
+  };
+})();
+
 function loadScript(src) {
   return new Promise(function(resolve, reject) {
     if (document.querySelector('script[src="' + src + '"]')) {
@@ -226,11 +241,11 @@ async function verifyOtpCode() {
     window._authUser = res.data.user;
     var rememberCb = document.getElementById('remember-device');
     if (!rememberCb || rememberCb.checked) {
-      localStorage.setItem('pz_remembered_email', email);
-      localStorage.setItem('pz_login_ts', String(Date.now()));
+      safeStorage.setItem('pz_remembered_email', email);
+      safeStorage.setItem('pz_login_ts', String(Date.now()));
     }
     if (res.data.session && res.data.session.refresh_token) {
-      localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
+      safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
     }
     await loadAndStartDashboard();
   }
@@ -255,24 +270,31 @@ async function loadAndStartDashboard() {
 
   try {
     if (!window.supabase) {
-      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2');
+      try {
+        await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2');
+      } catch (cdnErr) {
+        console.warn('Primary Supabase CDN failed, trying unpkg fallback:', cdnErr);
+        await loadScript('https://unpkg.com/@supabase/supabase-js@2.108.2/dist/umd/supabase.js');
+      }
     }
     await loadScript('app.min.js?v=1.4.7');
     if (typeof bootDashboard === 'function') {
       await bootDashboard();
     } else {
       console.error('bootDashboard function not found in app.min.js');
+      throw new Error('bootDashboard function missing');
     }
   } catch (err) {
     console.error('Failed to load app.min.js:', err);
-    document.getElementById('app-loading').style.display = 'none';
-    showLoginErr('Failed to load application scripts. Please try again.');
+    var al = document.getElementById('app-loading'); if (al) al.style.display = 'none';
+    var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'flex';
+    showLoginErr('Failed to load application scripts. Please check your internet connection and try again.');
   }
 }
 
 window.onload = async function() {
   try {
-    var hasTokens = localStorage.getItem('pz_session_tokens') || localStorage.getItem('sb-erteibdxzdvsaujptxsd-auth-token');
+    var hasTokens = safeStorage.getItem('pz_session_tokens') || safeStorage.getItem('sb-erteibdxzdvsaujptxsd-auth-token');
     if (hasTokens) {
       await initAuthClient();
     }
@@ -282,7 +304,7 @@ window.onload = async function() {
         if (event === 'TOKEN_REFRESHED' && session) {
           _authSession = session;
           window._authSession = session;
-          localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
+          safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
         }
         if (event === 'SIGNED_IN' && session) {
           _authSession = session;
@@ -292,8 +314,8 @@ window.onload = async function() {
     }
 
     var SIXTY_DAYS = 60 * 24 * 60 * 60 * 1000;
-    var rememberedEmail = localStorage.getItem('pz_remembered_email');
-    var loginTs = parseInt(localStorage.getItem('pz_login_ts') || '0');
+    var rememberedEmail = safeStorage.getItem('pz_remembered_email');
+    var loginTs = parseInt(safeStorage.getItem('pz_login_ts') || '0');
     var deviceTrusted = rememberedEmail && (Date.now() - loginTs) < SIXTY_DAYS;
 
     var sessionRestored = false;
@@ -302,15 +324,15 @@ window.onload = async function() {
     }
     if (sessionRestored) {
       if (_authUser && _authUser.email) {
-        localStorage.setItem('pz_remembered_email', _authUser.email);
-        localStorage.setItem('pz_login_ts', Date.now());
+        safeStorage.setItem('pz_remembered_email', _authUser.email);
+        safeStorage.setItem('pz_login_ts', Date.now());
       }
       deviceTrusted = true;
     }
 
     if (!deviceTrusted) {
-      document.getElementById('app-loading').style.display = 'none';
-      document.getElementById('login-screen').style.display = 'flex';
+      var al = document.getElementById('app-loading'); if (al) al.style.display = 'none';
+      var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'flex';
       return;
     }
 
@@ -322,7 +344,7 @@ window.onload = async function() {
     await loadAndStartDashboard();
   } catch (e) {
     console.error('Startup error:', e);
-    document.getElementById('app-loading').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
+    var al = document.getElementById('app-loading'); if (al) al.style.display = 'none';
+    var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'flex';
   }
 };

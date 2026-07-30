@@ -1171,6 +1171,26 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
+<script>
+window.onerror = function(msg, url, line) {
+  console.error('Global emergency error handler caught:', msg, 'at', url, 'line', line);
+  var al = document.getElementById('app-loading');
+  var ls = document.getElementById('login-screen');
+  if (al && getComputedStyle(al).display !== 'none') {
+    al.style.display = 'none';
+    if (ls) ls.style.display = 'flex';
+  }
+};
+window.onunhandledrejection = function(e) {
+  console.error('Unhandled Promise Rejection:', e.reason);
+  var al = document.getElementById('app-loading');
+  var ls = document.getElementById('login-screen');
+  if (al && getComputedStyle(al).display !== 'none') {
+    al.style.display = 'none';
+    if (ls) ls.style.display = 'flex';
+  }
+};
+</script>
 <script defer src="auth.min.js?v=1.4.7"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>
@@ -1284,7 +1304,7 @@ input:focus, select:focus, textarea:focus {
 <div class="toast" id="toast"></div>
 
 <!-- ── LOGIN SCREEN ── -->
-<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 25%, rgba(39, 174, 96, 0.08) 0%, rgba(9, 9, 11, 0.98) 75%);align-items:center;justify-content:center;padding:24px;font-family:'Plus Jakarta Sans', sans-serif">
+<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;background:#09090b;background:radial-gradient(circle at 50% 25%, rgba(39, 174, 96, 0.08) 0%, rgba(9, 9, 11, 0.98) 75%);align-items:center;justify-content:center;padding:24px;font-family:'Plus Jakarta Sans', sans-serif">
   <div style="background:rgba(24, 24, 27, 0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:24px;padding:44px 38px;width:100%;max-width:410px;box-shadow:0 30px 60px -12px rgba(0,0,0,0.7);border:1px solid rgba(255, 255, 255, 0.12);color:var(--text)">
     <div style="text-align:center;margin-bottom:32px">
       <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#27AE60 0%,#2563EB 100%);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 10px 25px -5px rgba(39, 174, 96, 0.4)">🌿</div>

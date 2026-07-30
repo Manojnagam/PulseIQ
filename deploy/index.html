@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- saved from url=(0050)file:///C:/Users/nagam/Downloads/PulseIQ-v3_2.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <title>PulseZen Dashboard</title>
 <meta name="apple-mobile-web-app-title" content="PulseZen">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -52,75 +52,76 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 :root{
-  --bg:#0b0f19;
-  --surface:rgba(18, 26, 44, 0.65);
-  --surface-solid:#121a2c;
-  --surface2:rgba(28, 38, 62, 0.65);
-  --primary:#00e676;
-  --primary-mid:#00c853;
-  --primary-light:rgba(0, 230, 118, 0.15);
-  --accent:#ffd600;
-  --accent-light:rgba(255, 214, 0, 0.1);
-  --text:#f8fafc;
-  --muted:#94a3b8;
-  --border:rgba(255, 255, 255, 0.07);
-  --border-solid:rgba(255, 255, 255, 0.15);
-  --danger:#ff1744;
-  --danger-light:rgba(255, 23, 68, 0.1);
-  --success:#00e676;
-  --success-light:rgba(0, 230, 118, 0.15);
-  --shadow:0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md:0 12px 40px rgba(0, 0, 0, 0.45);
-  --shadow-lg:0 16px 48px rgba(0, 0, 0, 0.6);
+  --bg:#09090b;
+  --surface:rgba(24, 24, 27, 0.75);
+  --surface-solid:#18181b;
+  --surface2:rgba(39, 39, 42, 0.75);
+  --primary:#27AE60;
+  --primary-mid:#219653;
+  --primary-light:rgba(39, 174, 96, 0.15);
+  --accent:#2563EB;
+  --accent-light:rgba(37, 99, 235, 0.12);
+  --text:#fafafa;
+  --muted:#a1a1aa;
+  --border:rgba(255, 255, 255, 0.1);
+  --border-solid:rgba(255, 255, 255, 0.18);
+  --danger:#ef4444;
+  --danger-light:rgba(239, 68, 68, 0.15);
+  --success:#27AE60;
+  --success-light:rgba(39, 174, 96, 0.15);
+  --shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  --shadow-md:0 20px 40px -15px rgba(0, 0, 0, 0.6);
+  --shadow-lg:0 25px 50px -12px rgba(0, 0, 0, 0.7);
   --radius:16px;
+  --radius-xl:24px;
   --sw:234px;
-  --glass-bg:rgba(18, 26, 44, 0.65);
-  --glass-border:rgba(255, 255, 255, 0.07);
-  --glass-blur:blur(16px);
+  --glass-bg:rgba(24, 24, 27, 0.75);
+  --glass-border:rgba(255, 255, 255, 0.1);
+  --glass-blur:blur(20px);
   --cyber-blue:#38bdf8;
   --purple:#a78bfa;
-  --sidebar-bg:linear-gradient(180deg,#121a2c 0%,#0b0f19 100%);
+  --sidebar-bg:linear-gradient(180deg,#18181b 0%,#09090b 100%);
   
   /* Zebra rows & hovers */
   --zebra-bg:rgba(255,255,255,.02);
   --hover-bg:rgba(255,255,255,.05);
-  --hover-active-bg:rgba(0, 230, 118, 0.15);
+  --hover-active-bg:rgba(39, 174, 96, 0.15);
   
   /* Input background & focus */
-  --input-bg:rgba(18, 26, 44, 0.8);
-  --input-focus-bg:rgba(28, 38, 62, 0.85);
+  --input-bg:rgba(18, 18, 20, 0.85);
+  --input-focus-bg:rgba(24, 24, 27, 0.95);
   
   /* Statuses, warnings & alerts */
-  --warning-light:rgba(255, 214, 0, 0.1);
-  --warning-text:#ffd600;
-  --info-light:rgba(56, 189, 248, 0.1);
-  --info-text:#38bdf8;
-  --alert-bg:rgba(255, 23, 68, 0.1);
+  --warning-light:rgba(245, 158, 11, 0.15);
+  --warning-text:#f59e0b;
+  --info-light:rgba(37, 99, 235, 0.15);
+  --info-text:#2563EB;
+  --alert-bg:rgba(239, 68, 68, 0.15);
   
   /* Revenue cards borders & texts */
-  --border-success:rgba(0, 230, 118, 0.3);
-  --border-danger:rgba(255, 23, 68, 0.3);
-  --border-accent:rgba(255, 214, 0, 0.3);
-  --text-success:#00e676;
-  --text-danger:#ff1744;
-  --text-accent:#ffd600;
+  --border-success:rgba(39, 174, 96, 0.3);
+  --border-danger:rgba(239, 68, 68, 0.3);
+  --border-accent:rgba(37, 99, 235, 0.3);
+  --text-success:#27AE60;
+  --text-danger:#ef4444;
+  --text-accent:#2563EB;
   
   /* Hints */
-  --good-bg:rgba(0, 230, 118, 0.15);
-  --good-text:#00e676;
-  --warn-bg:rgba(255, 214, 0, 0.15);
-  --warn-text:#ffd600;
-  --bad-bg:rgba(255, 23, 68, 0.15);
-  --bad-text:#ff1744;
-  --low-bg:rgba(56, 189, 248, 0.15);
-  --low-text:#38bdf8;
+  --good-bg:rgba(39, 174, 96, 0.15);
+  --good-text:#27AE60;
+  --warn-bg:rgba(245, 158, 11, 0.15);
+  --warn-text:#f59e0b;
+  --bad-bg:rgba(239, 68, 68, 0.15);
+  --bad-text:#ef4444;
+  --low-bg:rgba(37, 99, 235, 0.15);
+  --low-text:#2563EB;
 
   /* Scrollbars */
   --scrollbar-thumb:rgba(255, 255, 255, 0.15);
   --scrollbar-thumb-hover:rgba(255, 255, 255, 0.3);
 
   /* Toolbar */
-  --toolbar-bg:rgba(18, 26, 44, 0.8);
+  --toolbar-bg:rgba(24, 24, 27, 0.85);
 }
 [data-theme="light"]{
   --bg:#f8fafc;
@@ -270,60 +271,64 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .menu-btn{display:none;position:fixed;top:13px;left:13px;z-index:200;background:var(--primary);border:none;border-radius:9px;padding:7px 10px;cursor:pointer;color:#fff;font-size:17px;box-shadow:0 2px 8px rgba(26,58,40,.35)}
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99}
 /* PAGE */
-.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px}
-.pt{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text)}
-.ps{color:var(--muted);font-size:13px;margin-top:3px}
-.btn-p{padding:10px 20px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:.1px;box-shadow:0 2px 8px rgba(26,58,40,.25)}
-.btn-p:hover{background:linear-gradient(135deg,var(--primary-light),var(--primary))}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+.pt{font-family:'Space Grotesk','Plus Jakarta Sans',sans-serif;font-size:28px;font-weight:700;color:var(--text);letter-spacing:-0.5px;line-height:1.2}
+.ps{color:var(--muted);font-size:13.5px;margin-top:4px;font-weight:500}
+.btn-p{padding:12px 22px;background:linear-gradient(135deg,#27AE60 0%,#219653 100%);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;letter-spacing:.2px;box-shadow:0 6px 18px -4px rgba(39, 174, 96, 0.4);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1)}
+.btn-p:hover{background:linear-gradient(135deg,#219653 0%,#1e854a 100%);transform:translateY(-1px);box-shadow:0 8px 24px -4px rgba(39, 174, 96, 0.55)}
+.btn-p:active{transform:translateY(0)}
 /* STATS */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-bottom:24px}
-.stat{background:var(--surface);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border:1px solid var(--border)}
-.stat-l{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700}
-.stat-v{font-family:'DM Serif Display',serif;font-size:30px;color:var(--primary);margin-top:4px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+.stat{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;padding:22px 24px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);transition:all .22s cubic-bezier(0.4, 0, 0.2, 1)}
+.stat:hover{transform:translateY(-2px);border-color:rgba(39, 174, 96, 0.35);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65)}
+.stat-l{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700}
+.stat-v{font-family:'Space Grotesk','Plus Jakarta Sans',sans-serif;font-size:32px;font-weight:700;color:var(--primary);margin-top:6px;letter-spacing:-0.5px}
 /* ── VISION CARD ── */
 
 /* OVERVIEW DASHBOARD */
-.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-.ov-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.ov-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px}
 @media(max-width:900px){.ov-grid,.ov-grid-3{grid-template-columns:1fr}}
-.ov-card{background:var(--surface);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
-.ov-card-h{padding:14px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--surface2)}
-.ov-card-h h3{font-family:'DM Serif Display',serif;font-size:16px;color:var(--text);display:flex;align-items:center;gap:8px}
-.ov-card-h .ov-count{font-size:12px;background:var(--surface2);color:var(--muted);padding:2px 8px;border-radius:10px;font-weight:600;font-family:'DM Sans',sans-serif}
-.ov-card-body{padding:14px 18px;max-height:280px;overflow-y:auto}
+.ov-card{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);overflow:hidden;transition:border-color .2s}
+.ov-card:hover{border-color:rgba(255, 255, 255, 0.18)}
+.ov-card-h{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255, 255, 255, 0.08);background:rgba(255, 255, 255, 0.02)}
+.ov-card-h h3{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px}
+.ov-card-h .ov-count{font-size:12px;background:rgba(255, 255, 255, 0.08);color:var(--primary);padding:3px 10px;border-radius:12px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif}
+.ov-card-body{padding:16px 20px;max-height:300px;overflow-y:auto}
 .ov-card-body::-webkit-scrollbar{width:4px}
-.ov-card-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-.ov-empty{text-align:center;padding:24px;color:var(--muted);font-size:13px}
-.ov-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--surface2);gap:10px}
+.ov-card-body::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.15);border-radius:4px}
+.ov-empty{text-align:center;padding:28px;color:var(--muted);font-size:13.5px}
+.ov-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255, 255, 255, 0.06);gap:12px}
 .ov-row:last-child{border-bottom:none}
 .ov-row-info{flex:1;min-width:0}
-.ov-row-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ov-row-sub{font-size:11px;color:var(--muted);margin-top:1px}
-.ov-row-actions{display:flex;gap:5px;flex-shrink:0}
-.ov-quick{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.ov-quick-btn{padding:10px 18px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:7px;transition:all .18s;box-shadow:var(--shadow)}
-.ov-quick-btn:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-1px);box-shadow:0 4px 14px rgba(45,90,61,.12)}
+.ov-row-name{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.ov-row-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.ov-row-actions{display:flex;gap:6px;flex-shrink:0}
+.ov-quick{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.ov-quick-btn{padding:11px 20px;background:rgba(24, 24, 27, 0.8);border:1.5px solid rgba(255, 255, 255, 0.1);border-radius:12px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:8px;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 4px 12px rgba(0, 0, 0, 0.2)}
+.ov-quick-btn:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-1.5px);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.3)}
 /* Mini bar chart */
-.ov-bars{display:flex;align-items:flex-end;gap:6px;height:80px;padding:10px 0}
-.ov-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
-.ov-bar{width:100%;border-radius:4px 4px 0 0;background:var(--primary);min-height:2px;transition:height .4s ease}
-.ov-bar-lbl{font-size:10px;color:var(--muted);font-weight:600}
-.ov-bar-val{font-size:10px;color:var(--primary);font-weight:700}
+.ov-bars{display:flex;align-items:flex-end;gap:8px;height:90px;padding:12px 0}
+.ov-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.ov-bar{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#27AE60 0%,#219653 100%);min-height:3px;transition:height .25s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 0 10px rgba(39, 174, 96, 0.2)}
+.ov-bar-lbl{font-size:10.5px;color:var(--muted);font-weight:600}
+.ov-bar-val{font-size:11px;color:var(--primary);font-weight:700}
 /* Stat icon */
-.stat-ic{font-size:22px;margin-bottom:4px}
+.stat-ic{font-size:24px;margin-bottom:6px}
 /* Revenue mini cards */
-.ov-rev-row{display:flex;gap:10px;margin-bottom:10px}
-.ov-rev-card{flex:1;padding:14px;border-radius:10px;text-align:center}
-.ov-rev-card.inc{background:var(--success-light);border:1px solid var(--border-success)}
-.ov-rev-card.exp{background:var(--danger-light);border:1px solid var(--border-danger)}
-.ov-rev-card.net{background:var(--accent-light);border:1px solid var(--border-accent)}
-.ov-rev-card .ov-rev-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
-.ov-rev-card .ov-rev-val{font-family:'DM Serif Display',serif;font-size:22px;margin-top:4px}
-.ov-rev-card.inc .ov-rev-val{color:var(--text-success)}
-.ov-rev-card.exp .ov-rev-val{color:var(--text-danger)}
-.ov-rev-card.net .ov-rev-val{color:var(--text-accent)}
-.ov-link{font-size:12px;color:var(--primary);cursor:pointer;font-weight:600;text-decoration:none}
-.ov-link:hover{text-decoration:underline}
+.ov-rev-row{display:flex;gap:12px;margin-bottom:12px}
+.ov-rev-card{flex:1;padding:16px;border-radius:14px;text-align:center;transition:transform .2s}
+.ov-rev-card:hover{transform:translateY(-1px)}
+.ov-rev-card.inc{background:rgba(39, 174, 96, 0.12);border:1px solid rgba(39, 174, 96, 0.25)}
+.ov-rev-card.exp{background:rgba(239, 68, 68, 0.12);border:1px solid rgba(239, 68, 68, 0.25)}
+.ov-rev-card.net{background:rgba(37, 99, 235, 0.12);border:1px solid rgba(37, 99, 235, 0.25)}
+.ov-rev-card .ov-rev-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.ov-rev-card .ov-rev-val{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-top:6px}
+.ov-rev-card.inc .ov-rev-val{color:#27AE60}
+.ov-rev-card.exp .ov-rev-val{color:#ef4444}
+.ov-rev-card.net .ov-rev-val{color:#2563EB}
+.ov-link{font-size:12.5px;color:var(--primary);cursor:pointer;font-weight:600;text-decoration:none;transition:color .18s}
+.ov-link:hover{color:var(--primary-mid);text-decoration:underline}
 /* PIN TRACKER */
 .pin-progress{background:var(--surface2);border-radius:20px;height:24px;overflow:hidden;position:relative}
 .pin-fill{height:100%;border-radius:20px;transition:width .6s ease;position:relative}
@@ -340,49 +345,54 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .pin-center-row:last-child{border-bottom:none}
 .pin-action{background:var(--success-light);border:1px solid var(--border-success);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--text);margin-top:10px;line-height:1.6}
 /* TABLE */
-.tcard{background:var(--surface);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
-.ttoolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--toolbar-bg)}
-.search{padding:8px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:13px;flex:1;min-width:160px;color:var(--text);background:var(--input-bg);transition:border-color .18s,box-shadow .18s}
-.search:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,58,40,.07);background:var(--input-focus-bg)}
-.twrap{overflow-x:auto}
+.tcard{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);overflow:hidden}
+.ttoolbar{padding:14px 18px;border-bottom:1px solid rgba(255, 255, 255, 0.08);display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(255, 255, 255, 0.02)}
+.search{padding:11px 16px;border:1.5px solid rgba(255, 255, 255, 0.12);border-radius:12px;font-family:inherit;font-size:13.5px;flex:1;min-width:180px;color:var(--text);background:rgba(18, 18, 20, 0.85);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1)}
+.search:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(39, 174, 96, 0.2);background:rgba(24, 24, 27, 0.95)}
+.twrap{overflow-x:auto;max-height:550px}
 table{width:100%;border-collapse:collapse}
-th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;white-space:nowrap}
-td{padding:12px 14px;border-bottom:1px solid var(--surface2);font-size:13px;vertical-align:middle}
+th{background:rgba(24, 24, 27, 0.95);position:sticky;top:0;z-index:10;padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#a1a1aa;font-weight:700;white-space:nowrap;border-bottom:1px solid rgba(255, 255, 255, 0.1)}
+td{padding:14px 16px;border-bottom:1px solid rgba(255, 255, 255, 0.06);font-size:13.5px;vertical-align:middle;transition:background .15s}
+tr:nth-child(even) td{background:rgba(255, 255, 255, 0.015)}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--hover-bg)}
-.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+tr:hover td{background:rgba(255, 255, 255, 0.04) !important}
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11.5px;font-weight:700;letter-spacing:0.2px}
 .ref-item:hover{background:var(--accent);color:#fff}
-.bg{background:var(--success-light);color:var(--text-success)}
-.by{background:var(--warning-light);color:var(--warning-text)}
-.br{background:var(--danger-light);color:var(--text-danger)}
-.bb{background:var(--info-light);color:var(--info-text)}
-.acts{display:flex;gap:5px}
-.btn-e,.btn-d{padding:5px 11px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
-.btn-e{background:var(--info-light);color:var(--info-text)}
-.btn-e:hover{background:var(--border)}
-.btn-d{background:var(--danger-light);color:var(--text-danger)}
-.btn-d:hover{background:var(--border)}
-.empty{text-align:center;padding:44px 20px;color:var(--muted)}
-.empty .ei{font-size:38px;margin-bottom:10px}
+.bg{background:rgba(39, 174, 96, 0.15);color:#27AE60;border:1px solid rgba(39, 174, 96, 0.3)}
+.by{background:rgba(245, 158, 11, 0.15);color:#f59e0b;border:1px solid rgba(245, 158, 11, 0.3)}
+.br{background:rgba(239, 68, 68, 0.15);color:#ef4444;border:1px solid rgba(239, 68, 68, 0.3)}
+.bb{background:rgba(37, 99, 235, 0.15);color:#2563EB;border:1px solid rgba(37, 99, 235, 0.3)}
+.acts{display:flex;gap:6px}
+.btn-e,.btn-d{padding:7px 14px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1)}
+.btn-e{background:rgba(37, 99, 235, 0.15);color:#2563EB;border:1px solid rgba(37, 99, 235, 0.3)}
+.btn-e:hover{background:rgba(37, 99, 235, 0.25);transform:translateY(-1px)}
+.btn-d{background:rgba(239, 68, 68, 0.15);color:#ef4444;border:1px solid rgba(239, 68, 68, 0.3)}
+.btn-d:hover{background:rgba(239, 68, 68, 0.25);transform:translateY(-1px)}
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty .ei{font-size:42px;margin-bottom:12px}
 /* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:20px 14px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .22s;-webkit-overflow-scrolling:touch}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .22s cubic-bezier(0.4, 0, 0.2, 1);-webkit-overflow-scrolling:touch}
 .overlay.open{opacity:1;pointer-events:all}
-.modal{background:var(--surface);border-radius:18px;width:100%;max-width:520px;margin:auto;transform:translateY(16px);transition:transform .22s;box-shadow:0 24px 64px rgba(0,0,0,.2),0 2px 12px rgba(0,0,0,.06);flex-shrink:0}
+.modal{background:rgba(24, 24, 27, 0.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:24px;width:100%;max-width:540px;margin:auto;transform:translateY(16px);transition:transform .22s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 30px 70px -15px rgba(0,0,0,0.8);border:1px solid rgba(255, 255, 255, 0.15);flex-shrink:0;color:var(--text)}
 .overlay.open .modal{transform:translateY(0)}
-.mh{padding:22px 24px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.mt{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text)}
-.mc{width:32px;height:32px;border-radius:9px;border:none;background:var(--surface2);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s}
-.mc:hover{background:var(--border);color:var(--text)}
-.mb{padding:20px 24px 24px}
-.fr{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.fg{margin-bottom:15px}
-.fg label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px}
-.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:13px;color:var(--text);background:var(--input-bg);transition:border-color .18s,box-shadow .18s}
-.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--primary);background:var(--input-focus-bg);box-shadow:0 0 0 3px rgba(26,58,40,.07)}
-.fg textarea{resize:vertical;min-height:70px}
-.mf{display:flex;gap:9px;justify-content:flex-end;padding:6px 24px 20px}
-.btn-c{padding:10px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s}
-.btn-c:hover{background:var(--border);color:var(--text)}
+.mh{padding:24px 28px 16px;border-bottom:1px solid rgba(255, 255, 255, 0.1);display:flex;align-items:center;justify-content:space-between}
+.mt{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--text)}
+.mc{width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .2s}
+.mc:hover{background:rgba(255,255,255,0.12);color:var(--text)}
+.mb{padding:22px 28px 26px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;border:1.5px solid rgba(255, 255, 255, 0.12);border-radius:12px;font-family:inherit;font-size:13.5px;color:var(--text);background:rgba(9, 9, 11, 0.6);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1)}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--primary);background:rgba(24, 24, 27, 0.95);box-shadow:0 0 0 3px rgba(39, 174, 96, 0.2)}
+.fg textarea{resize:vertical;min-height:75px}
+.mf{display:flex;gap:10px;justify-content:flex-end;padding:8px 28px 24px}
+.btn-c{padding:11px 20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .2s}
+.btn-c:hover{background:rgba(255,255,255,0.12);color:var(--text)}
+/* FINANCE PERIOD BUTTONS */
+.fin-period{background:rgba(255, 255, 255, 0.05) !important;color:var(--muted) !important;border:1px solid rgba(255, 255, 255, 0.1) !important;border-radius:10px !important;padding:7px 14px !important;font-size:12.5px !important;font-weight:600 !important;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1) !important}
+.fin-period:hover{background:rgba(255, 255, 255, 0.12) !important;color:var(--text) !important}
+.fin-period.active{background:linear-gradient(135deg, #27AE60 0%, #219653 100%) !important;color:#ffffff !important;border-color:transparent !important;font-weight:700 !important;box-shadow:0 4px 14px -2px rgba(39, 174, 96, 0.4) !important}
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transform:translateY(10px);transition:all .28s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.18)}
 .toast.show{opacity:1;transform:translateY(0)}
@@ -448,31 +458,186 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 .inv-usage-stat{background:var(--surface);border-radius:8px;padding:10px 12px;text-align:center}
 .inv-usage-stat-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .inv-usage-stat-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--primary);margin-top:2px}
-@media(max-width:768px){
-  .sidebar{transform:translateX(-100%)}
-  .sidebar.open{transform:translateX(0)}
-  .sb-overlay.open{display:block}
-  .main{margin-left:0;padding:60px 14px 20px}
-  .menu-btn{display:block}
-  .sb-logo h1{font-size:13px}
-  .fr{grid-template-columns:1fr}
-  .ph{flex-direction:column;align-items:flex-start}
-  #sec-profile [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
+/* ── RESPONSIVE GRID AUDIT & LAYOUT HARDENING ── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+  width: 100%;
 }
 
-/* ── SLICERS ── */
-.slicer-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:18px;box-shadow:var(--shadow)}
-.slicer-bar-inner{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
-.slicer-group{display:flex;flex-direction:column;gap:4px;min-width:130px}
-.slicer-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
-.slicer-select,.slicer-input{padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;color:var(--text);background:var(--input-bg);cursor:pointer}
-.slicer-select:focus,.slicer-input:focus{outline:none;border-color:var(--primary);background:var(--input-focus-bg)}
-.slicer-chip-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.slicer-chip{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s;white-space:nowrap}
-.slicer-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-.slicer-chip:hover:not(.active){background:var(--accent-light);border-color:var(--accent);color:var(--text)}
-.slicer-reset{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--danger);background:var(--danger-light);color:var(--danger);font-family:inherit}
-.slicer-reset:hover{background:var(--danger);color:#fff}
+.stat {
+  display: block;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.ov-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.ov-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+@media(max-width:1024px){
+  .stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+  .ov-grid-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+  .ov-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+/* P0 Mobile Fix: <= 768px (covering all mobile DPR/resolutions) = 1 Column 100% Full Width Stacking */
+@media(max-width:768px){
+  .stats {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-bottom: 20px !important;
+    width: 100% !important;
+  }
+  .stat {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    flex-basis: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    padding: 16px 18px !important;
+  }
+  .ov-grid, .ov-grid-3 {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    margin-bottom: 20px !important;
+    width: 100% !important;
+  }
+  .stat, .ov-card, .tcard, .report-card, .ws-report-card, .card {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .stat-v {
+    font-size: 24px !important;
+  }
+  .ov-rev-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  .ov-rev-card {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    flex-basis: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .ov-quick {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  .ov-quick-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .sidebar{width:285px;max-width:85vw;transform:translateX(-100%);z-index:1000;-webkit-overflow-scrolling:touch}
+  .sidebar.open{transform:translateX(0)}
+  .sb-overlay{z-index:999}
+  .sb-overlay.open{display:block}
+  .main{margin-left:0;padding:64px 12px 24px;width:100%;box-sizing:border-box}
+  .menu-btn{display:block;z-index:1001}
+  .sb-logo h1{font-size:14px}
+  .sb-nav #g-portals, .sb-nav #g-analytics, .sb-nav #g-ops, .sb-nav #g-setup{display:block !important}
+  .sb-nav .nav-lbl{color:var(--primary-light);font-size:10px}
+  .sb-nav .nav-lbl.collapsed .nav-arrow{transform:rotate(0deg)}
+  .fr{grid-template-columns:1fr !important}
+  .ph{flex-direction:column !important;align-items:flex-start !important;gap:8px !important;margin-bottom:16px !important;width:100% !important;box-sizing:border-box !important;max-width:100% !important}
+  .ph > div{width:100% !important;max-width:100% !important;flex:1 1 100% !important;min-width:0 !important;box-sizing:border-box !important}
+  .pt{font-size:20px !important;line-height:1.3 !important;white-space:normal !important;word-break:break-word !important;overflow-wrap:break-word !important;width:100% !important;box-sizing:border-box !important}
+  .ps{font-size:12px !important;line-height:1.4 !important;width:100%;box-sizing:border-box !important}
+  #overdue-leads-banner, #trial-countdown-banner, #leads-revenue-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #overdue-leads-banner > div, #trial-countdown-banner > div, #leads-revenue-banner > div {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  #overdue-leads-banner button, #trial-countdown-banner a, #leads-revenue-banner button {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+  .twrap{overflow-x:auto !important;-webkit-overflow-scrolling:touch !important;max-width:100% !important;border-radius:12px}
+  .twrap table{width:100% !important}
+  .slicer-bar-inner{flex-direction:column;align-items:stretch}
+  .slicer-group{min-width:100% !important;width:100% !important}
+  #sec-profile [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
+  [style*="grid-template-columns"],
+  [style*="grid-template-columns:1fr 1fr"],
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="grid-template-columns:repeat"],
+  [style*="grid-template-columns: repeat"] {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+}
+
+/* ── SLICERS & REPORTS ── */
+.slicer-bar{background:rgba(24, 24, 27, 0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.12);border-radius:20px;padding:18px 22px;margin-bottom:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5)}
+.slicer-bar-inner{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.slicer-group{display:flex;flex-direction:column;gap:6px;min-width:130px}
+.slicer-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-family:'Space Grotesk',sans-serif}
+.slicer-select,.slicer-input,input[type="date"]{color-scheme:dark;padding:10px 14px;border:1.5px solid rgba(255, 255, 255, 0.12);border-radius:12px;font-family:inherit;font-size:13.5px;color:var(--text);background:rgba(9, 9, 11, 0.65);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);cursor:pointer}
+.slicer-select:focus,.slicer-input:focus,input[type="date"]:focus{outline:none;border-color:var(--primary);background:rgba(24, 24, 27, 0.95);box-shadow:0 0 0 3px rgba(39, 174, 96, 0.25)}
+.slicer-chip-row{display:flex;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:8px;align-items:center;padding-bottom:4px;max-width:100%}
+.slicer-chip{padding:7px 14px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid rgba(255, 255, 255, 0.1);background:rgba(255, 255, 255, 0.05);color:var(--muted);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);white-space:nowrap;user-select:none;-webkit-tap-highlight-color:transparent}
+.slicer-chip.active{background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border-color:transparent;font-weight:700;box-shadow:0 4px 14px -2px rgba(39, 174, 96, 0.4)}
+@media (hover: hover) {
+  .slicer-chip:hover:not(.active){background:rgba(255, 255, 255, 0.12);color:var(--text);transform:translateY(-1px)}
+  .slicer-reset:hover{background:rgba(239, 68, 68, 0.25);transform:translateY(-1px);box-shadow:0 4px 12px rgba(239, 68, 68, 0.2)}
+  .report-card:hover,.ws-report-card:hover{transform:translateY(-3px);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65), 0 0 15px rgba(39, 174, 96, 0.15);border-color:rgba(39, 174, 96, 0.35)}
+  #sec-export .tcard:hover{transform:translateY(-3px);border-color:rgba(39, 174, 96, 0.4);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65), 0 0 20px rgba(39, 174, 96, 0.15)}
+}
+.slicer-chip:active:not(.active){background:rgba(255, 255, 255, 0.18);transform:scale(0.98)}
+.slicer-reset{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(239, 68, 68, 0.3);background:rgba(239, 68, 68, 0.15);color:#ef4444;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);user-select:none;-webkit-tap-highlight-color:transparent}
+.slicer-reset:active{background:rgba(239, 68, 68, 0.35);transform:scale(0.98)}
+.report-card,.ws-report-card{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:16px;padding:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
+.report-card:active,.ws-report-card:active,#sec-export .tcard:active{transform:scale(0.99)}
+#sec-export .tcard{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
+#sec-export .tcard:hover{transform:translateY(-3px);border-color:rgba(39, 174, 96, 0.4);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65), 0 0 20px rgba(39, 174, 96, 0.15)}
+#sec-export .tcard[style*="dashed"]{background:linear-gradient(135deg, rgba(39, 174, 96, 0.08) 0%, rgba(24, 24, 27, 0.85) 100%);border:2px dashed rgba(39, 174, 96, 0.5) !important}
+:focus-visible{outline:none !important;border-color:#27AE60 !important;box-shadow:0 0 0 3px rgba(39, 174, 96, 0.3) !important}
 /* ── BODY COMPOSITION ── */
 .body-profile{background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:var(--radius);padding:18px 22px;color:#fff}
 .body-profile-name{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px}
@@ -623,7 +788,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 .btp-subtab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .btp-subtab:hover:not(.active){border-color:var(--primary);color:var(--primary)}
 /* Tracker table */
-.tracker-wrap{overflow-x:auto}
+.tracker-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tracker-tbl{width:100%;border-collapse:collapse;min-width:700px}
 .tracker-tbl th{background:var(--surface2);padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;white-space:nowrap;text-align:center}
 .tracker-tbl th:first-child{text-align:left}
@@ -732,47 +897,48 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
 .fhint-low{background:var(--low-bg);color:var(--low-text)}
 
 /* ── HEALTH SCORE GAUGE ── */
-.hs-card{background:linear-gradient(135deg,#0f2318 0%,#1a3a28 50%,#2d5a3d 100%);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;color:#fff;display:flex;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+.hs-card{background:linear-gradient(135deg, rgba(39, 174, 96, 0.14) 0%, rgba(24, 24, 27, 0.85) 60%, rgba(37, 99, 235, 0.1) 100%);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;padding:22px 24px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:22px;flex-wrap:wrap;box-shadow:0 12px 35px -10px rgba(0, 0, 0, 0.6);border:1px solid rgba(39, 174, 96, 0.35);transition:all .22s cubic-bezier(0.4, 0, 0.2, 1)}
+.hs-card:hover{border-color:rgba(39, 174, 96, 0.55);box-shadow:0 18px 42px -10px rgba(0, 0, 0, 0.75)}
 .hs-gauge{flex-shrink:0}
 .hs-info{flex:1;min-width:160px}
-.hs-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.55);margin-bottom:4px}
-.hs-score-big{font-size:32px;font-weight:700;color:#fff;line-height:1}
-.hs-grade-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:6px}
-.hs-breakdown{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
-.hs-metric{font-size:11px;color:rgba(255,255,255,.65)}
-.hs-metric span{color:#fff;font-weight:700}
-.hs-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.hs-info-panel{display:none;background:rgba(0,0,0,.25);border-radius:8px;padding:12px 14px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.85);line-height:1.7}
+.hs-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:6px}
+.hs-score-big{font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:#27AE60;line-height:1;letter-spacing:-0.5px}
+.hs-grade-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11.5px;font-weight:700;margin-top:8px;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.hs-breakdown{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
+.hs-metric{font-size:11.5px;color:rgba(255,255,255,.7)}
+.hs-metric span{color:#27AE60;font-weight:700;font-family:'Space Grotesk',sans-serif}
+.hs-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.hs-info-panel{display:none;background:rgba(9, 9, 11, 0.7);border-radius:12px;border:1px solid rgba(255,255,255,0.1);padding:14px 16px;margin-top:12px;font-size:12.5px;color:rgba(255,255,255,.9);line-height:1.7}
 .hs-info-panel table{width:100%;border-collapse:collapse}
-.hs-info-panel td{padding:3px 8px 3px 0;vertical-align:top;color:rgba(255,255,255,.85)}
-.hs-info-panel td:first-child{font-weight:700;color:#fff;white-space:nowrap}
-.hs-grade-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.hs-grade-pip{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.hs-info-panel td{padding:4px 10px 4px 0;vertical-align:top;color:rgba(255,255,255,.9)}
+.hs-info-panel td:first-child{font-weight:700;color:#27AE60;white-space:nowrap}
+.hs-grade-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.hs-grade-pip{padding:3px 10px;border-radius:12px;font-size:10.5px;font-weight:700}
 
 /* ── DIET PLAN ── */
-.diet-header{background:linear-gradient(135deg,#052e16,#14532d,#166534);border-radius:var(--radius);padding:20px 22px;margin-bottom:16px;color:#fff}
-.diet-header h2{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px}
-.diet-header p{font-size:12px;opacity:.7}
-.diet-macros{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.diet-macro{background:rgba(255,255,255,.12);border-radius:10px;padding:8px 14px;text-align:center;flex:1;min-width:70px}
-.diet-macro-val{font-size:18px;font-weight:700}
-.diet-macro-lbl{font-size:10px;opacity:.7;margin-top:2px}
-.meal-slot{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
-.meal-slot-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.meal-slot-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.meal-slot-title{font-weight:700;font-size:14px}
-.meal-slot-cal{font-size:11px;color:var(--muted);margin-top:1px}
-.meal-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--surface2)}
+.diet-header{background:linear-gradient(135deg,rgba(39, 174, 96, 0.2) 0%,rgba(24, 24, 27, 0.9) 60%,rgba(37, 99, 235, 0.15) 100%);backdrop-filter:blur(16px);border-radius:20px;padding:22px 24px;margin-bottom:18px;color:#fff;border:1px solid rgba(39, 174, 96, 0.3)}
+.diet-header h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px}
+.diet-header p{font-size:13px;color:var(--muted)}
+.diet-macros{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+.diet-macro{background:rgba(255,255,255,.08);border-radius:12px;padding:10px 16px;text-align:center;flex:1;min-width:75px;border:1px solid rgba(255,255,255,0.08)}
+.diet-macro-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#27AE60}
+.diet-macro-lbl{font-size:10.5px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+.meal-slot{background:rgba(24, 24, 27, 0.75);border:1px solid rgba(255, 255, 255, 0.1);border-radius:16px;padding:18px 20px;margin-bottom:14px;box-shadow:0 8px 25px -10px rgba(0, 0, 0, 0.4)}
+.meal-slot-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.meal-slot-icon{width:38px;height:38px;border-radius:12px;background:rgba(39, 174, 96, 0.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.meal-slot-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--text)}
+.meal-slot-cal{font-size:11.5px;color:var(--muted);margin-top:2px}
+.meal-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255, 255, 255, 0.06)}
 .meal-item:last-child{border-bottom:none}
-.meal-item-name{font-size:13px;font-weight:600}
-.meal-item-detail{font-size:11px;color:var(--muted);margin-top:2px}
-.meal-item-badge{background:var(--surface2);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--primary);white-space:nowrap}
+.meal-item-name{font-size:13.5px;font-weight:600;color:var(--text)}
+.meal-item-detail{font-size:11.5px;color:var(--muted);margin-top:2px}
+.meal-item-badge{background:rgba(39, 174, 96, 0.15);border:1px solid rgba(39, 174, 96, 0.3);border-radius:10px;padding:4px 12px;font-size:11.5px;font-weight:700;color:#27AE60;white-space:nowrap}
 
 /* ── MODAL LIVE SCORE ── */
-.modal-hs-bar{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.modal-hs-bar{background:rgba(9, 9, 11, 0.75);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px}
 .modal-hs-ring{flex-shrink:0}
-.modal-hs-label{font-size:12px;color:var(--muted);font-weight:600}
-.modal-hs-val{font-size:20px;font-weight:700;color:var(--primary)}
+.modal-hs-label{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.6px}
+.modal-hs-val{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#27AE60}
 
 /* ── SIDEBAR GREETING ── */
 .sb-greeting{padding:12px 18px 2px;font-size:10.5px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;letter-spacing:.7px}
@@ -1005,57 +1171,183 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
+<script>
+window.onerror = function(msg, url, line) {
+  console.error('Global emergency error handler caught:', msg, 'at', url, 'line', line);
+  var al = document.getElementById('app-loading');
+  var ls = document.getElementById('login-screen');
+  if (al && getComputedStyle(al).display !== 'none') {
+    al.style.display = 'none';
+    if (ls) ls.style.display = 'flex';
+  }
+};
+window.onunhandledrejection = function(e) {
+  console.error('Unhandled Promise Rejection:', e.reason);
+  var al = document.getElementById('app-loading');
+  var ls = document.getElementById('login-screen');
+  if (al && getComputedStyle(al).display !== 'none') {
+    al.style.display = 'none';
+    if (ls) ls.style.display = 'flex';
+  }
+};
+</script>
 <script defer src="auth.min.js?v=1.4.7"></script>
+<script defer src="shared/constants.js"></script>
+<script defer src="shared/date-utils.js"></script>
+<script defer src="shared/formatting.js"></script>
+<script defer src="shared/index.js"></script>
+<script defer src="security/role-engine.js"></script>
+<script defer src="security/permission-engine.js"></script>
+<script defer src="security/audit-helper.js"></script>
+<script defer src="security/session-manager.js"></script>
+<script defer src="security/auth-service.js"></script>
+<script defer src="security/index.js"></script>
+<script defer src="organisation/organisation-engine.js"></script>
+<script defer src="organisation/location-engine.js"></script>
+<script defer src="organisation/context-manager.js"></script>
+<script defer src="organisation/organisation-renderer.js"></script>
+<script defer src="organisation/index.js"></script>
+<script defer src="communication/template-engine.js"></script>
+<script defer src="communication/channel-manager.js"></script>
+<script defer src="communication/preference-manager.js"></script>
+<script defer src="communication/delivery-queue.js"></script>
+<script defer src="communication/notification-engine.js"></script>
+<script defer src="communication/communication-renderer.js"></script>
+<script defer src="communication/index.js"></script>
+<script defer src="reporting/report-engine.js"></script>
+<script defer src="reporting/template-engine.js"></script>
+<script defer src="reporting/export-engine.js"></script>
+<script defer src="reporting/scheduler.js"></script>
+<script defer src="reporting/report-renderer.js"></script>
+<script defer src="reporting/index.js"></script>
+<script defer src="monitoring/audit-engine.js"></script>
+<script defer src="monitoring/event-log.js"></script>
+<script defer src="monitoring/metrics-engine.js"></script>
+<script defer src="monitoring/health-monitor.js"></script>
+<script defer src="monitoring/diagnostics-engine.js"></script>
+<script defer src="monitoring/monitoring-renderer.js"></script>
+<script defer src="monitoring/index.js"></script>
+<script defer src="performance/cache-manager.js"></script>
+<script defer src="performance/lazy-loader.js"></script>
+<script defer src="performance/worker-manager.js"></script>
+<script defer src="performance/benchmark-engine.js"></script>
+<script defer src="performance/optimisation-engine.js"></script>
+<script defer src="performance/performance-renderer.js"></script>
+<script defer src="performance/index.js"></script>
+<script defer src="saas/plan-engine.js"></script>
+<script defer src="saas/tenant-engine.js"></script>
+<script defer src="saas/subscription-engine.js"></script>
+<script defer src="saas/billing-engine.js"></script>
+<script defer src="saas/usage-engine.js"></script>
+<script defer src="saas/licensing-engine.js"></script>
+<script defer src="saas/saas-renderer.js"></script>
+<script defer src="saas/index.js"></script>
+<script defer src="bi/metrics-engine.js"></script>
+<script defer src="bi/insight-engine.js"></script>
+<script defer src="bi/recommendation-engine.js"></script>
+<script defer src="bi/nlg-engine.js"></script>
+<script defer src="bi/index.js"></script>
+<script defer src="action-center/priority-engine.js"></script>
+<script defer src="action-center/action-engine.js"></script>
+<script defer src="action-center/task-renderer.js"></script>
+<script defer src="action-center/index.js"></script>
+<script defer src="customer-risk/scoring-engine.js"></script>
+<script defer src="customer-risk/risk-engine.js"></script>
+<script defer src="customer-risk/risk-renderer.js"></script>
+<script defer src="customer-risk/index.js"></script>
+<script defer src="coach-analytics/metrics-engine.js"></script>
+<script defer src="coach-analytics/scoring-engine.js"></script>
+<script defer src="coach-analytics/analytics-renderer.js"></script>
+<script defer src="coach-analytics/index.js"></script>
+<script defer src="customer-followup/template-engine.js"></script>
+<script defer src="customer-followup/followup-engine.js"></script>
+<script defer src="customer-followup/queue-renderer.js"></script>
+<script defer src="customer-followup/index.js"></script>
+<script defer src="goal-tracking/target-engine.js"></script>
+<script defer src="goal-tracking/progress-engine.js"></script>
+<script defer src="goal-tracking/dashboard-renderer.js"></script>
+<script defer src="goal-tracking/index.js"></script>
+<script defer src="forecasting/confidence-engine.js"></script>
+<script defer src="forecasting/trend-engine.js"></script>
+<script defer src="forecasting/forecast-engine.js"></script>
+<script defer src="forecasting/dashboard-renderer.js"></script>
+<script defer src="forecasting/index.js"></script>
+<script defer src="executive-dashboard/overview-engine.js"></script>
+<script defer src="executive-dashboard/widget-engine.js"></script>
+<script defer src="executive-dashboard/dashboard-renderer.js"></script>
+<script defer src="executive-dashboard/index.js"></script>
+<script defer src="payments/gateway-adapter.js"></script>
+<script defer src="payments/payment-engine.js"></script>
+<script defer src="payments/invoice-engine.js"></script>
+<script defer src="payments/refund-engine.js"></script>
+<script defer src="payments/reconciliation-engine.js"></script>
+<script defer src="payments/payment-renderer.js"></script>
+<script defer src="payments/index.js"></script>
+<script defer src="resilience/backup-engine.js"></script>
+<script defer src="resilience/restore-engine.js"></script>
+<script defer src="resilience/snapshot-engine.js"></script>
+<script defer src="resilience/recovery-engine.js"></script>
+<script defer src="resilience/continuity-engine.js"></script>
+<script defer src="resilience/resilience-renderer.js"></script>
+<script defer src="resilience/index.js"></script>
+<script defer src="release/validation-engine.js"></script>
+<script defer src="release/regression-engine.js"></script>
+<script defer src="release/security-review.js"></script>
+<script defer src="release/compatibility-engine.js"></script>
+<script defer src="release/release-checklist.js"></script>
+<script defer src="release/documentation-engine.js"></script>
+<script defer src="release/release-renderer.js"></script>
+<script defer src="release/index.js"></script>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
 
 <!-- ── LOGIN SCREEN ── -->
-<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#090d16 0%,#0f172a 60%,#1e293b 100%);align-items:center;justify-content:center;padding:24px;font-family:'DM Sans',sans-serif">
-  <div style="background:var(--surface);border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4);border:1px solid var(--border);color:var(--text)">
+<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;background:#09090b;background:radial-gradient(circle at 50% 25%, rgba(39, 174, 96, 0.08) 0%, rgba(9, 9, 11, 0.98) 75%);align-items:center;justify-content:center;padding:24px;font-family:'Plus Jakarta Sans', sans-serif">
+  <div style="background:rgba(24, 24, 27, 0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:24px;padding:44px 38px;width:100%;max-width:410px;box-shadow:0 30px 60px -12px rgba(0,0,0,0.7);border:1px solid rgba(255, 255, 255, 0.12);color:var(--text)">
     <div style="text-align:center;margin-bottom:32px">
-      <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#00e676,#38bdf8);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px">🌿</div>
-      <div style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--primary-mid);line-height:1.2">PulseZen</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Supervisor Dashboard</div>
+      <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#27AE60 0%,#2563EB 100%);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 10px 25px -5px rgba(39, 174, 96, 0.4)">🌿</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:var(--text);letter-spacing:-0.5px;line-height:1.2">PulseZen</div>
+      <div style="font-size:11px;color:var(--primary);margin-top:6px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700">Supervisor Operating System</div>
     </div>
     <!-- Step 1: Email -->
     <div id="login-email-state">
-      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">Sign in to your dashboard</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">We'll send a 6-digit code to your email. No password needed.</div>
-      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:6px">Email Address</label>
-      <input type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendOtpCode()" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:12px;outline:none;transition:border .2s;background:var(--input-bg);color:var(--text)" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
-      <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer;user-select:none">
-        <input type="checkbox" id="remember-device" checked style="width:16px;height:16px;accent-color:#1a3a28;cursor:pointer">
+      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">Sign in to your dashboard</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6">We'll send a 6-digit verification code to your email.</div>
+      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:block;margin-bottom:8px">Email Address</label>
+      <input type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendOtpCode()" style="width:100%;padding:14px 16px;border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;font-size:14px;font-family:inherit;margin-bottom:14px;outline:none;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);background:rgba(9, 9, 11, 0.6);color:var(--text)" onfocus="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(39, 174, 96, 0.2)'" onblur="this.style.borderColor='rgba(255,255,255,0.12)';this.style.boxShadow='none'">
+      <label style="display:flex;align-items:center;gap:10px;margin-bottom:18px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="remember-device" checked style="width:17px;height:17px;accent-color:#27AE60;cursor:pointer;border-radius:4px">
         <span style="font-size:13px;color:var(--text);font-weight:500">Remember this device</span>
       </label>
-      <button id="login-btn" onclick="sendOtpCode()" style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s" onmouseover="this.style.background='var(--primary-mid)'" onmouseout="this.style.background='var(--primary)'">Send Code →</button>
-      <div id="login-error" style="display:none;margin-top:10px;padding:10px 14px;background:#fef2f2;border-radius:8px;font-size:13px;color:#dc2626;border-left:3px solid #dc2626"></div>
+      <button id="login-btn" onclick="sendOtpCode()" style="width:100%;padding:15px;background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.4)">Send Code →</button>
+      <div id="login-error" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.12);border-radius:10px;font-size:13px;color:#ef4444;border-left:3.5px solid #ef4444;font-weight:500"></div>
     </div>
     <!-- Step 2: Code input -->
     <div id="login-code-state" style="display:none">
-      <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:36px;margin-bottom:10px">📩</div>
-        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Check your email</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6">We sent a 6-digit code to<br><strong id="login-sent-to" style="color:var(--primary-mid)"></strong></div>
+      <div style="text-align:center;margin-bottom:22px">
+        <div style="font-size:38px;margin-bottom:10px">📩</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">Check your inbox</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6">We sent a 6-digit verification code to<br><strong id="login-sent-to" style="color:var(--primary);font-weight:700"></strong></div>
       </div>
-      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:6px">6-Digit Code</label>
-      <input type="text" id="login-otp" placeholder="······" maxlength="8" inputmode="numeric" onkeydown="if(event.key==='Enter')verifyOtpCode()" style="width:100%;padding:14px;border:1.5px solid var(--border);border-radius:10px;font-size:22px;font-family:inherit;margin-bottom:12px;outline:none;text-align:center;letter-spacing:8px;transition:border .2s;background:var(--input-bg);color:var(--text)" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
-      <button id="verify-btn" onclick="verifyOtpCode()" style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s" onmouseover="this.style.background='var(--primary-mid)'" onmouseout="this.style.background='var(--primary)'">Verify & Sign In →</button>
-      <div id="login-code-error" style="display:none;margin-top:10px;padding:10px 14px;background:#fef2f2;border-radius:8px;font-size:13px;color:#dc2626;border-left:3px solid #dc2626"></div>
-      <button onclick="document.getElementById('login-code-state').style.display='none';document.getElementById('login-email-state').style.display='block';document.getElementById('login-btn').textContent='Send Code →';document.getElementById('login-btn').disabled=false" style="width:100%;margin-top:10px;background:none;border:1.5px solid var(--border);border-radius:8px;padding:8px 16px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Change email</button>
+      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:block;margin-bottom:8px">6-Digit Code</label>
+      <input type="text" id="login-otp" placeholder="······" maxlength="8" inputmode="numeric" onkeydown="if(event.key==='Enter')verifyOtpCode()" style="width:100%;padding:14px;border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;font-size:24px;font-family:inherit;margin-bottom:14px;outline:none;text-align:center;letter-spacing:10px;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);background:rgba(9, 9, 11, 0.6);color:var(--text);font-weight:700" onfocus="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(39, 174, 96, 0.2)'" onblur="this.style.borderColor='rgba(255,255,255,0.12)';this.style.boxShadow='none'">
+      <button id="verify-btn" onclick="verifyOtpCode()" style="width:100%;padding:15px;background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.4)">Verify & Sign In →</button>
+      <div id="login-code-error" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.12);border-radius:10px;font-size:13px;color:#ef4444;border-left:3.5px solid #ef4444;font-weight:500"></div>
+      <button onclick="document.getElementById('login-code-state').style.display='none';document.getElementById('login-email-state').style.display='block';document.getElementById('login-btn').textContent='Send Code →';document.getElementById('login-btn').disabled=false" style="width:100%;margin-top:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 16px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s">← Change email</button>
     </div>
-    <div style="margin-top:28px;padding-top:18px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--muted)">Powered by PulseZen · Wellness Intelligence Platform</div>
+    <div style="margin-top:30px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);text-align:center;font-size:12px;color:var(--muted)">Powered by <strong style="color:var(--text)">PulseZen</strong> · Wellness Intelligence Platform</div>
   </div>
 </div>
 
 <!-- LOADING SPLASH -->
-<div id="app-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f7f3;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;gap:18px">
-  <div style="font-size:56px;animation:spin 1.5s linear infinite">🌿</div>
-  <div style="font-size:18px;font-weight:700;color:#1a3a28;font-family:'DM Serif Display',serif">PulseIQ</div>
-  <div style="font-size:13px;color:#3b5647" id="app-loading-msg">Loading your center data…</div>
+<div id="app-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#09090b;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;gap:20px;font-family:'Plus Jakarta Sans',sans-serif">
+  <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#27AE60 0%,#2563EB 100%);display:flex;align-items:center;justify-content:center;font-size:32px;animation:pulseSpin 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;box-shadow:0 0 30px rgba(39, 174, 96, 0.4)">🌿</div>
+  <div style="font-size:22px;font-weight:700;color:#fafafa;font-family:'Space Grotesk',sans-serif;letter-spacing:-0.5px">PulseIQ</div>
+  <div style="font-size:13px;color:#a1a1aa;font-weight:500" id="app-loading-msg">Loading your center data…</div>
 </div>
-<style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+<style>@keyframes pulseSpin{0%{transform:rotate(0deg) scale(1)}50%{transform:rotate(180deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}</style>
 
 <!-- DASHBOARD TEMPLATE -->
 <template id="dashboard-template">
@@ -1109,9 +1401,8 @@ input:focus, select:focus, textarea:focus {
 
 
 
-<!-- APP -->
 <div id="app" style="display: none;">
-  <nav class="sidebar" id="sidebar">
+<nav class="sidebar" id="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-inner">
         <div class="sb-logo-icon">🌿</div>
@@ -1129,6 +1420,7 @@ input:focus, select:focus, textarea:focus {
       <div class="nav-lbl" onclick="toggleNavGroup('g-mgmt')"><span data-t="nav_management">Management</span><span class="nav-arrow">▾</span></div>
       <div id="g-mgmt">
         <button class="nav-item active" onclick="goTo(&#39;overview&#39;,this)"><span class="ic">🏠</span><span data-t="nav_overview">Overview</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('executivedashboard',this)" style="border:1.5px solid #38bdf8;color:#38bdf8;margin-bottom:4px"><span class="ic">👑</span><span>Executive Command</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo(&#39;centers&#39;,this)"><span class="ic">🏢</span><span data-t="nav_centers">Wellness Centers</span></button>
         <button class="nav-item" onclick="goTo(&#39;coaches&#39;,this)"><span class="ic">👨‍🏫</span><span data-t="nav_coaches">Coaches</span></button>
         <button id="nav-customers" class="nav-item" onclick="goTo(&#39;customers&#39;,this)"><span class="ic">👤</span><span data-t="nav_customers">Customers</span></button>
@@ -1149,10 +1441,16 @@ input:focus, select:focus, textarea:focus {
       <div id="g-analytics" style="display:none">
         <button class="nav-item" onclick="goTo('analytics',this)"><span class="ic">📈</span><span data-t="nav_analytics">Analytics</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span><span data-t="nav_bizanalyst">Biz Analyst</span></button>
+        <button class="nav-item" onclick="goTo('customerrisk',this)" style="border:1.5px solid #ef4444;color:#ef4444;margin-bottom:4px"><span class="ic">🎯</span><span>Customer Risk</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('coachanalytics',this)" style="border:1.5px solid #38bdf8;color:#38bdf8;margin-bottom:4px"><span class="ic">📊</span><span>Coach Analytics</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('forecasting',this)" style="border:1.5px solid #a78bfa;color:#a78bfa;margin-bottom:4px"><span class="ic">📈</span><span>Forecasting</span></button>
         <button class="nav-item" onclick="goTo('notifications',this)"><span class="ic">🔔</span><span data-t="nav_notifications">Notifications</span></button>
       </div>
       <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
       <div id="g-ops" style="display:none">
+        <button class="nav-item" onclick="goTo('actioncenter',this)" style="border:1.5px solid #27AE60;color:#27AE60;margin-bottom:4px"><span class="ic">⚡</span><span>Action Centre</span></button>
+        <button class="nav-item" onclick="goTo('customerfollowup',this)" style="border:1.5px solid #25D366;color:#25D366;margin-bottom:4px"><span class="ic">📲</span><span>Follow-up Queue</span></button>
+        <button class="nav-item" onclick="goTo('goaltracking',this)" style="border:1.5px solid #f59e0b;color:#f59e0b;margin-bottom:4px"><span class="ic">🎯</span><span>Goal Tracking</span></button>
         <button class="nav-item" onclick="goTo('foods',this)"><span class="ic">🥗</span><span>Food Database</span></button>
         <button class="nav-item" onclick="goTo('coupons',this)"><span class="ic">🎟️</span><span data-t="nav_coupons">Coupons</span></button>
         <button class="nav-item" onclick="goTo('payments',this)"><span class="ic">💳</span><span data-t="nav_payments">Payments</span></button>
@@ -1358,7 +1656,7 @@ input:focus, select:focus, textarea:focus {
         <div class="tcard">
           <div class="ttoolbar" style="flex-wrap:wrap;gap:9px">
             <input class="search" id="inventory-search" placeholder="🔍 Search products..." oninput="renderCurrentStock()" style="flex:2;min-width:160px">
-            <select id="inventory-cat-filter" onchange="renderCurrentStock()" style="padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:#fff">
+            <select id="inventory-cat-filter" onchange="renderCurrentStock()" style="padding:11px 14px;border:1.5px solid rgba(255, 255, 255, 0.12);border-radius:12px;font-family:inherit;font-size:13.5px;color:var(--text);background:rgba(9, 9, 11, 0.6);transition:all .2s">
               <option value="">All Categories</option>
               <option>Shake Products</option>
               <option>Children's Health</option>
@@ -1708,7 +2006,7 @@ input:focus, select:focus, textarea:focus {
           </div>
           <button class="btn-p" onclick="downloadMonthlyAttendanceCSV()" style="font-size:12px;padding:6px 14px;background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer">📥 Download CSV</button>
         </div>
-        <div class="att-grid"><table id="att-grid-table"></table></div>
+        <div class="att-grid" style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table id="att-grid-table"></table></div>
       </div>
 
       <!-- Coach Attendance View -->
@@ -1963,13 +2261,31 @@ input:focus, select:focus, textarea:focus {
       <!-- Monthly P&L chart -->
       <div class="tcard" style="padding:16px;margin-bottom:12px">
         <div style="font-weight:700;font-size:13px;margin-bottom:12px">📊 Monthly P&amp;L Trend</div>
-        <canvas id="chart-pl" height="120"></canvas>
+        <div style="position:relative;height:220px;width:100%"><canvas id="chart-pl"></canvas></div>
       </div>
       <!-- Monthly P&L by Center -->
       <div class="tcard" id="fin-center-pl" style="padding:16px;margin-bottom:12px;display:none">
         <div style="font-weight:700;font-size:13px;margin-bottom:12px">🏢 Monthly P&L by Center</div>
         <div class="twrap"><div id="fin-center-pl-body"></div></div>
       </div>
+      
+      <!-- AI Finance Insights -->
+      <div class="tcard" style="padding:16px;margin-bottom:12px;background:linear-gradient(to right, rgba(16, 185, 129, 0.05), rgba(0, 0, 0, 0));border-left:3px solid var(--primary)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-weight:700;font-size:13px;color:var(--primary)">✨ AI Finance Insights</div>
+          <button class="btn-s" onclick="generateFinanceInsights()" style="font-size:11px;padding:4px 8px">Generate Insights</button>
+        </div>
+        <div id="fin-ai-summary" style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:12px">
+          <span style="color:var(--muted)">Click 'Generate Insights' to analyze your financial trends and flag anomalies.</span>
+        </div>
+        <div id="fin-ai-followup-container" style="display:none;border-top:1px solid var(--border);padding-top:12px">
+          <div style="display:flex;gap:8px">
+            <input type="text" id="fin-ai-question" class="search" style="flex:1;font-size:12px" placeholder="Ask a follow-up question (e.g., 'Why did expenses spike?')">
+            <button class="btn-p" onclick="askFinanceFollowup()" style="font-size:12px;padding:6px 12px">Ask</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Transactions table -->
       <div class="tcard">
         <div class="ttoolbar" style="justify-content:space-between"><input class="search" id="fin-search" placeholder="🔍 Search..." oninput="renderFinance()" style="flex:1"><button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportFinanceCSV()">⬇️ CSV</button></div>
@@ -2025,17 +2341,17 @@ input:focus, select:focus, textarea:focus {
             <div style="font-family:'DM Serif Display',serif;font-size:16px">💰 Revenue Trend</div>
             <select class="slicer-select" id="slicer-revenue-type" onchange="renderAnalytics()" style="width:auto;font-size:11px;padding:4px 8px"><option value="">Both</option><option value="income">Income</option><option value="expense">Expense</option></select>
           </div>
-          <canvas id="chart-revenue" height="160"></canvas>
+          <div style="position:relative;height:160px;width:100%"><canvas id="chart-revenue"></canvas></div>
           <div id="analytics-forecast" style="margin-top:14px"></div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px">📅 Peak Days</div><canvas id="chart-attendance" height="160"></canvas></div>
-        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px">🏃 Streak Distribution</div><canvas id="chart-streaks" height="160"></canvas></div>
+        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px">📅 Peak Days</div><div style="position:relative;height:160px;width:100%"><canvas id="chart-attendance"></canvas></div></div>
+        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:14px">🏃 Streak Distribution</div><div style="position:relative;height:160px;width:100%"><canvas id="chart-streaks"></canvas></div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
         <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:10px">⭐ Top Referrers</div><div id="analytics-referrers"></div></div>
-        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:10px">📦 Pack Distribution</div><canvas id="chart-packs" height="180"></canvas></div>
+        <div class="tcard" style="padding:20px"><div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:10px">📦 Pack Distribution</div><div style="position:relative;height:180px;width:100%"><canvas id="chart-packs"></canvas></div></div>
       </div>
       <!-- Pack Renewal Forecast -->
       <div class="tcard" style="padding:20px;margin-bottom:16px">
@@ -2108,7 +2424,7 @@ input:focus, select:focus, textarea:focus {
           <div style="font-family:'DM Serif Display',serif;font-size:16px">⚖️ Body Metric Trend</div>
           <select class="slicer-select" id="slicer-metric" onchange="renderAnalytics()" style="width:auto;font-size:11px;padding:4px 8px"><option value="weight">Weight kg</option><option value="fat">Fat %</option><option value="muscle">Muscle %</option><option value="bmi">BMI</option></select>
         </div>
-        <canvas id="chart-weightloss" height="120"></canvas>
+        <div style="position:relative;height:220px;width:100%"><canvas id="chart-weightloss"></canvas></div>
       </div>
       <!-- Center Comparison (supervisor only) -->
       <div id="analytics-center-comparison" style="display:none">
@@ -2116,8 +2432,8 @@ input:focus, select:focus, textarea:focus {
           <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px">🏢 Center Comparison</div>
           <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Revenue and attendance this month across all centers</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">💰 Revenue This Month (₹)</div><canvas id="chart-center-revenue" height="180"></canvas></div>
-            <div><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">📋 Attendance This Month</div><canvas id="chart-center-attendance" height="180"></canvas></div>
+            <div><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">💰 Revenue This Month (₹)</div><div style="position:relative;height:240px;width:100%"><canvas id="chart-center-revenue"></canvas></div></div>
+            <div><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">📋 Attendance This Month</div><div style="position:relative;height:240px;width:100%"><canvas id="chart-center-attendance"></canvas></div></div>
           </div>
           <div id="analytics-center-table" style="margin-top:16px"></div>
         </div>
@@ -2186,6 +2502,292 @@ input:focus, select:focus, textarea:focus {
         <div id="biz-leaderboard"></div>
       </div>
       <div id="biz-content"></div>
+    </div>
+    <!-- ACTION CENTRE -->
+    <div class="sec" id="sec-actioncenter">
+      <div class="ph">
+        <div>
+          <div class="pt">⚡ Action Centre</div>
+          <div class="ps">Operational command centre — automated task priority & daily execution</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_ActionCenter.refreshTasks()">🔄 Refresh Tasks</button>
+      </div>
+
+      <div id="action-center-stats" class="stats" style="margin-bottom:20px"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group">
+            <span class="slicer-label">🔴 Priority</span>
+            <div class="slicer-chip-row">
+              <span class="slicer-chip active" data-ac-filter="priority" data-val="" onclick="PulseIQ_ActionCenter.setFilter('priority','',this)">All</span>
+              <span class="slicer-chip" data-ac-filter="priority" data-val="HIGH" onclick="PulseIQ_ActionCenter.setFilter('priority','HIGH',this)">High 🔴</span>
+              <span class="slicer-chip" data-ac-filter="priority" data-val="MEDIUM" onclick="PulseIQ_ActionCenter.setFilter('priority','MEDIUM',this)">Medium 🟡</span>
+              <span class="slicer-chip" data-ac-filter="priority" data-val="LOW" onclick="PulseIQ_ActionCenter.setFilter('priority','LOW',this)">Low 🟢</span>
+            </div>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🏷️ Category</span>
+            <select class="slicer-select" id="ac-category-filter" onchange="PulseIQ_ActionCenter.setCategoryFilter(this.value)">
+              <option value="">All Categories</option>
+              <option value="Attendance">Attendance</option>
+              <option value="Membership">Membership</option>
+              <option value="Inventory">Inventory</option>
+              <option value="Finance">Finance</option>
+              <option value="BodyComposition">Body Composition</option>
+              <option value="Coach">Coach & Team</option>
+            </select>
+          </div>
+          <div class="slicer-group" style="flex:1;min-width:200px">
+            <span class="slicer-label">🔍 Search Tasks</span>
+            <input type="text" class="slicer-input" id="ac-search-input" placeholder="Search by customer, product, or title..." oninput="PulseIQ_ActionCenter.setSearchQuery(this.value)"/>
+          </div>
+          <button class="slicer-reset" onclick="PulseIQ_ActionCenter.resetFilters()">✕ Reset</button>
+        </div>
+      </div>
+
+      <!-- Task Cards Feed Container -->
+      <div id="action-center-feed"></div>
+    </div>
+    <!-- CUSTOMER RISK PREDICTION -->
+    <div class="sec" id="sec-customerrisk">
+      <div class="ph">
+        <div>
+          <div class="pt">🎯 Customer Risk Prediction</div>
+          <div class="ps">Deterministic churn risk scoring & retention directives</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_CustomerRisk.refreshDashboard()">🔄 Recalculate Risk</button>
+      </div>
+
+      <div id="risk-dashboard-stats" class="stats" style="margin-bottom:20px"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group">
+            <span class="slicer-label">🔴 Churn Risk Level</span>
+            <div class="slicer-chip-row">
+              <span class="slicer-chip active" data-risk-filter="level" data-val="" onclick="PulseIQ_CustomerRisk.setFilter('',this)">All</span>
+              <span class="slicer-chip" data-risk-filter="level" data-val="HIGH" onclick="PulseIQ_CustomerRisk.setFilter('HIGH',this)">High Risk 🔴</span>
+              <span class="slicer-chip" data-risk-filter="level" data-val="MEDIUM" onclick="PulseIQ_CustomerRisk.setFilter('MEDIUM',this)">Medium Risk 🟡</span>
+              <span class="slicer-chip" data-risk-filter="level" data-val="LOW" onclick="PulseIQ_CustomerRisk.setFilter('LOW',this)">Low Risk 🟢</span>
+            </div>
+          </div>
+          <div class="slicer-group" style="flex:1;min-width:180px">
+            <span class="slicer-label">🔍 Search Customer</span>
+            <input type="text" class="slicer-input" id="risk-search-input" placeholder="Search by name, phone, or coach..." oninput="PulseIQ_CustomerRisk.setSearchQuery(this.value)"/>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🔃 Sort By</span>
+            <select class="slicer-select" id="risk-sort-select" onchange="PulseIQ_CustomerRisk.setSortBy(this.value)">
+              <option value="score_desc">Highest Risk Score (0–100)</option>
+              <option value="score_asc">Lowest Risk Score</option>
+              <option value="absent_desc">Most Days Absent</option>
+              <option value="name">Customer Name</option>
+            </select>
+          </div>
+          <button class="slicer-reset" onclick="PulseIQ_CustomerRisk.resetFilters()">✕ Reset</button>
+        </div>
+      </div>
+
+      <!-- Customer Risk Feed Container -->
+      <div id="risk-profiles-feed"></div>
+    </div>
+    <!-- COACH PERFORMANCE ANALYTICS -->
+    <div class="sec" id="sec-coachanalytics">
+      <div class="ph">
+        <div>
+          <div class="pt">📊 Coach Performance Analytics</div>
+          <div class="ps">Deterministic coach effectiveness scoring & team rankings</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_CoachAnalytics.refreshDashboard()">🔄 Refresh Metrics</button>
+      </div>
+
+      <div id="coach-dashboard-stats" class="stats" style="margin-bottom:20px"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group" style="flex:1;min-width:200px">
+            <span class="slicer-label">🔍 Search Coach</span>
+            <input type="text" class="slicer-input" id="coach-search-input" placeholder="Search coach name or pin..." oninput="PulseIQ_CoachAnalytics.setSearchQuery(this.value)"/>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🔃 Sort Leaderboard</span>
+            <select class="slicer-select" id="coach-sort-select" onchange="PulseIQ_CoachAnalytics.setSortBy(this.value)">
+              <option value="score_desc">Highest Coach Score (0–100)</option>
+              <option value="revenue_desc">Highest Revenue Generated</option>
+              <option value="retention_desc">Highest Retention Rate %</option>
+              <option value="customers_desc">Most Active Members</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coach Performance Cards Feed -->
+      <div id="coach-cards-feed"></div>
+    </div>
+    <!-- AUTOMATED CUSTOMER FOLLOW-UPS -->
+    <div class="sec" id="sec-customerfollowup">
+      <div class="ph">
+        <div>
+          <div class="pt">📲 Customer Follow-up Queue</div>
+          <div class="ps">Structured engagement queue & deterministic message templates — Human Approval Required</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_CustomerFollowup.refreshQueue()">🔄 Refresh Queue</button>
+      </div>
+
+      <div id="followup-dashboard-stats" class="stats" style="margin-bottom:20px"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group">
+            <span class="slicer-label">📋 Approval Status</span>
+            <div class="slicer-chip-row">
+              <span class="slicer-chip active" data-fu-filter="approval" data-val="pending" onclick="PulseIQ_CustomerFollowup.setApprovalFilter('pending',this)">Pending ⏳</span>
+              <span class="slicer-chip" data-fu-filter="approval" data-val="approved" onclick="PulseIQ_CustomerFollowup.setApprovalFilter('approved',this)">Approved ✓</span>
+              <span class="slicer-chip" data-fu-filter="approval" data-val="dismissed" onclick="PulseIQ_CustomerFollowup.setApprovalFilter('dismissed',this)">Dismissed ✕</span>
+              <span class="slicer-chip" data-fu-filter="approval" data-val="all" onclick="PulseIQ_CustomerFollowup.setApprovalFilter('all',this)">All</span>
+            </div>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🔴 Priority</span>
+            <div class="slicer-chip-row">
+              <span class="slicer-chip active" data-fu-filter="priority" data-val="" onclick="PulseIQ_CustomerFollowup.setFilter('priority','',this)">All</span>
+              <span class="slicer-chip" data-fu-filter="priority" data-val="HIGH" onclick="PulseIQ_CustomerFollowup.setFilter('priority','HIGH',this)">High 🔴</span>
+              <span class="slicer-chip" data-fu-filter="priority" data-val="MEDIUM" onclick="PulseIQ_CustomerFollowup.setFilter('priority','MEDIUM',this)">Medium 🟡</span>
+              <span class="slicer-chip" data-fu-filter="priority" data-val="LOW" onclick="PulseIQ_CustomerFollowup.setFilter('priority','LOW',this)">Low 🟢</span>
+            </div>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🏷️ Category</span>
+            <select class="slicer-select" id="fu-category-filter" onchange="PulseIQ_CustomerFollowup.setCategoryFilter(this.value)">
+              <option value="">All Categories</option>
+              <option value="HighRisk">High Risk Churn</option>
+              <option value="Attendance">Missed Attendance</option>
+              <option value="Membership">Membership Expiry</option>
+              <option value="BodyScan">Body Scan Reminder</option>
+              <option value="Milestone">Progress Milestone</option>
+              <option value="Onboarding">New Member Onboarding</option>
+              <option value="Birthday">Birthday Greeting</option>
+            </select>
+          </div>
+          <div class="slicer-group" style="flex:1;min-width:180px">
+            <span class="slicer-label">🔍 Search Queue</span>
+            <input type="text" class="slicer-input" id="fu-search-input" placeholder="Search customer, phone, or text..." oninput="PulseIQ_CustomerFollowup.setSearchQuery(this.value)"/>
+          </div>
+          <button class="slicer-reset" onclick="PulseIQ_CustomerFollowup.resetFilters()">✕ Reset</button>
+        </div>
+      </div>
+
+      <!-- Follow-up Queue Cards Feed -->
+      <div id="followup-queue-feed"></div>
+    </div>
+    <!-- GOAL TRACKING & KPI TARGETS -->
+    <div class="sec" id="sec-goaltracking">
+      <div class="ph">
+        <div>
+          <div class="pt">🎯 Goal Tracking & Strategic KPI Targets</div>
+          <div class="ps">Strategic performance tracking — compare actual operational metrics vs business goals</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_GoalTracking.refreshDashboard()">🔄 Recalculate Goals</button>
+      </div>
+
+      <!-- Strategic Overview Header Box -->
+      <div id="goal-business-overview"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group">
+            <span class="slicer-label">🏷️ Filter Category</span>
+            <select class="slicer-select" id="goal-category-filter" onchange="PulseIQ_GoalTracking.setCategoryFilter(this.value)">
+              <option value="">All Categories</option>
+              <option value="Finance">Finance</option>
+              <option value="Customer">Customer & Renewals</option>
+              <option value="Operations">Operations & Attendance</option>
+              <option value="Growth">Growth & Onboarding</option>
+              <option value="Team">Team & Coach Performance</option>
+            </select>
+          </div>
+          <div class="slicer-group" style="flex:1;min-width:200px">
+            <span class="slicer-label">🔍 Search KPI</span>
+            <input type="text" class="slicer-input" id="goal-search-input" placeholder="Search by KPI name..." oninput="PulseIQ_GoalTracking.setSearchQuery(this.value)"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Target Cards Feed -->
+      <div id="goal-kpi-feed"></div>
+
+      <!-- Target Comparison Table -->
+      <div id="goal-comparison-table"></div>
+    </div>
+    <!-- FORECASTING & PREDICTIVE BUSINESS TRENDS -->
+    <div class="sec" id="sec-forecasting">
+      <div class="ph">
+        <div>
+          <div class="pt">📈 Forecasting & Predictive Business Trends</div>
+          <div class="ps">Short-term statistical projections & trend trajectories — Pure Deterministic Math</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_Forecasting.refreshDashboard()">🔄 Recalculate Forecasts</button>
+      </div>
+
+      <div id="forecast-dashboard-stats" class="stats" style="margin-bottom:20px"></div>
+
+      <!-- Slicers / Filters -->
+      <div class="slicer-bar" style="margin-bottom:20px">
+        <div class="slicer-bar-inner">
+          <div class="slicer-group">
+            <span class="slicer-label">⏱️ Forecast Horizon</span>
+            <select class="slicer-select" id="forecast-horizon-select" onchange="PulseIQ_Forecasting.setHorizon(this.value)">
+              <option value="Next 30 Days">Next 30 Days (Short Term)</option>
+              <option value="Next 60 Days">Next 60 Days (Medium Term)</option>
+              <option value="Next 90 Days">Next 90 Days (Quarterly)</option>
+            </select>
+          </div>
+          <div class="slicer-group">
+            <span class="slicer-label">🏷️ Domain Category</span>
+            <select class="slicer-select" id="forecast-category-filter" onchange="PulseIQ_Forecasting.setCategoryFilter(this.value)">
+              <option value="">All Categories</option>
+              <option value="Finance">Finance & Revenue</option>
+              <option value="Operations">Operations & Attendance</option>
+              <option value="Growth">Growth & Members</option>
+              <option value="Customer">Customer & Renewals</option>
+              <option value="Inventory">Inventory & Products</option>
+              <option value="Team">Team & Coach Load</option>
+            </select>
+          </div>
+          <div class="slicer-group" style="flex:1;min-width:180px">
+            <span class="slicer-label">🔍 Search Forecast</span>
+            <input type="text" class="slicer-input" id="forecast-search-input" placeholder="Search by metric..." oninput="PulseIQ_Forecasting.setSearchQuery(this.value)"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Forecast Cards Feed Container -->
+      <div id="forecast-cards-feed"></div>
+
+      <!-- Forecast Comparison Table -->
+      <div id="forecast-comparison-table"></div>
+    </div>
+    <!-- EXECUTIVE INTELLIGENCE DASHBOARD -->
+    <div class="sec" id="sec-executivedashboard">
+      <div class="ph">
+        <div>
+          <div class="pt">👑 Executive Intelligence Command</div>
+          <div class="ps">Unified executive operations centre — consolidated Phase 2 intelligence briefing</div>
+        </div>
+        <button class="btn-p" onclick="PulseIQ_ExecutiveDashboard.refreshDashboard()">🔄 Refresh Executive Dashboard</button>
+      </div>
+
+      <!-- Executive Briefing Hero Box -->
+      <div id="exec-briefing-hero"></div>
+
+      <!-- Executive Responsive Widget Grid -->
+      <div id="exec-widget-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px"></div>
     </div>
     <!-- PIN TRACKER -->
     <div class="sec" id="sec-pintracker">
@@ -2895,8 +3497,8 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div style="position:relative;display:inline-block" id="wc-dropdown-wrap">
           <button onclick="var m=document.getElementById('wc-menu');m.style.display=m.style.display==='block'?'none':'block'" style="background:#e8f4fd;color:#1a6fa0;border:1.5px solid #b3d4f5;border-radius:8px;padding:7px 14px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">💧 Water Cans ▾</button>
           <div id="wc-menu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;min-width:210px;overflow:hidden">
-            <div onclick="quickAddWaterCans('home');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='#f5f2ee'" onmouseout="this.style.background=''">🏠 Home</div>
-            <div onclick="quickAddWaterCans('center');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px" onmouseover="this.style.background='#f5f2ee'" onmouseout="this.style.background=''" id="wc-center-btn">🌿 Wellness Center</div>
+            <div onclick="quickAddWaterCans('home');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)">🏠 Home</div>
+            <div onclick="quickAddWaterCans('center');document.getElementById('wc-menu').style.display='none'" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px" id="wc-center-btn">🌿 Wellness Center</div>
           </div>
         </div>
         <button class="btn-p" onclick="openExpenseModal()">+ Add Expense</button>
@@ -4579,7 +5181,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
           <button class="btn-p" style="flex:1; background:var(--accent); border-color:var(--accent); color:#1a2e1f; font-weight:700" onclick="copyProgressCardToClipboard()">📋 Copy Image</button>
         </div>
       </div>
-      <div style="display:flex; justify-content:center; align-items:center; background:#f0ede8; border-radius:12px; padding:10px; width:320px; height:320px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.05); margin:0 auto;">
+      <div style="display:flex; justify-content:center; align-items:center; background:#f0ede8; border-radius:12px; padding:10px; width:100%; max-width:320px; aspect-ratio:1/1; height:auto; box-shadow:inset 0 2px 6px rgba(0,0,0,0.05); margin:0 auto;">
         <canvas id="progress-card-canvas" width="1080" height="1080" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></canvas>
       </div>
     </div>
