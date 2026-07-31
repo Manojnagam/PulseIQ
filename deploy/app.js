@@ -97,7 +97,7 @@ async function checkExistingSession() {
       return true;
     }
     // Fallback: use manually stored tokens (access_token needed as parseable JWT even if expired)
-    var storedRaw = localStorage.getItem('pz_session_tokens');
+    var storedRaw = safeStorage.getItem('pz_session_tokens');
     if (storedRaw) {
       try {
         var tokens = JSON.parse(storedRaw);
@@ -106,12 +106,12 @@ async function checkExistingSession() {
           if (r2.data && r2.data.session) {
             _authSession = r2.data.session;
             _authUser = r2.data.session.user;
-            localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: r2.data.session.access_token, refresh_token: r2.data.session.refresh_token }));
+            safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: r2.data.session.access_token, refresh_token: r2.data.session.refresh_token }));
             return true;
           }
         }
       } catch(e) {}
-      localStorage.removeItem('pz_session_tokens');
+      safeStorage.removeItem('pz_session_tokens');
     }
   } catch(err) {
     console.warn('checkExistingSession failed:', err);
@@ -127,7 +127,12 @@ async function sendOtpCode() {
   var RL_KEY = 'otp_rl_' + email.toLowerCase();
   var RL_MAX = 5, RL_WINDOW = 10 * 60 * 1000;
   var now = Date.now();
-  var attempts = JSON.parse(localStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
+  var attempts = JSON.parse(safeStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
+  var lastAttempt = attempts.length > 0 ? Math.max.apply(null, attempts) : 0;
+  if (now - lastAttempt < 30000) {
+    showLoginErr('Please wait 30 seconds before requesting a new code.');
+    return;
+  }
   if (attempts.length >= RL_MAX) {
     var waitMs = RL_WINDOW - (now - attempts[0]);
     var waitMin = Math.ceil(waitMs / 60000);
@@ -191,7 +196,7 @@ async function sendOtpCode() {
     btn.textContent = 'Send Code →'; btn.disabled = false;
   } else {
     attempts.push(now);
-    localStorage.setItem(RL_KEY, JSON.stringify(attempts));
+    safeStorage.setItem(RL_KEY, JSON.stringify(attempts));
     document.getElementById('login-sent-to').textContent = email;
     document.getElementById('login-email-state').style.display = 'none';
     document.getElementById('login-code-state').style.display = 'block';
@@ -204,24 +209,33 @@ async function verifyOtpCode() {
   var token = (document.getElementById('login-otp').value || '').trim();
   if (!token || token.length < 6) { showCodeErr('Please enter the login code.'); return; }
   var btn = document.getElementById('verify-btn');
+  if (btn.disabled) return;
   btn.textContent = 'Verifying…'; btn.disabled = true;
-  var res = await _sbAuth.auth.verifyOtp({ email: email, token: token, type: 'email' });
-  if (res.error) {
-    showCodeErr(res.error.message === 'Token has expired or is invalid' ? 'Incorrect or expired code. Try again.' : res.error.message);
-    btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
-  } else {
+  try {
+    var res = await _sbAuth.auth.verifyOtp({ email: email, token: token, type: 'email' });
+    if (res.error) throw res.error;
+    
     _authSession = res.data.session;
     _authUser = res.data.user;
     // Remember this device if checkbox is checked
     var rememberCb = document.getElementById('remember-device');
     if (!rememberCb || rememberCb.checked) {
-      localStorage.setItem('pz_remembered_email', email);
-      localStorage.setItem('pz_login_ts', String(Date.now()));
+      safeStorage.setItem('pz_remembered_email', email);
+      safeStorage.setItem('pz_login_ts', String(Date.now()));
     }
     if (res.data.session && res.data.session.refresh_token) {
-      localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
+      safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
     }
-    await startApp();
+    try {
+      await startApp();
+    } catch (e) {
+      showCodeErr('Error loading application. Please try again.');
+      btn.textContent = 'Verify & Sign In →'; 
+      btn.disabled = false;
+    }
+  } catch (e) {
+    showCodeErr(e.message === 'Token has expired or is invalid' ? 'Incorrect or expired code. Try again.' : e.message);
+    btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
   }
 }
 
@@ -239,17 +253,17 @@ function showLoginErr(msg) {
 async function signOut() {
   if (_sbAuth) await _sbAuth.auth.signOut();
   _authUser = null; _authSession = null;
-  localStorage.removeItem('pz_session_tokens');
-  localStorage.removeItem('pz_remembered_email');
-  localStorage.removeItem('pz_login_ts');
+  safeStorage.removeItem('pz_session_tokens');
+  safeStorage.removeItem('pz_remembered_email');
+  safeStorage.removeItem('pz_login_ts');
   location.reload();
 }
 
 var IS_SUPER_ADMIN = false;
-var ACTIVE_CENTER = localStorage.getItem('activeCenter') || '';
+var ACTIVE_CENTER = safeStorage.getItem('activeCenter') || '';
 
 // ── LANGUAGE / TRANSLATIONS ──
-var LANG = localStorage.getItem('svLang') || 'en';
+var LANG = safeStorage.getItem('svLang') || 'en';
 var T = {
   en: {
     // sidebar groups
@@ -303,17 +317,17 @@ async function startApp() {
   if (window.location.hash) history.replaceState(null, '', window.location.pathname);
 
   // ── Super admin fast-path: check remembered email even without a real auth session ──
-  var _currentEmail = (_authUser && _authUser.email) || (_authSession && _authSession.user && _authSession.user.email) || localStorage.getItem('pz_remembered_email') || '';
+  var _currentEmail = (_authUser && _authUser.email) || (_authSession && _authSession.user && _authSession.user.email) || safeStorage.getItem('pz_remembered_email') || '';
   var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
   if (HARDCODED_SUPER_ADMINS.indexOf(_currentEmail) !== -1) {
     IS_SUPER_ADMIN = true;
     ACTIVE_CENTER = '';
-    localStorage.setItem('activeCenter', '');
+    safeStorage.setItem('activeCenter', '');
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
-    var _opQ = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+    var _opQ = JSON.parse(safeStorage.getItem('ownerProfile') || '{}');
     delete _opQ.center_name;
-    localStorage.setItem('ownerProfile', JSON.stringify(_opQ));
+    safeStorage.setItem('ownerProfile', JSON.stringify(_opQ));
     if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _opQ;
     try { renderProfileCard(); } catch(e) {}
   }
@@ -338,10 +352,10 @@ async function startApp() {
       if (isSuperAdmin) {
         // Super admin: clear any center lock from previous session
         ACTIVE_CENTER = '';
-        localStorage.setItem('activeCenter', '');
-        var _opSA = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+        safeStorage.setItem('activeCenter', '');
+        var _opSA = JSON.parse(safeStorage.getItem('ownerProfile') || '{}');
         delete _opSA.center_name;
-        localStorage.setItem('ownerProfile', JSON.stringify(_opSA));
+        safeStorage.setItem('ownerProfile', JSON.stringify(_opSA));
         if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _opSA;
       } else {
         // Try to auto-link by email if auth_user_id not set yet
@@ -375,13 +389,13 @@ async function startApp() {
         }
         // Lock center owner to their own center
         ACTIVE_CENTER = myCenter.id;
-        localStorage.setItem('activeCenter', myCenter.id);
+        safeStorage.setItem('activeCenter', myCenter.id);
         _centerAuth = { type: 'center', centerId: myCenter.id };
         sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
         // Store center name so sidebar shows correctly before loadAll completes
-        var _op = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+        var _op = JSON.parse(safeStorage.getItem('ownerProfile') || '{}');
         _op.center_name = myCenter.name;
-        localStorage.setItem('ownerProfile', JSON.stringify(_op));
+        safeStorage.setItem('ownerProfile', JSON.stringify(_op));
         if (typeof OWNER_PROFILE !== 'undefined') OWNER_PROFILE = _op;
       }
     } catch(err) {
@@ -390,17 +404,17 @@ async function startApp() {
   }
 
   // ── Load app ──
-  try { localStorage.removeItem('sb_url'); localStorage.removeItem('sb_key'); } catch(e){}
+  try { localStorage.removeItem('sb_url'); safeStorage.removeItem('sb_key'); } catch(e){}
   var setupEl = document.getElementById('setup');
   var appEl = document.getElementById('app');
   if (setupEl) setupEl.style.display = 'none';
   if (appEl) appEl.style.display = 'block';
   await loadAll();
 }
-var ACTIVE_CENTER = localStorage.getItem('activeCenter') || '';
+var ACTIVE_CENTER = safeStorage.getItem('activeCenter') || '';
 
 // ── LANGUAGE / TRANSLATIONS ──
-var LANG = localStorage.getItem('svLang') || 'en';
+var LANG = safeStorage.getItem('svLang') || 'en';
 var T = {
   en: {
     // sidebar groups
@@ -535,7 +549,7 @@ function applyLang() {
 }
 function toggleLang() {
   LANG = LANG === 'en' ? 'te' : 'en';
-  localStorage.setItem('svLang', LANG);
+  safeStorage.setItem('svLang', LANG);
   applyLang();
 }
 
@@ -612,9 +626,12 @@ function exportCSV(headers, rows, filename) {
 }
 function exportCustomersCSV() {
   if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Basic plan feature (₹499/mo).', 'error'); return; }
-
-
-function fmt(n) { return '₹' + Math.round(n || 0).toLocaleString('en-IN'); }
+  var headers = ['ID', 'Name', 'Phone', 'Email', 'Center', 'Plan', 'Status', 'Joined Date'];
+  var rows = (D.customers || []).map(function(c) {
+    return [c.id, c.name, c.phone || '', c.email || '', getCenterById(c.center_id), c.plan || '', c.status || '', c.created_at || ''];
+  });
+  exportCSV(headers, rows, 'customers');
+}
 function getCenterById(id) {
   if (!id) return '';
   var c = (D.centers||[]).find(function(x){return x.id===id;}); return c?c.name:'';
@@ -992,12 +1009,12 @@ function toggleDarkMode() {
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   var next = isDark ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('svTheme', next);
+  safeStorage.setItem('svTheme', next);
   var btn = document.getElementById('dark-mode-btn');
   if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
 }
 (function applyTheme() {
-  var t = localStorage.getItem('svTheme') || 'dark';
+  var t = safeStorage.getItem('svTheme') || 'dark';
   document.documentElement.setAttribute('data-theme', t);
   var btn = document.getElementById('dark-mode-btn');
   if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
@@ -1043,7 +1060,7 @@ function verifyPinPrompt() {
   var targetCenter = _pendingSwitchCenter;
 
   // Check supervisor PIN — DB first, localStorage fallback
-  var supervisorPin = _DB_SUPERVISOR_PIN || (JSON.parse(localStorage.getItem('ownerProfile') || '{}')).master_pin || '';
+  var supervisorPin = _DB_SUPERVISOR_PIN || (JSON.parse(safeStorage.getItem('ownerProfile') || '{}')).master_pin || '';
   if(supervisorPin && entered === supervisorPin) {
     _centerAuth = { type: 'master' };
     sessionStorage.setItem('centerAuth', JSON.stringify(_centerAuth));
@@ -1079,9 +1096,9 @@ function verifyPinPrompt() {
 function _applySwitch(centerId) {
   ACTIVE_CENTER = centerId || '';
   if (centerId) {
-    localStorage.setItem('activeCenter', centerId);
+    safeStorage.setItem('activeCenter', centerId);
   } else {
-    localStorage.removeItem('activeCenter');
+    safeStorage.removeItem('activeCenter');
   }
   _daysLeftCache = {};
   updateSidebarLogo();
@@ -1170,7 +1187,7 @@ function updateCenterSwitcher() {
   });
   sel.innerHTML = opts;
   sel.value = prev;
-  if(prev && !(D.centers || []).some(function(c){return c.id == prev;})) { ACTIVE_CENTER=''; localStorage.removeItem('activeCenter'); sel.value = ''; }
+  if(prev && !(D.centers || []).some(function(c){return c.id == prev;})) { ACTIVE_CENTER=''; safeStorage.removeItem('activeCenter'); sel.value = ''; }
   // Hide supervisor-only nav items for center-PIN users, with plan overrides
   var isSuper = isSupervisor();
   var isElite = isElitePlan();
@@ -1253,12 +1270,12 @@ function getCenterName() {
   }
   // Master/supervisor mode — no center lock
   if (_centerAuth && _centerAuth.type === 'master') return 'PulseZen Network';
-  var op = (typeof OWNER_PROFILE !== 'undefined') ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+  var op = (typeof OWNER_PROFILE !== 'undefined') ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile') || '{}');
   if (op && op.center_name) return op.center_name;
   if (D && D.centers && D.centers.length) return D.centers[0].name;
   return 'Our Wellness Center';
 }
-var OWNER_PROFILE = JSON.parse(localStorage.getItem('ownerProfile') || '{}');
+var OWNER_PROFILE = JSON.parse(safeStorage.getItem('ownerProfile') || '{}');
 
 function checkStartupAuth() {
   var hasCenterPins = Object.keys(_DB_PINS).length > 0;
@@ -1278,7 +1295,7 @@ function checkStartupAuth() {
   }
   if(_centerAuth.type === 'center' && _centerAuth.centerId && _DB_PINS[_centerAuth.centerId]) {
     ACTIVE_CENTER = _centerAuth.centerId;
-    localStorage.setItem('activeCenter', _centerAuth.centerId);
+    safeStorage.setItem('activeCenter', _centerAuth.centerId);
     // Don't reload data — just re-render with center filter (data already loaded)
     try { renderOverview(); } catch(e){}
     try { renderCustomers(); } catch(e){}
@@ -1498,7 +1515,7 @@ function saveOwnerProfile() {
     master_pin: mpVal || OWNER_PROFILE.master_pin || null
   });
   OWNER_PROFILE = p;
-  localStorage.setItem('ownerProfile', JSON.stringify(p));
+  safeStorage.setItem('ownerProfile', JSON.stringify(p));
 
   // Route PIN to the right place based on who is saving
   var isCenterUser = _centerAuth.type === 'center' && _centerAuth.centerId;
@@ -1552,7 +1569,7 @@ function loadProfilePhoto(event) {
   var reader = new FileReader();
   reader.onload = function(e) {
     OWNER_PROFILE.photo = e.target.result;
-    localStorage.setItem('ownerProfile', JSON.stringify(OWNER_PROFILE));
+    safeStorage.setItem('ownerProfile', JSON.stringify(OWNER_PROFILE));
     var img = document.getElementById('prof-photo-preview');
     img.src = e.target.result; img.style.display = 'block';
     var cardPhoto = document.getElementById('prof-card-photo');
@@ -1618,19 +1635,19 @@ function showCoachPinTip() {
 }
 
 function getCredentials() {
-  var storedUrl = (localStorage.getItem('sb_url') || '').trim();
+  var storedUrl = (safeStorage.getItem('sb_url') || '').trim();
   if (storedUrl && storedUrl !== 'null' && storedUrl !== 'undefined' && storedUrl.startsWith('http')) {
     SB_URL = storedUrl.replace(/\/$/, '');
   } else {
     SB_URL = null;
-    if (storedUrl === 'null' || storedUrl === 'undefined') localStorage.removeItem('sb_url');
+    if (storedUrl === 'null' || storedUrl === 'undefined') safeStorage.removeItem('sb_url');
   }
-  var storedKey = (localStorage.getItem('sb_key') || '').trim();
+  var storedKey = (safeStorage.getItem('sb_key') || '').trim();
   if (storedKey && storedKey !== 'null' && storedKey !== 'undefined') {
     SB_KEY = storedKey;
   } else {
     SB_KEY = null;
-    if (storedKey === 'null' || storedKey === 'undefined') localStorage.removeItem('sb_key');
+    if (storedKey === 'null' || storedKey === 'undefined') safeStorage.removeItem('sb_key');
   }
   return true;
 }
@@ -1713,6 +1730,20 @@ async function dbGet(table, order, extraFilter) {
   try { var r = await req('GET', table, null, qs); return Array.isArray(r) ? r : []; }
   catch(e) { console.error(table, e); return []; }
 }
+async function dbGetAll(table, order, extraFilter) {
+  var all = [];
+  var offset = 0;
+  var limit = 1000;
+  while(true) {
+    var ext = (extraFilter ? extraFilter + '&' : '') + 'limit=' + limit + '&offset=' + offset;
+    var page = await dbGet(table, order, ext);
+    if (!page || page.length === 0) break;
+    all = all.concat(page);
+    if (page.length < limit) break;
+    offset += limit;
+  }
+  return all;
+}
 async function dbInsert(table, data) { return req('POST', table, data); }
 async function dbUpdate(table, id, data) {
   try {
@@ -1748,7 +1779,7 @@ function _cFilter(field) {
 function _custIdsFilter() {
   if (!ACTIVE_CENTER) return '';
   var ids = D.customers.map(function(c){ return c.id; });
-  var svId = (JSON.parse(localStorage.getItem('ownerProfile')||'{}')).sv_body_id;
+  var svId = (JSON.parse(safeStorage.getItem('ownerProfile')||'{}')).sv_body_id;
   if (svId) ids.push(svId);
   D.coaches.forEach(function(c){ if(c.id) ids.push(c.id); });
   (D.walkins||[]).forEach(function(w){ if(w.id) ids.push(w.id); });
@@ -1772,8 +1803,8 @@ async function doConnect() {
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
     });
     if (res.status === 401) { showErr('Invalid API Key. Check your anon key.'); SB_URL=null; SB_KEY=null; btn.textContent='Connect & Launch Dashboard →'; btn.disabled=false; return; }
-    localStorage.setItem('sb_url', url);
-    localStorage.setItem('sb_key', key);
+    safeStorage.setItem('sb_url', url);
+    safeStorage.setItem('sb_key', key);
     document.getElementById('setup').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     await loadAll();
@@ -1791,15 +1822,15 @@ function showErr(msg) {
   el.textContent = msg; el.style.display = 'block';
 }
 function doDisconnect() {
-  localStorage.removeItem('sb_url'); localStorage.removeItem('sb_key');
+  safeStorage.removeItem('sb_url'); safeStorage.removeItem('sb_key');
   SB_URL=null; SB_KEY=null;
   document.getElementById('setup').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
-var GROQ_MODEL = localStorage.getItem('groqModel') || 'gemini-2.5-flash';
+var GROQ_MODEL = safeStorage.getItem('groqModel') || 'gemini-2.5-flash';
 if (GROQ_MODEL === 'gemini-1.5-flash' || GROQ_MODEL === 'llama-3.1-8b-instant') {
   GROQ_MODEL = 'gemini-2.5-flash';
-  localStorage.setItem('groqModel', GROQ_MODEL);
+  safeStorage.setItem('groqModel', GROQ_MODEL);
 }
 var DEFAULT_GROQ_KEY = ''; // set in deploy/index.html — not stored in repo
 function getGroqKey() { return 'server-side'; }
@@ -1821,7 +1852,7 @@ function saveGroqKey() {
   var el = document.getElementById('cfg-groq-key');
   if (el) {
     var key = el.value.trim();
-    localStorage.setItem('groqKey', key);
+    safeStorage.setItem('groqKey', key);
     showToast('Groq API Key saved successfully!', 'success');
   }
 }
@@ -1937,19 +1968,19 @@ function saveGroqModel() {
   var sel = document.getElementById('cfg-groq-model');
   if (!sel) return;
   GROQ_MODEL = sel.value;
-  localStorage.setItem('groqModel', GROQ_MODEL);
+  safeStorage.setItem('groqModel', GROQ_MODEL);
   showToast('AI model set to: ' + GROQ_MODEL, 'success');
 }
 function saveCountryCode() {
   var code = document.getElementById('cfg-country-code').value.trim().replace(/\D/g,'');
   if (!code) { showToast('Enter a valid country code (digits only)', 'error'); return; }
-  localStorage.setItem('countryCode', code);
+  safeStorage.setItem('countryCode', code);
   COUNTRY_CODE = code;
   showToast('Country code saved: +' + code, 'success');
 }
 function saveWaLang() {
   var lang = document.getElementById('cfg-wa-lang').value;
-  localStorage.setItem('waLang', lang);
+  safeStorage.setItem('waLang', lang);
   WA_LANG = lang;
   showToast('Default WhatsApp language set to: ' + lang, 'success');
 }
@@ -1979,7 +2010,7 @@ async function bootDashboard() {
       _sbAuth.auth.onAuthStateChange(function(event, session) {
         if (event === 'TOKEN_REFRESHED' && session) {
           _authSession = session;
-          localStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
+          safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }));
         }
         if (event === 'SIGNED_IN' && session) {
           _authSession = session;
@@ -1989,12 +2020,12 @@ async function bootDashboard() {
 
     // ── "Remember this device" — valid for 60 days ──
     var SIXTY_DAYS = 60 * 24 * 60 * 60 * 1000;
-    var rememberedEmail = localStorage.getItem('pz_remembered_email');
-    var loginTs = parseInt(localStorage.getItem('pz_login_ts') || '0');
+    var rememberedEmail = safeStorage.getItem('pz_remembered_email');
+    var loginTs = parseInt(safeStorage.getItem('pz_login_ts') || '0');
     var deviceTrusted = rememberedEmail && (Date.now() - loginTs) < SIXTY_DAYS;
 
     var sessionRestored = false;
-    var hasTokens = localStorage.getItem('pz_session_tokens') || localStorage.getItem('sb-erteibdxzdvsaujptxsd-auth-token');
+    var hasTokens = safeStorage.getItem('pz_session_tokens') || safeStorage.getItem('sb-erteibdxzdvsaujptxsd-auth-token');
     if (hasTokens) {
       // Try restoring full Supabase session (works when token hasn't expired)
       sessionRestored = await checkExistingSession();
@@ -2002,8 +2033,8 @@ async function bootDashboard() {
     if (sessionRestored) {
       // Upgrade trust on successful session restore
       if (_authUser && _authUser.email) {
-        localStorage.setItem('pz_remembered_email', _authUser.email);
-        localStorage.setItem('pz_login_ts', Date.now());
+        safeStorage.setItem('pz_remembered_email', _authUser.email);
+        safeStorage.setItem('pz_login_ts', Date.now());
       }
       deviceTrusted = true;
     }
@@ -2021,14 +2052,14 @@ async function bootDashboard() {
 
     // ── STEP 2: UI init (runs only when authed) ──
     var gKey = getGroqKey();
-    var cc = localStorage.getItem('countryCode');
+    var cc = safeStorage.getItem('countryCode');
     var cfgKeyInput = document.getElementById('cfg-groq-key');
     if(cfgKeyInput && gKey) cfgKeyInput.value = gKey;
     if(cc) { document.getElementById('cfg-country-code').value = cc; COUNTRY_CODE = cc; }
     else document.getElementById('cfg-country-code').value = '91';
-    var savedWaLang = localStorage.getItem('waLang');
+    var savedWaLang = safeStorage.getItem('waLang');
     if (savedWaLang) { WA_LANG = savedWaLang; var wsel = document.getElementById('cfg-wa-lang'); if(wsel) wsel.value = savedWaLang; }
-    var savedModel = localStorage.getItem('groqModel') || 'gemini-2.5-flash';
+    var savedModel = safeStorage.getItem('groqModel') || 'gemini-2.5-flash';
     GROQ_MODEL = savedModel;
     var msel = document.getElementById('cfg-groq-model');
     if (msel) msel.value = savedModel;
@@ -2083,7 +2114,7 @@ async function loadAll() {
     // ── Instant Startup from Local Dashboard Cache (< 50ms) ──
     var _cachedDash = null;
     try {
-      var _rawCache = localStorage.getItem('pq_dashboard_cache_v1');
+      var _rawCache = safeStorage.getItem('pq_dashboard_cache_v1');
       if (_rawCache) _cachedDash = JSON.parse(_rawCache);
     } catch(ce) {}
     if (_cachedDash && Array.isArray(_cachedDash.centers) && Array.isArray(_cachedDash.customers)) {
@@ -2130,7 +2161,7 @@ async function loadAll() {
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
     try { renderAnnouncementBanner(); } catch(re){ console.error('renderAnnouncementBanner crash:',re); }
     applyLang();
-    (function(){ var btn=document.getElementById('dark-mode-btn'); if(btn) btn.textContent=localStorage.getItem('svTheme')==='dark'?'☀️':'🌙'; })();
+    (function(){ var btn=document.getElementById('dark-mode-btn'); if(btn) btn.textContent=safeStorage.getItem('svTheme')==='dark'?'☀️':'🌙'; })();
     startAutoPing();
     migrateSvBodyToSupabase();
     // Hide loading splash — critical data is ready and dashboard is interactive!
@@ -2138,7 +2169,7 @@ async function loadAll() {
     
     // Save snapshot to dashboard cache for instant startup next time
     try {
-      localStorage.setItem('pq_dashboard_cache_v1', JSON.stringify({
+      safeStorage.setItem('pq_dashboard_cache_v1', JSON.stringify({
         ts: Date.now(),
         centers: D.centers || [],
         customers: (D.customers || []).slice(0, 300),
@@ -2197,7 +2228,7 @@ async function loadCenters() {
     D.centers = Array.isArray(res) ? res : [];
   }
   try {
-    var pzPlans = JSON.parse(localStorage.getItem('pz_center_plans') || '{}');
+    var pzPlans = JSON.parse(safeStorage.getItem('pz_center_plans') || '{}');
     (D.centers || []).forEach(function(c) {
       if (pzPlans[c.id]) {
         if (typeof pzPlans[c.id] === 'string') c.plan_type = pzPlans[c.id];
@@ -2234,14 +2265,14 @@ function updateSidebarLogo() {
   if (wcBtn) wcBtn.textContent = '🌿 ' + cn;
 }
 async function loadCustomers() {
-  D.customers = await dbGet('customers', 'created_at', _cFilter());
+  D.customers = await dbGetAll('customers', 'created_at', _cFilter());
   try { renderCustomers(); } catch(e) {}
   try { renderOverview(); } catch(e) {}
   try {
-    var _rawCache = localStorage.getItem('pq_dashboard_cache_v1');
+    var _rawCache = safeStorage.getItem('pq_dashboard_cache_v1');
     var _cd = _rawCache ? JSON.parse(_rawCache) : {};
     _cd.customers = (D.customers || []).slice(0, 300);
-    localStorage.setItem('pq_dashboard_cache_v1', JSON.stringify(_cd));
+    safeStorage.setItem('pq_dashboard_cache_v1', JSON.stringify(_cd));
   } catch(e) {}
   updateCustSelects();
   updateCoachSelects();
@@ -2272,7 +2303,7 @@ async function loadBody() {
 }
 
 async function loadFinance() {
-  D.finance = await dbGet('finance','date', _cFilter());
+  D.finance = await dbGetAll('finance','date');
   try { renderFinance(); } catch(e) {}
   try { renderOverview(); } catch(e) {}
 }
@@ -2714,14 +2745,14 @@ function autofillBodyHeightAge(custId) {
 
   // 1. Supervisor (Myself)
   if (custId === '__sv__') {
-    var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+    var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
     var svId = op.sv_body_id;
     var lastRec = svId ? (D.body||[]).filter(function(b){return b.customer_id===svId;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0] : null;
     if (lastRec) {
       if (lastRec.height) el_h.value = lastRec.height;
       if (lastRec.age)    el_a.value = lastRec.age;
     } else {
-      var p = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+      var p = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
       if (op.height || p.height) el_h.value = op.height || p.height;
       if (op.age || p.age)       el_a.value = op.age || p.age;
     }
@@ -2862,8 +2893,8 @@ function updateCustSelects() {
   // Body composition — ALL coaches regardless of pack status + walk-ins + Center Owner / Supervisor
   var bodySel = document.getElementById('body-customer');
   if(bodySel) {
-    var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-    var _svProf = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+    var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+    var _svProf = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
     var _ownerName = _opProf.name || _svProf.name || 'Myself (Center Owner)';
     var bCustOpts = _custs.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
     var bCoachOpts = _allCoaches.length ? '<optgroup label="── Coaches ──">'+_allCoaches.map(function(c){return '<option value="'+c.id+'">'+c.name+' (Coach)</option>';}).join('')+'</optgroup>' : '';
@@ -3337,7 +3368,7 @@ function runPaymentAgent() {
     emptyMsg: 'No outstanding payments — all cleared!',
     items: items,
     labelFn:    function(x){ return x.p.person_name||'Unknown'; },
-    subLabelFn: function(x){ return '₹'+x.bal.toLocaleString('en-IN')+' due'+(x.p.due_date?' by '+x.p.due_date:''); },
+    subLabelFn: function(x){ return '₹'+x.bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' due'+(x.p.due_date?' by '+x.p.due_date:''); },
     urgencyFn:  function(x){ return x.p.due_date&&x.p.due_date<today ? '🔴 Overdue' : '⚠️ Pending'; },
     phoneFn: function(x){ return x.cust ? (x.cust.contact||'').replace(/\D/g,'')||null : null; },
     langFn:  function(x){ return (x.cust&&x.cust.preferred_language)||WA_LANG||'English'; },
@@ -3521,12 +3552,12 @@ async function runFinanceAnalystAgent() {
   // ── Build Groq context ──
   var context =
     'WELLNESS CENTER FINANCIAL DATA — '+curMon+'\n\n'+
-    'THIS MONTH:\nIncome: ₹'+curInc.toLocaleString('en-IN')+'\nExpenses: ₹'+curExp.toLocaleString('en-IN')+'\nNet Profit: ₹'+netProfit.toLocaleString('en-IN')+'\nProfit Margin: '+margin+'%\n\n'+
-    'LAST MONTH ('+lastMon+'):\nIncome: ₹'+lastInc.toLocaleString('en-IN')+'\nExpenses: ₹'+lastExp.toLocaleString('en-IN')+'\nNet: ₹'+lastNet.toLocaleString('en-IN')+'\n\n'+
-    'TWO MONTHS AGO ('+twoMon+'):\nIncome: ₹'+twoInc.toLocaleString('en-IN')+'\n\n'+
+    'THIS MONTH:\nIncome: ₹'+curInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\nExpenses: ₹'+curExp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\nNet Profit: ₹'+netProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\nProfit Margin: '+margin+'%\n\n'+
+    'LAST MONTH ('+lastMon+'):\nIncome: ₹'+lastInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\nExpenses: ₹'+lastExp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\nNet: ₹'+lastNet.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\n\n'+
+    'TWO MONTHS AGO ('+twoMon+'):\nIncome: ₹'+twoInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\n\n'+
     (growth!==null?'REVENUE GROWTH vs last month: '+growth+'%\n\n':'')+
-    'EXPENSE BREAKDOWN THIS MONTH:\n'+Object.keys(expCat).map(function(k){ return '- '+k+': ₹'+expCat[k].toLocaleString('en-IN'); }).join('\n')+'\n\n'+
-    'UNCOLLECTED PENDING PAYMENTS: ₹'+pending.toLocaleString('en-IN')+'\n\n'+
+    'EXPENSE BREAKDOWN THIS MONTH:\n'+Object.keys(expCat).map(function(k){ return '- '+k+': ₹'+expCat[k].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }).join('\n')+'\n\n'+
+    'UNCOLLECTED PENDING PAYMENTS: ₹'+pending.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\n\n'+
     'BUSINESS METRICS:\nActive customers: '+activeCnt+'\nNew this month: '+newCnt+'\nExpiring in 7 days: '+expiring7+'\nLow/out-of-stock products: '+lowStock+'\n\n'+
     'CONTEXT: Small nutrition wellness center, India, sole proprietor owner.';
 
@@ -3556,9 +3587,9 @@ function _renderFinanceReport(text, netProfit, income, expenses, pending, growth
   var growthNum = parseFloat(growth);
   var summaryHtml =
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">'+
-    _finCard('Net Profit','₹'+netProfit.toLocaleString('en-IN'), netProfit>=0?'#166534':'#dc2626', netProfit>=0?'#f0fdf4':'#fef2f2', netProfit>=0?'#86efac':'#fca5a5')+
+    _finCard('Net Profit','₹'+netProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), netProfit>=0?'#166534':'#dc2626', netProfit>=0?'#f0fdf4':'#fef2f2', netProfit>=0?'#86efac':'#fca5a5')+
     _finCard('Revenue Growth', growth===null?'N/A':(growthNum>=0?'+':'')+growth+'%', growthNum>=0?'#166534':'#dc2626','#fffbeb','#fcd34d')+
-    _finCard('Uncollected','₹'+pending.toLocaleString('en-IN'),'#1e40af','#eff6ff','#93c5fd')+
+    _finCard('Uncollected','₹'+pending.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}),'#1e40af','#eff6ff','#93c5fd')+
     _finCard('Expense Ratio', income>0?((expenses/income)*100).toFixed(0)+'%':'0%','#9d174d','#fdf2f8','#f9a8d4')+
     '</div>';
 
@@ -4035,7 +4066,7 @@ function renderOverview() {
         var estVal = pendingLeads.length * 2000;
         var textEl = document.getElementById('leads-revenue-text');
         if (textEl) {
-          textEl.textContent = 'You have ' + pendingLeads.length + ' pending leads waiting. Estimated potential revenue: ₹' + estVal.toLocaleString('en-IN') + ' (at ₹2,000/client).';
+          textEl.textContent = 'You have ' + pendingLeads.length + ' pending leads waiting. Estimated potential revenue: ₹' + estVal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' (at ₹2,000/client).';
         }
         leadsRevenueBanner.style.display = 'flex';
       } else {
@@ -4054,8 +4085,8 @@ function renderOverview() {
       });
       if (cPayments.length > 0 && targetId) {
         var celebKey = 'celebratedFirstRevenue_' + targetId;
-        if (!localStorage.getItem(celebKey)) {
-          localStorage.setItem(celebKey, 'true');
+        if (!safeStorage.getItem(celebKey)) {
+          safeStorage.setItem(celebKey, 'true');
           var firstPayVal = cPayments[0].amount_paid || 0;
           setTimeout(function() { triggerFirstRevenueCelebration(firstPayVal); }, 1000);
         }
@@ -4167,9 +4198,9 @@ function renderOverview() {
   // ── Revenue Row ──
   document.getElementById('ov-revenue-row').innerHTML =
     '<div class="ov-rev-row">'+
-      '<div class="ov-rev-card inc"><div class="ov-rev-lbl">Income ('+currentMonth+')</div><div class="ov-rev-val">₹'+mInc.toLocaleString('en-IN')+'</div></div>'+
-      '<div class="ov-rev-card exp"><div class="ov-rev-lbl">Expenses ('+currentMonth+')</div><div class="ov-rev-val">₹'+mExp.toLocaleString('en-IN')+'</div></div>'+
-      '<div class="ov-rev-card net"><div class="ov-rev-lbl">Net Profit</div><div class="ov-rev-val">'+(mNet>=0?'+':'')+' ₹'+mNet.toLocaleString('en-IN')+'</div></div>'+
+      '<div class="ov-rev-card inc"><div class="ov-rev-lbl">Income ('+currentMonth+')</div><div class="ov-rev-val">₹'+mInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '<div class="ov-rev-card exp"><div class="ov-rev-lbl">Expenses ('+currentMonth+')</div><div class="ov-rev-val">₹'+mExp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '<div class="ov-rev-card net"><div class="ov-rev-lbl">Net Profit</div><div class="ov-rev-val">'+(mNet>=0?'+':'')+' ₹'+mNet.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '</div>';
 
   // ── Customer Health Score Rankings ──
@@ -4275,10 +4306,10 @@ function renderOverview() {
       var dueLabel = p.overdue ? '<div class="ov-row-sub" style="color:var(--danger)">⚠️ Overdue — due '+p.due+'</div>' : '<div class="ov-row-sub">Due: '+(p.due||'No date')+'</div>';
       var waBtn = '';
       if(p.phone) {
-        var waMsg = encodeURIComponent('Hi '+p.name+'! 👋\n\nThis is a friendly reminder that ₹'+p.bal.toLocaleString('en-IN')+' is pending for your '+p.desc+' at '+getCenterName()+'.'+(p.due?'\n\nDue date: '+p.due:'')+(p.overdue?'\n\n⚠️ Your payment is overdue. Please clear it at your earliest convenience.':'\n\nKindly arrange the payment at your next visit. Thank you! 🙏'));
+        var waMsg = encodeURIComponent('Hi '+p.name+'! 👋\n\nThis is a friendly reminder that ₹'+p.bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' is pending for your '+p.desc+' at '+getCenterName()+'.'+(p.due?'\n\nDue date: '+p.due:'')+(p.overdue?'\n\n⚠️ Your payment is overdue. Please clear it at your earliest convenience.':'\n\nKindly arrange the payment at your next visit. Thank you! 🙏'));
         waBtn = '<button class="wa-btn" style="font-size:11px;padding:3px 8px;margin-left:8px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+p.phone+'&text='+waMsg+'\',\'_blank\')" title="Send payment reminder">💬 Remind</button>';
       }
-      return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">'+p.name+'</div>'+dueLabel+'</div><div class="ov-row-actions" style="display:flex;align-items:center;gap:4px"><span style="font-weight:700;color:var(--danger);font-size:14px">₹'+p.bal.toLocaleString('en-IN')+'</span>'+waBtn+'</div></div>';
+      return '<div class="ov-row"><div class="ov-row-info"><div class="ov-row-name">'+p.name+'</div>'+dueLabel+'</div><div class="ov-row-actions" style="display:flex;align-items:center;gap:4px"><span style="font-weight:700;color:var(--danger);font-size:14px">₹'+p.bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span>'+waBtn+'</div></div>';
     }).join('');
     if(pendingPay.length>8) leftHtml += '<div style="text-align:center;padding-top:8px"><span class="ov-link" onclick="goTo(\'payments\',document.querySelector(\'[onclick*=payments]\'))">View all '+pendingPay.length+' pending →</span></div>';
     leftHtml += '</div></div>';
@@ -4432,7 +4463,7 @@ function renderOverview() {
   rightHtml += '<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">'
     +'<div style="flex:1;text-align:center;background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">This Month</div><div style="font-family:DM Serif Display,serif;font-size:22px;color:var(--primary)">'+walkinsMonth.length+'</div></div>'
     +'<div style="flex:1;text-align:center;background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Converted</div><div style="font-family:DM Serif Display,serif;font-size:22px;color:var(--success)">'+walkinsMonth.filter(function(w){return w.converted;}).length+'</div></div>'
-    +(walkinRevMonth>0?'<div style="flex:1;text-align:center;background:#f0fdf4;border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Revenue</div><div style="font-family:DM Serif Display,serif;font-size:18px;color:var(--success)">₹'+walkinRevMonth.toLocaleString('en-IN')+'</div></div>':'')
+    +(walkinRevMonth>0?'<div style="flex:1;text-align:center;background:#f0fdf4;border-radius:8px;padding:8px 4px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Revenue</div><div style="font-family:DM Serif Display,serif;font-size:18px;color:var(--success)">₹'+walkinRevMonth.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>':'')
     +'</div>';
   // Today's walk-ins list
   if(!walkinsToday.length){
@@ -4442,7 +4473,7 @@ function renderOverview() {
     rightHtml += walkinsToday.map(function(w){
       var outIcon = OUT_ICON[w.outcome]||'📝';
       var outColor = w.outcome==='product_sale'?'var(--success)':w.outcome==='trial'?'#b07800':'#1d4ed8';
-      var amt = w.amount_received>0?'<span style="font-weight:700;color:var(--success);font-size:13px">₹'+Number(w.amount_received).toLocaleString('en-IN')+'</span>':'<span style="font-size:11px;color:var(--success)">Free</span>';
+      var amt = w.amount_received>0?'<span style="font-weight:700;color:var(--success);font-size:13px">₹'+Number(w.amount_received).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span>':'<span style="font-size:11px;color:var(--success)">Free</span>';
       return '<div class="ov-row"><div class="ov-row-info">'
         +'<div class="ov-row-name">'+w.name+(w.converted?'<span class="badge bg" style="font-size:9px;margin-left:6px">✅</span>':'')+'</div>'
         +'<div class="ov-row-sub"><span style="color:'+outColor+'">'+outIcon+' '+(w.outcome||'—').replace('_',' ')+'</span>'+(w.pincode?' · 📍'+w.pincode:'')+'</div>'
@@ -4469,7 +4500,7 @@ function renderOverview() {
         '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'+
           '<span style="color:var(--muted)">'+label+'</span>'+
           '<span style="font-weight:700;color:'+(pct>=100?'var(--success)':'var(--text)')+'">'+
-            (unit||'')+actual.toLocaleString('en-IN')+' / '+(unit||'')+target.toLocaleString('en-IN')+
+            (unit||'')+actual.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' / '+(unit||'')+target.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+
             (pct>=100?' ✅':' ('+pct+'%)')+
           '</span>'+
         '</div>'+
@@ -4637,7 +4668,9 @@ function renderCoaches() {
   var rows = _coaches.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.contact||'').toLowerCase().includes(q); });
   var tb = document.getElementById('coaches-body');
   if (!rows.length) { tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">👨‍🏫</div><p>No coaches found. Add your first one!</p></div></td></tr>'; }
-  else tb.innerHTML = rows.map(function(c){
+  else {
+    window._limCoach = window._limCoach || 50;
+    tb.innerHTML = rows.slice(0, window._limCoach).map(function(c){
     var refs = D.customers.filter(function(cust){return cust.referred_by_id===c.id;}).length;
     var st = c.status||'Active';
     var pinHtml = c.herbalife_pin ? '<span style="font-size:10px;background:var(--info-light);color:var(--info-text);padding:2px 7px;border-radius:10px;font-weight:600;display:block;margin-top:3px">'+c.herbalife_pin+'</span>' : '';
@@ -4651,6 +4684,8 @@ function renderCoaches() {
     var promoteBtn = '<button class="btn-p" style="font-size:11px;padding:3px 8px;background:#7c3aed;border-color:#7c3aed;margin-right:4px" onclick="openPromoteModal(\''+c.id+'\')" title="Promote to Supervisor — Open New Center">🏆 Promote</button>';
     return '<tr><td><strong>'+c.name+'</strong>'+pinHtml+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(st==='Active'?'bg':'br')+'">'+st+'</span></td><td>'+(c.upline||'—')+'</td><td>'+refs+'</td><td>'+(c.join_date||'—')+'</td><td><div class="acts">'+promoteBtn+payBtn+renewBtn+'<button class="btn-e" onclick="editCoach(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'coaches\',\''+c.id+'\',\'coaches\')">Delete</button></div></td></tr>';
   }).join('');
+    if(rows.length > window._limCoach) { tb.innerHTML += '<tr><td colspan="7" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCoach+=50;renderCoaches()">⬇️ Load More (' + (rows.length - window._limCoach) + ' remaining)</button></td></tr>'; }
+  }
   document.getElementById('coaches-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Coaches</div><div class="stat-v">'+_coaches.length+'</div></div><div class="stat"><div class="stat-l">Active</div><div class="stat-v">'+_coaches.filter(function(c){return (c.status||'Active')==='Active';}).length+'</div></div>';
 }
 
@@ -4877,7 +4912,7 @@ function renderStockInHistory() {
   var sorted = D.stockIn.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   tb.innerHTML = sorted.map(function(r){
     var p = getProductById(r.product_id);
-    return '<tr><td>'+r.date+'</td><td><strong>'+(r.product_name||r.product_id)+'</strong></td><td style="color:var(--muted);font-size:12px">'+(p?p.category:'—')+'</td><td>'+r.quantity+'</td><td>'+(r.unit||'—')+'</td><td>'+(r.cost_price?'₹'+Number(r.cost_price).toLocaleString('en-IN'):'—')+'</td><td>'+(r.expiry_date||'—')+'</td><td>'+(r.notes||'—')+'</td><td><div class="acts"><button class="btn-e" onclick="editStockIn(\''+r.id+'\')">Edit</button><button class="btn-d" onclick="delStockIn(\''+r.id+'\')">Delete</button></div></td></tr>';
+    return '<tr><td>'+r.date+'</td><td><strong>'+(r.product_name||r.product_id)+'</strong></td><td style="color:var(--muted);font-size:12px">'+(p?p.category:'—')+'</td><td>'+r.quantity+'</td><td>'+(r.unit||'—')+'</td><td>'+(r.cost_price?'₹'+Number(r.cost_price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}):'—')+'</td><td>'+(r.expiry_date||'—')+'</td><td>'+(r.notes||'—')+'</td><td><div class="acts"><button class="btn-e" onclick="editStockIn(\''+r.id+'\')">Edit</button><button class="btn-d" onclick="delStockIn(\''+r.id+'\')">Delete</button></div></td></tr>';
   }).join('');
 }
 
@@ -4888,7 +4923,7 @@ function renderStockOutHistory() {
   if (!D.stockOut || !D.stockOut.length) { tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">➖</div><p>No stock out records yet.</p></div></td></tr>'; return; }
   var sorted = D.stockOut.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   tb.innerHTML = sorted.map(function(r){
-    return '<tr><td>'+r.date+'</td><td><strong>'+(r.product_name||r.product_id)+'</strong></td><td>'+r.quantity+'</td><td>'+(r.unit||'—')+'</td><td>'+(r.sale_price?'₹'+Number(r.sale_price).toLocaleString('en-IN'):'—')+'</td><td>'+(r.notes||'—')+'</td><td><div class="acts"><button class="btn-e" onclick="editStockOut(\''+r.id+'\')">Edit</button><button class="btn-d" onclick="delStockOut(\''+r.id+'\')">Delete</button></div></td></tr>';
+    return '<tr><td>'+r.date+'</td><td><strong>'+(r.product_name||r.product_id)+'</strong></td><td>'+r.quantity+'</td><td>'+(r.unit||'—')+'</td><td>'+(r.sale_price?'₹'+Number(r.sale_price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}):'—')+'</td><td>'+(r.notes||'—')+'</td><td><div class="acts"><button class="btn-e" onclick="editStockOut(\''+r.id+'\')">Edit</button><button class="btn-d" onclick="delStockOut(\''+r.id+'\')">Delete</button></div></td></tr>';
   }).join('');
 }
 
@@ -5467,7 +5502,7 @@ function getCenterOwnerName(c) {
     else if (email === 'bharathkumarnagam07@gmail.com') name = 'Nagam Venkata Bharath Kumar';
   }
   if (name === '—') {
-    var _pcOwner = JSON.parse(localStorage.getItem('profileCenterOwner') || '{}');
+    var _pcOwner = JSON.parse(safeStorage.getItem('profileCenterOwner') || '{}');
     if (_pcOwner[c.name] && OWNER_PROFILE && OWNER_PROFILE.name) name = OWNER_PROFILE.name;
   }
   return name === '—' ? (c.owner_name || c.owner_email || '—') : name;
@@ -5478,7 +5513,7 @@ function renderCenters() {
   var q = document.getElementById('centers-search').value.toLowerCase();
   var rows = D.centers.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.location||'').toLowerCase().includes(q); });
   var tb = document.getElementById('centers-body');
-  var _pins = JSON.parse(localStorage.getItem('centerPins') || '{}');
+  var _pins = JSON.parse(safeStorage.getItem('centerPins') || '{}');
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">🏢</div><p>No centers found. Add your first one!</p></div></td></tr>'; }
   else tb.innerHTML = rows.map(function(c){
     var ownerName = getCenterOwnerName(c);
@@ -5984,7 +6019,7 @@ function renderRecurringList() {
     + items.map(function(r){
         return '<tr style="border-bottom:1px solid var(--border)">'
           + '<td style="padding:6px 8px;font-weight:600">'+r.name+'</td>'
-          + '<td style="padding:6px 8px;text-align:right;color:var(--danger)">₹'+Number(r.amount).toLocaleString('en-IN')+'</td>'
+          + '<td style="padding:6px 8px;text-align:right;color:var(--danger)">₹'+Number(r.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
           + '<td style="padding:6px 8px;text-align:center;color:var(--muted)">'+r.day_of_month+'</td>'
           + '<td style="padding:6px 8px;color:var(--muted)">'+r.category+'</td>'
           + '<td style="padding:6px 8px;text-align:right"><button class="btn-c" style="color:var(--danger);font-size:11px;padding:3px 8px" onclick="deleteRecurring(\''+r.id+'\')">Delete</button></td>'
@@ -6029,7 +6064,7 @@ async function autoApplyRecurring() {
   var today = new Date();
   var ym = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
   var lsKey = 'recurringApplied_' + ym;
-  if (localStorage.getItem(lsKey)) return; // already applied this month on this device
+  if (safeStorage.getItem(lsKey)) return; // already applied this month on this device
   var todayStr = today.toISOString().split('T')[0];
   var applied = 0;
   for (var i = 0; i < items.length; i++) {
@@ -6048,7 +6083,7 @@ async function autoApplyRecurring() {
       applied++;
     } catch(e) { /* skip duplicates or errors silently */ }
   }
-  localStorage.setItem(lsKey, '1');
+  safeStorage.setItem(lsKey, '1');
   if (applied > 0) {
     await loadFinance();
     showToast(applied + ' recurring expense(s) auto-added for ' + ym, 'success');
@@ -6058,7 +6093,7 @@ async function autoApplyRecurring() {
 // Manual "Apply This Month Now" button
 async function applyRecurringNow() {
   var ym = new Date().toISOString().slice(0,7);
-  localStorage.removeItem('recurringApplied_' + ym); // reset guard so it re-applies
+  safeStorage.removeItem('recurringApplied_' + ym); // reset guard so it re-applies
   closeModal('recurring-expenses');
   await autoApplyRecurring();
 }
@@ -6577,8 +6612,8 @@ function renderBody() {
     return;
   }
 
-  var _opP = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-  var _svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var _opP = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+  var _svP = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var _svBodyId = _opP.sv_body_id || '__sv__';
   var _isSvSelected = (_selectedBodyCustId === '__sv__' || _selectedBodyCustId === _svBodyId);
 
@@ -7062,10 +7097,10 @@ function sendDailySummaryWA() {
   var msg = lines.join('\n');
 
   // Get supervisor's own phone from first center owner contact or prompt
-  var myPhone = localStorage.getItem('supervisorPhone') || '';
+  var myPhone = safeStorage.getItem('supervisorPhone') || '';
   if (!myPhone) {
     myPhone = prompt('Enter your WhatsApp number (with country code, e.g. 917981614593) to receive summaries:') || '';
-    if (myPhone) localStorage.setItem('supervisorPhone', myPhone.replace(/\D/g,''));
+    if (myPhone) safeStorage.setItem('supervisorPhone', myPhone.replace(/\D/g,''));
   }
   myPhone = myPhone.replace(/\D/g,'');
 
@@ -7144,7 +7179,11 @@ function renderFinance() {
   var rows = _getFinFiltered();
   var tb = document.getElementById('fin-body');
   if (!rows.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="ei">💰</div><p>No transactions yet.</p></div></td></tr>'; }
-  else tb.innerHTML = rows.map(function(f){ return '<tr class="'+f.type+'-row"><td><span class="badge '+(f.type==='income'?'bg':'br')+'">'+f.type+'</span></td><td>'+(f.description||'—')+'</td><td><strong>₹'+Number(f.amount).toLocaleString('en-IN')+'</strong></td><td>'+(f.category||'—')+'</td><td>'+f.date+'</td><td><div class="acts"><button class="btn-e" onclick="editFinance(\''+f.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'finance\',\''+f.id+'\',\'finance\')">Delete</button></div></td></tr>'; }).join('');
+  else {
+    window._limFin = window._limFin || 50;
+    tb.innerHTML = rows.slice(0, window._limFin).map(function(f){ return '<tr class="'+f.type+'-row"><td><span class="badge '+(f.type==='income'?'bg':'br')+'">'+f.type+'</span></td><td>'+(f.description||'—')+'</td><td><strong>₹'+Number(f.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong></td><td>'+(f.category||'—')+'</td><td>'+f.date+'</td><td><div class="acts"><button class="btn-e" onclick="editFinance(\''+f.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'finance\',\''+f.id+'\',\'finance\')">Delete</button></div></td></tr>'; }).join('');
+    if(rows.length > window._limFin) { tb.innerHTML += '<tr><td colspan="6" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limFin+=50;renderFinance()">⬇️ Load More (' + (rows.length - window._limFin) + ' remaining)</button></td></tr>'; }
+  }
   var inc = rows.filter(function(f){return f.type==='income';}).reduce(function(s,f){return s+Number(f.amount);},0);
   var exp = rows.filter(function(f){return f.type==='expense';}).reduce(function(s,f){return s+Number(f.amount);},0);
   var net = inc - exp;
@@ -7153,9 +7192,9 @@ function renderFinance() {
   var to   = document.getElementById('fin-to').value;
   var periodLabel = (from && to) ? from + ' → ' + to : (from ? 'From ' + from : (to ? 'Until ' + to : 'All dates'));
   document.getElementById('fin-stats').innerHTML =
-    '<div class="stat"><div class="stat-l">Total Income<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:2px">📅 '+periodLabel+'</div></div><div class="stat-v" style="color:var(--success)">₹'+inc.toLocaleString('en-IN')+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Total Expense</div><div class="stat-v" style="color:var(--danger)">₹'+exp.toLocaleString('en-IN')+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="color:'+(net>=0?'var(--primary)':'var(--danger)')+'">₹'+net.toLocaleString('en-IN')+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Total Income<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:2px">📅 '+periodLabel+'</div></div><div class="stat-v" style="color:var(--success)">₹'+inc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Total Expense</div><div class="stat-v" style="color:var(--danger)">₹'+exp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="color:'+(net>=0?'var(--primary)':'var(--danger)')+'">₹'+net.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Profit Margin</div><div class="stat-v" id="fin-margin" style="color:'+(margin>=0?'var(--primary)':'var(--danger)')+'">'+margin+'%</div></div>';
   // ── Category breakdown ──
   function catBreakdown(type) {
@@ -7173,7 +7212,7 @@ function renderFinance() {
       var pct = total > 0 ? Math.round((e[1]/total)*100) : 0;
       return '<div style="margin-bottom:8px">'+
         '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'+
-          '<span>'+e[0]+'</span><span style="font-weight:600">₹'+e[1].toLocaleString('en-IN')+' <span style="color:var(--muted)">('+pct+'%)</span></span>'+
+          '<span>'+e[0]+'</span><span style="font-weight:600">₹'+e[1].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' <span style="color:var(--muted)">('+pct+'%)</span></span>'+
         '</div>'+
         '<div style="height:5px;border-radius:3px;background:var(--border)"><div style="height:5px;border-radius:3px;background:'+color+';width:'+pct+'%"></div></div>'+
       '</div>';
@@ -7202,7 +7241,7 @@ function renderFinance() {
         {label:'Expense',data:months.map(function(m){return monthMap[m].exp;}),backgroundColor:'rgba(255, 23, 68, 0.7)',borderRadius:4},
         {label:'Net',data:months.map(function(m){return monthMap[m].inc-monthMap[m].exp;}),type:'line',borderColor:'#00e676',pointBackgroundColor:'#00e676',backgroundColor:'transparent',tension:0.4,pointRadius:4,borderWidth:2}
       ]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},color:'#94a3b8'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#94a3b8'}},y:{grid:{color:'rgba(255, 255, 255, 0.07)'},ticks:{font:{size:11},color:'#94a3b8',callback:function(v){return '₹'+Number(v).toLocaleString('en-IN');}}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},color:'#94a3b8'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#94a3b8'}},y:{grid:{color:'rgba(255, 255, 255, 0.07)'},ticks:{font:{size:11},color:'#94a3b8',callback:function(v){return '₹'+Number(v).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});}}}}}
     });
   }
 
@@ -7234,7 +7273,7 @@ function renderFinance() {
         if (cid==='unassigned') return 'Unassigned';
         var c = D.centers.find(function(x){return x.id===cid;}); return c ? c.name : cid.slice(0,8);
       };
-      var fmt = function(n){ return '₹'+Math.round(n).toLocaleString('en-IN'); };
+      var fmt = function(n){ return '₹'+Math.round(n).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
       var mLabels = plMonths.map(function(m){ var d=new Date(m+'-01'); return d.toLocaleString('en-IN',{month:'short',year:'2-digit'}); });
       var html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">'
         + '<thead><tr style="border-bottom:2px solid var(--border)">'
@@ -7445,10 +7484,10 @@ async function saveCenter() {
     if (pTypeEl && pTypeEl.value) payload.plan_type = pTypeEl.value;
   }
   // Track profile-owner mapping locally (owner_id is uuid-only in DB)
-  var profileCenters = JSON.parse(localStorage.getItem('profileCenterOwner') || '{}');
+  var profileCenters = JSON.parse(safeStorage.getItem('profileCenterOwner') || '{}');
   if(ownerRaw === 'owner-profile') profileCenters[payload.name] = true;
   else delete profileCenters[payload.name];
-  localStorage.setItem('profileCenterOwner', JSON.stringify(profileCenters));
+  safeStorage.setItem('profileCenterOwner', JSON.stringify(profileCenters));
   if (!payload.name) { showToast('Center name is required','error'); return; }
   try {
     if(id) await dbUpdate('wellness_centers',id,payload); else await dbInsert('wellness_centers',payload);
@@ -7456,7 +7495,7 @@ async function saveCenter() {
     if(payload.type === 'main' && payload.name) {
       OWNER_PROFILE.center_name = payload.name;
       if(payload.location) OWNER_PROFILE.center_location = payload.location;
-      localStorage.setItem('ownerProfile', JSON.stringify(OWNER_PROFILE));
+      safeStorage.setItem('ownerProfile', JSON.stringify(OWNER_PROFILE));
     }
     auditLog(id?'Updated':'Added','Center',payload.name+(payload.location?' — '+payload.location:''));
     showToast(id?'Center updated!':'Center added!'); closeModal('center'); await loadCenters(); renderOverview();
@@ -7685,13 +7724,13 @@ async function saveCustomer() {
       var _custCenter = payload.wellness_center_id || null;
       if (payMode === 'full') {
         await dbInsert('finance', { type:'income', description:custName+' — Pack sale', amount:packPrice, category:'Pack sale to customer', date:today, wellness_center_id:_custCenter });
-        showToast('Customer added + ₹'+packPrice.toLocaleString('en-IN')+' income recorded!', 'success');
+        showToast('Customer added + ₹'+packPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' income recorded!', 'success');
       } else if (payMode === 'partial') {
         var paidNow = Number(document.getElementById('customer-paid-now').value)||0;
         var dueDate = document.getElementById('customer-due-date').value||null;
         await dbInsert('payments', { person_id:custId, person_name:custName, total_amount:packPrice, amount_paid:paidNow, payment_date:today, due_date:dueDate, description:payload.pack_type||'Pack', notes:'Auto-created on customer add', center_id:_custCenter });
         if (paidNow > 0) await dbInsert('finance', { type:'income', description:custName+' — Partial pack payment', amount:paidNow, category:'Pack sale to customer', date:today, wellness_center_id:_custCenter });
-        showToast('Customer added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
+        showToast('Customer added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), 'success');
       } else {
         var dueDateNone = document.getElementById('customer-due-date') ? document.getElementById('customer-due-date').value||null : null;
         await dbInsert('payments', { person_id:custId, person_name:custName, total_amount:packPrice, amount_paid:0, payment_date:today, due_date:dueDateNone, description:payload.pack_type||'Pack', notes:'Auto-created on customer add', center_id:_custCenter });
@@ -7970,9 +8009,12 @@ function editAttendance(id) {
 }
 
 // ── SAVE BODY ──
-document.getElementById('body-customer').addEventListener('change', function() {
-  autofillBodyHeightAge(this.value);
-});
+var bodyCustEl = document.getElementById('body-customer');
+if (bodyCustEl) {
+  bodyCustEl.addEventListener('change', function() {
+    autofillBodyHeightAge(this.value);
+  });
+}
 
 function calcBody() {
   var weight    = parseFloat(document.getElementById('body-weight').value);
@@ -8243,13 +8285,13 @@ async function saveBody() {
 
   if (custId === '__sv__') {
     getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) { showToast('Not connected to Supabase', 'error'); return; }
-    var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+    var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
     if (!op.sv_body_id) {
       op.sv_body_id = (crypto.randomUUID ? crypto.randomUUID() : 'sv-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-      localStorage.setItem('ownerProfile', JSON.stringify(op));
+      safeStorage.setItem('ownerProfile', JSON.stringify(op));
       OWNER_PROFILE = op;
     }
-    var _opName = op.name || (JSON.parse(localStorage.getItem('sv_profile')||'{}')).name || 'Center Owner';
+    var _opName = op.name || (JSON.parse(safeStorage.getItem('sv_profile')||'{}')).name || 'Center Owner';
     var svPayload = {
       customer_id: op.sv_body_id, customer_name: _opName,
       date: dateVal,
@@ -8379,13 +8421,13 @@ async function saveCoach() {
       var _coachCenter = payload.wellness_center_id || null;
       if (payMode === 'full') {
         await dbInsert('finance', { type:'income', description:coachName+' — Coach pack sale', amount:packPrice, category:'Coach pack payment', date:today, wellness_center_id:_coachCenter });
-        showToast('Coach added + ₹'+packPrice.toLocaleString('en-IN')+' income recorded!', 'success');
+        showToast('Coach added + ₹'+packPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' income recorded!', 'success');
       } else if (payMode === 'partial') {
         var paidNow = Number((document.getElementById('coach-paid-now')||{value:0}).value)||0;
         var dueDate = (document.getElementById('coach-due-date')||{value:''}).value||null;
         await dbInsert('payments', { person_id:coachId, person_name:coachName, total_amount:packPrice, amount_paid:paidNow, payment_date:today, due_date:dueDate, description:(payload.pack_type||'Coach Pack'), notes:'Coach pack payment', center_id:_coachCenter });
         if (paidNow > 0) await dbInsert('finance', { type:'income', description:coachName+' — Partial coach pack payment', amount:paidNow, category:'Coach pack payment', date:today, wellness_center_id:_coachCenter });
-        showToast('Coach added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
+        showToast('Coach added + payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), 'success');
       } else {
         var dueDateNone = (document.getElementById('coach-due-date')||{value:''}).value||null;
         await dbInsert('payments', { person_id:coachId, person_name:coachName, total_amount:packPrice, amount_paid:0, payment_date:today, due_date:dueDateNone, description:(payload.pack_type||'Coach Pack'), notes:'Coach pack payment', center_id:_coachCenter });
@@ -8437,7 +8479,7 @@ async function saveFinance() {
   if (!payload.amount||!payload.date) { showToast('Amount and date required','error'); return; }
   try {
     if(id) await dbUpdate('finance',id,payload); else await dbInsert('finance',payload);
-    auditLog(id?'Updated':'Added','Finance', (payload.type==='income'?'Income':'Expense')+' ₹'+Number(payload.amount).toLocaleString('en-IN')+(payload.description?' — '+payload.description:''));
+    auditLog(id?'Updated':'Added','Finance', (payload.type==='income'?'Income':'Expense')+' ₹'+Number(payload.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+(payload.description?' — '+payload.description:''));
     showToast(id?'Transaction updated!':'Transaction added!'); closeModal('finance'); await loadFinance(); renderOverview();
   }
   catch(e) { showToast('Error saving transaction: '+e.message,'error'); }
@@ -8492,13 +8534,13 @@ function auditLog(action, entity, detail) {
     if (ctr) actor = ctr.name + ' (coach login)';
   }
   var entry = { ts: new Date().toISOString(), actor: actor, action: action, entity: entity, detail: detail, centerId: ACTIVE_CENTER || null };
-  var log = JSON.parse(localStorage.getItem('auditLog') || '[]');
+  var log = JSON.parse(safeStorage.getItem('auditLog') || '[]');
   log.unshift(entry);
   if (log.length > 500) log = log.slice(0, 500);
-  localStorage.setItem('auditLog', JSON.stringify(log));
+  safeStorage.setItem('auditLog', JSON.stringify(log));
 }
 function renderAuditLog() {
-  var log = JSON.parse(localStorage.getItem('auditLog') || '[]');
+  var log = JSON.parse(safeStorage.getItem('auditLog') || '[]');
   var q = (document.getElementById('audit-search')||{}).value || '';
   var ef = (document.getElementById('audit-filter')||{}).value || '';
   q = q.toLowerCase();
@@ -8732,9 +8774,9 @@ function renderAnalytics() {
 
   document.getElementById('analytics-kpis').innerHTML =
     '<div class="stat"><div class="stat-l">Customers<span class="analytics-badge">'+totalCusts+'</span></div><div class="stat-v" style="color:'+(retentionRate>=70?'var(--success)':'var(--danger)')+'">'+retentionRate+'% retention</div></div>'+
-    '<div class="stat"><div class="stat-l">Revenue (period)</div><div class="stat-v" style="font-size:18px;color:var(--success)">₹'+totalIncome.toLocaleString('en-IN')+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Expense (period)</div><div class="stat-v" style="font-size:18px;color:var(--danger)">₹'+totalExpense.toLocaleString('en-IN')+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="font-size:18px;color:'+(totalIncome-totalExpense>=0?'var(--primary)':'var(--danger)')+'">₹'+(totalIncome-totalExpense).toLocaleString('en-IN')+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Revenue (period)</div><div class="stat-v" style="font-size:18px;color:var(--success)">₹'+totalIncome.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Expense (period)</div><div class="stat-v" style="font-size:18px;color:var(--danger)">₹'+totalExpense.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="font-size:18px;color:'+(totalIncome-totalExpense>=0?'var(--primary)':'var(--danger)')+'">₹'+(totalIncome-totalExpense).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">⭐ Star Customers</div><div class="stat-v" style="color:#b07800">'+stars+'</div></div>';
 
   // ── Retention bars ──
@@ -8783,10 +8825,10 @@ function renderAnalytics() {
         maintainAspectRatio:false,
         plugins:{
           legend:{position:'bottom', labels:{color:'#94a3b8'}},
-          tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': ₹'+Number(ctx.raw||0).toLocaleString('en-IN');}}}
+          tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': ₹'+Number(ctx.raw||0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});}}}
         },
         scales:{
-          y:{beginAtZero:true, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8', callback:function(v){return '₹'+v.toLocaleString('en-IN');}}},
+          y:{beginAtZero:true, grid:{color:'rgba(255, 255, 255, 0.07)'}, ticks:{color:'#94a3b8', callback:function(v){return '₹'+v.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});}}},
           x:{grid:{display:false}, ticks:{color:'#94a3b8'}}
         }
       }
@@ -8821,17 +8863,17 @@ function renderAnalytics() {
       '<div style="display:flex;gap:12px;flex-wrap:wrap">' +
       (incF ? '<div style="flex:1;min-width:120px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px">' +
         '<div style="font-size:11px;color:#166534;font-weight:600">Projected Income</div>' +
-        '<div style="font-size:20px;font-weight:700;color:#16a34a;margin:2px 0">₹' + incF.next.toLocaleString('en-IN') + '</div>' +
-        '<div style="font-size:11px;color:var(--muted)">' + trendArrow(incF.slope) + ' ' + (incF.slope >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(incF.slope)).toLocaleString('en-IN') + '/mo trend</div>' +
+        '<div style="font-size:20px;font-weight:700;color:#16a34a;margin:2px 0">₹' + incF.next.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
+        '<div style="font-size:11px;color:var(--muted)">' + trendArrow(incF.slope) + ' ' + (incF.slope >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(incF.slope)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '/mo trend</div>' +
         '</div>' : '') +
       (expF ? '<div style="flex:1;min-width:120px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px">' +
         '<div style="font-size:11px;color:#991b1b;font-weight:600">Projected Expense</div>' +
-        '<div style="font-size:20px;font-weight:700;color:#e74c3c;margin:2px 0">₹' + expF.next.toLocaleString('en-IN') + '</div>' +
-        '<div style="font-size:11px;color:var(--muted)">' + trendArrow(expF.slope) + ' ' + (expF.slope >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(expF.slope)).toLocaleString('en-IN') + '/mo trend</div>' +
+        '<div style="font-size:20px;font-weight:700;color:#e74c3c;margin:2px 0">₹' + expF.next.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
+        '<div style="font-size:11px;color:var(--muted)">' + trendArrow(expF.slope) + ' ' + (expF.slope >= 0 ? '+' : '') + '₹' + Math.abs(Math.round(expF.slope)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '/mo trend</div>' +
         '</div>' : '') +
       (incF && expF ? '<div style="flex:1;min-width:120px;background:' + (netF >= 0 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (netF >= 0 ? '#bbf7d0' : '#fecaca') + ';border-radius:10px;padding:10px 14px">' +
         '<div style="font-size:11px;color:' + (netF >= 0 ? '#166534' : '#991b1b') + ';font-weight:600">Projected Net Profit</div>' +
-        '<div style="font-size:20px;font-weight:700;color:' + (netF >= 0 ? '#16a34a' : '#e74c3c') + ';margin:2px 0">₹' + netF.toLocaleString('en-IN') + '</div>' +
+        '<div style="font-size:20px;font-weight:700;color:' + (netF >= 0 ? '#16a34a' : '#e74c3c') + ';margin:2px 0">₹' + netF.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
         '<div style="font-size:11px;color:var(--muted)">Based on linear trend</div>' +
         '</div>' : '') +
       '</div>' +
@@ -8888,20 +8930,20 @@ function renderAnalytics() {
       + '</div>'
       + '<div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:10px;padding:14px">'
       +   '<div style="font-size:11px;color:#7e22ce;font-weight:700;margin-bottom:4px">Avg Pack Price</div>'
-      +   '<div style="font-size:22px;font-weight:800;color:#9333ea">₹'+avgPackPrice.toLocaleString('en-IN')+'</div>'
+      +   '<div style="font-size:22px;font-weight:800;color:#9333ea">₹'+avgPackPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div>'
       +   '<div style="font-size:11px;color:var(--muted)">from income records</div>'
       + '</div>'
       + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
       + '<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:12px;padding:16px">'
       +   '<div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:6px">📅 '+tmLabel+' Forecast</div>'
-      +   '<div style="font-size:28px;font-weight:800;color:#16a34a">₹'+forecastThis.toLocaleString('en-IN')+'</div>'
-      +   '<div style="font-size:11px;color:#166534;margin-top:4px">'+expiringThisMonth.length+' packs × '+renewalRate+'% × ₹'+avgPackPrice.toLocaleString('en-IN')+'</div>'
+      +   '<div style="font-size:28px;font-weight:800;color:#16a34a">₹'+forecastThis.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div>'
+      +   '<div style="font-size:11px;color:#166534;margin-top:4px">'+expiringThisMonth.length+' packs × '+renewalRate+'% × ₹'+avgPackPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div>'
       + '</div>'
       + '<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:12px;padding:16px">'
       +   '<div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:6px">📅 '+nmLabel+' Forecast</div>'
-      +   '<div style="font-size:28px;font-weight:800;color:#2563eb">₹'+forecastNext.toLocaleString('en-IN')+'</div>'
-      +   '<div style="font-size:11px;color:#1d4ed8;margin-top:4px">'+expiringNextMonth.length+' packs × '+renewalRate+'% × ₹'+avgPackPrice.toLocaleString('en-IN')+'</div>'
+      +   '<div style="font-size:28px;font-weight:800;color:#2563eb">₹'+forecastNext.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div>'
+      +   '<div style="font-size:11px;color:#1d4ed8;margin-top:4px">'+expiringNextMonth.length+' packs × '+renewalRate+'% × ₹'+avgPackPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div>'
       + '</div>'
       + '</div>'
       + '<div style="font-size:10px;color:var(--muted);margin-top:10px">* Based on historical renewal rate and average pack price from income records. Actual results may vary.</div>';
@@ -9020,7 +9062,7 @@ function renderAnalytics() {
     if (crEl) _charts['center-revenue'] = new Chart(crEl, {
       type: 'bar',
       data: { labels: centerLabels, datasets: [{ label: 'Revenue (₹)', data: revData, backgroundColor: colors.slice(0, centerLabels.length), borderRadius: 6 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return '₹'+v.toLocaleString('en-IN'); } } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.07)' }, ticks: { color: '#94a3b8', callback: function(v){ return '₹'+v.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); } } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
     });
     if (caEl) _charts['center-attendance'] = new Chart(caEl, {
       type: 'bar',
@@ -9040,7 +9082,7 @@ function renderAnalytics() {
           + '<td style="padding:7px 8px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:'+r.color+';display:inline-block"></span>'+r.name+'</td>'
           + '<td style="text-align:right;padding:7px 8px">'+r.custs+'</td>'
           + '<td style="text-align:right;padding:7px 8px">'+r.att+'</td>'
-          + '<td style="text-align:right;padding:7px 8px;font-weight:700;color:var(--success)">₹'+r.rev.toLocaleString('en-IN')+'</td>'
+          + '<td style="text-align:right;padding:7px 8px;font-weight:700;color:var(--success)">₹'+r.rev.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
           + '</tr>';
       }).join('')
       + '</tbody></table></div>';
@@ -9430,7 +9472,7 @@ function renderAnalytics() {
         + 'generate <span style="color:#4ade80">80%</span> of revenue'
       + '</div>'
       + '<div style="font-size:12px;opacity:.65;margin-top:6px">'
-        + 'Total: ₹' + grandTotal.toLocaleString('en-IN') + ' across ' + custRevenue.length + ' customers'
+        + 'Total: ₹' + grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' across ' + custRevenue.length + ' customers'
       + '</div>'
     + '</div>';
 
@@ -9441,7 +9483,7 @@ function renderAnalytics() {
     paretoData.forEach(function(d) {
       var widthPct = (1 / custRevenue.length) * 100;
       var color = d.rank <= eightyCount ? '#16a34a' : '#94a3b8';
-      html += '<div style="position:absolute;left:' + ((d.rank-1)/custRevenue.length*100) + '%;width:' + widthPct + '%;height:100%;background:' + color + ';border-right:1px solid #fff" title="' + d.name + ': ₹' + d.revenue.toLocaleString('en-IN') + '"></div>';
+      html += '<div style="position:absolute;left:' + ((d.rank-1)/custRevenue.length*100) + '%;width:' + widthPct + '%;height:100%;background:' + color + ';border-right:1px solid #fff" title="' + d.name + ': ₹' + d.revenue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '"></div>';
     });
     // 80% line
     html += '<div style="position:absolute;left:' + eightyPct + '%;top:-4px;bottom:-4px;width:2px;background:#e74c3c;z-index:2"></div>';
@@ -9465,7 +9507,7 @@ function renderAnalytics() {
         + '<td style="font-weight:700;color:' + (isTop ? '#16a34a' : 'var(--muted)') + '">' + d.rank + '</td>'
         + '<td><strong>' + d.name + '</strong>' + (isTop ? ' <span style="background:#d1fae5;color:#065f46;border-radius:8px;padding:1px 6px;font-size:10px">Top 80%</span>' : '') + '</td>'
         + '<td style="font-size:12px;color:var(--muted)">' + d.packType + '</td>'
-        + '<td style="font-weight:700">₹' + d.revenue.toLocaleString('en-IN') + '</td>'
+        + '<td style="font-weight:700">₹' + d.revenue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>'
         + '<td style="text-align:center">' + revPct + '%</td>'
         + '<td><div style="display:flex;align-items:center;gap:6px">'
           + '<div style="flex:1;background:#e2e8f0;border-radius:4px;height:6px"><div style="background:' + (isTop ? '#16a34a' : '#94a3b8') + ';height:100%;width:' + d.cumRevPct + '%"></div></div>'
@@ -9534,22 +9576,22 @@ function renderAnalytics() {
     var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px">'
       + '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.4px">Overall ARPU</div>'
-        + '<div style="font-size:24px;font-weight:700;color:#16a34a;margin:4px 0">₹' + overallARPU.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:24px;font-weight:700;color:#16a34a;margin:4px 0">₹' + overallARPU.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">avg per active user/month</div>'
       + '</div>'
       + '<div style="background:' + (trend >= 0 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (trend >= 0 ? '#bbf7d0' : '#fecaca') + ';border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:' + (trend >= 0 ? '#166534' : '#991b1b') + ';text-transform:uppercase;letter-spacing:.4px">Period Trend</div>'
-        + '<div style="font-size:24px;font-weight:700;color:' + (trend >= 0 ? '#16a34a' : '#e74c3c') + ';margin:4px 0">' + (trend >= 0 ? '▲' : '▼') + ' ₹' + Math.abs(trend).toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:24px;font-weight:700;color:' + (trend >= 0 ? '#16a34a' : '#e74c3c') + ';margin:4px 0">' + (trend >= 0 ? '▲' : '▼') + ' ₹' + Math.abs(trend).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">first vs last month in period</div>'
       + '</div>'
       + '<div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#6b21a8;text-transform:uppercase;letter-spacing:.4px">Best Month</div>'
-        + '<div style="font-size:18px;font-weight:700;color:#7c3aed;margin:4px 0">₹' + maxARPU.arpu.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:18px;font-weight:700;color:#7c3aed;margin:4px 0">₹' + maxARPU.arpu.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">' + maxARPU.label + '</div>'
       + '</div>'
       + '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.4px">Lowest Month</div>'
-        + '<div style="font-size:18px;font-weight:700;color:#ea580c;margin:4px 0">₹' + minARPU.arpu.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:18px;font-weight:700;color:#ea580c;margin:4px 0">₹' + minARPU.arpu.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">' + minARPU.label + '</div>'
       + '</div>'
     + '</div>';
@@ -9564,9 +9606,9 @@ function renderAnalytics() {
       var isCurrent = r.ym === now;
       html += '<tr' + (isCurrent ? ' style="font-weight:700"' : '') + '>'
         + '<td>' + r.label + (isCurrent ? ' <span style="background:#dbeafe;color:#1e40af;border-radius:8px;padding:1px 6px;font-size:10px">current</span>' : '') + '</td>'
-        + '<td>₹' + r.income.toLocaleString('en-IN') + '</td>'
+        + '<td>₹' + r.income.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>'
         + '<td style="text-align:center">' + r.activeCount + '</td>'
-        + '<td style="font-weight:700;color:' + (r.arpu ? '#16a34a' : 'var(--muted)') + '">' + (r.arpu ? '₹' + r.arpu.toLocaleString('en-IN') : '—') + '</td>'
+        + '<td style="font-weight:700;color:' + (r.arpu ? '#16a34a' : 'var(--muted)') + '">' + (r.arpu ? '₹' + r.arpu.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—') + '</td>'
         + '<td><div style="background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden"><div style="background:#16a34a;height:100%;width:' + pct + '%"></div></div></td>'
         + '</tr>';
     });
@@ -9581,7 +9623,7 @@ function renderAnalytics() {
         var avgA = byPack[pt].count > 0 ? Math.round(byPack[pt].income / byPack[pt].count) : 0;
         html += '<div style="background:var(--surface2);border-radius:8px;padding:8px 14px;font-size:12px">'
           + '<span style="font-weight:700">' + pt + '</span>'
-          + ' &nbsp;·&nbsp; ₹' + avgA.toLocaleString('en-IN') + ' avg'
+          + ' &nbsp;·&nbsp; ₹' + avgA.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' avg'
           + ' <span style="color:var(--muted)">(' + byPack[pt].count + ')</span></div>';
       });
       html += '</div>';
@@ -9632,22 +9674,22 @@ function renderAnalytics() {
     var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px">'
       + '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.4px">Avg CLV</div>'
-        + '<div style="font-size:22px;font-weight:700;color:#16a34a;margin:4px 0">₹' + avgCLV.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:22px;font-weight:700;color:#16a34a;margin:4px 0">₹' + avgCLV.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">per customer</div>'
       + '</div>'
       + '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.4px">Avg Monthly Spend</div>'
-        + '<div style="font-size:22px;font-weight:700;color:#2563eb;margin:4px 0">₹' + avgMonthly.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:22px;font-weight:700;color:#2563eb;margin:4px 0">₹' + avgMonthly.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">avg ' + avgTenure + ' months tenure</div>'
       + '</div>'
       + '<div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#6b21a8;text-transform:uppercase;letter-spacing:.4px">Top Customer</div>'
         + '<div style="font-size:16px;font-weight:700;color:#7c3aed;margin:4px 0">' + maxCLV.name + '</div>'
-        + '<div style="font-size:11px;color:var(--muted)">₹' + maxCLV.clv.toLocaleString('en-IN') + ' · ' + maxCLV.renewals + ' renewal' + (maxCLV.renewals !== 1 ? 's' : '') + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">₹' + maxCLV.clv.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' · ' + maxCLV.renewals + ' renewal' + (maxCLV.renewals !== 1 ? 's' : '') + '</div>'
       + '</div>'
       + '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px">'
         + '<div style="font-size:11px;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.4px">Total Revenue (CLV)</div>'
-        + '<div style="font-size:22px;font-weight:700;color:#ea580c;margin:4px 0">₹' + totalCLV.toLocaleString('en-IN') + '</div>'
+        + '<div style="font-size:22px;font-weight:700;color:#ea580c;margin:4px 0">₹' + totalCLV.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">' + clvData.length + ' customers</div>'
       + '</div>'
     + '</div>';
@@ -9659,7 +9701,7 @@ function renderAnalytics() {
       var avg = Math.round(byPack[pt].total / byPack[pt].count);
       html += '<div style="background:var(--surface2);border-radius:8px;padding:8px 14px;font-size:12px">'
         + '<span style="font-weight:700">'+pt+'</span>'
-        + ' &nbsp;·&nbsp; Avg ₹' + avg.toLocaleString('en-IN')
+        + ' &nbsp;·&nbsp; Avg ₹' + avg.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})
         + ' <span style="color:var(--muted)">('+byPack[pt].count+' customers)</span></div>';
     });
     html += '</div></div>';
@@ -9675,8 +9717,8 @@ function renderAnalytics() {
         + '<td>' + d.packType + '</td>'
         + '<td style="text-align:center">' + d.renewals + '</td>'
         + '<td style="text-align:center">' + d.tenureMonths + ' mo</td>'
-        + '<td style="font-weight:700;color:#16a34a">₹' + d.clv.toLocaleString('en-IN') + '</td>'
-        + '<td style="color:var(--muted)">₹' + avgMo.toLocaleString('en-IN') + '</td>'
+        + '<td style="font-weight:700;color:#16a34a">₹' + d.clv.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>'
+        + '<td style="color:var(--muted)">₹' + avgMo.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>'
         + '</tr>';
     });
     html += '</tbody></table></div>'
@@ -9868,7 +9910,7 @@ function renderAnalytics() {
         + '<td><span style="background:'+s.seg.bg+';color:'+s.seg.c+';border-radius:12px;padding:2px 9px;font-size:11px;font-weight:700">'+s.seg.emoji+' '+s.seg.label+'</span></td>'
         + '<td>' + (s.recencyDays === 999 ? '—' : s.recencyDays + 'd ago') + '</td>'
         + '<td>' + s.freqPerWeek + '</td>'
-        + '<td>' + (s.monetary ? '₹' + s.monetary.toLocaleString('en-IN') : '—') + '</td>'
+        + '<td>' + (s.monetary ? '₹' + s.monetary.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—') + '</td>'
         + '<td style="text-align:center;font-weight:700;color:' + (s.rScore>=4?'#16a34a':s.rScore<=2?'#e74c3c':'#b07800') + '">' + s.rScore + '</td>'
         + '<td style="text-align:center;font-weight:700;color:' + (s.fScore>=4?'#16a34a':s.fScore<=2?'#e74c3c':'#b07800') + '">' + s.fScore + '</td>'
         + '<td style="text-align:center;font-weight:700;color:' + (s.mScore>=4?'#16a34a':s.mScore<=2?'#e74c3c':'#b07800') + '">' + s.mScore + '</td>'
@@ -9907,8 +9949,8 @@ function renderAnalytics() {
     var html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">';
     html += kpiCard('Total Walk-ins', total, '#2563eb');
     html += kpiCard('Converted', converted + ' (' + convPct + '%)', '#16a34a');
-    html += kpiCard('Product Revenue', '₹' + productRev.toLocaleString('en-IN'), '#d97706');
-    html += kpiCard('Avg Sale', paidCount ? '₹' + avgSale.toLocaleString('en-IN') : '—', '#7c3aed');
+    html += kpiCard('Product Revenue', '₹' + productRev.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), '#d97706');
+    html += kpiCard('Avg Sale', paidCount ? '₹' + avgSale.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—', '#7c3aed');
     html += '</div>';
 
     function kpiCard(label, val, color) {
@@ -9968,7 +10010,7 @@ function renderAnalytics() {
       html += '<div style="margin-bottom:8px">'
         + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">'
         + '<span>' + o.label + '</span>'
-        + '<strong>' + cnt + (rev > 0 ? ' · ₹' + rev.toLocaleString('en-IN') : '') + '</strong>'
+        + '<strong>' + cnt + (rev > 0 ? ' · ₹' + rev.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '') + '</strong>'
         + '</div>'
         + '<div style="background:var(--bg2);border-radius:4px;height:8px"><div style="background:' + o.color + ';width:' + pct + '%;height:8px;border-radius:4px;transition:width 0.4s"></div></div>'
         + '</div>';
@@ -10241,10 +10283,10 @@ function saveSvProfile() {
     gender: (document.getElementById('sv-gender')||{}).value||'',
     goal:   (document.getElementById('sv-goal')||{}).value||'Weight Loss'
   };
-  localStorage.setItem('sv_profile', JSON.stringify(p));
+  safeStorage.setItem('sv_profile', JSON.stringify(p));
 }
 function loadSvProfile() {
-  var p = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var p = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var n=document.getElementById('sv-name');   if(n) n.value=p.name||'';
   var a=document.getElementById('sv-age');    if(a) a.value=p.age||'';
   var h=document.getElementById('sv-height'); if(h) h.value=p.height||'';
@@ -10252,7 +10294,7 @@ function loadSvProfile() {
   var gl=document.getElementById('sv-goal');  if(gl&&p.goal) gl.value=p.goal;
 }
 function renderSvBody() {
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   var svId = op.sv_body_id;
   var recs = svId ? (D.body||[]).filter(function(b){ return b.customer_id===svId; }) : [];
   var tb=document.getElementById('sv-body-body');
@@ -10261,7 +10303,7 @@ function renderSvBody() {
   if(!tb||!empty||!wrap) return;
   if(!recs.length){ empty.style.display='block'; wrap.style.display='none'; return; }
   empty.style.display='none'; wrap.style.display='block';
-  var p=JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var p=JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var revWeight=(p.goal||'Weight Loss')==='Weight Gain';
   var sorted=recs.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
   // ── Health Score Card ──
@@ -10269,14 +10311,14 @@ function renderSvBody() {
   var scoreEl=document.getElementById('sv-body-score-card');
   if(scoreEl && latest) {
     var lVfKg=parseFloat(latest.visceral_fat)||0;
-    var svPhone=(JSON.parse(localStorage.getItem('sv_profile')||'{}')).phone||'';
+    var svPhone=(JSON.parse(safeStorage.getItem('sv_profile')||'{}')).phone||'';
     var wChange=(first&&latest&&first.weight&&latest.weight)?(Number(latest.weight)-Number(first.weight)).toFixed(1):null;
     var fChange=(first&&latest&&first.fat_percentage&&latest.fat_percentage)?(Number(latest.fat_percentage)-Number(first.fat_percentage)).toFixed(1):null;
     var mChange=(first&&latest&&first.muscle_percentage&&latest.muscle_percentage)?(Number(latest.muscle_percentage)-Number(first.muscle_percentage)).toFixed(1):null;
     function svDiffColor(val,goodWhenNeg){if(val===null)return'rgba(255,255,255,.6)';var n=Number(val);if(n===0)return'rgba(255,255,255,.6)';return(goodWhenNeg?n<0:n>0)?'#a8e6b8':'#f4a7a0';}
     function svFmt(val,unit){if(val===null)return'—';return(Number(val)>0?'+':'')+val+(unit||'');}
     // Ideal card — build synthetic cust from sv_profile
-    var svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+    var svP = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
     var svCust = { name: op.name||'Supervisor', gender: svP.gender||'', dob: svP.age ? String(new Date().getFullYear() - parseInt(svP.age)) : null };
     renderIdealCard(svCust, latest, 'sv-ideal-card');
     scoreEl.innerHTML = svBuildHealthScoreCard(latest.bmi, latest.fat_percentage, lVfKg, latest.date, {name:op.name||'Supervisor', phone:svPhone, weight:latest.weight, musclePct:latest.muscle_percentage, gender:svP.gender||''}) +
@@ -10333,7 +10375,7 @@ function renderSvBody() {
   }).join('');
 }
 async function autoRecoverSvBodyIfNeeded() {
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   if (op.sv_body_id) return; // already linked, nothing to do
   getCredentials();
   if (!getActiveSbUrl() || !(SB_KEY || CENTER_SB_KEY)) return;
@@ -10377,7 +10419,7 @@ async function autoRecoverSvBodyIfNeeded() {
       selectedId = groupKeys[idx];
     }
     op.sv_body_id = selectedId;
-    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    safeStorage.setItem('ownerProfile', JSON.stringify(op));
     OWNER_PROFILE = op;
     await loadBody();
     renderSvBody();
@@ -10395,7 +10437,7 @@ async function recoverSvBodyRecords() {
     .concat((D.coaches||[]).map(function(c){return c.id;}))
     .concat((D.walkins||[]).map(function(w){return w.id;}))
   );
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   if (op.sv_body_id) knownIds.add(op.sv_body_id);
   // Fetch ALL body_composition records directly (no customer_id filter)
   try {
@@ -10430,7 +10472,7 @@ async function recoverSvBodyRecords() {
     if (isNaN(idx) || idx < 0 || idx >= groupKeys.length) { showToast('Invalid selection','error'); return; }
     var selectedId = groupKeys[idx];
     op.sv_body_id = selectedId;
-    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    safeStorage.setItem('ownerProfile', JSON.stringify(op));
     OWNER_PROFILE = op;
     showToast('Profile linked! Loading records…', 'success');
     await loadBody();
@@ -10440,13 +10482,13 @@ async function recoverSvBodyRecords() {
   }
 }
 async function migrateSvBodyToSupabase() {
-  var old = JSON.parse(localStorage.getItem('sv_body_records')||'[]');
+  var old = JSON.parse(safeStorage.getItem('sv_body_records')||'[]');
   if (!old.length) return;
   getCredentials(); if (!getActiveSbUrl() || !getActiveSbKey()) return;
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   if (!op.sv_body_id) {
     op.sv_body_id = (crypto.randomUUID ? crypto.randomUUID() : 'sv-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    safeStorage.setItem('ownerProfile', JSON.stringify(op));
     OWNER_PROFILE = op;
   }
   var svId = op.sv_body_id;
@@ -10466,7 +10508,7 @@ async function migrateSvBodyToSupabase() {
     } catch(e) {}
   }
   if (toMigrate.length) {
-    localStorage.removeItem('sv_body_records');
+    safeStorage.removeItem('sv_body_records');
     await loadBody(); renderSvBody();
     showToast(toMigrate.length + ' old supervisor body record(s) migrated to Supabase ✓', 'success');
   }
@@ -10476,7 +10518,7 @@ var _svDietInFlight = false;
 
 function renderSvDietPlan() {
   var el = document.getElementById('sv-diet-output'); if (!el) return;
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   var plan = op.sv_diet_plan ? JSON.parse(op.sv_diet_plan) : null;
   if (!plan) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 0">No plan yet — fill in Goal, Diet Type and Activity Level, then click Generate My Plan.</div>'; return; }
   // Restore dropdown selections from saved plan
@@ -10532,8 +10574,8 @@ async function generateSvDietPlan() {
   if (_svDietInFlight) return;
   if (!getGroqKey()) { showToast('Set Groq API key in SQL/Config section first', 'error'); return; }
   if (!D_FOODS.length) { showToast('Add foods to the Food Database first', 'error'); return; }
-  var op = JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-  var svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+  var svP = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var svId = op.sv_body_id;
   var latestBody = (D.body||[]).filter(function(b){
     return b.customer_id === '__sv__' || (svId && b.customer_id === svId) || (
@@ -10681,7 +10723,7 @@ function parseAiJson(raw) {
     plan.diet_type = dietType;
     plan.activity = activity;
     op.sv_diet_plan = JSON.stringify(plan);
-    localStorage.setItem('ownerProfile', JSON.stringify(op));
+    safeStorage.setItem('ownerProfile', JSON.stringify(op));
     OWNER_PROFILE = op;
     _svDietDay = null;
     renderSvDietPlan();
@@ -10700,7 +10742,7 @@ function openBodyModalSv() {
   });
   document.getElementById('body-age-field').value='';
   // Auto-fill height and age from latest body record (stored in Supabase via body_composition)
-  var op=JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op=JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   var svId=op.sv_body_id;
   var lastRec=svId ? (D.body||[]).filter(function(b){return b.customer_id===svId;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0] : null;
   if(lastRec) {
@@ -10708,14 +10750,14 @@ function openBodyModalSv() {
     if(lastRec.age)    document.getElementById('body-age-field').value=lastRec.age;
   } else {
     // First scan — fallback to My Profile fields
-    var p=JSON.parse(localStorage.getItem('sv_profile')||'{}');
+    var p=JSON.parse(safeStorage.getItem('sv_profile')||'{}');
     if(p.height) document.getElementById('body-height').value=p.height;
     if(p.age)    document.getElementById('body-age-field').value=p.age;
   }
   openModal('body');
 }
 function editSvBody(id) {
-  var op=JSON.parse(localStorage.getItem('ownerProfile')||'{}');
+  var op=JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
   var b=(D.body||[]).find(function(x){return x.id===id && x.customer_id===op.sv_body_id;}); if(!b) return;
   document.getElementById('body-id').value=b.id;
   document.getElementById('body-customer').value='__sv__';
@@ -10744,8 +10786,8 @@ async function delSvBody(id) {
 function updateBodyCustSelect() {
   var sel = document.getElementById('body-cust-select'); if(!sel) return;
   var prev = sel.value;
-  var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-  var _svProf = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+  var _svProf = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var _ownerName = _opProf.name || _svProf.name || 'Myself (Center Owner)';
   var svOpt = '<option value="__sv__">👤 ' + _ownerName + ' (Myself / Owner)</option>';
   var custOpts = D.customers.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
@@ -10764,8 +10806,8 @@ function onBodyCustomerChange() {
 function onBodySearch() {
   var q = document.getElementById('body-search').value.toLowerCase().trim();
   var sel = document.getElementById('body-cust-select');
-  var _opP = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(localStorage.getItem('ownerProfile')||'{}');
-  var _svP = JSON.parse(localStorage.getItem('sv_profile')||'{}');
+  var _opP = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+  var _svP = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
   var _ownerName = (_opP.name || _svP.name || 'myself').toLowerCase();
   var match = D.customers.find(function(c){return(c.name||'').toLowerCase().includes(q);})
            || D.coaches.find(function(c){return(c.name||'').toLowerCase().includes(q);});
@@ -10822,7 +10864,7 @@ function showCustomerJourney(cid){
     return'<div class="pack-item"><div class="pack-dot '+dotCls+'" style="top:10px">'+(isCur?'▶':i===0?'★':'✓')+'</div>'
       +'<div class="pack-card'+(isCur?' active-pack':'')+'">'
       +'<div style="display:flex;justify-content:space-between"><strong style="font-size:13px">'+(p.pack_type||'—')+(i===0?' <span style="font-size:10px;color:var(--accent)">FIRST</span>':'')+(isCur?' <span class="badge bg" style="font-size:9px">ACTIVE</span>':'')+'</strong>'
-      +(p.price?'<span style="font-weight:700;color:var(--primary);font-size:13px">₹'+Number(p.price).toLocaleString('en-IN')+'</span>':'')
+      +(p.price?'<span style="font-weight:700;color:var(--primary);font-size:13px">₹'+Number(p.price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span>':'')
       +'</div><div style="font-size:11px;color:var(--muted);margin-top:4px">📅 '+(p.start_date||'—')+(p.notes?' · '+p.notes:'')+'</div>'
       +'</div></div>';
   }).join('')+'</div>':'<div style="color:var(--muted);font-size:13px">No pack history yet.</div>';
@@ -10833,7 +10875,7 @@ function showCustomerJourney(cid){
   var totalSpent=(allPacks.reduce(function(s,p){return s+Number(p.price||0);},0));
   document.getElementById('pack-journey-stats').innerHTML=[
     {lbl:'Total Packs',val:allPacks.length},
-    {lbl:'Total Spent',val:totalSpent>0?'₹'+totalSpent.toLocaleString('en-IN'):'—'},
+    {lbl:'Total Spent',val:totalSpent>0?'₹'+totalSpent.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}):'—'},
     {lbl:'Sessions',val:sessions},
     {lbl:'Days With Us',val:daysW!==null?daysW+' days':'—'},
     {lbl:'Weight Change',val:wLost!==null?(Number(wLost)>0?'+':'')+wLost+' kg':'—'},
@@ -10916,14 +10958,14 @@ async function saveRenewal(){
     if(price){
       if(payMode==='full'){
         await dbInsert('finance',{type:'income',description:displayName+' — Pack renewal',amount:price,category:finCategory,date:today,wellness_center_id:_renewCenter});
-        showToast('Pack renewed + ₹'+price.toLocaleString('en-IN')+' income recorded! 🎉');
+        showToast('Pack renewed + ₹'+price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' income recorded! 🎉');
       } else if(payMode==='partial'){
         if(paidNow>0) await dbInsert('finance',{type:'income',description:displayName+' — Partial renewal payment',amount:paidNow,category:finCategory,date:today,wellness_center_id:_renewCenter});
         await dbInsert('payments',{person_id:cid,person_name:displayName,total_amount:price,amount_paid:paidNow,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — balance due',center_id:_renewCenter});
-        showToast('Pack renewed! Balance ₹'+(price-paidNow).toLocaleString('en-IN')+' due. 🎉');
+        showToast('Pack renewed! Balance ₹'+(price-paidNow).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' due. 🎉');
       } else {
         await dbInsert('payments',{person_id:cid,person_name:displayName,total_amount:price,amount_paid:0,payment_date:today,due_date:dueDate,description:packType,notes:'Renewal — not yet paid',center_id:_renewCenter});
-        showToast('Pack renewed! ₹'+price.toLocaleString('en-IN')+' payment pending. 🎉');
+        showToast('Pack renewed! ₹'+price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' payment pending. 🎉');
       }
       await loadPayments(); await loadFinance();
     } else {
@@ -10935,7 +10977,7 @@ async function saveRenewal(){
     await loadPackHistory();renderOverview();
 
     if(c&&c.contact){
-      var balMsg = payMode==='full' ? 'Payment received in full. ✅' : payMode==='partial' ? 'Partial payment received. Balance ₹'+(price-paidNow).toLocaleString('en-IN')+' due.' : 'Payment of ₹'+(price||0).toLocaleString('en-IN')+' pending.';
+      var balMsg = payMode==='full' ? 'Payment received in full. ✅' : payMode==='partial' ? 'Partial payment received. Balance ₹'+(price-paidNow).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' due.' : 'Payment of ₹'+(price||0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' pending.';
       var msg='🌿 *Pack Renewed!*\n\nHi *'+displayName+'*! 🎉\n\nYour *'+packType+'* starts *'+startDate+'*.\n'+balMsg+'\n\nThank you for continuing your wellness journey! 💪\n\n_Your '+getCenterName()+' Family_ 💚';
       var phone=c.contact.replace(/\D/g,'');if(phone.length===10)phone=COUNTRY_CODE+phone;
       setTimeout(function(){if(confirm('Send WhatsApp renewal confirmation to '+displayName+'?'))window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');},400);
@@ -10948,7 +10990,7 @@ function openRefundModal(cid) {
   if (!c) return;
   document.getElementById('refund-cust-id').value = c.id;
   document.getElementById('refund-cust-name').textContent = c.name;
-  document.getElementById('refund-curr-pack').textContent = 'Pack: '+(c.pack_type||'None')+' · Started: '+(c.pack_start_date||'—')+(c.pack_price?' · ₹'+Number(c.pack_price).toLocaleString('en-IN'):'');
+  document.getElementById('refund-curr-pack').textContent = 'Pack: '+(c.pack_type||'None')+' · Started: '+(c.pack_start_date||'—')+(c.pack_price?' · ₹'+Number(c.pack_price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}):'');
   document.getElementById('refund-amount').value = c.pack_price || '';
   document.getElementById('refund-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('refund-reason').value = '';
@@ -10989,7 +11031,7 @@ async function saveRefund() {
       await dbUpdate('customers', cid, {pack_type:null, pack_start_date:null, pack_price:null});
     }
     auditLog('Refund','Customer',(c?c.name:'')+(amount>0?' — ₹'+amount+' refunded':'')+' — '+reason);
-    showToast('Refund recorded'+(clearPack?' & pack cleared':'')+'! ₹'+amount.toLocaleString('en-IN')+' logged as expense.','success');
+    showToast('Refund recorded'+(clearPack?' & pack cleared':'')+'! ₹'+amount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' logged as expense.','success');
     closeModal('refund-pack');
     await loadFinance(); await loadCustomers();
     if (pending) await loadPayments();
@@ -11027,7 +11069,7 @@ var _origRenderCustomers = typeof renderCustomers === 'function' ? renderCustome
 // ══════════════════════════════════════════════
 function updateCoachUplineSelects(excludeId){
   excludeId = excludeId || '';
-  var ownerName = (JSON.parse(localStorage.getItem('ownerProfile')||'{}')).name || 'You (Root)';
+  var ownerName = (JSON.parse(safeStorage.getItem('ownerProfile')||'{}')).name || 'You (Root)';
   var opts='<option value="">'+ownerName+' (Root — You)</option>'+D.coaches
     .filter(function(c){ return !excludeId || c.id !== excludeId; })
     .map(function(c){
@@ -11109,20 +11151,20 @@ function renderPinTracker() {
 
   // ── Personal VP ──
   html += '<div class="pin-card"><h3>💪 Personal Volume Points</h3>';
-  html += '<div class="pin-metric"><span class="pin-metric-label">Your Center VP</span><span class="pin-metric-val" style="color:'+(pGap===0?'var(--success)':'var(--primary)')+'">'+personalVP.toLocaleString('en-IN')+'</span></div>';
-  html += '<div class="pin-metric"><span class="pin-metric-label">Required</span><span style="font-size:14px;color:var(--muted)">'+req.personalVP.toLocaleString('en-IN')+' VP</span></div>';
+  html += '<div class="pin-metric"><span class="pin-metric-label">Your Center VP</span><span class="pin-metric-val" style="color:'+(pGap===0?'var(--success)':'var(--primary)')+'">'+personalVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span></div>';
+  html += '<div class="pin-metric"><span class="pin-metric-label">Required</span><span style="font-size:14px;color:var(--muted)">'+req.personalVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' VP</span></div>';
   html += '<div class="pin-progress"><div class="pin-fill" style="width:'+pVPPct+'%;background:'+(pVPPct>=100?'var(--success)':pVPPct>=60?'var(--accent)':'var(--danger)')+'"><span class="pin-fill-label">'+pVPPct+'%</span></div></div>';
-  if(pGap > 0) html += '<div class="pin-gap">📌 Need <strong>'+pGap.toLocaleString('en-IN')+' more VP</strong> — that\'s about <strong>'+pCustsNeeded+' more Standard pack customers</strong> from your center this month.</div>';
+  if(pGap > 0) html += '<div class="pin-gap">📌 Need <strong>'+pGap.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' more VP</strong> — that\'s about <strong>'+pCustsNeeded+' more Standard pack customers</strong> from your center this month.</div>';
   else html += '<div class="pin-action">✅ Personal VP target met!</div>';
   html += '</div>';
 
   // ── Organizational VP ──
   html += '<div class="pin-card"><h3>🌐 Organizational Volume Points</h3>';
-  html += '<div class="pin-metric"><span class="pin-metric-label">Downline VP</span><span class="pin-metric-val" style="color:'+(oGap===0?'var(--success)':'var(--primary)')+'">'+orgVP.toLocaleString('en-IN')+'</span></div>';
-  html += '<div class="pin-metric"><span class="pin-metric-label">Required</span><span style="font-size:14px;color:var(--muted)">'+req.orgVP.toLocaleString('en-IN')+' VP</span></div>';
+  html += '<div class="pin-metric"><span class="pin-metric-label">Downline VP</span><span class="pin-metric-val" style="color:'+(oGap===0?'var(--success)':'var(--primary)')+'">'+orgVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span></div>';
+  html += '<div class="pin-metric"><span class="pin-metric-label">Required</span><span style="font-size:14px;color:var(--muted)">'+req.orgVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' VP</span></div>';
   html += '<div class="pin-progress"><div class="pin-fill" style="width:'+oVPPct+'%;background:'+(oVPPct>=100?'var(--success)':oVPPct>=30?'var(--accent)':'var(--danger)')+'"><span class="pin-fill-label">'+oVPPct+'%</span></div></div>';
   if(oGap > 0) {
-    html += '<div class="pin-gap">📌 Need <strong>'+oGap.toLocaleString('en-IN')+' more VP</strong> from downline centers — about <strong>'+oCustsNeeded+' more pack sales</strong> across your organization.</div>';
+    html += '<div class="pin-gap">📌 Need <strong>'+oGap.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' more VP</strong> from downline centers — about <strong>'+oCustsNeeded+' more pack sales</strong> across your organization.</div>';
   } else {
     html += '<div class="pin-action">✅ Organizational VP target met!</div>';
   }
@@ -11184,10 +11226,10 @@ function renderPinTracker() {
   if(!allMet) {
     html += '<div class="pin-card" style="border-left:4px solid var(--primary)"><h3>🚀 Action Plan for '+targetPin+'</h3><div class="pin-action" style="background:none;border:none;padding:0">';
     var actions = [];
-    if(pGap > 0) actions.push('📍 <strong>Your center</strong>: Add '+pCustsNeeded+' more customers with Standard/Premium packs to hit '+req.personalVP.toLocaleString('en-IN')+' personal VP');
+    if(pGap > 0) actions.push('📍 <strong>Your center</strong>: Add '+pCustsNeeded+' more customers with Standard/Premium packs to hit '+req.personalVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' personal VP');
     if(oGap > 0) {
       var perCenter = D.centers.length > 1 ? Math.ceil(oCustsNeeded / (D.centers.length - 1)) : oCustsNeeded;
-      actions.push('📍 <strong>Downline</strong>: Each center needs ~'+perCenter+' more pack sales to collectively close the '+oGap.toLocaleString('en-IN')+' VP gap');
+      actions.push('📍 <strong>Downline</strong>: Each center needs ~'+perCenter+' more pack sales to collectively close the '+oGap.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' VP gap');
     }
     if(flGap > 0) actions.push('📍 <strong>Coach development</strong>: Help '+flGap+' first-line coach'+(flGap>1?'es':'')+' reach '+reqPinLevel+' — review their VP and customer pipeline');
     if(req.associates > 0 && activeAssociates < req.associates) actions.push('📍 <strong>Associates</strong>: Recruit '+(req.associates-activeAssociates)+' more active associates generating personal volume');
@@ -11235,7 +11277,7 @@ function renderBizAnalyst() {
 
   document.getElementById('biz-org-summary').innerHTML =
     '<div class="stats" style="margin-bottom:0">' +
-    '<div class="stat"><div class="stat-ic">⚡</div><div class="stat-l">Total Org VP ('+month+')</div><div class="stat-v" style="color:var(--primary)">'+totalVP.toLocaleString('en-IN')+'</div></div>' +
+    '<div class="stat"><div class="stat-ic">⚡</div><div class="stat-l">Total Org VP ('+month+')</div><div class="stat-v" style="color:var(--primary)">'+totalVP.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>' +
     '<div class="stat"><div class="stat-ic">🏠</div><div class="stat-l">Your Center VP</div><div class="stat-v">'+totalPersonalVP+'</div></div>' +
     '<div class="stat"><div class="stat-ic">🌐</div><div class="stat-l">Downline VP</div><div class="stat-v">'+totalOrgVP+'</div></div>' +
     '<div class="stat"><div class="stat-ic">✅</div><div class="stat-l">Active Customers</div><div class="stat-v" style="color:var(--success)">'+allActiveCusts+'</div></div>' +
@@ -11300,7 +11342,7 @@ function renderBizAnalyst() {
           '<span style="color:var(--success);font-weight:700">+'+d.newThis+'</span>'+
           '<div><span style="font-weight:700">'+d.attRate+'%</span><div class="cp-bar-wrap"><div class="cp-bar" style="width:'+d.attRate+'%"></div></div></div>'+
           '<span>'+d.leads+'</span>'+
-          '<div><span style="font-weight:700;color:var(--success);font-size:12px">₹'+d.centerRev.toLocaleString('en-IN')+'</span><div class="cp-bar-wrap"><div class="cp-bar" style="width:'+revBarW+'%;background:#16a34a"></div></div></div>'+
+          '<div><span style="font-weight:700;color:var(--success);font-size:12px">₹'+d.centerRev.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span><div class="cp-bar-wrap"><div class="cp-bar" style="width:'+revBarW+'%;background:#16a34a"></div></div></div>'+
         '</div>';
       });
       lbEl.innerHTML = lbRows.join('');
@@ -11344,7 +11386,7 @@ function renderBizAnalyst() {
             +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:16px;font-weight:700;color:var(--primary)">'+d.vp+'</div><div style="font-size:10px;color:var(--muted)">VP</div></div>'
             +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:16px;font-weight:700;color:var(--success)">'+d.activeCusts+'</div><div style="font-size:10px;color:var(--muted)">active</div></div>'
             +'<div style="background:var(--surface2);border-radius:8px;padding:8px 4px"><div style="font-size:16px;font-weight:700;color:'+(d.inactiveCusts?'var(--danger)':'var(--success)')+'">'+d.inactiveCusts+'</div><div style="font-size:10px;color:var(--muted)">inactive</div></div>'
-            +'<div style="background:'+(net>=0?'#f0fdf4':'#fef2f2')+';border-radius:8px;padding:8px 4px"><div style="font-size:13px;font-weight:700;color:'+(net>=0?'#16a34a':'#e74c3c')+'">₹'+Math.round(rev).toLocaleString('en-IN')+'</div><div style="font-size:10px;color:var(--muted)">revenue</div></div>'
+            +'<div style="background:'+(net>=0?'#f0fdf4':'#fef2f2')+';border-radius:8px;padding:8px 4px"><div style="font-size:13px;font-weight:700;color:'+(net>=0?'#16a34a':'#e74c3c')+'">₹'+Math.round(rev).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div><div style="font-size:10px;color:var(--muted)">revenue</div></div>'
             +'</div>';
         })()
 
@@ -11502,9 +11544,9 @@ async function saveCenterPlan(centerId) {
   var updatePayload = needNewTrialDate ? { plan_type: newPlan, created_at: nowIso } : { plan_type: newPlan };
 
   try {
-    var pzPlans = JSON.parse(localStorage.getItem('pz_center_plans') || '{}');
+    var pzPlans = JSON.parse(safeStorage.getItem('pz_center_plans') || '{}');
     pzPlans[centerId] = typeof pzPlans[centerId] === 'object' ? Object.assign(pzPlans[centerId], updatePayload) : updatePayload;
-    localStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
+    safeStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
   } catch(e) {}
 
   var dbSuccess = false;
@@ -11540,9 +11582,9 @@ async function resetCenterTrial(centerId) {
   center.plan_type = 'trial';
   center.created_at = nowIso;
   try {
-    var pzPlans = JSON.parse(localStorage.getItem('pz_center_plans') || '{}');
+    var pzPlans = JSON.parse(safeStorage.getItem('pz_center_plans') || '{}');
     pzPlans[centerId] = { plan_type: 'trial', created_at: nowIso };
-    localStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
+    safeStorage.setItem('pz_center_plans', JSON.stringify(pzPlans));
   } catch(e) {}
 
   var dbSuccess = false;
@@ -11680,11 +11722,11 @@ function renderOrgTree(){
     '<div style="display:flex; gap:24px; flex-wrap:wrap; text-align:left">' +
       '<div>' +
         '<div style="font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase;">Current Month (Actual)</div>' +
-        '<div style="font-size:22px; font-weight:800; color:var(--primary); margin-top:2px">₹' + Math.round(networkRevenue).toLocaleString('en-IN') + '</div>' +
+        '<div style="font-size:22px; font-weight:800; color:var(--primary); margin-top:2px">₹' + Math.round(networkRevenue).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
       '</div>' +
       '<div>' +
         '<div style="font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase;">Next Month (Projected)</div>' +
-        '<div style="font-size:22px; font-weight:800; color:var(--accent); margin-top:2px">₹' + Math.round(projectedRevenue).toLocaleString('en-IN') + '</div>' +
+        '<div style="font-size:22px; font-weight:800; color:var(--accent); margin-top:2px">₹' + Math.round(projectedRevenue).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
       '</div>' +
     '</div>' +
   '</div>';
@@ -11708,7 +11750,7 @@ function renderOrgTree(){
 async function loadCoupons(){
   getCredentials();if(!getActiveSbUrl()||!getActiveSbKey())return;
   try{
-    var r=await dbGet('coupons','created_at');
+    var r=await dbGetAll('coupons','created_at');
     var rawCoupons=Array.isArray(r)?r:[];
     D.coupons=filterCouponsByCenter(rawCoupons);
   }
@@ -11823,7 +11865,8 @@ function renderCoupons(){
   var tb=document.getElementById('coupon-body');if(!tb)return;
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">🎟️</div><p>No coupons yet.</p></div></td></tr>';return;}
   rows.sort(function(a,b){return new Date(b.date||b.created_at)-new Date(a.date||a.created_at);});
-  tb.innerHTML=rows.map(function(r){
+  window._limCoup = window._limCoup || 50;
+  tb.innerHTML = rows.slice(0, window._limCoup).map(function(r){
     var person=findPerson(r.coach_id);
     var pName=person?person.name:r.coach_id;
     var pBadge=person?(' <span class="badge '+(person.type==='coach'?'bg':'ms-green')+'" style="font-size:9px">'+person.type+'</span>'):'';
@@ -11833,6 +11876,7 @@ function renderCoupons(){
       +'<td>'+(r.date||'—')+'</td><td>'+(r.referred_person||'—')+'</td>'
       +'<td><button class="btn-d" onclick="delCoupon(\''+r.id+'\')">Del</button></td></tr>';
   }).join('');
+  if(rows.length > window._limCoup) { tb.innerHTML += '<tr><td colspan="7" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCoup+=50;renderCoupons()">⬇️ Load More (' + (rows.length - window._limCoup) + ' remaining)</button></td></tr>'; }
   // Stats: scoped to active center
   var statsPersonIds={};
   allCoupons.forEach(function(x){ statsPersonIds[x.coach_id]=true; });
@@ -11877,7 +11921,7 @@ function calcCouponRenewal(){
   var discount=actualUse*perShake;
   bd.style.display='block';
   bd.innerHTML='<div style="font-weight:700;margin-bottom:8px;color:var(--primary)">💰 Calculation</div>'
-    +'<div class="coupon-row"><span>Pack Price</span><strong>₹'+price.toLocaleString('en-IN')+'</strong></div>'
+    +'<div class="coupon-row"><span>Pack Price</span><strong>₹'+price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong></div>'
     +'<div class="coupon-row"><span>Per Shake Value</span><strong>₹'+perShake.toFixed(2)+'</strong></div>'
     +'<div class="coupon-row"><span>Available Coupons</span><strong style="color:var(--accent)">'+bal.balance+'</strong></div>'
     +'<div class="coupon-row"><span>Coupons Used ('+actualUse+')</span><strong style="color:var(--danger)">-₹'+discount.toFixed(0)+'</strong></div>'
@@ -11966,7 +12010,7 @@ async function saveShakeRedemption(){
 async function loadPayments(){
   getCredentials();if(!getActiveSbUrl()||!getActiveSbKey())return;
   try{
-    var r=await dbGet('payments','payment_date');
+    var r=await dbGetAll('payments','payment_date');
     var rawPayments=Array.isArray(r)?r:[];
     D.payments=filterPaymentsByCenter(rawPayments);
   }
@@ -11983,7 +12027,7 @@ function calcBalance(){
   var total=Number(document.getElementById('payment-total').value)||0;
   var paid=Number(document.getElementById('payment-paid').value)||0;
   var el=document.getElementById('payment-balance-preview');
-  if(el){el.textContent='₹'+Math.max(0,total-paid).toLocaleString('en-IN');el.style.color=paid<total?'var(--danger)':'var(--success)';}
+  if(el){el.textContent='₹'+Math.max(0,total-paid).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});el.style.color=paid<total?'var(--danger)':'var(--success)';}
 }
 function renderPayments(){
   var q=(document.getElementById('payment-search')||{value:''}).value.toLowerCase();
@@ -11999,16 +12043,17 @@ function renderPayments(){
   if(!rows.length){tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">💳</div><p>No payments yet.</p></div></td></tr>';return;}
   rows.sort(function(a,b){return new Date(b.payment_date)-new Date(a.payment_date);});
   var today=new Date().toISOString().split('T')[0];
-  tb.innerHTML=rows.map(function(p){
+  window._limPay = window._limPay || 50;
+  tb.innerHTML = rows.slice(0, window._limPay).map(function(p){
     var total=Number(p.total_amount),paid=Number(p.amount_paid),bal=Math.max(0,total-paid);
     var pct=total>0?Math.round((paid/total)*100):100;
     var isOverdue=bal>0&&p.due_date&&p.due_date<today;
     var badge=bal===0?'<span class="badge bg">Paid</span>':(isOverdue?'<span class="badge br">Overdue</span>':'<span class="badge by">Pending</span>');
     return'<tr style="'+(isOverdue?'background:var(--danger-light)':'')+'">'
       +'<td><strong>'+(p.person_name||'—')+'</strong></td><td>'+(p.description||'—')+'</td>'
-      +'<td>₹'+total.toLocaleString('en-IN')+'</td>'
-      +'<td style="color:var(--success)">₹'+paid.toLocaleString('en-IN')+'</td>'
-      +'<td style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</td>'
+      +'<td>₹'+total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+      +'<td style="color:var(--success)">₹'+paid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+      +'<td style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
       +'<td><div class="payment-bar"><div class="payment-fill'+(isOverdue?' overdue':'')+'" style="width:'+pct+'%"></div></div><span style="font-size:10px;color:var(--muted)">'+pct+'%</span></td>'
       +'<td>'+(p.due_date||'—')+'</td><td>'+badge+'</td>'
       +'<td><div class="acts">'
@@ -12018,10 +12063,11 @@ function renderPayments(){
       +'<button class="btn-e" onclick="editPayment(\''+p.id+'\')">Edit</button>'
       +'<button class="btn-d" onclick="delPayment(\''+p.id+'\')">Del</button></div></td></tr>';
   }).join('');
+  if(rows.length > window._limPay) { tb.innerHTML += '<tr><td colspan="9" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limPay+=50;renderPayments()">⬇️ Load More (' + (rows.length - window._limPay) + ' remaining)</button></td></tr>'; }
   var totalBal=allPayments.reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0);
   var overdueCount=allPayments.filter(function(p){return Math.max(0,Number(p.total_amount)-Number(p.amount_paid))>0&&p.due_date&&p.due_date<today;}).length;
   var el=document.getElementById('payment-stats');
-  if(el)el.innerHTML='<div class="stat"><div class="stat-l">Outstanding</div><div class="stat-v" style="color:var(--danger)">₹'+totalBal.toLocaleString('en-IN')+'</div></div>'
+  if(el)el.innerHTML='<div class="stat"><div class="stat-l">Outstanding</div><div class="stat-v" style="color:var(--danger)">₹'+totalBal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'
     +'<div class="stat"><div class="stat-l">Overdue</div><div class="stat-v" style="color:var(--danger)">'+overdueCount+'</div></div>'
     +'<div class="stat"><div class="stat-l">Records</div><div class="stat-v">'+allPayments.length+'</div></div>';
 }
@@ -12032,7 +12078,7 @@ async function convertToWalkin(paymentId) {
   var amountPaid = Number(p.amount_paid) || 0;
   var name = p.person_name || '—';
 
-  if (!confirm('Convert ' + name + ' to a Walk-in?\n\nThis will:\n1. Create a Walk-in product sale record for ₹' + amountPaid.toLocaleString('en-IN') + '.\n2. Clear their outstanding payment balance to ₹0.\n3. Change their customer pack type to "Walk-in" (preserving their body composition scans).')) {
+  if (!confirm('Convert ' + name + ' to a Walk-in?\n\nThis will:\n1. Create a Walk-in product sale record for ₹' + amountPaid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '.\n2. Clear their outstanding payment balance to ₹0.\n3. Change their customer pack type to "Walk-in" (preserving their body composition scans).')) {
     return;
   }
 
@@ -12088,7 +12134,7 @@ function openCoachPaymentSetup(coachId) {
   document.getElementById('cps-info').innerHTML =
     '<strong>'+c.name+'</strong><br>'+
     'Pack: <strong>'+(c.pack_type||'—')+'</strong> &nbsp;|&nbsp; '+
-    'Pack Price: <strong style="color:var(--primary)">₹'+Number(c.pack_price).toLocaleString('en-IN')+'</strong>'+
+    'Pack Price: <strong style="color:var(--primary)">₹'+Number(c.pack_price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong>'+
     (c.pack_start_date ? '<br>Started: '+c.pack_start_date : '');
   document.getElementById('cps-pay-mode').value = 'full';
   document.getElementById('cps-paid-now-box').style.display = 'none';
@@ -12113,7 +12159,7 @@ function updateCpsPreview() {
   var paid = Number(document.getElementById('cps-paid-now').value)||0;
   var bal = total - paid;
   var el = document.getElementById('cps-balance-preview');
-  if(el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</strong>';
+  if(el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong>';
 }
 async function saveCoachPaymentSetup() {
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
@@ -12127,13 +12173,13 @@ async function saveCoachPaymentSetup() {
     if (mode === 'full') {
       await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:packPrice, payment_date:payDate, description:c.pack_type||'Coach Pack', notes:'Coach pack — full payment', center_id:c.wellness_center_id||null });
       await dbInsert('finance', { type:'income', description:c.name+' — Coach pack sale', amount:packPrice, category:'Coach pack payment', date:payDate, wellness_center_id:c.wellness_center_id||null });
-      showToast('Payment recorded! ₹'+packPrice.toLocaleString('en-IN')+' income logged.', 'success');
+      showToast('Payment recorded! ₹'+packPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' income logged.', 'success');
     } else if (mode === 'partial') {
       var paidNow = Number(document.getElementById('cps-paid-now').value)||0;
       var dueDate = document.getElementById('cps-due-date').value||null;
       await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:paidNow, payment_date:payDate, due_date:dueDate, description:c.pack_type||'Coach Pack', notes:'Coach pack — partial', center_id:c.wellness_center_id||null });
       if (paidNow > 0) await dbInsert('finance', { type:'income', description:c.name+' — Partial coach pack payment', amount:paidNow, category:'Coach pack payment', date:payDate, wellness_center_id:c.wellness_center_id||null });
-      showToast('Payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN'), 'success');
+      showToast('Payment plan created! Balance: ₹'+(packPrice-paidNow).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), 'success');
     } else {
       var dueDateNone = document.getElementById('cps-due-date').value||null;
       await dbInsert('payments', { person_id:coachId, person_name:c.name, total_amount:packPrice, amount_paid:0, payment_date:payDate, due_date:dueDateNone, description:c.pack_type||'Coach Pack', notes:'Coach pack — pending', center_id:c.wellness_center_id||null });
@@ -12174,7 +12220,7 @@ function updateCoachBalancePreview() {
   var paid = Number((document.getElementById('coach-paid-now')||{value:0}).value)||0;
   var bal = total - paid;
   var el = document.getElementById('coach-balance-preview');
-  if(el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</strong>';
+  if(el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong>';
 }
 
 function openNewCustomerModal() {
@@ -12247,7 +12293,7 @@ function updateCustBalancePreview() {
   var paid = Number((document.getElementById('customer-paid-now')||{value:0}).value)||0;
   var bal = total - paid;
   var el = document.getElementById('cust-balance-preview');
-  if (el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN')+'</strong>';
+  if (el) el.innerHTML = 'Balance: <strong style="color:'+(bal>0?'var(--danger)':'var(--success)')+'">₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong>';
 }
 
 // ── INSTALLMENT PAYMENT ──
@@ -12262,9 +12308,9 @@ function openInstallmentModal(paymentId) {
   document.getElementById('inst-balance-preview').style.display='none';
   document.getElementById('inst-info').innerHTML =
     '<strong>'+(p.person_name||'Customer')+'</strong> — '+(p.description||'Pack')+'<br>'+
-    'Total: <strong>₹'+total.toLocaleString('en-IN')+'</strong> &nbsp;|&nbsp; '+
-    'Paid: <span style="color:var(--success)">₹'+paid.toLocaleString('en-IN')+'</span> &nbsp;|&nbsp; '+
-    'Remaining: <span style="color:var(--danger)">₹'+bal.toLocaleString('en-IN')+'</span>';
+    'Total: <strong>₹'+total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong> &nbsp;|&nbsp; '+
+    'Paid: <span style="color:var(--success)">₹'+paid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span> &nbsp;|&nbsp; '+
+    'Remaining: <span style="color:var(--danger)">₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</span>';
 
   // Reset UPI QR Code Section
   var upiContainer = document.getElementById('inst-upi-container');
@@ -12292,7 +12338,7 @@ function toggleUpiQR() {
     
     // Load saved UPI ID for this center from localStorage
     var centerId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId) || 'default';
-    var savedUpiMap = JSON.parse(localStorage.getItem('center_upi_ids') || '{}');
+    var savedUpiMap = JSON.parse(safeStorage.getItem('center_upi_ids') || '{}');
     var upiInput = document.getElementById('inst-upi-id');
     
     if (upiInput && !upiInput.value) {
@@ -12329,9 +12375,9 @@ function generateAndShowQR() {
   
   // Save to localStorage
   var centerId = ACTIVE_CENTER || (_centerAuth && _centerAuth.centerId) || 'default';
-  var savedUpiMap = JSON.parse(localStorage.getItem('center_upi_ids') || '{}');
+  var savedUpiMap = JSON.parse(safeStorage.getItem('center_upi_ids') || '{}');
   savedUpiMap[centerId] = upiId;
-  localStorage.setItem('center_upi_ids', JSON.stringify(savedUpiMap));
+  safeStorage.setItem('center_upi_ids', JSON.stringify(savedUpiMap));
   
   // Amount to pay: if inst-amount is set, use it; otherwise use full balance
   var amt = Number(document.getElementById('inst-amount').value);
@@ -12368,7 +12414,7 @@ function updateInstPreview() {
   var newBal = total - newPaid;
   var el = document.getElementById('inst-balance-preview');
   el.style.display='block';
-  el.innerHTML = 'After this payment: Paid <strong style="color:var(--success)">₹'+newPaid.toLocaleString('en-IN')+'</strong> &nbsp;|&nbsp; Balance <strong style="color:'+(newBal>0?'var(--danger)':'var(--success)')+'">₹'+Math.max(0,newBal).toLocaleString('en-IN')+'</strong>'+(newBal<=0?' &nbsp;<span style="color:var(--success)">✅ Fully paid!</span>':'');
+  el.innerHTML = 'After this payment: Paid <strong style="color:var(--success)">₹'+newPaid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong> &nbsp;|&nbsp; Balance <strong style="color:'+(newBal>0?'var(--danger)':'var(--success)')+'">₹'+Math.max(0,newBal).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</strong>'+(newBal<=0?' &nbsp;<span style="color:var(--success)">✅ Fully paid!</span>':'');
 }
 async function saveInstallment() {
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Not connected','error');return;}
@@ -12385,7 +12431,7 @@ async function saveInstallment() {
     await dbUpdate('payments', pid, { amount_paid: newPaid, notes: (p.notes?p.notes+'; ':'')+date+': ₹'+adding+(notes?' ('+notes+')':'') });
     var _instPerson = D.customers.find(function(x){return x.id===p.person_id;}) || D.coaches.find(function(x){return x.id===p.person_id;});
     await dbInsert('finance', { type:'income', description:(p.person_name||'Customer')+' — '+(p.description||'Pack')+' installment', amount:adding, category:'Pack sale to customer', date:date, wellness_center_id:(_instPerson&&_instPerson.wellness_center_id)||null });
-    showToast('₹'+adding.toLocaleString('en-IN')+' recorded + income logged!', 'success');
+    showToast('₹'+adding.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' recorded + income logged!', 'success');
     closeModal('installment');
     await loadPayments(); await loadFinance(); renderOverview();
   } catch(e) { showToast('Error: '+e.message,'error'); }
@@ -12435,7 +12481,7 @@ function sendPaymentWA(pid){
   var phone=(person&&person.contact?person.contact:'').replace(/\D/g,'');
   if(phone.length===10)phone=COUNTRY_CODE+phone;
   if(!phone){showToast('No contact number','error');return;}
-  var msg='🌿 *Payment Reminder — '+getCenterName()+'*\n\nHi *'+p.person_name+'*! 😊\n\n📋 *'+p.description+'*\n✅ Paid: ₹'+Number(p.amount_paid).toLocaleString('en-IN')+'\n⚠️ Balance: *₹'+bal.toLocaleString('en-IN')+'*\n'+(p.due_date?'📅 Due: *'+p.due_date+'*\n':'')+'\nPlease clear at earliest. Thank you! 🙏\n\n_'+getCenterName()+'_ 💚';
+  var msg='🌿 *Payment Reminder — '+getCenterName()+'*\n\nHi *'+p.person_name+'*! 😊\n\n📋 *'+p.description+'*\n✅ Paid: ₹'+Number(p.amount_paid).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'\n⚠️ Balance: *₹'+bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'*\n'+(p.due_date?'📅 Due: *'+p.due_date+'*\n':'')+'\nPlease clear at earliest. Thank you! 🙏\n\n_'+getCenterName()+'_ 💚';
   window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
 }
 function checkOverduePayments(){
@@ -12443,7 +12489,7 @@ function checkOverduePayments(){
   var overdue=(D.payments||[]).filter(function(p){return Math.max(0,Number(p.total_amount)-Number(p.amount_paid))>0&&p.due_date&&p.due_date<today;});
   var el=document.getElementById('overdue-alert');
   if(!el){el=document.createElement('div');el.id='overdue-alert';var ov=document.getElementById('overview-stats');if(ov)ov.parentNode.insertBefore(el,ov);}
-  el.innerHTML=overdue.length?'<div style="background:var(--danger-light);border:1px solid var(--danger);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-weight:700;color:var(--danger)">⚠️ '+overdue.length+' overdue payment'+(overdue.length>1?'s':'')+' — ₹'+overdue.reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0).toLocaleString('en-IN')+' outstanding</span></div>':'';
+  el.innerHTML=overdue.length?'<div style="background:var(--danger-light);border:1px solid var(--danger);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-weight:700;color:var(--danger)">⚠️ '+overdue.length+' overdue payment'+(overdue.length>1?'s':'')+' — ₹'+overdue.reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' outstanding</span></div>':'';
 }
 
 // ══════════════════════════════════════════════
@@ -12490,7 +12536,9 @@ function renderCustomers() {
   var tb = document.getElementById('customers-body');
   var todayMMDD = new Date().toISOString().slice(5,10);
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">👤</div><p>No customers found.</p></div></td></tr>'; }
-  else tb.innerHTML = rows.map(function(c){
+  else {
+    window._limCust = window._limCust || 50;
+    tb.innerHTML = rows.slice(0, window._limCust).map(function(c){
     var st = getDaysLeft(c);
     var streak = getStreak(c.id);
     var bdg = st.days > 3 ? 'bg' : (st.days > 0 ? 'by' : 'br');
@@ -12548,6 +12596,8 @@ function renderCustomers() {
         +'<button class="btn-d" onclick="delRecord(\'customers\',\''+c.id+'\',\'customers\')">Delete</button>'
       +'</div></td></tr>';
   }).join('');
+    if(rows.length > window._limCust) { tb.innerHTML += '<tr><td colspan="9" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCust+=50;renderCustomers()">⬇️ Load More (' + (rows.length - window._limCust) + ' remaining)</button></td></tr>'; }
+  }
   var active=_custs.filter(function(c){return getDaysLeft(c).active;}).length;
   var expiring=_custs.filter(function(c){var s=getDaysLeft(c);return s.active&&s.days<=3;}).length;
   var stars=_custs.filter(function(c){return _custs.filter(function(x){return x.referred_by_id===c.id;}).length>=2;}).length;
@@ -12945,7 +12995,7 @@ async function executePromotion() {
 // ══════════════════════════════════════════════
 
 async function loadWalkins() {
-  D.walkins = await dbGet('walkins', 'created_at');
+  D.walkins = await dbGetAll('walkins', 'created_at');
   renderWalkins();
   updateCustSelects();
   updateBodyCustSelect();
@@ -12982,12 +13032,13 @@ function renderWalkins() {
   var SRC = {google:'🔍 Google',customer_referral:'👤 Customer',coach_referral:'👨‍🏫 Coach',owner:'🏢 Owner',other:'Other'};
   var OUT = {checkup:'🔬 Checkup',trial:'📦 Trial Pack',product_sale:'🛒 Product Sale',other:'Other'};
   var OUT_COL = {checkup:'#1d4ed8',trial:'#b07800',product_sale:'#16a34a',other:'var(--muted)'};
-  tb.innerHTML = rows.map(function(w) {
+  window._limWalk = window._limWalk || 50;
+  tb.innerHTML = rows.slice(0, window._limWalk).map(function(w) {
     var refObj = w.referred_by_id ? findPerson(w.referred_by_id) : null;
     var refName = w.referred_by_name || (refObj ? refObj.name : '');
     var srcLbl = (SRC[w.source]||w.source||'—') + (refName ? '<br><span style="font-size:11px;color:var(--muted)">'+refName+'</span>' : '');
     var outLbl = '<span style="font-weight:600;color:'+(OUT_COL[w.outcome]||'var(--muted)')+'">'+( OUT[w.outcome]||w.outcome||'—')+'</span>'+(w.product_details?'<br><span style="font-size:11px;color:var(--muted)">'+w.product_details+'</span>':'');
-    var amt = (w.outcome==='checkup') ? '<span style="color:var(--success);font-size:11px;font-weight:600">Free</span>' : (w.amount_received ? '₹'+Number(w.amount_received).toLocaleString('en-IN') : '—');
+    var amt = (w.outcome==='checkup') ? '<span style="color:var(--success);font-size:11px;font-weight:600">Free</span>' : (w.amount_received ? '₹'+Number(w.amount_received).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—');
     var waBtn = w.phone ? '<a class="wa-btn" href="https://api.whatsapp.com/send?phone='+COUNTRY_CODE+w.phone.replace(/\D/g,'')+'&text=Hi+'+encodeURIComponent(w.name||'')+',+thank+you+for+visiting+our+wellness+center!+We+hope+to+see+you+again+soon+%F0%9F%8C%BF" target="_blank" rel="noopener" style="font-size:11px;padding:3px 7px;text-decoration:none">💬 WA</a>' : '';
     var convertBtn = w.converted
       ? '<span class="badge bg" style="font-size:10px">✅ Customer</span>'
@@ -13003,6 +13054,7 @@ function renderWalkins() {
       +'<td><div class="acts">'+waBtn+' '+convertBtn+' <button class="btn-e" onclick="openWalkinModal(\''+w.id+'\')">Edit</button> <button class="btn-e" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5" onclick="deleteWalkin(\''+w.id+'\')">🗑</button></div></td>'
       +'</tr>';
   }).join('');
+  if(rows.length > window._limWalk) { tb.innerHTML += '<tr><td colspan="8" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limWalk+=50;renderWalkins()">⬇️ Load More (' + (rows.length - window._limWalk) + ' remaining)</button></td></tr>'; }
 }
 
 function openWalkinModal(id) {
@@ -13128,7 +13180,7 @@ async function saveWalkin(){
         // Amount newly added on edit — create finance record and link it
         var newFin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:'Walk-in product sale',date:data.date,wellness_center_id:data.wellness_center_id||null});
         if(newFin && newFin[0] && newFin[0].id) await dbUpdate('walkins', id, {finance_id: newFin[0].id});
-        showToast('Walk-in updated · ₹'+data.amount_received.toLocaleString('en-IN')+' added to finance ✅','success');
+        showToast('Walk-in updated · ₹'+data.amount_received.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' added to finance ✅','success');
       } else {
         showToast('Walk-in updated','success');
       }
@@ -13140,7 +13192,7 @@ async function saveWalkin(){
         if(fin && fin[0] && fin[0].id && savedWalkin && savedWalkin[0] && savedWalkin[0].id){
           await dbUpdate('walkins', savedWalkin[0].id, {finance_id: fin[0].id});
         }
-        showToast('Walk-in saved · ₹'+data.amount_received.toLocaleString('en-IN')+' added to finance ✅','success');
+        showToast('Walk-in saved · ₹'+data.amount_received.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' added to finance ✅','success');
       } else {
         showToast('Walk-in saved ✅','success');
       }
@@ -13217,7 +13269,7 @@ async function _markWalkinConverted(customerId){
 // ══════════════════════════════════════════════
 
 async function loadLeads() {
-  D.leads = await dbGet('leads', 'id');
+  D.leads = await dbGetAll('leads', 'id');
   D.leadFollowups = await dbGet('lead_followups', 'called_at');
   renderLeadsStats();
   renderLeads();
@@ -13588,16 +13640,16 @@ async function loadExpenses() {
   D.expenses = rows.map(expFromDB);
 }
 async function migrateExpensesFromLocalStorage() {
-  var local = JSON.parse(localStorage.getItem('supervisorExpenses') || '[]');
+  var local = JSON.parse(safeStorage.getItem('supervisorExpenses') || '[]');
   if (!local.length) return;
   var existingIds = D.expenses.map(function(e){ return e.id; });
   var toMigrate = local.filter(function(e){ return !existingIds.includes(e.id); });
-  if (!toMigrate.length) { localStorage.removeItem('supervisorExpenses'); return; }
+  if (!toMigrate.length) { safeStorage.removeItem('supervisorExpenses'); return; }
   showToast('Migrating ' + toMigrate.length + ' expenses to cloud...', 'info');
   for (var i = 0; i < toMigrate.length; i++) {
     try { await dbInsert('expenses', expToDB(toMigrate[i])); } catch(err) { console.error('migrate expense', err); }
   }
-  localStorage.removeItem('supervisorExpenses');
+  safeStorage.removeItem('supervisorExpenses');
   var rows = await dbGet('expenses', 'date');
   D.expenses = rows.map(expFromDB);
   showToast('Expenses migrated to cloud!');
@@ -13630,7 +13682,7 @@ function openExpenseModal(id) {
 function quickAddWaterCans(loc) {
   var key    = loc === 'home' ? 'waterCansHomeAmt' : 'waterCansCenterAmt';
   var label  = loc === 'home' ? 'Water Can — Home' : 'Water Can — ' + getCenterName();
-  var lastAmt = localStorage.getItem(key) || '10';
+  var lastAmt = safeStorage.getItem(key) || '10';
   openExpenseModal();
   document.getElementById('exp-cat').value    = 'Water Cans';
   document.getElementById('exp-desc').value   = label;
@@ -13658,8 +13710,8 @@ async function saveExpense() {
   var centerName = '';
   if (centerId) { var cc = D.centers.find(function(c){ return c.id === centerId; }); centerName = cc ? cc.name : ''; }
   if (cat === 'Water Cans') {
-    if (desc.indexOf('Home') !== -1) localStorage.setItem('waterCansHomeAmt', amount);
-    else localStorage.setItem('waterCansCenterAmt', amount);
+    if (desc.indexOf('Home') !== -1) safeStorage.setItem('waterCansHomeAmt', amount);
+    else safeStorage.setItem('waterCansCenterAmt', amount);
   }
   var financeData = { type: 'expense', category: cat, amount: amount, description: desc, date: date, wellness_center_id: centerId || null };
   try {
@@ -13829,7 +13881,7 @@ function renderCommission() {
   if (!sel) return;
   var month = sel.value;
   if (!month) { var d = new Date(); month = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
-  var rates = JSON.parse(localStorage.getItem('commissionRates') || '{}');
+  var rates = JSON.parse(safeStorage.getItem('commissionRates') || '{}');
   var defRate = parseFloat(rates.default !== undefined ? rates.default : 10) / 100;
 
   var data = D.coaches.map(function(coach) {
@@ -13878,7 +13930,7 @@ function renderCommission() {
   }
 
   var html = '<div class="stats" style="margin-bottom:12px">'
-    +'<div class="stat"><div class="stat-ic">💰</div><div class="stat-l">Total Payout</div><div class="stat-v" style="color:var(--primary)">₹'+grandTotal.toLocaleString('en-IN')+'</div></div>'
+    +'<div class="stat"><div class="stat-ic">💰</div><div class="stat-l">Total Payout</div><div class="stat-v" style="color:var(--primary)">₹'+grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'
     +'<div class="stat"><div class="stat-ic">👨‍🏫</div><div class="stat-l">Coaches</div><div class="stat-v">'+data.length+'</div></div>'
     +'<div class="stat"><div class="stat-ic">🔄</div><div class="stat-l">Total Renewals</div><div class="stat-v">'+data.reduce(function(s,d){return s+d.renewCount;},0)+'</div></div>'
     +'<div class="stat"><div class="stat-ic">🆕</div><div class="stat-l">New Enrollments</div><div class="stat-v">'+data.reduce(function(s,d){return s+d.newCount;},0)+'</div></div>'
@@ -13892,15 +13944,15 @@ function renderCommission() {
   data.forEach(function(d, i) {
     var medal = i===0&&d.total>0?'🥇 ':i===1&&d.total>0?'🥈 ':i===2&&d.total>0?'🥉 ':'';
     var phone = (d.coach.contact||'').replace(/\D/g,''); if(phone.length===10) phone=COUNTRY_CODE+phone;
-    var msg = encodeURIComponent('Hi '+d.coach.name+'! Your commission for '+month+' is ready: ₹'+d.total.toLocaleString('en-IN')+' ('+d.newCount+' new + '+d.renewCount+' renewals). Thank you! 🙏');
+    var msg = encodeURIComponent('Hi '+d.coach.name+'! Your commission for '+month+' is ready: ₹'+d.total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' ('+d.newCount+' new + '+d.renewCount+' renewals). Thank you! 🙏');
     html += '<tr>'
       +'<td><strong>'+medal+d.coach.name+'</strong><div style="font-size:11px;color:var(--muted)">'+(d.coach.herbalife_pin||'Associate')+'</div></td>'
       +'<td>'+d.totalCusts+'</td>'
       +'<td style="color:var(--success);font-weight:700">+'+d.newCount+'</td>'
       +'<td>'+d.renewCount+'</td>'
-      +'<td>₹'+d.newEarnings.toLocaleString('en-IN')+'</td>'
-      +'<td>₹'+d.renewalEarnings.toLocaleString('en-IN')+'</td>'
-      +'<td style="font-weight:700;color:var(--primary)"><div style="display:flex;align-items:center;gap:6px">₹'+d.total.toLocaleString('en-IN')
+      +'<td>₹'+d.newEarnings.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+      +'<td>₹'+d.renewalEarnings.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+      +'<td style="font-weight:700;color:var(--primary)"><div style="display:flex;align-items:center;gap:6px">₹'+d.total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})
         +(phone&&d.total>0?' <button class="wa-btn" style="font-size:10px;padding:2px 7px" onclick="window.open(\'https://api.whatsapp.com/send?phone='+phone+'&text='+msg+'\',\'_blank\')" title="Notify coach">💬</button>':'')
       +'</div></td>'
       +'</tr>';
@@ -13908,9 +13960,9 @@ function renderCommission() {
 
   html += '<tr style="background:var(--surface2);font-weight:700">'
     +'<td colspan="4" style="text-align:right;font-size:13px">Grand Total</td>'
-    +'<td>₹'+data.reduce(function(s,d){return s+d.newEarnings;},0).toLocaleString('en-IN')+'</td>'
-    +'<td>₹'+data.reduce(function(s,d){return s+d.renewalEarnings;},0).toLocaleString('en-IN')+'</td>'
-    +'<td style="color:var(--primary)">₹'+grandTotal.toLocaleString('en-IN')+'</td>'
+    +'<td>₹'+data.reduce(function(s,d){return s+d.newEarnings;},0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+    +'<td>₹'+data.reduce(function(s,d){return s+d.renewalEarnings;},0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
+    +'<td style="color:var(--primary)">₹'+grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</td>'
     +'</tr>';
 
   html += '</tbody></table></div>';
@@ -13918,7 +13970,7 @@ function renderCommission() {
 }
 
 function openCommissionSettings() {
-  var rates = JSON.parse(localStorage.getItem('commissionRates') || '{}');
+  var rates = JSON.parse(safeStorage.getItem('commissionRates') || '{}');
   document.getElementById('comm-rate-default').value = rates.default !== undefined ? rates.default : 10;
   var packTypes = [];
   D.customers.forEach(function(c){ if(c.pack_type && packTypes.indexOf(c.pack_type)===-1) packTypes.push(c.pack_type); });
@@ -13942,7 +13994,7 @@ function saveCommissionRates() {
     var v = inp.value.trim();
     if(v !== '') rates[inp.dataset.pack] = parseFloat(v);
   });
-  localStorage.setItem('commissionRates', JSON.stringify(rates));
+  safeStorage.setItem('commissionRates', JSON.stringify(rates));
   closeModal('commission-rates');
   renderCommission();
   showToast('Commission rates saved', 'success');
@@ -14105,7 +14157,7 @@ function getDaysLeftSv(c) {
 //  GOAL SETTING
 // ══════════════════════════════════════════
 function getGoals() {
-  return JSON.parse(localStorage.getItem('supervisorGoals') || '{}');
+  return JSON.parse(safeStorage.getItem('supervisorGoals') || '{}');
 }
 function saveGoals() {
   var goals = getGoals();
@@ -14115,7 +14167,7 @@ function saveGoals() {
   goals[ym].revenue     = parseInt(document.getElementById('goal-revenue').value) || 0;
   goals[ym].attendance  = parseInt(document.getElementById('goal-attendance').value) || 0;
   goals[ym].leads       = parseInt(document.getElementById('goal-leads').value) || 0;
-  localStorage.setItem('supervisorGoals', JSON.stringify(goals));
+  safeStorage.setItem('supervisorGoals', JSON.stringify(goals));
   renderGoals();
   showToast('Goals saved!');
 }
@@ -14669,7 +14721,7 @@ async function _doBulkGenerate() {
     if(!res.ok) throw new Error(data.error || 'Edge function error ' + res.status);
 
     // Reload customers so diet_plan fields reflect what the edge function saved
-    var fresh = await dbGet('customers', '*');
+    var fresh = await dbGetAll('customers', '*');
     if(fresh) D.customers = fresh;
 
     renderCustomers();
@@ -16589,6 +16641,5 @@ async function askFinanceFollowup() {
   
   askBtn.disabled = false;
   askBtn.textContent = 'Ask';
-}
 }
 

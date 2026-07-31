@@ -152,6 +152,11 @@ async function sendOtpCode() {
   var RL_MAX = 5, RL_WINDOW = 10 * 60 * 1000;
   var now = Date.now();
   var attempts = JSON.parse(safeStorage.getItem(RL_KEY) || '[]').filter(function(t){ return now - t < RL_WINDOW; });
+  var lastAttempt = attempts.length > 0 ? Math.max.apply(null, attempts) : 0;
+  if (now - lastAttempt < 30000) {
+    showLoginErr('Please wait 30 seconds before requesting a new code.');
+    return;
+  }
   if (attempts.length >= RL_MAX) {
     var waitMs = RL_WINDOW - (now - attempts[0]);
     var waitMin = Math.ceil(waitMs / 60000);
@@ -229,6 +234,7 @@ async function verifyOtpCode() {
   var token = (document.getElementById('login-otp').value || '').trim();
   if (!token || token.length < 6) { showCodeErr('Please enter the login code.'); return; }
   var btn = document.getElementById('verify-btn');
+  if (btn.disabled) return;
   btn.textContent = 'Verifying…'; btn.disabled = true;
   var res = null;
   try {
@@ -266,7 +272,12 @@ async function verifyOtpCode() {
     if (res.data.session && res.data.session.refresh_token) {
       safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
     }
-    await loadAndStartDashboard();
+    try {
+      await loadAndStartDashboard();
+    } catch (e) {
+      showCodeErr('Error loading application. Please try again.');
+      btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
+    }
   }
 }
 
