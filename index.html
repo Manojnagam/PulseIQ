@@ -1276,8 +1276,20 @@ window.onunhandledrejection = function(e) {
   }
 };
 </script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    for(let r of regs) r.unregister();
+  }).catch(e => console.error(e));
+}
+if ('caches' in window) {
+  caches.keys().then(function(names) {
+    for (let n of names) caches.delete(n);
+  }).catch(e => console.error(e));
+}
+</script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
-<script defer src="auth.min.js?v=1.5.9"></script>
+<script defer src="auth.min.js?v=1.5.10"></script>
 <script defer src="app.min.js?v=1.5.5"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>
@@ -1393,7 +1405,8 @@ window.onunhandledrejection = function(e) {
 <!-- ── LOGIN SCREEN ── -->
 <div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;background:#09090b;background:radial-gradient(circle at 50% 25%, rgba(39, 174, 96, 0.08) 0%, rgba(9, 9, 11, 0.98) 75%);align-items:center;justify-content:center;padding:24px;font-family:'Plus Jakarta Sans', sans-serif">
   <div style="background:rgba(24, 24, 27, 0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:24px;padding:44px 38px;width:100%;max-width:410px;box-shadow:0 30px 60px -12px rgba(0,0,0,0.7);border:1px solid rgba(255, 255, 255, 0.12);color:var(--text)">
-    <div style="text-align:center;margin-bottom:32px">
+    <div style="text-align:center;margin-bottom:32px;position:relative;">
+      <div style="position:absolute;top:-30px;right:-10px;background:#ef4444;color:#fff;font-size:10px;font-weight:900;padding:4px 8px;border-radius:12px;letter-spacing:1px;text-transform:uppercase;">BUILD 1.5.10</div>
       <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#27AE60 0%,#2563EB 100%);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 10px 25px -5px rgba(39, 174, 96, 0.4)">🌿</div>
       <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:var(--text);letter-spacing:-0.5px;line-height:1.2">PulseZen</div>
       <div style="font-size:11px;color:var(--primary);margin-top:6px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700">Supervisor Operating System</div>

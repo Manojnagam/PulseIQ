@@ -1,4 +1,5 @@
 // ── AUTH SPLIT LIGHTWEIGHT INITIALIZER ──
+console.log("AUTH BUILD 1.5.10 LOADED");
 window.authSplitActive = true;
 
 window.visualDebug = function(msg) {
