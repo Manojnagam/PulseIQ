@@ -2650,8 +2650,7 @@ function goTo(name, el) {
     window._tabPerfMetrics[tabKey] = {
       firstRenderTimeMs: isFirst ? Math.round(t1 - t0) : (window._tabPerfMetrics[tabKey] ? window._tabPerfMetrics[tabKey].firstRenderTimeMs : 0),
       cachedRenderTimeMs: isFirst ? 0 : Math.round(t1 - t0),
-      mainThreadBlockingMs: Math.max(0, Math.round((t1 - t0) - 16)),
-      domNodeCount: document.getElementsByTagName('*').length
+      mainThreadBlockingMs: Math.max(0, Math.round((t1 - t0) - 16))
     };
   }
 
