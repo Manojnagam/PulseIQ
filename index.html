@@ -1289,8 +1289,8 @@ if ('caches' in window) {
 }
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
-<script defer src="auth.core.min.js?v=1.6.1"></script>
-<script defer src="app.min.js?v=1.6.1"></script>
+<script defer src="auth.core.min.js?v=1.6.2"></script>
+<script defer src="app.min.js?v=1.6.2"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>
 <script defer src="shared/formatting.js"></script>
@@ -2030,6 +2030,7 @@ if ('caches' in window) {
       </div>
       <div class="stats">
         <div class="stat"><div class="stat-ic">📅</div><div class="stat-l">Today</div><div class="stat-v" id="wi-stat-today">0</div></div>
+        <div class="stat"><div class="stat-ic">📆</div><div class="stat-l" id="wi-stat-month-lbl">This Month</div><div class="stat-v" style="color:var(--accent)" id="wi-stat-month">0</div></div>
         <div class="stat"><div class="stat-ic">🔬</div><div class="stat-l">Checkups</div><div class="stat-v" id="wi-stat-checkup">0</div></div>
         <div class="stat"><div class="stat-ic">📦</div><div class="stat-l">Trial Packs</div><div class="stat-v" id="wi-stat-trial">0</div></div>
         <div class="stat"><div class="stat-ic">🛒</div><div class="stat-l">Product Sales</div><div class="stat-v" id="wi-stat-sale">0</div></div>
@@ -2037,6 +2038,7 @@ if ('caches' in window) {
       </div>
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <input class="search" id="walkins-search" placeholder="🔍 Search name or phone..." oninput="renderWalkins()" style="flex:1;min-width:160px;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:10px 14px;font-family:inherit;font-size:14px">
+        <input type="month" id="walkins-filter-month" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)" title="Filter by month">
         <select id="walkins-filter-outcome" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)">
           <option value="">All Outcomes</option>
           <option value="checkup">🔬 Checkup</option>
@@ -2045,7 +2047,7 @@ if ('caches' in window) {
           <option value="other">Other</option>
         </select>
         <input type="date" id="walkins-filter-date" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)" title="Filter by date">
-        <button class="btn-c" onclick="document.getElementById('walkins-filter-date').value='';document.getElementById('walkins-filter-outcome').value='';renderWalkins()">Clear</button>
+        <button class="btn-c" onclick="document.getElementById('walkins-filter-date').value='';document.getElementById('walkins-filter-outcome').value='';document.getElementById('walkins-filter-month').value='';renderWalkins()">Clear</button>
       </div>
       <div class="tcard">
         <div class="twrap"><table>

@@ -12921,6 +12921,15 @@ function renderWalkins() {
   var q = ((document.getElementById('walkins-search')||{}).value||'').toLowerCase();
   var filterOutcome = (document.getElementById('walkins-filter-outcome')||{}).value||'';
   var filterDate = (document.getElementById('walkins-filter-date')||{}).value||'';
+  
+  var filterMonthEl = document.getElementById('walkins-filter-month');
+  if (filterMonthEl && !filterMonthEl.value && !window._walkinsMonthInit) {
+    var d = new Date();
+    filterMonthEl.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    window._walkinsMonthInit = true;
+  }
+  var filterMonth = (filterMonthEl||{}).value||'';
+
   var all = D.walkins || [];
   if (ACTIVE_CENTER) {
     all = all.filter(function(w){ return w.wellness_center_id === ACTIVE_CENTER || w.center_id === ACTIVE_CENTER; });
@@ -12929,6 +12938,18 @@ function renderWalkins() {
 
   // Stats
   var si = document.getElementById('wi-stat-today'); if(si) si.textContent = all.filter(function(w){return w.date===today;}).length;
+  si = document.getElementById('wi-stat-month'); 
+  if(si) {
+    si.textContent = all.filter(function(w){return filterMonth && w.date && w.date.startsWith(filterMonth);}).length;
+    var mlbl = document.getElementById('wi-stat-month-lbl');
+    if(mlbl) {
+      if(!filterMonth) mlbl.textContent = 'Month Total';
+      else {
+        var dp = new Date(filterMonth+'-01');
+        mlbl.textContent = dp.toLocaleString('default',{month:'short',year:'numeric'})+' Total';
+      }
+    }
+  }
   si = document.getElementById('wi-stat-checkup'); if(si) si.textContent = all.filter(function(w){return w.outcome==='checkup';}).length;
   si = document.getElementById('wi-stat-trial'); if(si) si.textContent = all.filter(function(w){return w.outcome==='trial';}).length;
   si = document.getElementById('wi-stat-sale'); if(si) si.textContent = all.filter(function(w){return w.outcome==='product_sale';}).length;
@@ -12937,6 +12958,7 @@ function renderWalkins() {
   var rows = all.filter(function(w) {
     if(filterOutcome && w.outcome !== filterOutcome) return false;
     if(filterDate && w.date !== filterDate) return false;
+    if(filterMonth && w.date && !w.date.startsWith(filterMonth)) return false;
     return (w.name||'').toLowerCase().includes(q) || (w.phone||'').includes(q);
   }).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
 
