@@ -1289,8 +1289,8 @@ if ('caches' in window) {
 }
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
-<script defer src="auth.core.min.js?v=1.6.3"></script>
-<script defer src="app.min.js?v=1.6.3"></script>
+<script defer src="auth.core.min.js?v=1.6.4"></script>
+<script defer src="app.min.js?v=1.6.4"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>
 <script defer src="shared/formatting.js"></script>
@@ -2325,6 +2325,7 @@ if ('caches' in window) {
       <div class="ph">
         <div><div class="pt" data-t="pt_finance">Finance & P&amp;L</div><div class="ps" data-t="ps_finance">Income, expenses and profit &amp; loss</div></div>
         <div style="display:flex;gap:8px">
+          <button class="btn-e" onclick="downloadFinancialReportPDF()" style="background:#10b981;border-color:#10b981;color:#fff;font-weight:600">📊 Download PDF</button>
           <button class="btn-e" id="fin-ai-btn" onclick="generateFinanceInsights()" style="background:#f0f4ff;border-color:#c7d2fe;color:#4f46e5;font-weight:600">✨ AI Insights</button>
           <button class="btn-e" onclick="openRecurringModal()" style="background:#fef3c7;border-color:#fcd34d;color:#92400e;font-weight:600">🔁 Recurring</button>
           <button class="btn-p" onclick="openFinanceModal()">+ Add Transaction</button>

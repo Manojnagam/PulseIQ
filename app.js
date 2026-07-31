@@ -7218,6 +7218,162 @@ function renderFinance() {
   } else if (plCard) { plCard.style.display = 'none'; }
 }
 
+function downloadFinancialReportPDF() {
+  var rows = _getFinFiltered();
+  
+  var from = document.getElementById('fin-from').value;
+  var to   = document.getElementById('fin-to').value;
+  var periodLabel = (from && to) ? from + ' to ' + to : (from ? 'From ' + from : (to ? 'Until ' + to : 'All Time'));
+
+  var baseWalkins = ACTIVE_CENTER ? (D.walkins||[]).filter(function(w){ return w.wellness_center_id === ACTIVE_CENTER || w.center_id === ACTIVE_CENTER; }) : (D.walkins||[]);
+  var walkins = baseWalkins.filter(function(w){
+    if(!w.date) return false;
+    if(from && w.date < from) return false;
+    if(to && w.date > to) return false;
+    return true;
+  });
+
+  if (!rows.length && !walkins.length) {
+    showToast('No financial or walk-in records in this period.','error');
+    return;
+  }
+
+  var byMonth = {};
+  
+  rows.forEach(function(r) {
+    if(!r.date) return;
+    var monthKey = r.date.slice(0,7);
+    var dayKey = r.date;
+    if(!byMonth[monthKey]) byMonth[monthKey] = { days: {}, inc:0, exp:0, net:0, wCount:0 };
+    if(!byMonth[monthKey].days[dayKey]) byMonth[monthKey].days[dayKey] = { inc:0, exp:0, net:0, wCount:0, rows:[], wRows:[] };
+    
+    var amt = parseFloat(r.amount)||0;
+    if (r.type === 'income') {
+      byMonth[monthKey].inc += amt; byMonth[monthKey].net += amt;
+      byMonth[monthKey].days[dayKey].inc += amt; byMonth[monthKey].days[dayKey].net += amt;
+    } else {
+      byMonth[monthKey].exp += amt; byMonth[monthKey].net -= amt;
+      byMonth[monthKey].days[dayKey].exp += amt; byMonth[monthKey].days[dayKey].net -= amt;
+    }
+    byMonth[monthKey].days[dayKey].rows.push(r);
+  });
+
+  walkins.forEach(function(w) {
+    if(!w.date) return;
+    var monthKey = w.date.slice(0,7);
+    var dayKey = w.date;
+    if(!byMonth[monthKey]) byMonth[monthKey] = { days: {}, inc:0, exp:0, net:0, wCount:0 };
+    if(!byMonth[monthKey].days[dayKey]) byMonth[monthKey].days[dayKey] = { inc:0, exp:0, net:0, wCount:0, rows:[], wRows:[] };
+    
+    byMonth[monthKey].wCount++;
+    byMonth[monthKey].days[dayKey].wCount++;
+    byMonth[monthKey].days[dayKey].wRows.push(w);
+  });
+
+  var html = '<html><head><title>PulseIQ Financial Report</title><style>';
+  html += '@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");';
+  html += 'body { font-family: "Inter", sans-serif; padding: 40px; color: #1e293b; background: #fff; }';
+  html += 'h1 { color: #0f172a; text-align: center; font-size: 28px; margin-bottom: 5px; }';
+  html += '.subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; }';
+  html += '.month-block { page-break-inside: avoid; margin-bottom: 40px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }';
+  html += '.month-header { background: #f8fafc; padding: 20px; border-bottom: 2px solid #e2e8f0; }';
+  html += '.month-title { font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0; }';
+  html += '.month-summary { display: flex; gap: 24px; font-size: 15px; font-weight: 600; }';
+  html += '.text-green { color: #16a34a; } .text-red { color: #dc2626; } .text-blue { color: #2563eb; } .text-orange { color: #f59e0b; }';
+  html += 'table { width: 100%; border-collapse: collapse; font-size: 13px; }';
+  html += 'th { background: #f1f5f9; padding: 12px 16px; text-align: left; font-weight: 600; color: #475569; border-bottom: 1px solid #cbd5e1; }';
+  html += 'td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }';
+  html += 'tr.day-row { font-weight: 700; background: #fff; border-top: 2px solid #e2e8f0; }';
+  html += 'tr.detail-row { color: #64748b; font-size: 12px; background: #fafbfc; }';
+  html += 'tr.detail-row td { padding: 6px 16px; border-bottom: none; }';
+  html += '.badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700; text-transform:uppercase; }';
+  html += '.bg-w { background:#fef3c7; color:#d97706; }';
+  html += '.bg-i { background:#dcfce7; color:#16a34a; }';
+  html += '.bg-e { background:#fee2e2; color:#dc2626; }';
+  html += '@media print { body { padding: 0; } .month-block { break-inside: avoid; } }';
+  html += '</style></head><body>';
+  
+  html += '<h1>PulseIQ Financial & Walk-ins Report</h1>';
+  html += '<div class="subtitle">Period: ' + periodLabel + ' | Generated on ' + new Date().toLocaleString() + '</div>';
+
+  var monthKeys = Object.keys(byMonth).sort().reverse();
+  monthKeys.forEach(function(mk) {
+    var mData = byMonth[mk];
+    var mName = new Date(mk+'-01').toLocaleString('en-IN', {month:'long', year:'numeric'});
+    
+    html += '<div class="month-block">';
+    html += '<div class="month-header">';
+    html += '<h2 class="month-title">' + mName + '</h2>';
+    html += '<div class="month-summary">';
+    html += '<span class="text-orange">🚶 Walk-ins: ' + mData.wCount + '</span>';
+    html += '<span class="text-green">💰 Income: ₹' + mData.inc.toLocaleString('en-IN',{minimumFractionDigits:2}) + '</span>';
+    html += '<span class="text-red">📉 Expense: ₹' + mData.exp.toLocaleString('en-IN',{minimumFractionDigits:2}) + '</span>';
+    html += '<span class="' + (mData.net>=0?'text-green':'text-red') + '">💵 Net: ₹' + mData.net.toLocaleString('en-IN',{minimumFractionDigits:2}) + '</span>';
+    html += '</div></div>';
+    
+    html += '<table><thead><tr><th style="width:120px">Date</th><th style="width:100px">Type</th><th>Details</th><th style="text-align:right">Income</th><th style="text-align:right">Expense</th><th style="text-align:right">Net Day</th></tr></thead><tbody>';
+    
+    var dayKeys = Object.keys(mData.days).sort().reverse();
+    dayKeys.forEach(function(dk) {
+      var dData = mData.days[dk];
+      var dName = new Date(dk).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+      
+      html += '<tr class="day-row">';
+      html += '<td>' + dName + '</td>';
+      html += '<td colspan="2" style="color:#64748b;font-weight:normal;font-size:11px">Daily Summary ('+dData.wCount+' walk-ins)</td>';
+      html += '<td style="text-align:right" class="text-green">₹' + dData.inc.toLocaleString('en-IN') + '</td>';
+      html += '<td style="text-align:right" class="text-red">₹' + dData.exp.toLocaleString('en-IN') + '</td>';
+      html += '<td style="text-align:right" class="' + (dData.net >= 0 ? 'text-green' : 'text-red') + '">₹' + dData.net.toLocaleString('en-IN') + '</td>';
+      html += '</tr>';
+      
+      dData.wRows.forEach(function(w) {
+        html += '<tr class="detail-row">';
+        html += '<td></td>';
+        html += '<td><span class="badge bg-w">Walk-in</span></td>';
+        html += '<td>' + (w.name||'Unknown') + ' - ' + (w.outcome||'Visit') + '</td>';
+        html += '<td colspan="3"></td>';
+        html += '</tr>';
+      });
+
+      dData.rows.forEach(function(r) {
+        var isInc = r.type === 'income';
+        html += '<tr class="detail-row">';
+        html += '<td></td>';
+        html += '<td><span class="badge ' + (isInc?'bg-i':'bg-e') + '">' + r.type + '</span></td>';
+        html += '<td>' + (r.category||'Other') + (r.description ? ' - ' + r.description : '') + '</td>';
+        html += '<td style="text-align:right">' + (isInc ? '₹'+parseFloat(r.amount).toLocaleString('en-IN') : '') + '</td>';
+        html += '<td style="text-align:right">' + (!isInc ? '₹'+parseFloat(r.amount).toLocaleString('en-IN') : '') + '</td>';
+        html += '<td></td>';
+        html += '</tr>';
+      });
+    });
+    
+    html += '</tbody></table></div>';
+  });
+
+  html += '</body></html>';
+
+  var iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  document.body.appendChild(iframe);
+  
+  var doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write(html);
+  doc.close();
+  
+  setTimeout(function() {
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    setTimeout(function() { document.body.removeChild(iframe); }, 1000);
+  }, 500);
+}
+
 // ── SAVE CENTERS ──
 async function saveOnboardCustomer() {
   var name = (document.getElementById('oc-name').value||'').trim();
