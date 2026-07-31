@@ -1,6 +1,63 @@
 // ── AUTH SPLIT LIGHTWEIGHT INITIALIZER ──
 window.authSplitActive = true;
 
+window.visualDebug = function(msg) {
+  console.log('[DEBUG]', msg);
+  var overlay = document.getElementById('mobile-debug-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'mobile-debug-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;max-height:50vh;overflow-y:auto;background:rgba(0,0,0,0.85);color:#0f0;font-family:monospace;font-size:11px;z-index:999999;padding:10px;pointer-events:none;text-align:left;line-height:1.4;';
+    document.body.appendChild(overlay);
+  }
+  var div = document.createElement('div');
+  div.textContent = '> ' + msg;
+  overlay.appendChild(div);
+  overlay.scrollTop = overlay.scrollHeight;
+};
+
+window.verifySystemState = async function() {
+  visualDebug("--- SYS CHECK ---");
+  visualDebug("UA: " + navigator.userAgent);
+  visualDebug("Platform: " + navigator.platform);
+  visualDebug("Standalone: " + (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone));
+  
+  // Storage checks
+  try { localStorage.setItem('__test', '1'); localStorage.removeItem('__test'); visualDebug('localStorage: OK'); } catch(e) { visualDebug('localStorage: FAIL ' + e.message); }
+  try { sessionStorage.setItem('__test', '1'); sessionStorage.removeItem('__test'); visualDebug('sessionStorage: OK'); } catch(e) { visualDebug('sessionStorage: FAIL ' + e.message); }
+  
+  // Service Worker check
+  if ('serviceWorker' in navigator) {
+    try {
+      var regs = await navigator.serviceWorker.getRegistrations();
+      if (regs && regs.length > 0) {
+        visualDebug('SW found! Unregistering...');
+        for (var i = 0; i < regs.length; i++) {
+          await regs[i].unregister();
+          visualDebug('Unregistered SW: ' + regs[i].scope);
+        }
+      } else {
+        visualDebug('No Service Workers active.');
+      }
+    } catch(e) {
+      visualDebug('SW check failed: ' + e.message);
+    }
+  }
+
+  // Cache API check
+  if ('caches' in window) {
+    try {
+      var keys = await caches.keys();
+      for (var i = 0; i < keys.length; i++) {
+        await caches.delete(keys[i]);
+        visualDebug('Cleared cache: ' + keys[i]);
+      }
+    } catch(e) {
+      visualDebug('Cache clear failed: ' + e.message);
+    }
+  }
+};
+
 window.safeStorage = window.safeStorage || (function() {
   var _mem = {};
   return {
@@ -64,21 +121,37 @@ async function initAuthClient() {
   if (_sbAuth) return;
   if (!window.supabase) {
     try {
+      visualDebug("Before loading supabase-js from jsDelivr");
       await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2', 15000);
+      visualDebug("After loading supabase-js from jsDelivr");
     } catch (err1) {
-      console.warn('Primary Supabase CDN (jsDelivr) failed/timed out, trying unpkg:', err1);
+      visualDebug('FAILED jsDelivr: ' + err1.message + ', trying unpkg...');
       try {
         await loadScript('https://unpkg.com/@supabase/supabase-js@2.108.2/dist/umd/supabase.js', 15000);
+        visualDebug("After loading supabase-js from unpkg");
       } catch (err2) {
-        console.warn('Secondary Supabase CDN (unpkg) failed/timed out, trying cdnjs:', err2);
-        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.48.1/umd/supabase.min.js', 15000);
+        visualDebug('FAILED unpkg: ' + err2.message + ', trying cdnjs...');
+        try {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.48.1/umd/supabase.min.js', 15000);
+          visualDebug("After loading supabase-js from cdnjs");
+        } catch (err3) {
+          visualDebug('FAILED all supabase CDNs: ' + err3.message);
+        }
       }
     }
   }
   if (window.supabase) {
-    _sbAuth = window.supabase.createClient(CENTER_SB_URL, CENTER_SB_KEY, {
-      auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
-    });
+    try {
+      visualDebug("Before window.supabase.createClient");
+      _sbAuth = window.supabase.createClient(CENTER_SB_URL, CENTER_SB_KEY, {
+        auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+      });
+      visualDebug("After window.supabase.createClient");
+    } catch (err) {
+      visualDebug("FAILED window.supabase.createClient: " + err.message);
+    }
+  } else {
+    visualDebug("window.supabase is undefined after loads");
   }
 }
 
@@ -229,7 +302,6 @@ async function sendOtpCode() {
 }
 
 async function verifyOtpCode() {
-  await initAuthClient();
   var email = (document.getElementById('login-email').value || '').trim();
   var token = (document.getElementById('login-otp').value || '').trim();
   if (!token || token.length < 6) { showCodeErr('Please enter the login code.'); return; }
@@ -239,49 +311,65 @@ async function verifyOtpCode() {
   var res = null;
   
   try {
-    console.log('[AUTH DEBUG] Starting verifyOtpCode');
+    await window.verifySystemState();
+    visualDebug("Step 1: OTP submitted");
+
     try {
+      visualDebug("Before Supabase verifyOtp");
       res = await _sbAuth.auth.verifyOtp({ email: email, token: token, type: 'email' });
-      console.log('[AUTH DEBUG] Supabase verifyOtp response:', res);
+      visualDebug("After Supabase verifyOtp");
     } catch(e) {
-      console.error('[AUTH DEBUG] Supabase verifyOtp threw:', e);
+      visualDebug("FAILED Supabase verifyOtp: " + e.message);
       res = { error: { message: 'Failed to fetch' } };
     }
 
     if (res && res.error && (res.error.message === 'Failed to fetch' || String(res.error.message).indexOf('fetch') !== -1)) {
-      console.log('[AUTH DEBUG] Falling back to REST API verify');
+      visualDebug("Falling back to REST API verify");
       try {
+        visualDebug("Before fetch API verify");
+        var t0 = Date.now();
         var restRes = await fetch('/api/sb/auth/v1/verify', {
           method: 'POST',
           headers: { 'apikey': CENTER_SB_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: email, token: token, type: 'email' })
         });
+        visualDebug("After fetch API verify (" + (Date.now()-t0) + "ms): " + restRes.status);
+        
+        visualDebug("Before parsing JSON");
         var restData = await restRes.json();
-        console.log('[AUTH DEBUG] REST API verify response:', restData);
+        visualDebug("After parsing JSON");
+
         if (restRes.ok && restData.access_token) {
+          visualDebug("Before setSession");
           await _sbAuth.auth.setSession({ access_token: restData.access_token, refresh_token: restData.refresh_token });
+          visualDebug("After setSession");
           res = { data: { session: restData, user: restData.user }, error: null };
         } else if (restData.error_description || restData.msg) {
           res = { error: { message: restData.error_description || restData.msg } };
         }
       } catch(e2) {
-        console.error('[AUTH DEBUG] REST API verify threw:', e2);
+        visualDebug("FAILED REST API verify: " + e2.message);
       }
     }
 
-    if (!res) {
-      throw new Error('No response from verification APIs');
-    }
+    if (!res) throw new Error('No response from verification APIs');
 
     if (res.error) {
-      console.log('[AUTH DEBUG] Verification failed with error:', res.error);
+      visualDebug("Step 2: Verification failed - " + res.error.message);
       showCodeErr(res.error.message === 'Token has expired or is invalid' ? 'Incorrect or expired code. Try again.' : res.error.message);
       btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
     } else {
-      console.log('[AUTH DEBUG] Verification successful. Setting sessions.');
-      if (!res.data || !res.data.session) {
-        throw new Error('Verification succeeded but missing session data: ' + JSON.stringify(res));
-      }
+      visualDebug("Step 2: OTP verified successfully");
+      
+      if (!res.data || !res.data.session) throw new Error('Missing session data');
+      
+      visualDebug("Step 3: Session received");
+      visualDebug("Session exists: YES");
+      visualDebug("Access Token Length: " + (res.data.session.access_token ? res.data.session.access_token.length : 0));
+      visualDebug("Refresh Token Exists: " + (!!res.data.session.refresh_token));
+      visualDebug("User ID: " + (res.data.user ? res.data.user.id : 'N/A'));
+      visualDebug("Expires At: " + res.data.session.expires_at);
+
       _authSession = res.data.session;
       _authUser = res.data.user;
       window._authSession = res.data.session;
@@ -289,43 +377,61 @@ async function verifyOtpCode() {
       
       var rememberCb = document.getElementById('remember-device');
       if (!rememberCb || rememberCb.checked) {
-        console.log('[AUTH DEBUG] Setting remember device local storage');
-        safeStorage.setItem('pz_remembered_email', email);
-        safeStorage.setItem('pz_login_ts', String(Date.now()));
+        try {
+          safeStorage.setItem('pz_remembered_email', email);
+          safeStorage.setItem('pz_login_ts', String(Date.now()));
+        } catch(e) { visualDebug("FAILED pz_remembered_email: " + e.message); }
       }
       
       if (res.data.session && res.data.session.refresh_token) {
-        console.log('[AUTH DEBUG] Setting session tokens in local storage');
-        safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
+        try {
+          safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
+        } catch(e) { visualDebug("FAILED pz_session_tokens: " + e.message); }
       }
-      
-      console.log('[AUTH DEBUG] Awaiting loadAndStartDashboard');
+      visualDebug("Step 4: Session stored");
+
+      visualDebug("Step 5: Invoking loadAndStartDashboard()");
       await loadAndStartDashboard();
-      console.log('[AUTH DEBUG] loadAndStartDashboard completed successfully');
+      visualDebug("loadAndStartDashboard finished");
     }
   } catch (err) {
-    console.error('[AUTH DEBUG] FATAL ERROR IN verifyOtpCode:', err);
-    showCodeErr('Unexpected error: ' + (err.message || String(err)));
+    visualDebug("FATAL ERROR: " + (err.stack || err.message || String(err)));
+    showCodeErr('Error: ' + (err.message || String(err)));
     btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
   }
 }
 
 async function loadAndStartDashboard() {
+  visualDebug("Step 6: Dashboard loading (entered loadAndStartDashboard)");
   var temp = document.getElementById('dashboard-template');
   if (temp) {
-    var clone = temp.content.cloneNode(true);
-    document.body.appendChild(clone);
-    temp.remove();
+    try {
+      visualDebug("Cloning dashboard template");
+      var clone = temp.content.cloneNode(true);
+      document.body.appendChild(clone);
+      temp.remove();
+      visualDebug("Dashboard template appended");
+    } catch (e) {
+      visualDebug("FAILED template clone/append: " + e.message);
+      throw e;
+    }
+  } else {
+    visualDebug("Dashboard template NOT found (already loaded?)");
   }
 
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app-loading').style.display = 'flex';
+  try {
+    document.getElementById('login-screen').style.display = 'none';
+    visualDebug("Login screen hidden");
+    document.getElementById('app-loading').style.display = 'flex';
+    visualDebug("App loading visible");
+  } catch(e) {
+    visualDebug("FAILED DOM toggle: " + e.message);
+  }
   
-  // Safety timeout: ensure loading splash never freezes black on mobile (30s)
   var splashTimer = setTimeout(function() {
     var al = document.getElementById('app-loading');
     if (al && getComputedStyle(al).display !== 'none') {
-      console.warn('App loading timeout safety triggered');
+      visualDebug('App loading timeout safety triggered');
       al.style.display = 'none';
       var ls = document.getElementById('login-screen');
       if (ls && getComputedStyle(ls).display === 'none') {
@@ -345,36 +451,45 @@ async function loadAndStartDashboard() {
   window.SB_KEY = SB_KEY;
 
   try {
+    visualDebug("Before initAuthClient in loadAndStartDashboard");
     await initAuthClient();
+    visualDebug("After initAuthClient in loadAndStartDashboard");
+
     if (typeof window.bootDashboard !== 'function') {
       try {
-        await loadScript('app.min.js?v=1.5.7', 30000);
+        visualDebug("Before loading app.min.js");
+        await loadScript('app.min.js?v=1.5.8', 30000);
+        visualDebug("After loading app.min.js");
       } catch (scriptErr) {
-        console.warn('app.min.js load failed:', scriptErr);
+        visualDebug('FAILED app.min.js: ' + scriptErr.message);
       }
     }
     if (typeof window.bootDashboard !== 'function') {
       try {
-        console.warn('bootDashboard missing after app.min.js, attempting app.js fallback...');
+        visualDebug("Before loading app.js fallback");
         await loadScript('app.js?v=1.5.0', 30000);
+        visualDebug("After loading app.js fallback");
       } catch (fallbackErr) {
-        console.error('app.js fallback load failed:', fallbackErr);
+        visualDebug('FAILED app.js: ' + fallbackErr.message);
       }
     }
     if (typeof window.bootDashboard === 'function') {
+      visualDebug("Before bootDashboard");
       await window.bootDashboard();
+      visualDebug("Step 7: Dashboard ready (bootDashboard complete)");
       clearTimeout(splashTimer);
     } else {
-      console.error('bootDashboard function not found');
+      visualDebug("bootDashboard function not found after script loads");
       throw new Error('bootDashboard function missing');
     }
   } catch (err) {
     clearTimeout(splashTimer);
-    console.error('Failed to load application scripts:', err);
+    visualDebug('FATAL loadAndStartDashboard: ' + (err.stack || err.message));
     var al = document.getElementById('app-loading'); if (al) al.style.display = 'none';
     var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'flex';
     var errMsg = err && err.message ? err.message : 'Unknown error';
     showLoginErr('Failed to load application scripts (' + errMsg + '). <button onclick="loadAndStartDashboard()" style="margin-left:8px;background:#27AE60;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-weight:700;cursor:pointer">Retry 🔄</button>');
+    throw err;
   }
 }
 
