@@ -237,47 +237,76 @@ async function verifyOtpCode() {
   if (btn.disabled) return;
   btn.textContent = 'Verifying…'; btn.disabled = true;
   var res = null;
+  
   try {
-    res = await _sbAuth.auth.verifyOtp({ email: email, token: token, type: 'email' });
-  } catch(e) {
-    res = { error: { message: 'Failed to fetch' } };
-  }
-  if (res && res.error && (res.error.message === 'Failed to fetch' || String(res.error.message).indexOf('fetch') !== -1)) {
+    console.log('[AUTH DEBUG] Starting verifyOtpCode');
     try {
-      var restRes = await fetch('/api/sb/auth/v1/verify', {
-        method: 'POST',
-        headers: { 'apikey': CENTER_SB_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, token: token, type: 'email' })
-      });
-      var restData = await restRes.json();
-      if (restRes.ok && restData.access_token) {
-        await _sbAuth.auth.setSession({ access_token: restData.access_token, refresh_token: restData.refresh_token });
-        res = { data: { session: restData, user: restData.user }, error: null };
+      res = await _sbAuth.auth.verifyOtp({ email: email, token: token, type: 'email' });
+      console.log('[AUTH DEBUG] Supabase verifyOtp response:', res);
+    } catch(e) {
+      console.error('[AUTH DEBUG] Supabase verifyOtp threw:', e);
+      res = { error: { message: 'Failed to fetch' } };
+    }
+
+    if (res && res.error && (res.error.message === 'Failed to fetch' || String(res.error.message).indexOf('fetch') !== -1)) {
+      console.log('[AUTH DEBUG] Falling back to REST API verify');
+      try {
+        var restRes = await fetch('/api/sb/auth/v1/verify', {
+          method: 'POST',
+          headers: { 'apikey': CENTER_SB_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, token: token, type: 'email' })
+        });
+        var restData = await restRes.json();
+        console.log('[AUTH DEBUG] REST API verify response:', restData);
+        if (restRes.ok && restData.access_token) {
+          await _sbAuth.auth.setSession({ access_token: restData.access_token, refresh_token: restData.refresh_token });
+          res = { data: { session: restData, user: restData.user }, error: null };
+        } else if (restData.error_description || restData.msg) {
+          res = { error: { message: restData.error_description || restData.msg } };
+        }
+      } catch(e2) {
+        console.error('[AUTH DEBUG] REST API verify threw:', e2);
       }
-    } catch(e2) {}
-  }
-  if (res.error) {
-    showCodeErr(res.error.message === 'Token has expired or is invalid' ? 'Incorrect or expired code. Try again.' : res.error.message);
-    btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
-  } else {
-    _authSession = res.data.session;
-    _authUser = res.data.user;
-    window._authSession = res.data.session;
-    window._authUser = res.data.user;
-    var rememberCb = document.getElementById('remember-device');
-    if (!rememberCb || rememberCb.checked) {
-      safeStorage.setItem('pz_remembered_email', email);
-      safeStorage.setItem('pz_login_ts', String(Date.now()));
     }
-    if (res.data.session && res.data.session.refresh_token) {
-      safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
+
+    if (!res) {
+      throw new Error('No response from verification APIs');
     }
-    try {
-      await loadAndStartDashboard();
-    } catch (e) {
-      showCodeErr('Error loading application. Please try again.');
+
+    if (res.error) {
+      console.log('[AUTH DEBUG] Verification failed with error:', res.error);
+      showCodeErr(res.error.message === 'Token has expired or is invalid' ? 'Incorrect or expired code. Try again.' : res.error.message);
       btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
+    } else {
+      console.log('[AUTH DEBUG] Verification successful. Setting sessions.');
+      if (!res.data || !res.data.session) {
+        throw new Error('Verification succeeded but missing session data: ' + JSON.stringify(res));
+      }
+      _authSession = res.data.session;
+      _authUser = res.data.user;
+      window._authSession = res.data.session;
+      window._authUser = res.data.user;
+      
+      var rememberCb = document.getElementById('remember-device');
+      if (!rememberCb || rememberCb.checked) {
+        console.log('[AUTH DEBUG] Setting remember device local storage');
+        safeStorage.setItem('pz_remembered_email', email);
+        safeStorage.setItem('pz_login_ts', String(Date.now()));
+      }
+      
+      if (res.data.session && res.data.session.refresh_token) {
+        console.log('[AUTH DEBUG] Setting session tokens in local storage');
+        safeStorage.setItem('pz_session_tokens', JSON.stringify({ access_token: res.data.session.access_token, refresh_token: res.data.session.refresh_token }));
+      }
+      
+      console.log('[AUTH DEBUG] Awaiting loadAndStartDashboard');
+      await loadAndStartDashboard();
+      console.log('[AUTH DEBUG] loadAndStartDashboard completed successfully');
     }
+  } catch (err) {
+    console.error('[AUTH DEBUG] FATAL ERROR IN verifyOtpCode:', err);
+    showCodeErr('Unexpected error: ' + (err.message || String(err)));
+    btn.textContent = 'Verify & Sign In →'; btn.disabled = false;
   }
 }
 
