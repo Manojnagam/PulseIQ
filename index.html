@@ -1289,8 +1289,8 @@ if ('caches' in window) {
 }
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
-<script defer src="auth.core.min.js?v=1.6.2"></script>
-<script defer src="app.min.js?v=1.6.2"></script>
+<script defer src="auth.core.min.js?v=1.6.3"></script>
+<script defer src="app.min.js?v=1.6.3"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>
 <script defer src="shared/formatting.js"></script>
@@ -2026,7 +2026,10 @@ if ('caches' in window) {
     <div class="sec" id="sec-walkins">
       <div class="ph">
         <div><div class="pt">Walk-ins</div><div class="ps">Visitors who came for checkup or one-time purchase</div></div>
-        <button class="btn-p" onclick="openWalkinModal()">+ Add Walk-in</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-e" onclick="exportWalkinsCSV()" style="background:#10b981;color:#fff;border-color:#10b981;font-weight:600">⬇️ Download CSV</button>
+          <button class="btn-p" onclick="openWalkinModal()">+ Add Walk-in</button>
+        </div>
       </div>
       <div class="stats">
         <div class="stat"><div class="stat-ic">📅</div><div class="stat-l">Today</div><div class="stat-v" id="wi-stat-today">0</div></div>

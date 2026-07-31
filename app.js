@@ -12936,31 +12936,31 @@ function renderWalkins() {
   }
   var today = new Date().toISOString().slice(0,10);
 
-  // Stats
-  var si = document.getElementById('wi-stat-today'); if(si) si.textContent = all.filter(function(w){return w.date===today;}).length;
-  si = document.getElementById('wi-stat-month'); 
-  if(si) {
-    si.textContent = all.filter(function(w){return filterMonth && w.date && w.date.startsWith(filterMonth);}).length;
-    var mlbl = document.getElementById('wi-stat-month-lbl');
-    if(mlbl) {
-      if(!filterMonth) mlbl.textContent = 'Month Total';
-      else {
-        var dp = new Date(filterMonth+'-01');
-        mlbl.textContent = dp.toLocaleString('default',{month:'short',year:'numeric'})+' Total';
-      }
-    }
-  }
-  si = document.getElementById('wi-stat-checkup'); if(si) si.textContent = all.filter(function(w){return w.outcome==='checkup';}).length;
-  si = document.getElementById('wi-stat-trial'); if(si) si.textContent = all.filter(function(w){return w.outcome==='trial';}).length;
-  si = document.getElementById('wi-stat-sale'); if(si) si.textContent = all.filter(function(w){return w.outcome==='product_sale';}).length;
-  si = document.getElementById('wi-stat-converted'); if(si) si.textContent = all.filter(function(w){return w.converted;}).length;
-
   var rows = all.filter(function(w) {
     if(filterOutcome && w.outcome !== filterOutcome) return false;
     if(filterDate && w.date !== filterDate) return false;
     if(filterMonth && w.date && !w.date.startsWith(filterMonth)) return false;
     return (w.name||'').toLowerCase().includes(q) || (w.phone||'').includes(q);
   }).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+
+  // Stats - dynamically updated based on the currently filtered list
+  var si = document.getElementById('wi-stat-today'); if(si) si.textContent = rows.filter(function(w){return w.date===today;}).length;
+  si = document.getElementById('wi-stat-month'); 
+  if(si) {
+    si.textContent = rows.length;
+    var mlbl = document.getElementById('wi-stat-month-lbl');
+    if(mlbl) {
+      if(!filterMonth) mlbl.textContent = 'Total View';
+      else {
+        var dp = new Date(filterMonth+'-01');
+        mlbl.textContent = dp.toLocaleString('default',{month:'short',year:'numeric'})+' Total';
+      }
+    }
+  }
+  si = document.getElementById('wi-stat-checkup'); if(si) si.textContent = rows.filter(function(w){return w.outcome==='checkup';}).length;
+  si = document.getElementById('wi-stat-trial'); if(si) si.textContent = rows.filter(function(w){return w.outcome==='trial';}).length;
+  si = document.getElementById('wi-stat-sale'); if(si) si.textContent = rows.filter(function(w){return w.outcome==='product_sale';}).length;
+  si = document.getElementById('wi-stat-converted'); if(si) si.textContent = rows.filter(function(w){return w.converted;}).length;
 
   var tb = document.getElementById('walkins-body');
   if(!rows.length){
@@ -12993,6 +12993,48 @@ function renderWalkins() {
       +'</tr>';
   }).join('');
   if(rows.length > window._limWalk) { tb.innerHTML += '<tr><td colspan="8" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limWalk+=50;renderWalkins()">⬇️ Load More (' + (rows.length - window._limWalk) + ' remaining)</button></td></tr>'; }
+}
+
+function exportWalkinsCSV() {
+  if (isCenterSession() && !isGrowthPlan()) { showToast('CSV Export is a Basic plan feature (₹499/mo).', 'error'); return; }
+  var q = ((document.getElementById('walkins-search')||{}).value||'').toLowerCase();
+  var filterOutcome = (document.getElementById('walkins-filter-outcome')||{}).value||'';
+  var filterDate = (document.getElementById('walkins-filter-date')||{}).value||'';
+  var filterMonth = (document.getElementById('walkins-filter-month')||{}).value||'';
+  
+  var all = D.walkins || [];
+  if (ACTIVE_CENTER) all = all.filter(function(w){ return w.wellness_center_id === ACTIVE_CENTER || w.center_id === ACTIVE_CENTER; });
+  
+  var rows = all.filter(function(w) {
+    if(filterOutcome && w.outcome !== filterOutcome) return false;
+    if(filterDate && w.date !== filterDate) return false;
+    if(filterMonth && w.date && !w.date.startsWith(filterMonth)) return false;
+    return (w.name||'').toLowerCase().includes(q) || (w.phone||'').includes(q);
+  }).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+  
+  if(!rows.length) { showToast('No walk-ins to export for this selection!', 'error'); return; }
+  
+  var SRC = {google:'Google',customer_referral:'Customer',coach_referral:'Coach',owner:'Owner',other:'Other'};
+  var OUT = {checkup:'Checkup',trial:'Trial Pack',product_sale:'Product Sale',other:'Other'};
+
+  var headers = ['Date', 'Name', 'Phone', 'Source', 'Referred By', 'Outcome', 'Amount Received', 'Converted to Customer', 'Notes'];
+  var csvRows = rows.map(function(w){
+    var refObj = w.referred_by_id ? findPerson(w.referred_by_id) : null;
+    var refName = w.referred_by_name || (refObj ? refObj.name : '');
+    return [
+      w.date||'',
+      w.name||'',
+      w.phone||'',
+      SRC[w.source]||w.source||'',
+      refName||'',
+      OUT[w.outcome]||w.outcome||'',
+      w.amount_received||'0',
+      w.converted ? 'Yes' : 'No',
+      (w.notes||'').replace(/,/g, ';').replace(/\n/g, ' ')
+    ];
+  });
+  var prefix = filterMonth ? 'walkins_'+filterMonth : 'walkins_all';
+  exportCSV(headers, csvRows, prefix);
 }
 
 function openWalkinModal(id) {
