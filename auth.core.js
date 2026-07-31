@@ -426,8 +426,8 @@ async function loadAndStartDashboard() {
   }
 
   try {
-    document.getElementById('login-screen').style.display = 'none';
-    visualDebug("Login screen hidden");
+    document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
+    visualDebug("Login screen hidden (important)");
     document.getElementById('app-loading').style.display = 'flex';
     visualDebug("App loading visible");
   } catch(e) {
