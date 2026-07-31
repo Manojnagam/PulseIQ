@@ -68,6 +68,8 @@ var OWNER_PROFILE = null;
 
 async function initAuthClient() {
   if (_sbAuth) return;
+  // Pick up client if app.min.js already initialized it into window._sbAuth
+  if (window._sbAuth) { _sbAuth = window._sbAuth; return; }
   if (!window.supabase) {
     try {
       await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2', 15000);
@@ -90,6 +92,7 @@ async function initAuthClient() {
       _sbAuth = window.supabase.createClient(CENTER_SB_URL, CENTER_SB_KEY, {
         auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
       });
+      window._sbAuth = _sbAuth; // publish so app.min.js shares the same client
     } catch (err) {
       console.error('supabase.createClient failed:', err.message);
     }
