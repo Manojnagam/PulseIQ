@@ -7220,7 +7220,6 @@ function renderFinance() {
 
 function downloadFinancialReportPDF() {
   var rows = _getFinFiltered();
-  
   var from = document.getElementById('fin-from').value;
   var to   = document.getElementById('fin-to').value;
   var periodLabel = (from && to) ? from + ' to ' + to : (from ? 'From ' + from : (to ? 'Until ' + to : 'All Time'));
@@ -7233,145 +7232,421 @@ function downloadFinancialReportPDF() {
     return true;
   });
 
-  if (!rows.length && !walkins.length) {
-    showToast('No financial or walk-in records in this period.','error');
-    return;
-  }
+  if (!rows.length && !walkins.length) { showToast('No financial or walk-in records in this period.','error'); return; }
 
+  // ── Build month→day data ──
   var byMonth = {};
-  
   rows.forEach(function(r) {
     if(!r.date) return;
-    var monthKey = r.date.slice(0,7);
-    var dayKey = r.date;
-    if(!byMonth[monthKey]) byMonth[monthKey] = { days: {}, inc:0, exp:0, net:0, wCount:0 };
-    if(!byMonth[monthKey].days[dayKey]) byMonth[monthKey].days[dayKey] = { inc:0, exp:0, net:0, wCount:0, rows:[], wRows:[] };
-    
+    var mk = r.date.slice(0,7), dk = r.date;
+    if(!byMonth[mk]) byMonth[mk] = { days:{}, inc:0, exp:0, net:0, wCount:0, cats:{inc:{},exp:{}} };
+    if(!byMonth[mk].days[dk]) byMonth[mk].days[dk] = { inc:0, exp:0, net:0, wCount:0, rows:[], wRows:[] };
     var amt = parseFloat(r.amount)||0;
-    if (r.type === 'income') {
-      byMonth[monthKey].inc += amt; byMonth[monthKey].net += amt;
-      byMonth[monthKey].days[dayKey].inc += amt; byMonth[monthKey].days[dayKey].net += amt;
-    } else {
-      byMonth[monthKey].exp += amt; byMonth[monthKey].net -= amt;
-      byMonth[monthKey].days[dayKey].exp += amt; byMonth[monthKey].days[dayKey].net -= amt;
-    }
-    byMonth[monthKey].days[dayKey].rows.push(r);
+    if(r.type==='income') { byMonth[mk].inc+=amt; byMonth[mk].net+=amt; byMonth[mk].days[dk].inc+=amt; byMonth[mk].days[dk].net+=amt; var c=r.category||'Other'; byMonth[mk].cats.inc[c]=(byMonth[mk].cats.inc[c]||0)+amt; }
+    else { byMonth[mk].exp+=amt; byMonth[mk].net-=amt; byMonth[mk].days[dk].exp+=amt; byMonth[mk].days[dk].net-=amt; var c=r.category||'Other'; byMonth[mk].cats.exp[c]=(byMonth[mk].cats.exp[c]||0)+amt; }
+    byMonth[mk].days[dk].rows.push(r);
   });
-
   walkins.forEach(function(w) {
     if(!w.date) return;
-    var monthKey = w.date.slice(0,7);
-    var dayKey = w.date;
-    if(!byMonth[monthKey]) byMonth[monthKey] = { days: {}, inc:0, exp:0, net:0, wCount:0 };
-    if(!byMonth[monthKey].days[dayKey]) byMonth[monthKey].days[dayKey] = { inc:0, exp:0, net:0, wCount:0, rows:[], wRows:[] };
-    
-    byMonth[monthKey].wCount++;
-    byMonth[monthKey].days[dayKey].wCount++;
-    byMonth[monthKey].days[dayKey].wRows.push(w);
+    var mk = w.date.slice(0,7), dk = w.date;
+    if(!byMonth[mk]) byMonth[mk] = { days:{}, inc:0, exp:0, net:0, wCount:0, cats:{inc:{},exp:{}} };
+    if(!byMonth[mk].days[dk]) byMonth[mk].days[dk] = { inc:0, exp:0, net:0, wCount:0, rows:[], wRows:[] };
+    byMonth[mk].wCount++; byMonth[mk].days[dk].wCount++; byMonth[mk].days[dk].wRows.push(w);
   });
 
-  var html = '<html><head><title>PulseIQ Financial Report</title><style>';
-  html += '@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");';
-  html += 'body { font-family: "Inter", sans-serif; padding: 40px; color: #1e293b; background: #fff; }';
-  html += 'h1 { color: #0f172a; text-align: center; font-size: 28px; margin-bottom: 5px; }';
-  html += '.subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; }';
-  html += '.month-block { page-break-inside: avoid; margin-bottom: 40px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }';
-  html += '.month-header { background: #f8fafc; padding: 20px; border-bottom: 2px solid #e2e8f0; }';
-  html += '.month-title { font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0; }';
-  html += '.month-summary { display: flex; gap: 24px; font-size: 15px; font-weight: 600; }';
-  html += '.text-green { color: #16a34a; } .text-red { color: #dc2626; } .text-blue { color: #2563eb; } .text-orange { color: #f59e0b; }';
-  html += 'table { width: 100%; border-collapse: collapse; font-size: 13px; }';
-  html += 'th { background: #f1f5f9; padding: 12px 16px; text-align: left; font-weight: 600; color: #475569; border-bottom: 1px solid #cbd5e1; }';
-  html += 'td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }';
-  html += 'tr.day-row { font-weight: 700; background: #fff; border-top: 2px solid #e2e8f0; }';
-  html += 'tr.detail-row { color: #64748b; font-size: 12px; background: #fafbfc; }';
-  html += 'tr.detail-row td { padding: 6px 16px; border-bottom: none; }';
-  html += '.badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700; text-transform:uppercase; }';
-  html += '.bg-w { background:#fef3c7; color:#d97706; }';
-  html += '.bg-i { background:#dcfce7; color:#16a34a; }';
-  html += '.bg-e { background:#fee2e2; color:#dc2626; }';
-  html += '@media print { body { padding: 0; } .month-block { break-inside: avoid; } }';
+  var centerName = (typeof getCenterName === 'function' ? getCenterName() : '') || 'PulseIQ Wellness';
+  var totalInc = rows.filter(function(r){return r.type==='income';}).reduce(function(s,r){return s+parseFloat(r.amount||0);},0);
+  var totalExp = rows.filter(function(r){return r.type==='expense';}).reduce(function(s,r){return s+parseFloat(r.amount||0);},0);
+  var totalNet = totalInc - totalExp;
+  var profitMargin = totalInc>0?Math.round((totalNet/totalInc)*100):0;
+  var totalWalkins = walkins.length;
+
+  function fmtRs(n){ return '₹'+Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function pctBar(pct, color) { return '<div style="background:#e2e8f0;border-radius:4px;height:8px;width:100%;margin-top:3px"><div style="background:'+color+';height:8px;border-radius:4px;width:'+Math.min(100,pct)+'%"></div></div>'; }
+
+  // ── Build category breakdown SVG-free bars ──
+  function catBarsHtml(cats, total, color) {
+    var entries = Object.entries(cats).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
+    if(!entries.length) return '<div style="color:#94a3b8;font-size:12px">No data</div>';
+    return entries.map(function(e){
+      var pct = total>0?Math.round((e[1]/total)*100):0;
+      return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;color:#374151"><span>'+e[0]+'</span><span style="font-weight:700">'+fmtRs(e[1])+' <span style="color:#9ca3af">('+pct+'%)</span></span></div>'+pctBar(pct,color)+'</div>';
+    }).join('');
+  }
+
+  // ── Inline SVG Donut chart ──
+  function donutSVG(items, colors) {
+    var total = items.reduce(function(s,i){return s+i.v;},0);
+    if(!total) return '';
+    var r=60, cx=75, cy=75, strokeW=18;
+    var offset=0;
+    var segs = items.map(function(item,idx){
+      var pct = item.v/total;
+      var dashArray = (pct*2*Math.PI*r).toFixed(2)+' '+(2*Math.PI*r).toFixed(2);
+      var dashOffset = (-offset*2*Math.PI*r).toFixed(2);
+      offset += pct;
+      return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+colors[idx%colors.length]+'" stroke-width="'+strokeW+'" stroke-dasharray="'+dashArray+'" stroke-dashoffset="'+dashOffset+'" transform="rotate(-90 '+cx+' '+cy+')" />';
+    }).join('');
+    return '<svg width="150" height="150" viewBox="0 0 150 150">'+segs+'<text x="75" y="70" text-anchor="middle" font-size="11" fill="#374151" font-family="Inter,sans-serif">Total</text><text x="75" y="88" text-anchor="middle" font-size="13" font-weight="700" fill="#111827" font-family="Inter,sans-serif">'+fmtRs(total)+'</text></svg>';
+  }
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PulseIQ Financial Report</title>';
+  html += '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">';
+  html += '<style>';
+  html += '*{box-sizing:border-box;margin:0;padding:0}';
+  html += 'body{font-family:"Inter",sans-serif;background:#f8fafc;color:#1e293b;padding:0}';
+  html += '.cover{background:linear-gradient(135deg,#1e3a5f 0%,#0d6e6e 50%,#1a1a4e 100%);padding:50px 40px 40px;color:#fff;position:relative;overflow:hidden}';
+  html += '.cover::before{content:"";position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:rgba(255,255,255,0.05);border-radius:50%}';
+  html += '.cover::after{content:"";position:absolute;bottom:-80px;left:20px;width:200px;height:200px;background:rgba(255,255,255,0.04);border-radius:50%}';
+  html += '.cover-logo{font-size:13px;font-weight:600;opacity:0.8;letter-spacing:2px;text-transform:uppercase;margin-bottom:30px}';
+  html += '.cover-title{font-size:36px;font-weight:800;line-height:1.2;margin-bottom:8px}';
+  html += '.cover-sub{font-size:14px;opacity:0.75;margin-bottom:30px}';
+  html += '.cover-meta{display:flex;gap:30px;margin-top:20px;flex-wrap:wrap}';
+  html += '.cover-meta-item{background:rgba(255,255,255,0.12);padding:12px 18px;border-radius:10px;font-size:13px;backdrop-filter:blur(4px)}';
+  html += '.cover-meta-item strong{display:block;font-size:18px;font-weight:700;margin-bottom:2px}';
+  html += '.content{padding:30px 40px}';
+  html += '.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:30px}';
+  html += '.kpi{background:#fff;border-radius:14px;padding:20px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:3px solid var(--kc)}';
+  html += '.kpi-label{font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:#94a3b8;margin-bottom:6px}';
+  html += '.kpi-value{font-size:20px;font-weight:800;color:#0f172a}';
+  html += '.kpi-sub{font-size:10px;color:#94a3b8;margin-top:4px}';
+  html += '.section-title{font-size:16px;font-weight:700;color:#0f172a;margin:24px 0 14px;padding-left:10px;border-left:4px solid #0d6e6e}';
+  html += '.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}';
+  html += '.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.07)}';
+  html += '.card-title{font-size:13px;font-weight:700;color:#374151;margin-bottom:14px;display:flex;align-items:center;gap:6px}';
+  html += '.month-block{background:#fff;border-radius:14px;margin-bottom:24px;box-shadow:0 1px 6px rgba(0,0,0,0.08);overflow:hidden;page-break-inside:avoid}';
+  html += '.month-hdr{padding:18px 22px;color:#fff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}';
+  html += '.month-name{font-size:18px;font-weight:700}';
+  html += '.month-kpis{display:flex;gap:16px;font-size:13px;font-weight:600;flex-wrap:wrap}';
+  html += '.mk{background:rgba(255,255,255,0.18);padding:6px 12px;border-radius:8px}';
+  html += '.day-table{width:100%;border-collapse:collapse;font-size:12px}';
+  html += '.day-table th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #e2e8f0}';
+  html += '.day-table th:not(:first-child){text-align:right}';
+  html += '.day-row td{padding:10px 14px;border-bottom:1px solid #f1f5f9;font-weight:700;background:#fafbff;vertical-align:middle}';
+  html += '.day-row td:not(:first-child){text-align:right}';
+  html += '.detail-row td{padding:6px 14px 6px 30px;border-bottom:none;font-size:11px;color:#64748b;background:#fff;vertical-align:middle}';
+  html += '.detail-row td:not(:first-child){text-align:right}';
+  html += '.badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px}';
+  html += '.b-income{background:#dcfce7;color:#15803d}.b-expense{background:#fee2e2;color:#b91c1c}.b-walkin{background:#fef3c7;color:#b45309}';
+  html += '.net-pos{color:#16a34a;font-weight:700}.net-neg{color:#dc2626;font-weight:700}';
+  html += '.footer{background:#f1f5f9;padding:20px 40px;text-align:center;font-size:11px;color:#94a3b8;margin-top:10px}';
+  html += '@media print{body{background:#fff}.cover{-webkit-print-color-adjust:exact;print-color-adjust:exact}.month-hdr{-webkit-print-color-adjust:exact;print-color-adjust:exact}.month-block{break-inside:avoid}body{padding:0}.content{padding:10px 20px}}';
   html += '</style></head><body>';
-  
-  html += '<h1>PulseIQ Financial & Walk-ins Report</h1>';
-  html += '<div class="subtitle">Period: ' + periodLabel + ' | Generated on ' + new Date().toLocaleString() + '</div>';
 
-  var monthKeys = Object.keys(byMonth).sort().reverse();
-  monthKeys.forEach(function(mk) {
-    var mData = byMonth[mk];
-    var mName = new Date(mk+'-01').toLocaleString('en-IN', {month:'long', year:'numeric'});
-    
-    html += '<div class="month-block">';
-    html += '<div class="month-header">';
-    html += '<h2 class="month-title">' + mName + '</h2>';
-    html += '<div class="month-summary">';
-    html += '<span class="text-orange">🚶 Walk-ins: ' + mData.wCount + '</span>';
-    html += '<span class="text-green">💰 Income: ₹' + mData.inc.toLocaleString('en-IN',{minimumFractionDigits:2}) + '</span>';
-    html += '<span class="text-red">📉 Expense: ₹' + mData.exp.toLocaleString('en-IN',{minimumFractionDigits:2}) + '</span>';
-    html += '<span class="' + (mData.net>=0?'text-green':'text-red') + '">💵 Net: ₹' + mData.net.toLocaleString('en-IN',{minimumFractionDigits:2}) + '</span>';
+  // ── Cover ──
+  var netClass = totalNet>=0 ? '#22c55e' : '#ef4444';
+  html += '<div class="cover">';
+  html += '<div class="cover-logo">📊 PulseIQ — Business Intelligence</div>';
+  html += '<div class="cover-title">Financial & Walk-in<br>Performance Report</div>';
+  html += '<div class="cover-sub">'+centerName+' &nbsp;•&nbsp; Period: '+periodLabel+'</div>';
+  html += '<div class="cover-meta">';
+  html += '<div class="cover-meta-item"><strong>'+fmtRs(totalInc)+'</strong>Total Income</div>';
+  html += '<div class="cover-meta-item"><strong>'+fmtRs(totalExp)+'</strong>Total Expenses</div>';
+  html += '<div class="cover-meta-item" style="background:rgba('+(totalNet>=0?'34,197,94':'239,68,68')+',0.25)"><strong style="color:'+(totalNet>=0?'#86efac':'#fca5a5')+'">'+fmtRs(totalNet)+'</strong>Net '+(totalNet>=0?'Profit':'Loss')+'</div>';
+  html += '<div class="cover-meta-item"><strong>'+profitMargin+'%</strong>Profit Margin</div>';
+  html += '<div class="cover-meta-item"><strong>'+totalWalkins+'</strong>Walk-ins</div>';
+  html += '</div>';
+  html += '<div style="position:absolute;bottom:16px;right:30px;font-size:11px;opacity:0.5">Generated: '+new Date().toLocaleString('en-IN')+'</div>';
+  html += '</div>';
+
+  html += '<div class="content">';
+
+  // ── KPI Summary Cards ──
+  var kpis = [
+    {label:'Total Income', value:fmtRs(totalInc), sub:rows.filter(function(r){return r.type==='income';}).length+' transactions', color:'#16a34a'},
+    {label:'Total Expense', value:fmtRs(totalExp), sub:rows.filter(function(r){return r.type==='expense';}).length+' transactions', color:'#dc2626'},
+    {label:'Net Profit/Loss', value:(totalNet<0?'-':'')+fmtRs(totalNet), sub:totalNet>=0?'Profitable':'Loss making', color:totalNet>=0?'#2563eb':'#dc2626'},
+    {label:'Profit Margin', value:profitMargin+'%', sub:profitMargin>=30?'🟢 Healthy':profitMargin>=10?'🟡 Moderate':'🔴 Low', color:profitMargin>=30?'#059669':profitMargin>=10?'#d97706':'#dc2626'},
+    {label:'Walk-ins', value:totalWalkins, sub:'Potential conversions', color:'#7c3aed'}
+  ];
+  html += '<div class="kpi-grid">';
+  kpis.forEach(function(k){
+    html += '<div class="kpi" style="--kc:'+k.color+'"><div class="kpi-label">'+k.label+'</div><div class="kpi-value" style="color:'+k.color+'">'+k.value+'</div><div class="kpi-sub">'+k.sub+'</div></div>';
+  });
+  html += '</div>';
+
+  // ── Category Breakdown ──
+  var allIncCats = {}, allExpCats = {};
+  rows.filter(function(r){return r.type==='income';}).forEach(function(r){ var c=r.category||'Other'; allIncCats[c]=(allIncCats[c]||0)+parseFloat(r.amount||0); });
+  rows.filter(function(r){return r.type==='expense';}).forEach(function(r){ var c=r.category||'Other'; allExpCats[c]=(allExpCats[c]||0)+parseFloat(r.amount||0); });
+
+  // Build donut data
+  var incColors = ['#22c55e','#16a34a','#4ade80','#86efac','#bbf7d0','#dcfce7'];
+  var expColors = ['#ef4444','#dc2626','#f87171','#fca5a5','#fecaca','#fee2e2'];
+  var incDonutItems = Object.entries(allIncCats).sort(function(a,b){return b[1]-a[1];}).slice(0,6).map(function(e){return{v:e[1]};});
+  var expDonutItems = Object.entries(allExpCats).sort(function(a,b){return b[1]-a[1];}).slice(0,6).map(function(e){return{v:e[1]};});
+
+  html += '<div class="section-title">💰 Revenue & Expense Breakdown</div>';
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-title">🟢 Income by Category</div>';
+  html += '<div style="display:flex;align-items:flex-start;gap:16px">';
+  html += '<div style="flex-shrink:0">'+donutSVG(incDonutItems,incColors)+'</div>';
+  html += '<div style="flex:1">'+catBarsHtml(allIncCats,totalInc,'#22c55e')+'</div>';
+  html += '</div></div>';
+  html += '<div class="card"><div class="card-title">🔴 Expense by Category</div>';
+  html += '<div style="display:flex;align-items:flex-start;gap:16px">';
+  html += '<div style="flex-shrink:0">'+donutSVG(expDonutItems,expColors)+'</div>';
+  html += '<div style="flex:1">'+catBarsHtml(allExpCats,totalExp,'#ef4444')+'</div>';
+  html += '</div></div>';
+  html += '</div>';
+
+  // ── Walk-in Analysis ──
+  if (totalWalkins > 0) {
+    var wByOutcome = {}, wByDay = {};
+    walkins.forEach(function(w){
+      var o = w.outcome||'Visit'; wByOutcome[o]=(wByOutcome[o]||0)+1;
+      var d = (w.date||'').slice(0,10); wByDay[d]=(wByDay[d]||0)+1;
+    });
+    var bestDay = Object.entries(wByDay).sort(function(a,b){return b[1]-a[1];})[0];
+    var convRate = rows.length>0?Math.round((totalWalkins/(totalWalkins+rows.filter(function(r){return r.type==='income';}).length))*100):0;
+    html += '<div class="section-title">🚶 Walk-in Analysis</div>';
+    html += '<div class="two-col">';
+    html += '<div class="card"><div class="card-title">📊 Visit Outcome Breakdown</div>'+catBarsHtml(wByOutcome,totalWalkins,'#a855f7')+'</div>';
+    html += '<div class="card"><div class="card-title">📅 Walk-in Insights</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+    html += '<div style="background:#f5f3ff;padding:14px;border-radius:10px;text-align:center"><div style="font-size:24px;font-weight:800;color:#7c3aed">'+totalWalkins+'</div><div style="font-size:11px;color:#6b7280">Total Walk-ins</div></div>';
+    if(bestDay) { html += '<div style="background:#fefce8;padding:14px;border-radius:10px;text-align:center"><div style="font-size:20px;font-weight:800;color:#d97706">'+bestDay[1]+'</div><div style="font-size:10px;color:#6b7280">Best Day<br>'+new Date(bestDay[0]).toLocaleDateString('en-IN',{day:'numeric',month:'short'})+'</div></div>'; }
+    html += '<div style="background:#fef2f2;padding:14px;border-radius:10px;text-align:center;grid-column:span 2"><div style="font-size:12px;color:#374151;font-weight:600;margin-bottom:4px">💡 Walk-in Conversion Tip</div><div style="font-size:11px;color:#64748b">Each walk-in is a potential member. Follow up within 24 hours to increase enrollment rate by up to 40%.</div></div>';
     html += '</div></div>';
-    
-    html += '<table><thead><tr><th style="width:120px">Date</th><th style="width:100px">Type</th><th>Details</th><th style="text-align:right">Income</th><th style="text-align:right">Expense</th><th style="text-align:right">Net Day</th></tr></thead><tbody>';
-    
-    var dayKeys = Object.keys(mData.days).sort().reverse();
-    dayKeys.forEach(function(dk) {
-      var dData = mData.days[dk];
-      var dName = new Date(dk).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
-      
-      html += '<tr class="day-row">';
-      html += '<td>' + dName + '</td>';
-      html += '<td colspan="2" style="color:#64748b;font-weight:normal;font-size:11px">Daily Summary ('+dData.wCount+' walk-ins)</td>';
-      html += '<td style="text-align:right" class="text-green">₹' + dData.inc.toLocaleString('en-IN') + '</td>';
-      html += '<td style="text-align:right" class="text-red">₹' + dData.exp.toLocaleString('en-IN') + '</td>';
-      html += '<td style="text-align:right" class="' + (dData.net >= 0 ? 'text-green' : 'text-red') + '">₹' + dData.net.toLocaleString('en-IN') + '</td>';
-      html += '</tr>';
-      
-      dData.wRows.forEach(function(w) {
-        html += '<tr class="detail-row">';
-        html += '<td></td>';
-        html += '<td><span class="badge bg-w">Walk-in</span></td>';
-        html += '<td>' + (w.name||'Unknown') + ' - ' + (w.outcome||'Visit') + '</td>';
-        html += '<td colspan="3"></td>';
-        html += '</tr>';
-      });
+    html += '</div>';
+  }
 
-      dData.rows.forEach(function(r) {
-        var isInc = r.type === 'income';
-        html += '<tr class="detail-row">';
-        html += '<td></td>';
-        html += '<td><span class="badge ' + (isInc?'bg-i':'bg-e') + '">' + r.type + '</span></td>';
-        html += '<td>' + (r.category||'Other') + (r.description ? ' - ' + r.description : '') + '</td>';
-        html += '<td style="text-align:right">' + (isInc ? '₹'+parseFloat(r.amount).toLocaleString('en-IN') : '') + '</td>';
-        html += '<td style="text-align:right">' + (!isInc ? '₹'+parseFloat(r.amount).toLocaleString('en-IN') : '') + '</td>';
-        html += '<td></td>';
-        html += '</tr>';
+  // ── Month-by-Month Day Detail ──
+  html += '<div class="section-title">📅 Month-by-Month Day Detail</div>';
+  var monthKeys = Object.keys(byMonth).sort().reverse();
+  var monthGradients = [
+    'linear-gradient(135deg,#1e3a5f,#0d6e6e)',
+    'linear-gradient(135deg,#312e81,#0369a1)',
+    'linear-gradient(135deg,#1a1a4e,#2563eb)',
+    'linear-gradient(135deg,#065f46,#0f766e)',
+    'linear-gradient(135deg,#7c2d12,#c2410c)',
+    'linear-gradient(135deg,#4c1d95,#6d28d9)'
+  ];
+  monthKeys.forEach(function(mk, mIdx) {
+    var mData = byMonth[mk];
+    var mName = new Date(mk+'-01').toLocaleString('en-IN',{month:'long',year:'numeric'});
+    var grad = monthGradients[mIdx % monthGradients.length];
+    var netClass2 = mData.net>=0?'#86efac':'#fca5a5';
+    html += '<div class="month-block">';
+    html += '<div class="month-hdr" style="background:'+grad+'">';
+    html += '<span class="month-name">📆 '+mName+'</span>';
+    html += '<div class="month-kpis">';
+    html += '<span class="mk">🚶 '+mData.wCount+' Walk-ins</span>';
+    html += '<span class="mk" style="color:#86efac">💰 '+fmtRs(mData.inc)+'</span>';
+    html += '<span class="mk" style="color:#fca5a5">📉 '+fmtRs(mData.exp)+'</span>';
+    html += '<span class="mk" style="color:'+netClass2+'">💵 Net: '+(mData.net<0?'-':'')+fmtRs(mData.net)+'</span>';
+    html += '</div></div>';
+    html += '<table class="day-table"><thead><tr><th>Date</th><th>Walk-ins</th><th>Details / Category</th><th>Income</th><th>Expense</th><th>Day Net</th></tr></thead><tbody>';
+    var dayKeys = Object.keys(mData.days).sort().reverse();
+    dayKeys.forEach(function(dk){
+      var dData = mData.days[dk];
+      var dName = new Date(dk+'T00:00:00').toLocaleString('en-IN',{weekday:'short',day:'2-digit',month:'short'});
+      var netCls = dData.net>=0?'net-pos':'net-neg';
+      html += '<tr class="day-row"><td>'+dName+'</td><td style="text-align:right">'+(dData.wCount?'<span class="badge b-walkin">'+dData.wCount+' 🚶</span>':'—')+'</td><td style="color:#475569;font-weight:500;font-size:11px">Summary ('+( dData.rows.length)+' txn'+(dData.rows.length!==1?'s':'')+')</td><td style="text-align:right;color:#16a34a">'+(dData.inc?fmtRs(dData.inc):'—')+'</td><td style="text-align:right;color:#dc2626">'+(dData.exp?fmtRs(dData.exp):'—')+'</td><td class="'+netCls+'" style="text-align:right">'+(dData.net<0?'-':'')+fmtRs(dData.net)+'</td></tr>';
+      dData.wRows.forEach(function(w){
+        html += '<tr class="detail-row"><td></td><td style="text-align:right"><span class="badge b-walkin">Walk-in</span></td><td>'+(w.name||'Unknown')+' — '+(w.outcome||'Visit')+'</td><td></td><td></td><td></td></tr>';
+      });
+      dData.rows.forEach(function(r){
+        var isInc = r.type==='income';
+        html += '<tr class="detail-row"><td></td><td style="text-align:right"><span class="badge '+(isInc?'b-income':'b-expense')+'">'+r.type+'</span></td><td>'+(r.category||'Other')+(r.description?' — '+r.description:'')+'</td><td style="text-align:right;color:#16a34a">'+(isInc?fmtRs(r.amount):'')+'</td><td style="text-align:right;color:#dc2626">'+(!isInc?fmtRs(r.amount):'')+'</td><td></td></tr>';
       });
     });
-    
     html += '</tbody></table></div>';
   });
 
+  html += '</div>';
+  html += '<div class="footer">PulseIQ Financial Report &nbsp;•&nbsp; '+centerName+' &nbsp;•&nbsp; Generated '+new Date().toLocaleString('en-IN')+' &nbsp;•&nbsp; Confidential Business Document</div>';
   html += '</body></html>';
 
-  var iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = '0';
-  document.body.appendChild(iframe);
-  
-  var doc = iframe.contentWindow.document;
-  doc.open();
-  doc.write(html);
-  doc.close();
-  
-  setTimeout(function() {
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    setTimeout(function() { document.body.removeChild(iframe); }, 1000);
-  }, 500);
+  // Open in new tab for save/print
+  var w = window.open('','_blank');
+  if(w) {
+    w.document.open(); w.document.write(html); w.document.close();
+    w.document.title = 'PulseIQ Financial Report';
+    setTimeout(function(){ w.focus(); w.print(); }, 800);
+  } else {
+    // Fallback: blob download
+    var blob = new Blob([html],{type:'text/html;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'PulseIQ_Financial_Report_'+new Date().toISOString().slice(0,10)+'.html';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+}
+
+// ── MONTHLY DAY-BY-DAY FINANCIAL REPORT MODAL ──
+function showMonthlyFinancialReport() {
+  var existing = document.getElementById('monthly-fin-report-modal');
+  if(existing) { existing.remove(); }
+
+  // Gather all available months from finance + walkins
+  var allFinance = ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : (D.finance||[]);
+  var allWalkins = ACTIVE_CENTER ? (D.walkins||[]).filter(function(w){ return w.wellness_center_id===ACTIVE_CENTER||w.center_id===ACTIVE_CENTER; }) : (D.walkins||[]);
+
+  var monthSet = {};
+  allFinance.forEach(function(r){ if(r.date) monthSet[r.date.slice(0,7)]=true; });
+  allWalkins.forEach(function(w){ if(w.date) monthSet[w.date.slice(0,7)]=true; });
+  var months = Object.keys(monthSet).sort().reverse();
+  if(!months.length) {
+    var now = new Date();
+    months = [now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')];
+  }
+  var selMonth = months[0];
+
+  // Modal HTML
+  var modal = document.createElement('div');
+  modal.id = 'monthly-fin-report-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;backdrop-filter:blur(4px)';
+  modal.innerHTML = '<div id="mfr-panel" style="background:var(--surface,#1e293b);border-radius:18px;width:100%;max-width:900px;overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,0.5);margin:auto">'
+    +'<div style="background:linear-gradient(135deg,#1e3a5f 0%,#0d6e6e 100%);padding:24px 28px;display:flex;justify-content:space-between;align-items:flex-start">'
+    +'<div><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:6px">📊 Business Intelligence</div>'
+    +'<div style="font-size:22px;font-weight:800;color:#fff">Monthly Day-by-Day Financial Report</div>'
+    +'<div style="font-size:13px;color:rgba(255,255,255,0.65);margin-top:4px">Income · Expenses · Walk-in Analysis · Net Performance</div></div>'
+    +'<div style="display:flex;align-items:center;gap:10px">'
+    +'<button onclick="downloadFinancialReportPDF()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;backdrop-filter:blur(4px)">⬇️ Download Report</button>'
+    +'<button onclick="document.getElementById(\'monthly-fin-report-modal\').remove()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>'
+    +'</div></div>'
+    // Month selector
+    +'<div style="padding:16px 28px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
+    +'<label style="font-size:12px;font-weight:600;color:var(--muted,#94a3b8)">SELECT MONTH</label>'
+    +'<div id="mfr-month-tabs" style="display:flex;gap:8px;flex-wrap:wrap">'
+    + months.slice(0,12).map(function(m){
+        var label = new Date(m+'-01').toLocaleString('en-IN',{month:'short',year:'numeric'});
+        return '<button id="mfr-tab-'+m+'" onclick="mfrSelectMonth(\''+m+'\')" style="padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:var(--text,#e2e8f0);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s">'+label+'</button>';
+      }).join('')
+    +'</div></div>'
+    +'<div id="mfr-body" style="padding:20px 28px 28px"></div>'
+    +'</div>';
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+
+  // Render function — exposed globally for tab buttons
+  window.mfrSelectMonth = function(ym) {
+    // Highlight active tab
+    months.forEach(function(m){ var btn=document.getElementById('mfr-tab-'+m); if(btn){ btn.style.background=m===ym?'linear-gradient(135deg,#0d6e6e,#1e3a5f)':'rgba(255,255,255,0.05)'; btn.style.color=m===ym?'#fff':'var(--text,#e2e8f0)'; btn.style.borderColor=m===ym?'transparent':'rgba(255,255,255,0.15)'; } });
+    var body = document.getElementById('mfr-body');
+    if(!body) return;
+
+    // Filter data for chosen month
+    var finRows = allFinance.filter(function(r){ return r.date && r.date.slice(0,7)===ym; });
+    var wRows   = allWalkins.filter(function(w){ return w.date && w.date.slice(0,7)===ym; });
+
+    var totalInc = finRows.filter(function(r){return r.type==='income';}).reduce(function(s,r){return s+parseFloat(r.amount||0);},0);
+    var totalExp = finRows.filter(function(r){return r.type==='expense';}).reduce(function(s,r){return s+parseFloat(r.amount||0);},0);
+    var totalNet = totalInc-totalExp;
+    var margin   = totalInc>0?Math.round((totalNet/totalInc)*100):0;
+
+    function fmt(n){ return '₹'+Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+    function statCard(icon,label,value,color,bg){ return '<div style="background:'+bg+';border-radius:12px;padding:16px;text-align:center;border-bottom:3px solid '+color+'"><div style="font-size:22px;margin-bottom:4px">'+icon+'</div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:'+color+';margin-bottom:4px">'+label+'</div><div style="font-size:18px;font-weight:800;color:'+color+'">'+value+'</div></div>'; }
+
+    var h = '';
+
+    // ── KPIs ──
+    var netColor = totalNet>=0?'#16a34a':'#dc2626';
+    var netBg    = totalNet>=0?'rgba(22,163,74,0.12)':'rgba(220,38,38,0.12)';
+    var mrgColor = margin>=30?'#0d9488':margin>=10?'#d97706':'#dc2626';
+    var mrgBg    = margin>=30?'rgba(13,148,136,0.12)':margin>=10?'rgba(217,119,6,0.12)':'rgba(220,38,38,0.12)';
+    h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">';
+    h += statCard('💰','Total Income',fmt(totalInc),'#16a34a','rgba(22,163,74,0.1)');
+    h += statCard('📉','Total Expense',fmt(totalExp),'#dc2626','rgba(220,38,38,0.1)');
+    h += statCard('💵','Net '+(totalNet>=0?'Profit':'Loss'),(totalNet<0?'-':'')+fmt(totalNet),netColor,netBg);
+    h += statCard('📈','Profit Margin',margin+'%',mrgColor,mrgBg);
+    h += statCard('🚶','Walk-ins',wRows.length,'#7c3aed','rgba(124,58,237,0.1)');
+    h += '</div>';
+
+    // ── Category Breakdown horizontal bars ──
+    var incCats = {}, expCats = {};
+    finRows.filter(function(r){return r.type==='income';}).forEach(function(r){ var c=r.category||'Other'; incCats[c]=(incCats[c]||0)+parseFloat(r.amount||0); });
+    finRows.filter(function(r){return r.type==='expense';}).forEach(function(r){ var c=r.category||'Other'; expCats[c]=(expCats[c]||0)+parseFloat(r.amount||0); });
+
+    function miniBar(cats, total, barColor) {
+      var entries = Object.entries(cats).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+      if(!entries.length) return '<div style="color:var(--muted,#94a3b8);font-size:12px;padding:8px">No data</div>';
+      return entries.map(function(e){
+        var pct = total>0?Math.round((e[1]/total)*100):0;
+        return '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text,#e2e8f0);margin-bottom:3px"><span>'+e[0]+'</span><span style="font-weight:700">'+fmt(e[1])+' <span style="opacity:0.5">('+pct+'%)</span></span></div><div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:6px;background:'+barColor+';border-radius:3px;width:'+pct+'%"></div></div></div>';
+      }).join('');
+    }
+
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">';
+    h += '<div style="background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.2);border-radius:12px;padding:16px"><div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:10px">🟢 Income Categories</div>'+miniBar(incCats,totalInc,'#22c55e')+'</div>';
+    h += '<div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:12px;padding:16px"><div style="font-size:12px;font-weight:700;color:#f87171;margin-bottom:10px">🔴 Expense Categories</div>'+miniBar(expCats,totalExp,'#ef4444')+'</div>';
+    h += '</div>';
+
+    // ── Walk-in Analysis ──
+    if(wRows.length) {
+      var wOutcomes = {};
+      wRows.forEach(function(w){ var o=w.outcome||'Visit'; wOutcomes[o]=(wOutcomes[o]||0)+1; });
+      var outcomeColors = ['#a855f7','#7c3aed','#c084fc','#e879f9','#d946ef','#9333ea'];
+      var outEntries = Object.entries(wOutcomes).sort(function(a,b){return b[1]-a[1];});
+      h += '<div style="background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);border-radius:12px;padding:16px;margin-bottom:20px">';
+      h += '<div style="font-size:12px;font-weight:700;color:#c084fc;margin-bottom:12px">🚶 Walk-in Outcome Breakdown — '+wRows.length+' total</div>';
+      h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">';
+      outEntries.forEach(function(e,i){ h += '<div style="background:'+outcomeColors[i%outcomeColors.length]+'22;border:1px solid '+outcomeColors[i%outcomeColors.length]+'44;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;color:'+outcomeColors[i%outcomeColors.length]+'">'+e[0]+': '+e[1]+'</div>'; });
+      h += '</div>';
+      h += '<div style="font-size:11px;color:var(--muted,#94a3b8);padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px">💡 <strong>Tip:</strong> Walk-ins with "Enquiry" or "Trial" outcomes have ~35% conversion to memberships if followed up within 48 hours. Consider adding them to your CRM pipeline.</div>';
+      h += '</div>';
+    }
+
+    // ── Day-by-Day Table ──
+    var dayMap = {};
+    finRows.forEach(function(r){ if(!r.date) return; if(!dayMap[r.date]) dayMap[r.date]={inc:0,exp:0,net:0,rows:[],wRows:[]}; var a=parseFloat(r.amount||0); if(r.type==='income'){dayMap[r.date].inc+=a;dayMap[r.date].net+=a;}else{dayMap[r.date].exp+=a;dayMap[r.date].net-=a;} dayMap[r.date].rows.push(r); });
+    wRows.forEach(function(w){ if(!w.date) return; if(!dayMap[w.date]) dayMap[w.date]={inc:0,exp:0,net:0,rows:[],wRows:[]}; dayMap[w.date].wRows.push(w); });
+    var dayKeys = Object.keys(dayMap).sort().reverse();
+
+    if(!dayKeys.length) { h += '<div style="text-align:center;padding:30px;color:var(--muted,#94a3b8)">No transactions for this month.</div>'; }
+    else {
+      h += '<div style="font-size:12px;font-weight:700;color:var(--muted,#94a3b8);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📅 Day-by-Day Breakdown</div>';
+      h += '<div style="overflow-x:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.08)">';
+      h += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+      h += '<thead><tr style="background:rgba(255,255,255,0.05)">';
+      h += '<th style="padding:10px 14px;text-align:left;color:var(--muted,#94a3b8);font-weight:600;white-space:nowrap">Date</th>';
+      h += '<th style="padding:10px 14px;text-align:center;color:var(--muted,#94a3b8);font-weight:600">Walk-ins</th>';
+      h += '<th style="padding:10px 14px;text-align:right;color:#4ade80;font-weight:600">Income</th>';
+      h += '<th style="padding:10px 14px;text-align:right;color:#f87171;font-weight:600">Expense</th>';
+      h += '<th style="padding:10px 14px;text-align:right;color:var(--muted,#94a3b8);font-weight:600">Net</th>';
+      h += '<th style="padding:10px 14px;text-align:left;color:var(--muted,#94a3b8);font-weight:600">Transactions</th>';
+      h += '</tr></thead><tbody>';
+
+      dayKeys.forEach(function(dk, idx){
+        var d = dayMap[dk];
+        var netCol = d.net>=0?'#4ade80':'#f87171';
+        var dLabel = new Date(dk+'T00:00:00').toLocaleString('en-IN',{weekday:'short',day:'2-digit',month:'short'});
+        var rowBg = idx%2===0?'rgba(255,255,255,0.02)':'transparent';
+        // Summary row
+        h += '<tr style="background:'+rowBg+';border-bottom:1px solid rgba(255,255,255,0.06)">';
+        h += '<td style="padding:10px 14px;font-weight:700;color:var(--text,#e2e8f0);white-space:nowrap">'+dLabel+'</td>';
+        h += '<td style="padding:10px 14px;text-align:center">'+(d.wRows.length?'<span style="background:rgba(124,58,237,0.2);color:#c084fc;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">'+d.wRows.length+' 🚶</span>':'<span style="color:rgba(255,255,255,0.2);font-size:11px">—</span>')+'</td>';
+        h += '<td style="padding:10px 14px;text-align:right;font-weight:700;color:#4ade80">'+(d.inc?fmt(d.inc):'<span style="opacity:0.3">—</span>')+'</td>';
+        h += '<td style="padding:10px 14px;text-align:right;font-weight:700;color:#f87171">'+(d.exp?fmt(d.exp):'<span style="opacity:0.3">—</span>')+'</td>';
+        h += '<td style="padding:10px 14px;text-align:right;font-weight:800;color:'+netCol+'">'+(d.net<0?'-':'')+fmt(d.net)+'</td>';
+        // Compact transaction pills
+        h += '<td style="padding:10px 14px">';
+        d.rows.slice(0,4).forEach(function(r){
+          var isInc=r.type==='income';
+          h += '<span style="display:inline-block;margin:2px;background:'+(isInc?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)')+';color:'+(isInc?'#4ade80':'#f87171')+';padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600">'+(r.category||r.type.slice(0,3))+' '+(isInc?'+':'-')+fmt(r.amount)+'</span>';
+        });
+        if(d.rows.length>4) h += '<span style="color:var(--muted,#94a3b8);font-size:10px"> +'+( d.rows.length-4)+' more</span>';
+        if(d.wRows.length) d.wRows.slice(0,2).forEach(function(w){ h += '<span style="display:inline-block;margin:2px;background:rgba(124,58,237,0.15);color:#c084fc;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600">🚶 '+(w.name||'Walk-in')+'</span>'; });
+        h += '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+
+      // ── Monthly totals footer ──
+      h += '<div style="display:flex;justify-content:flex-end;gap:20px;margin-top:14px;padding:14px 16px;background:rgba(255,255,255,0.04);border-radius:10px;font-size:13px;font-weight:700">';
+      h += '<span style="color:var(--muted,#94a3b8)">Month Total:</span>';
+      h += '<span style="color:#4ade80">'+fmt(totalInc)+' income</span>';
+      h += '<span style="color:#f87171">'+fmt(totalExp)+' expense</span>';
+      h += '<span style="color:'+(totalNet>=0?'#4ade80':'#f87171')+'">'+(totalNet<0?'-':'')+fmt(totalNet)+' net</span>';
+      h += '</div>';
+    }
+
+    body.innerHTML = h;
+  };
+
+  // Render initial month
+  window.mfrSelectMonth(selMonth);
 }
 
 // ── SAVE CENTERS ──
