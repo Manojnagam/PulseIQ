@@ -42,72 +42,10 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  /* ─── 2. ANIMATED COUNTER (Motion Primitives style) ─── */
-  function animateCounter(el, target, duration = 800, prefix = '', suffix = '') {
-    const start = performance.now();
-    const startVal = 0;
-    const isFloat = !Number.isInteger(target);
-    const decimals = isFloat ? 1 : 0;
-
-    function ease(t) {
-      // Ease out cubic
-      return 1 - Math.pow(1 - t, 3);
-    }
-
-    function tick(now) {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const current = startVal + (target - startVal) * ease(progress);
-      el.textContent = prefix + current.toFixed(decimals) + suffix;
-
-      if (progress < 1) requestAnimationFrame(tick);
-      else el.textContent = prefix + target.toFixed(decimals) + suffix;
-    }
-
-    requestAnimationFrame(tick);
-  }
-
-  function initCounters() {
-    // Observe stat values entering the viewport
-    const io = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        const el = entry.target;
-        if (el._counted) continue;
-
-        const text = el.textContent.trim();
-        // Match ₹1,23,456 or 94% or 1.2K etc
-        const numMatch = text.match(/[\d,.]+/);
-        if (!numMatch) continue;
-
-        const raw = numMatch[0].replace(/,/g, '');
-        const num = parseFloat(raw);
-        if (isNaN(num) || num === 0) continue;
-
-        // Extract prefix/suffix around the number
-        const idx = text.indexOf(numMatch[0]);
-        const pre = text.slice(0, idx);
-        const suf = text.slice(idx + numMatch[0].length);
-
-        el._counted = true;
-        io.unobserve(el);
-        animateCounter(el, num, 900, pre, suf);
-      }
-    }, { threshold: 0.3 });
-
-    function observeCounters() {
-      document.querySelectorAll('.stat-v, .ov-rev-val').forEach((el) => {
-        if (!el._counted) io.observe(el);
-      });
-    }
-
-    observeCounters();
-
-    // Re-observe after section switches
-    document.addEventListener('click', () => {
-      setTimeout(observeCounters, 100);
-    });
-  }
+  /* ─── 2. ANIMATED COUNTER ─── DISABLED
+   * Removed: was corrupting Indian number formatting (₹7,02,763.75 → ₹702763.8)
+   * Real financial data must never be reformatted by presentation layer.
+   */
 
   /* ─── 3. STAGGER ENTRANCE for dynamic card lists ─── */
   function staggerEnter(container, selector = '.att-card, .lead-card, .recheck-card, .retention-card') {
@@ -199,7 +137,6 @@
   /* ─── INIT ─── */
   function init() {
     initSpotlight();
-    initCounters();
     startStaggerObserver();
     patchNavItems();
     patchToast();
