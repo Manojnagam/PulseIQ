@@ -17473,8 +17473,19 @@ function downloadFinancialReportPDF() {
 
     '</div></body></html>';
 
-  var win = window.open('', '_blank');
-  if (!win) { showToast('Popup blocked — please allow popups for this site.', 'error'); return; }
-  win.document.write(html);
-  win.document.close();
+  // Use Blob URL — works on local file:// and avoids popup blocker
+  var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  var blobUrl = URL.createObjectURL(blob);
+  var win = window.open(blobUrl, '_blank');
+  if (!win) {
+    // Popup still blocked — fall back to direct file download
+    var a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = 'financial_report_' + ym + '_' + new Date().toISOString().slice(0,10) + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('Report downloaded as HTML file — open it in your browser to print/save PDF.', 'success');
+  }
+  setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 10000);
 }
