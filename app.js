@@ -17054,3 +17054,427 @@ async function askFinanceFollowup() {
   askBtn.textContent = 'Ask';
 }
 
+// ══════════════════════════════════════════════════════════════
+// MONTHLY DAY-BY-DAY FINANCIAL REPORT  (with Walk-in Analysis)
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Build a per-month, per-day summary from D.finance.
+ * Returns { months: ['2025-06', ...], data: { '2025-06': { totalInc, totalExp, days: { '2025-06-01': { inc, exp, rows[] } } } } }
+ */
+function _buildDayByDayReport() {
+  var allFin = ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : (D.finance || []);
+  var allWalk = (D.walkins || []).filter(function(w) {
+    if (!ACTIVE_CENTER) return true;
+    return w.wellness_center_id === ACTIVE_CENTER || w.center_id === ACTIVE_CENTER;
+  });
+
+  var monthMap = {};
+
+  allFin.forEach(function(f) {
+    var d = (f.date || '').slice(0, 10);
+    if (!d) return;
+    var ym = d.slice(0, 7);
+    if (!monthMap[ym]) monthMap[ym] = { totalInc: 0, totalExp: 0, days: {} };
+    if (!monthMap[ym].days[d]) monthMap[ym].days[d] = { inc: 0, exp: 0, rows: [] };
+    var amt = Number(f.amount) || 0;
+    if (f.type === 'income') { monthMap[ym].totalInc += amt; monthMap[ym].days[d].inc += amt; }
+    else { monthMap[ym].totalExp += amt; monthMap[ym].days[d].exp += amt; }
+    monthMap[ym].days[d].rows.push(f);
+  });
+
+  // Walk-in totals per month
+  var walkMonthMap = {};
+  allWalk.forEach(function(w) {
+    var d = (w.date || '').slice(0, 10); if (!d) return;
+    var ym = d.slice(0, 7);
+    if (!walkMonthMap[ym]) walkMonthMap[ym] = { total: 0, converted: 0, trial: 0, checkup: 0, revenue: 0 };
+    walkMonthMap[ym].total++;
+    if (w.converted) walkMonthMap[ym].converted++;
+    if (w.outcome === 'trial') walkMonthMap[ym].trial++;
+    if (w.outcome === 'checkup') walkMonthMap[ym].checkup++;
+    walkMonthMap[ym].revenue += Number(w.amount_received) || 0;
+  });
+
+  var months = Object.keys(monthMap).sort().reverse();
+  return { months: months, data: monthMap, walkData: walkMonthMap, allWalk: allWalk };
+}
+
+/**
+ * showMonthlyFinancialReport() — opens a premium in-app modal.
+ * Month selector → day-by-day table + walk-in insights.
+ */
+function showMonthlyFinancialReport() {
+  var report = _buildDayByDayReport();
+
+  // ── Build or reuse modal overlay ──
+  var existingModal = document.getElementById('modal-monthly-fin-report');
+  if (existingModal) existingModal.remove();
+
+  var now = new Date();
+  var defaultMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+  var MONTH_OPTIONS = report.months.map(function(m) {
+    var d = new Date(m + '-01');
+    var label = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+    return '<option value="' + m + '"' + (m === defaultMonth ? ' selected' : '') + '>' + label + '</option>';
+  }).join('');
+
+  var overlay = document.createElement('div');
+  overlay.id = 'modal-monthly-fin-report';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px 40px;backdrop-filter:blur(4px)';
+
+  overlay.innerHTML = '<div style="background:var(--surface,#1e2a3a);border-radius:20px;max-width:900px;width:100%;border:1px solid rgba(255,255,255,0.1);box-shadow:0 24px 80px rgba(0,0,0,0.5);overflow:hidden;animation:fadeSlideIn .25s ease">' +
+    '<style>@keyframes fadeSlideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}</style>' +
+    // Header
+    '<div style="background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);padding:22px 24px;display:flex;justify-content:space-between;align-items:center">' +
+      '<div><div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.5px">📅 Monthly Financial Report</div>' +
+      '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:3px">Day-by-day income & expense breakdown with walk-in analysis</div></div>' +
+      '<button onclick="document.getElementById(\'modal-monthly-fin-report\').remove()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">✕</button>' +
+    '</div>' +
+    // Month picker + Download button
+    '<div style="padding:16px 24px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:rgba(0,0,0,0.2);border-bottom:1px solid rgba(255,255,255,0.07)">' +
+      '<label style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.5px">Select Month</label>' +
+      '<select id="mfr-month-sel" onchange="renderMonthlyFinReport()" style="background:#1a2a3a;color:#e2e8f0;border:1.5px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;font-size:14px;font-family:inherit;cursor:pointer">' +
+        MONTH_OPTIONS +
+      '</select>' +
+      '<button onclick="downloadFinancialReportPDF()" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">⬇️ Download Report</button>' +
+    '</div>' +
+    // Body (rendered by JS)
+    '<div id="mfr-body" style="padding:20px 24px;min-height:200px"></div>' +
+  '</div>';
+
+  document.body.appendChild(overlay);
+
+  // Close on overlay click
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+
+  renderMonthlyFinReport();
+}
+
+function renderMonthlyFinReport() {
+  var selEl = document.getElementById('mfr-month-sel');
+  if (!selEl) return;
+  var ym = selEl.value;
+  var report = _buildDayByDayReport();
+  var monthData = report.data[ym] || { totalInc: 0, totalExp: 0, days: {} };
+  var walkData = report.walkData[ym] || { total: 0, converted: 0, trial: 0, checkup: 0, revenue: 0 };
+  var allWalk = (report.allWalk || []).filter(function(w){ return (w.date||'').startsWith(ym); });
+
+  var net = monthData.totalInc - monthData.totalExp;
+  var margin = monthData.totalInc > 0 ? ((net / monthData.totalInc) * 100).toFixed(1) : 0;
+  var convRate = walkData.total > 0 ? ((walkData.converted / walkData.total) * 100).toFixed(0) : 0;
+
+  // Month label
+  var d = new Date(ym + '-01');
+  var monthLabel = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  function fmt(n) { return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+  function pct(v) { return Number(v).toFixed(1) + '%'; }
+
+  // ── KPI cards ──
+  var kpiHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">' +
+    _mfrKpiCard('💰 Income',  fmt(monthData.totalInc),  '#10b981', '#0a1f17') +
+    _mfrKpiCard('💸 Expense', fmt(monthData.totalExp),  '#f43f5e', '#1f0a14') +
+    _mfrKpiCard('📈 Net Profit', fmt(net), net >= 0 ? '#38bdf8' : '#f43f5e', net >= 0 ? '#07192a' : '#1f0a14') +
+    _mfrKpiCard('📊 Margin', pct(margin), '#a78bfa', '#150e2a') +
+    _mfrKpiCard('🚶 Walk-ins', walkData.total,           '#fb923c', '#1f1007') +
+    _mfrKpiCard('✅ Converted', walkData.converted + ' (' + convRate + '%)', '#34d399', '#091f17') +
+  '</div>';
+
+  // ── Walk-in bar (outcome breakdown) ──
+  var walkBarHtml = '';
+  if (allWalk.length) {
+    var OUT_LABELS = { checkup: '🔬 Checkup', trial: '📦 Trial Pack', product_sale: '🛒 Product Sale', other: 'Other' };
+    var OUT_COLORS = { checkup: '#60a5fa', trial: '#fbbf24', product_sale: '#34d399', other: '#94a3b8' };
+    var outCounts = {};
+    allWalk.forEach(function(w){ outCounts[w.outcome || 'other'] = (outCounts[w.outcome || 'other'] || 0) + 1; });
+
+    walkBarHtml = '<div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.07)">' +
+      '<div style="font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:12px">🚶 Walk-in Analysis — ' + monthLabel + '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">' +
+      Object.entries(outCounts).map(function(e) {
+        var pct2 = walkData.total > 0 ? Math.round((e[1] / walkData.total) * 100) : 0;
+        return '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 12px">' +
+          '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">' + (OUT_LABELS[e[0]] || e[0]) + '</div>' +
+          '<div style="font-size:18px;font-weight:800;color:' + (OUT_COLORS[e[0]] || '#94a3b8') + '">' + e[1] + '</div>' +
+          '<div style="height:3px;border-radius:2px;background:rgba(255,255,255,0.08);margin-top:6px"><div style="height:3px;border-radius:2px;background:' + (OUT_COLORS[e[0]] || '#94a3b8') + ';width:' + pct2 + '%"></div></div>' +
+          '<div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:3px">' + pct2 + '% of walk-ins</div>' +
+        '</div>';
+      }).join('') +
+      '</div>' +
+      (walkData.revenue > 0 ? '<div style="margin-top:10px;font-size:12px;color:#fbbf24;font-weight:600">💵 Walk-in Revenue: ' + fmt(walkData.revenue) + '</div>' : '') +
+    '</div>';
+  }
+
+  // ── Day-by-day table ──
+  var days = Object.keys(monthData.days).sort();
+  var tableHtml = '';
+  if (!days.length) {
+    tableHtml = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.3);font-size:14px">📭 No transactions recorded for ' + monthLabel + '</div>';
+  } else {
+    var rows = days.map(function(day) {
+      var dayData = monthData.days[day];
+      var dayNet = dayData.inc - dayData.exp;
+      var dayDate = new Date(day + 'T00:00:00');
+      var dayLabel = dayDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+      var netColor = dayNet >= 0 ? '#34d399' : '#f43f5e';
+      return '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">' +
+        '<td style="padding:10px 12px;font-size:13px;color:#e2e8f0;font-weight:600;white-space:nowrap">' + dayLabel + '</td>' +
+        '<td style="padding:10px 12px;font-size:13px;color:#34d399;text-align:right;font-weight:600">' + (dayData.inc > 0 ? fmt(dayData.inc) : '—') + '</td>' +
+        '<td style="padding:10px 12px;font-size:13px;color:#f43f5e;text-align:right;font-weight:600">' + (dayData.exp > 0 ? fmt(dayData.exp) : '—') + '</td>' +
+        '<td style="padding:10px 12px;font-size:13px;color:' + netColor + ';text-align:right;font-weight:700">' + fmt(dayNet) + '</td>' +
+        '<td style="padding:10px 12px;font-size:11px;color:rgba(255,255,255,0.45);max-width:200px">' +
+          dayData.rows.slice(0, 3).map(function(r){ return (r.description || r.category || r.type); }).join(', ') +
+          (dayData.rows.length > 3 ? ' +' + (dayData.rows.length - 3) + ' more' : '') +
+        '</td>' +
+      '</tr>';
+    }).join('');
+
+    // Running totals row
+    rows += '<tr style="background:rgba(255,255,255,0.05);border-top:2px solid rgba(255,255,255,0.15)">' +
+      '<td style="padding:12px;font-size:13px;font-weight:800;color:#fff">📊 TOTAL</td>' +
+      '<td style="padding:12px;font-size:14px;font-weight:800;color:#34d399;text-align:right">' + fmt(monthData.totalInc) + '</td>' +
+      '<td style="padding:12px;font-size:14px;font-weight:800;color:#f43f5e;text-align:right">' + fmt(monthData.totalExp) + '</td>' +
+      '<td style="padding:12px;font-size:14px;font-weight:800;color:' + (net >= 0 ? '#38bdf8' : '#f43f5e') + ';text-align:right">' + fmt(net) + '</td>' +
+      '<td style="padding:12px;font-size:12px;color:rgba(255,255,255,0.4)">' + days.length + ' active days | Margin: ' + pct(margin) + '</td>' +
+    '</tr>';
+
+    tableHtml = '<div style="background:rgba(0,0,0,0.3);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)">' +
+      '<div style="padding:14px 16px;font-size:13px;font-weight:700;color:#e2e8f0;border-bottom:1px solid rgba(255,255,255,0.07)">📋 Day-by-Day Breakdown — ' + monthLabel + '</div>' +
+      '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
+        '<thead><tr style="background:rgba(255,255,255,0.04)">' +
+          '<th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px">Date</th>' +
+          '<th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:.5px">Income</th>' +
+          '<th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#f43f5e;text-transform:uppercase;letter-spacing:.5px">Expense</th>' +
+          '<th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:.5px">Net</th>' +
+          '<th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px">Details</th>' +
+        '</tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table></div>' +
+    '</div>';
+  }
+
+  document.getElementById('mfr-body').innerHTML = kpiHtml + walkBarHtml + tableHtml;
+}
+
+function _mfrKpiCard(label, value, color, bg) {
+  return '<div style="background:' + bg + ';border:1px solid ' + color + '33;border-radius:12px;padding:14px 16px">' +
+    '<div style="font-size:11px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">' + label + '</div>' +
+    '<div style="font-size:20px;font-weight:800;color:' + color + '">' + value + '</div>' +
+  '</div>';
+}
+
+/**
+ * downloadFinancialReportPDF()
+ * Generates a colorful, print-friendly HTML report in a new tab.
+ * Covers: summary KPIs, walk-in analysis, monthly P&L, day-by-day table.
+ */
+function downloadFinancialReportPDF() {
+  var report = _buildDayByDayReport();
+  var now = new Date();
+
+  // Use selected month if the modal is open, else use current month
+  var selEl = document.getElementById('mfr-month-sel');
+  var ym = selEl ? selEl.value : (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
+
+  var monthData = report.data[ym] || { totalInc: 0, totalExp: 0, days: {} };
+  var walkData = report.walkData[ym] || { total: 0, converted: 0, trial: 0, checkup: 0, revenue: 0 };
+  var allWalk = (report.allWalk || []).filter(function(w){ return (w.date||'').startsWith(ym); });
+
+  var d = new Date(ym + '-01');
+  var monthLabel = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+  var net = monthData.totalInc - monthData.totalExp;
+  var margin = monthData.totalInc > 0 ? ((net / monthData.totalInc) * 100).toFixed(1) : 0;
+  var convRate = walkData.total > 0 ? ((walkData.converted / walkData.total) * 100).toFixed(0) : 0;
+
+  function fmt(n) { return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 0 }); }
+
+  // ── KPI cards ──
+  var kpiCards = [
+    { label: 'Total Income', value: fmt(monthData.totalInc), color: '#10b981', icon: '💰' },
+    { label: 'Total Expense', value: fmt(monthData.totalExp), color: '#f43f5e', icon: '💸' },
+    { label: 'Net Profit', value: fmt(net), color: net >= 0 ? '#3b82f6' : '#f43f5e', icon: '📈' },
+    { label: 'Profit Margin', value: Number(margin).toFixed(1) + '%', color: '#8b5cf6', icon: '📊' },
+    { label: 'Walk-ins', value: walkData.total, color: '#f97316', icon: '🚶' },
+    { label: 'Converted', value: walkData.converted + ' (' + convRate + '%)', color: '#06d6a0', icon: '✅' },
+  ].map(function(c) {
+    return '<div style="background:#fff;border-radius:14px;padding:18px 20px;border-left:4px solid ' + c.color + ';box-shadow:0 2px 12px rgba(0,0,0,0.08)">' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#9ca3af;margin-bottom:6px">' + c.icon + ' ' + c.label + '</div>' +
+      '<div style="font-size:26px;font-weight:900;color:' + c.color + '">' + c.value + '</div>' +
+    '</div>';
+  }).join('');
+
+  // ── Walk-in outcome table ──
+  var OUT_LABELS = { checkup: '🔬 Free Checkup', trial: '📦 Trial Pack', product_sale: '🛒 Product Sale', other: 'Other' };
+  var OUT_COLORS = { checkup: '#3b82f6', trial: '#f59e0b', product_sale: '#10b981', other: '#6b7280' };
+  var outCounts = {}; var outRevenue = {};
+  allWalk.forEach(function(w) {
+    var key = w.outcome || 'other';
+    outCounts[key] = (outCounts[key] || 0) + 1;
+    outRevenue[key] = (outRevenue[key] || 0) + (Number(w.amount_received) || 0);
+  });
+  var walkTableRows = Object.entries(outCounts).map(function(e) {
+    var pct2 = walkData.total > 0 ? ((e[1] / walkData.total) * 100).toFixed(0) : 0;
+    return '<tr>' +
+      '<td style="padding:10px 14px;font-weight:600;color:#374151">' + (OUT_LABELS[e[0]] || e[0]) + '</td>' +
+      '<td style="padding:10px 14px;text-align:center;font-weight:700;color:' + (OUT_COLORS[e[0]] || '#6b7280') + '">' + e[1] + '</td>' +
+      '<td style="padding:10px 14px;text-align:center;color:#6b7280">' + pct2 + '%' +
+        '<div style="height:4px;border-radius:2px;background:#e5e7eb;margin-top:4px"><div style="height:4px;border-radius:2px;background:' + (OUT_COLORS[e[0]] || '#6b7280') + ';width:' + pct2 + '%"></div></div>' +
+      '</td>' +
+      '<td style="padding:10px 14px;text-align:right;font-weight:600;color:#374151">' + (outRevenue[e[0]] > 0 ? fmt(outRevenue[e[0]]) : '—') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  // ── Day-by-day table ──
+  var days = Object.keys(monthData.days).sort();
+  var dayRows = days.map(function(day, i) {
+    var dd = monthData.days[day];
+    var dayNet = dd.inc - dd.exp;
+    var dt = new Date(day + 'T00:00:00');
+    var dayLabel = dt.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
+    var rowBg = i % 2 === 0 ? '#f9fafb' : '#fff';
+    var netColor = dayNet >= 0 ? '#10b981' : '#f43f5e';
+    // Inline bar
+    var barW = monthData.totalInc > 0 ? Math.min(100, Math.round((dd.inc / monthData.totalInc) * 100)) : 0;
+    return '<tr style="background:' + rowBg + '">' +
+      '<td style="padding:9px 12px;font-size:13px;color:#374151;font-weight:600">' + dayLabel + '</td>' +
+      '<td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:700;color:#10b981">' + (dd.inc > 0 ? fmt(dd.inc) : '—') + '</td>' +
+      '<td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:700;color:#f43f5e">' + (dd.exp > 0 ? fmt(dd.exp) : '—') + '</td>' +
+      '<td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:800;color:' + netColor + '">' + fmt(dayNet) + '</td>' +
+      '<td style="padding:9px 12px">' +
+        '<div style="height:6px;border-radius:3px;background:#e5e7eb"><div style="height:6px;border-radius:3px;background:linear-gradient(90deg,#10b981,#3b82f6);width:' + barW + '%"></div></div>' +
+      '</td>' +
+      '<td style="padding:9px 12px;font-size:11px;color:#9ca3af;max-width:180px">' +
+        dd.rows.slice(0, 3).map(function(r){ return r.description || r.category || r.type; }).join(', ') +
+        (dd.rows.length > 3 ? ' +' + (dd.rows.length - 3) + ' more' : '') +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  // ── Monthly P&L mini-trend (last 6 months) ──
+  var trendRows = report.months.slice(0, 6).reverse().map(function(m) {
+    var md = report.data[m] || { totalInc: 0, totalExp: 0 };
+    var mNet = md.totalInc - md.totalExp;
+    var mDate = new Date(m + '-01');
+    var mLabel = mDate.toLocaleString('default', { month: 'short', year: '2-digit' });
+    var netCol = mNet >= 0 ? '#10b981' : '#f43f5e';
+    var highlight = m === ym ? 'background:#eff6ff;font-weight:800;' : '';
+    return '<tr style="' + highlight + 'border-bottom:1px solid #e5e7eb">' +
+      '<td style="padding:8px 12px;font-size:13px;color:#374151;font-weight:600">' + mLabel + (m === ym ? ' ◀ this report' : '') + '</td>' +
+      '<td style="padding:8px 12px;text-align:right;font-size:13px;color:#10b981;font-weight:700">' + fmt(md.totalInc) + '</td>' +
+      '<td style="padding:8px 12px;text-align:right;font-size:13px;color:#f43f5e;font-weight:700">' + fmt(md.totalExp) + '</td>' +
+      '<td style="padding:8px 12px;text-align:right;font-size:13px;color:' + netCol + ';font-weight:700">' + fmt(mNet) + '</td>' +
+    '</tr>';
+  }).join('');
+
+  var orgName = '';
+  try { orgName = JSON.parse(safeStorage.getItem('ownerProfile') || '{}').center_name || 'Wellness Center'; } catch(e) {}
+
+  var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Financial Report — ' + monthLabel + ' | ' + orgName + '</title>' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f1f5f9;color:#1f2937;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '@media print{body{background:#fff}.no-print{display:none!important}@page{margin:15mm;size:A4}}' +
+    '.page{max-width:960px;margin:0 auto;padding:24px}' +
+    'table{width:100%;border-collapse:collapse}th{padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}' +
+    'h2{font-size:16px;font-weight:800;color:#111827;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e5e7eb}' +
+    '.section{background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 1px 8px rgba(0,0,0,0.08)}' +
+    '.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}' +
+    'button.print-btn{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}' +
+    'button.print-btn:hover{opacity:.9}' +
+    '</style></head><body>' +
+    '<div class="page">' +
+
+    // ── Cover header ──
+    '<div style="background:linear-gradient(135deg,#1e3a5f,#0f2027,#2c5364);border-radius:20px;padding:32px;margin-bottom:20px;color:#fff;position:relative;overflow:hidden">' +
+      '<div style="position:absolute;right:-20px;top:-20px;width:200px;height:200px;background:rgba(255,255,255,0.04);border-radius:50%"></div>' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.5);margin-bottom:8px">MONTHLY FINANCIAL REPORT</div>' +
+      '<div style="font-size:32px;font-weight:900;letter-spacing:-1px">' + monthLabel + '</div>' +
+      '<div style="font-size:15px;color:rgba(255,255,255,0.7);margin-top:4px">📍 ' + orgName + '</div>' +
+      '<div style="margin-top:20px;display:flex;gap:20px;flex-wrap:wrap">' +
+        '<div><div style="font-size:11px;color:rgba(255,255,255,0.5)">GENERATED ON</div><div style="font-size:14px;font-weight:700">' + now.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) + '</div></div>' +
+        '<div><div style="font-size:11px;color:rgba(255,255,255,0.5)">ACTIVE DAYS</div><div style="font-size:14px;font-weight:700">' + days.length + ' days</div></div>' +
+        '<div><div style="font-size:11px;color:rgba(255,255,255,0.5)">HEALTH</div><div style="font-size:14px;font-weight:700">' + (net >= 0 ? '🟢 Profitable' : '🔴 Loss') + '</div></div>' +
+      '</div>' +
+      '<div class="no-print" style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">' +
+        '<button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>' +
+        '<button class="print-btn" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(4px)" onclick="window.close()">✕ Close</button>' +
+      '</div>' +
+    '</div>' +
+
+    // ── KPI grid ──
+    '<div class="section"><h2>📊 Financial Summary</h2>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px">' + kpiCards + '</div>' +
+    '</div>' +
+
+    // ── Walk-in analysis ──
+    (allWalk.length ? '<div class="section"><h2>🚶 Walk-in Analysis</h2>' +
+      '<table style="margin-bottom:12px">' +
+        '<thead style="background:#f8fafc"><tr>' +
+          '<th>Outcome</th><th style="text-align:center">Count</th><th style="text-align:center">Share</th><th style="text-align:right">Revenue</th>' +
+        '</tr></thead>' +
+        '<tbody>' + walkTableRows + '</tbody>' +
+        '<tfoot style="background:#f0fdf4"><tr>' +
+          '<th style="padding:10px 12px;color:#374151">TOTAL</th>' +
+          '<th style="padding:10px 12px;text-align:center;color:#10b981">' + walkData.total + '</th>' +
+          '<th style="padding:10px 12px;text-align:center;color:#6b7280">100%</th>' +
+          '<th style="padding:10px 12px;text-align:right;color:#10b981">' + fmt(walkData.revenue) + '</th>' +
+        '</tr></tfoot>' +
+      '</table>' +
+      '<div style="display:flex;gap:16px;flex-wrap:wrap;padding:12px;background:#eff6ff;border-radius:10px;font-size:13px">' +
+        '<span>📥 <strong>Total Walk-ins:</strong> ' + walkData.total + '</span>' +
+        '<span>✅ <strong>Converted to Members:</strong> ' + walkData.converted + ' (' + convRate + '%)</span>' +
+        '<span>📦 <strong>Trial Packs:</strong> ' + walkData.trial + '</span>' +
+        '<span>🔬 <strong>Free Checkups:</strong> ' + walkData.checkup + '</span>' +
+      '</div>' +
+    '</div>' : '') +
+
+    // ── Day-by-Day table ──
+    '<div class="section"><h2>📋 Day-by-Day Breakdown</h2>' +
+      '<table>' +
+        '<thead style="background:linear-gradient(135deg,#1e3a5f,#2c5364);color:#fff"><tr>' +
+          '<th>Date</th>' +
+          '<th style="text-align:right;color:#6ee7b7">Income</th>' +
+          '<th style="text-align:right;color:#fca5a5">Expense</th>' +
+          '<th style="text-align:right;color:#93c5fd">Net</th>' +
+          '<th>Income Bar</th>' +
+          '<th>Details</th>' +
+        '</tr></thead>' +
+        '<tbody>' + dayRows + '</tbody>' +
+        '<tfoot style="background:#f0fdf4"><tr>' +
+          '<th style="padding:11px 12px;color:#374151">TOTAL</th>' +
+          '<th style="padding:11px 12px;text-align:right;color:#10b981">' + fmt(monthData.totalInc) + '</th>' +
+          '<th style="padding:11px 12px;text-align:right;color:#f43f5e">' + fmt(monthData.totalExp) + '</th>' +
+          '<th style="padding:11px 12px;text-align:right;color:' + (net >= 0 ? '#10b981' : '#f43f5e') + '">' + fmt(net) + '</th>' +
+          '<th style="padding:11px 12px;color:#6b7280">' + days.length + ' active days</th>' +
+          '<th style="padding:11px 12px;color:#6b7280">Margin: ' + Number(margin).toFixed(1) + '%</th>' +
+        '</tr></tfoot>' +
+      '</table>' +
+    '</div>' +
+
+    // ── 6-month P&L trend ──
+    (report.months.length > 1 ? '<div class="section"><h2>📅 6-Month P&amp;L Trend</h2>' +
+      '<table>' +
+        '<thead style="background:#f8fafc"><tr>' +
+          '<th>Month</th>' +
+          '<th style="text-align:right;color:#10b981">Income</th>' +
+          '<th style="text-align:right;color:#f43f5e">Expense</th>' +
+          '<th style="text-align:right;color:#3b82f6">Net Profit</th>' +
+        '</tr></thead>' +
+        '<tbody>' + trendRows + '</tbody>' +
+      '</table>' +
+    '</div>' : '') +
+
+    // Footer
+    '<div style="text-align:center;font-size:11px;color:#9ca3af;padding:16px 0;border-top:1px solid #e5e7eb;margin-top:8px">' +
+      '📊 Generated by PulseIQ · ' + orgName + ' · ' + now.toLocaleDateString('en-IN') +
+      '<div style="margin-top:4px">This report is confidential and intended for internal business use only.</div>' +
+    '</div>' +
+
+    '</div></body></html>';
+
+  var win = window.open('', '_blank');
+  if (!win) { showToast('Popup blocked — please allow popups for this site.', 'error'); return; }
+  win.document.write(html);
+  win.document.close();
+}
