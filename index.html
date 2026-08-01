@@ -1392,56 +1392,106 @@ if ('caches' in window) {
 <script defer src="resilience/index.js"></script>
 <script defer src="release/validation-engine.js"></script>
 <script defer src="release/regression-engine.js"></script>
-<script defer src="release/security-review.js"></script>
-<script defer src="release/compatibility-engine.js"></script>
-<script defer src="release/release-checklist.js"></script>
-<script defer src="release/documentation-engine.js"></script>
-<script defer src="release/release-renderer.js"></script>
-<script defer src="release/index.js"></script>
-<script src="pulseiq-premium.js?v=2.0"></script>
-</head>
-<body>
+<script defer src<!-- ── LOGIN SCREEN — Phase 2 Premium ── -->
+<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:24px;font-family:'Plus Jakarta Sans',sans-serif;overflow:hidden;background:#030306">
 
-<div class="toast" id="toast"></div>
+  <!-- Animated gradient orbs -->
+  <div class="login-orb login-orb-1"></div>
+  <div class="login-orb login-orb-2"></div>
+  <div class="login-orb login-orb-3"></div>
 
-<!-- ── LOGIN SCREEN ── -->
-<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;background:#09090b;background:radial-gradient(circle at 50% 25%, rgba(39, 174, 96, 0.08) 0%, rgba(9, 9, 11, 0.98) 75%);align-items:center;justify-content:center;padding:24px;font-family:'Plus Jakarta Sans', sans-serif">
-  <div style="background:rgba(24, 24, 27, 0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:24px;padding:44px 38px;width:100%;max-width:410px;box-shadow:0 30px 60px -12px rgba(0,0,0,0.7);border:1px solid rgba(255, 255, 255, 0.12);color:var(--text)">
-    <div style="text-align:center;margin-bottom:32px;position:relative;">
-      <div style="position:absolute;top:-30px;right:-10px;background:#ef4444;color:#fff;font-size:10px;font-weight:900;padding:4px 8px;border-radius:12px;letter-spacing:1px;text-transform:uppercase;">BUILD 1.5.11</div>
-      <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#27AE60 0%,#2563EB 100%);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 10px 25px -5px rgba(39, 174, 96, 0.4)">🌿</div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.5px;line-height:1.2" class="login-logo-text">PulseZen</div>
-      <div style="font-size:11px;color:var(--primary);margin-top:6px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700">Supervisor Operating System</div>
+  <!-- Noise grid overlay -->
+  <div class="login-grid-overlay"></div>
+
+  <!-- Card -->
+  <div class="login-card">
+
+    <!-- Brand -->
+    <div class="login-brand">
+      <!-- Build badge -->
+      <div class="login-build-badge">BUILD 1.5.11</div>
+
+      <!-- Logo with pulse ring -->
+      <div class="login-logo-wrap">
+        <div class="login-pulse-ring"></div>
+        <div class="login-logo-icon">🌿</div>
+      </div>
+
+      <div class="login-logo-text">PulseZen</div>
+      <div class="login-logo-tag">
+        <span class="login-tag-dot"></span>
+        Supervisor Operating System
+      </div>
     </div>
+
     <!-- Step 1: Email -->
     <div id="login-email-state">
-      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">Sign in to your dashboard</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6">We'll send a 6-digit verification code to your email.</div>
-      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:block;margin-bottom:8px">Email Address</label>
-      <input type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendOtpCode()" style="width:100%;padding:14px 16px;border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;font-size:14px;font-family:inherit;margin-bottom:14px;outline:none;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);background:rgba(9, 9, 11, 0.6);color:var(--text)" onfocus="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(39, 174, 96, 0.2)'" onblur="this.style.borderColor='rgba(255,255,255,0.12)';this.style.boxShadow='none'">
-      <label style="display:flex;align-items:center;gap:10px;margin-bottom:18px;cursor:pointer;user-select:none">
-        <input type="checkbox" id="remember-device" checked style="width:17px;height:17px;accent-color:#27AE60;cursor:pointer;border-radius:4px">
-        <span style="font-size:13px;color:var(--text);font-weight:500">Remember this device</span>
+      <div class="login-step-title">Sign in to your dashboard</div>
+      <div class="login-step-sub">We'll send a 6-digit verification code to your email.</div>
+
+      <label class="login-label">Email Address</label>
+      <input type="email" id="login-email" placeholder="your@email.com"
+        onkeydown="if(event.key==='Enter')sendOtpCode()"
+        class="login-input"
+        onfocus="this.classList.add('login-input-focus')"
+        onblur="this.classList.remove('login-input-focus')">
+
+      <label class="login-remember">
+        <input type="checkbox" id="remember-device" checked class="login-checkbox">
+        <span>Remember this device</span>
       </label>
-      <button id="login-btn" onclick="sendOtpCode()" style="width:100%;padding:15px;background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.4)">Send Code →</button>
-      <div id="login-error" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.12);border-radius:10px;font-size:13px;color:#ef4444;border-left:3.5px solid #ef4444;font-weight:500"></div>
+
+      <button id="login-btn" onclick="sendOtpCode()" class="login-btn login-btn-primary">
+        <span>Send Code</span>
+        <span class="login-btn-arrow">→</span>
+      </button>
+
+      <div id="login-error" class="login-error" style="display:none"></div>
     </div>
-    <!-- Step 2: Code input -->
+
+    <!-- Step 2: OTP -->
     <div id="login-code-state" style="display:none">
-      <div style="text-align:center;margin-bottom:22px">
-        <div style="font-size:38px;margin-bottom:10px">📩</div>
-        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">Check your inbox</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6">We sent a 6-digit verification code to<br><strong id="login-sent-to" style="color:var(--primary);font-weight:700"></strong></div>
+      <div class="login-otp-header">
+        <div class="login-otp-icon">📩</div>
+        <div class="login-step-title">Check your inbox</div>
+        <div class="login-step-sub">
+          We sent a 6-digit code to<br>
+          <strong id="login-sent-to" class="login-email-highlight"></strong>
+        </div>
       </div>
-      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:block;margin-bottom:8px">6-Digit Code</label>
-      <input type="text" id="login-otp" placeholder="······" maxlength="8" inputmode="numeric" onkeydown="if(event.key==='Enter')verifyOtpCode()" style="width:100%;padding:14px;border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;font-size:24px;font-family:inherit;margin-bottom:14px;outline:none;text-align:center;letter-spacing:10px;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);background:rgba(9, 9, 11, 0.6);color:var(--text);font-weight:700" onfocus="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(39, 174, 96, 0.2)'" onblur="this.style.borderColor='rgba(255,255,255,0.12)';this.style.boxShadow='none'">
-      <button id="verify-btn" onclick="verifyOtpCode()" style="width:100%;padding:15px;background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.4)">Verify & Sign In →</button>
-      <div id="login-code-error" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.12);border-radius:10px;font-size:13px;color:#ef4444;border-left:3.5px solid #ef4444;font-weight:500"></div>
-      <button onclick="document.getElementById('login-code-state').style.display='none';document.getElementById('login-email-state').style.display='block';document.getElementById('login-btn').textContent='Send Code →';document.getElementById('login-btn').disabled=false" style="width:100%;margin-top:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 16px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s">← Change email</button>
+
+      <label class="login-label">6-Digit Code</label>
+      <input type="text" id="login-otp" placeholder="······" maxlength="8" inputmode="numeric"
+        onkeydown="if(event.key==='Enter')verifyOtpCode()"
+        class="login-input login-otp-input"
+        onfocus="this.classList.add('login-input-focus')"
+        onblur="this.classList.remove('login-input-focus')">
+
+      <button id="verify-btn" onclick="verifyOtpCode()" class="login-btn login-btn-primary">
+        <span>Verify &amp; Sign In</span>
+        <span class="login-btn-arrow">→</span>
+      </button>
+
+      <div id="login-code-error" class="login-error" style="display:none"></div>
+
+      <button onclick="document.getElementById('login-code-state').style.display='none';document.getElementById('login-email-state').style.display='block';document.getElementById('login-btn').textContent='Send Code →';document.getElementById('login-btn').disabled=false"
+        class="login-btn-ghost">← Change email</button>
     </div>
-    <div style="margin-top:30px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);text-align:center;font-size:12px;color:var(--muted)">Powered by <strong style="color:var(--text)">PulseZen</strong> · Wellness Intelligence Platform</div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <span>Secured by</span>
+      <strong>Supabase</strong>
+      <span>·</span>
+      <span>Deployed on</span>
+      <strong>Vercel</strong>
+      <span>·</span>
+      <strong>PulseZen</strong>
+    </div>
+
   </div>
 </div>
+
 
 <!-- LOADING SPLASH -->
 <div id="app-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#09090b;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;gap:20px;font-family:'Plus Jakarta Sans',sans-serif">
