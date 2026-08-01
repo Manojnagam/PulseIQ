@@ -10162,13 +10162,8 @@ function getLinkedBodyCustomerIds(personId) {
   var cust = (D.customers||[]).find(function(c){ return c.id === cleanId; })
           || (D.coaches||[]).find(function(c){ return c.id === cleanId; });
   if (cust) {
-    var cPhone = cust.contact ? String(cust.contact).replace(/\D/g,'') : '';
-    var cName = cust.name ? cust.name.trim().toLowerCase() : '';
     (D.walkins||[]).forEach(function(w){
-      var matchId = w.converted_customer_id === cleanId ||
-                    (cPhone && cPhone.length >= 10 && w.phone && String(w.phone).replace(/\D/g,'') === cPhone) ||
-                    (w.converted && cName && w.name && w.name.trim().toLowerCase() === cName);
-      if (matchId) {
+      if (w.converted_customer_id === cleanId) {
         if (ids.indexOf(w.id) === -1) ids.push(w.id);
         if (ids.indexOf('walkin__' + w.id) === -1) ids.push('walkin__' + w.id);
       }
@@ -10180,16 +10175,6 @@ function getLinkedBodyCustomerIds(personId) {
     if (walkin.converted_customer_id && ids.indexOf(walkin.converted_customer_id) === -1) {
       ids.push(walkin.converted_customer_id);
     }
-    var wPhone = walkin.phone ? String(walkin.phone).replace(/\D/g,'') : '';
-    var wName = walkin.name ? walkin.name.trim().toLowerCase() : '';
-    (D.customers||[]).forEach(function(c){
-      var matchCust = walkin.converted_customer_id === c.id ||
-                      (wPhone && wPhone.length >= 10 && c.contact && String(c.contact).replace(/\D/g,'') === wPhone) ||
-                      (walkin.converted && wName && c.name && c.name.trim().toLowerCase() === wName);
-      if (matchCust && ids.indexOf(c.id) === -1) {
-        ids.push(c.id);
-      }
-    });
   }
   return ids;
 }
