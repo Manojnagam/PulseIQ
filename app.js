@@ -17018,29 +17018,23 @@ function downloadFinancialReportPDF(targetYm) {
 
     // ── KPI grid ──
     '<div class="section"><h2>📊 Financial Summary</h2>' +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px">' + kpiCards + '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">' + kpiCards + '</div>' +
     '</div>' +
 
     // ── Walk-in analysis ──
-    (allWalk.length ? '<div class="section"><h2>🚶 Walk-in Analysis</h2>' +
+    (allWalk.length ? '<div class="section"><h2>🚶 Walk-in Analysis &amp; Conversions</h2>' +
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px">' +
+        '<div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0"><div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">📥 Total Walk-ins</div><div style="font-size:24px;font-weight:900;color:#0f172a">' + walkData.total + '</div></div>' +
+        '<div style="background:#ecfdf5;border-radius:12px;padding:16px;border:1px solid #10b98144"><div style="font-size:11px;color:#059669;font-weight:700;text-transform:uppercase;margin-bottom:4px">✅ Converted</div><div style="font-size:24px;font-weight:900;color:#059669">' + walkData.converted + ' <span style="font-size:14px;font-weight:700">(' + convRate + '%)</span></div></div>' +
+        '<div style="background:#eff6ff;border-radius:12px;padding:16px;border:1px solid #3b82f644"><div style="font-size:11px;color:#1d4ed8;font-weight:700;text-transform:uppercase;margin-bottom:4px">🔬 Free Checkups</div><div style="font-size:24px;font-weight:900;color:#1d4ed8">' + walkData.checkup + '</div></div>' +
+        '<div style="background:#fff7ed;border-radius:12px;padding:16px;border:1px solid #f9731644"><div style="font-size:11px;color:#c2410c;font-weight:700;text-transform:uppercase;margin-bottom:4px">💵 Walk-in Revenue</div><div style="font-size:24px;font-weight:900;color:#c2410c">' + fmt(walkData.revenue) + '</div></div>' +
+      '</div>' +
       '<table style="margin-bottom:12px">' +
         '<thead style="background:#f8fafc"><tr>' +
-          '<th>Outcome</th><th style="text-align:center">Count</th><th style="text-align:center">Share</th><th style="text-align:right">Revenue</th>' +
+          '<th style="padding:10px 14px">Outcome</th><th style="text-align:center;padding:10px 14px">Count</th><th style="text-align:center;padding:10px 14px">Share</th><th style="text-align:right;padding:10px 14px">Revenue</th>' +
         '</tr></thead>' +
         '<tbody>' + walkTableRows + '</tbody>' +
-        '<tfoot style="background:#f0fdf4"><tr>' +
-          '<th style="padding:10px 12px;color:#374151">TOTAL</th>' +
-          '<th style="padding:10px 12px;text-align:center;color:#10b981">' + walkData.total + '</th>' +
-          '<th style="padding:10px 12px;text-align:center;color:#6b7280">100%</th>' +
-          '<th style="padding:10px 12px;text-align:right;color:#10b981">' + fmt(walkData.revenue) + '</th>' +
-        '</tr></tfoot>' +
       '</table>' +
-      '<div style="display:flex;gap:16px;flex-wrap:wrap;padding:12px;background:#eff6ff;border-radius:10px;font-size:13px">' +
-        '<span>📥 <strong>Total Walk-ins:</strong> ' + walkData.total + '</span>' +
-        '<span>✅ <strong>Converted to Members:</strong> ' + walkData.converted + ' (' + convRate + '%)</span>' +
-        '<span>📦 <strong>Trial Packs:</strong> ' + walkData.trial + '</span>' +
-        '<span>🔬 <strong>Free Checkups:</strong> ' + walkData.checkup + '</span>' +
-      '</div>' +
     '</div>' : '') +
 
     // ── Day-by-Day table ──
