@@ -1099,23 +1099,10 @@ tr:nth-child(even) td {
 
 .ov-rev-card {
   border-radius: 16px !important;
-  padding: 20px !important;
+  padding: 18px 16px !important;
   position: relative !important;
   overflow: hidden !important;
   transition: transform 0.2s var(--spring), box-shadow 0.2s !important;
-}
-
-.ov-rev-card::before {
-  content: '';
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.04;
-  pointer-events: none;
 }
 
 .ov-rev-card .ov-rev-lbl {
@@ -1124,25 +1111,32 @@ tr:nth-child(even) td {
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
   color: var(--muted) !important;
-  margin-bottom: 10px !important;
+  margin-bottom: 8px !important;
   display: block !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .ov-rev-card .ov-rev-val {
-  font-size: clamp(20px, 2.2vw, 28px) !important;
-  font-weight: 700 !important;
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace !important;
+  font-size: clamp(16px, 1.7vw, 23px) !important;
+  font-weight: 800 !important;
   letter-spacing: -0.04em !important;
   line-height: 1.1 !important;
   display: block !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .ov-rev-card.inc { background: rgba(0, 217, 126, 0.07) !important; border: 1px solid rgba(0, 217, 126, 0.15) !important; }
 .ov-rev-card.exp { background: rgba(248, 113, 113, 0.07) !important; border: 1px solid rgba(248, 113, 113, 0.15) !important; }
 .ov-rev-card.net { background: rgba(124, 90, 240, 0.07) !important; border: 1px solid rgba(124, 90, 240, 0.15) !important; }
 
-.ov-rev-card.inc .ov-rev-val { color: #00d97e !important; }
-.ov-rev-card.exp .ov-rev-val { color: #f87171 !important; }
-.ov-rev-card.net .ov-rev-val { color: #a78bfa !important; }
+.ov-rev-card.inc .ov-rev-val { color: #00d97e !important; text-shadow: 0 0 20px rgba(0,217,126,0.3) !important; }
+.ov-rev-card.exp .ov-rev-val { color: #f87171 !important; text-shadow: 0 0 20px rgba(248,113,113,0.3) !important; }
+.ov-rev-card.net .ov-rev-val { color: #a78bfa !important; text-shadow: 0 0 20px rgba(167,139,250,0.3) !important; }
 
 .ov-rev-card:hover {
   transform: translateY(-2px) !important;
