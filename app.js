@@ -16769,14 +16769,15 @@ function renderMonthlyFinReport() {
   function fmt(n) { return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
   function pct(v) { return Number(v).toFixed(1) + '%'; }
 
+  var isNetLossModal = net < 0;
   // ── KPI cards ──
-  var kpiHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">' +
-    _mfrKpiCard('💰 Income',  fmt(monthData.totalInc),  '#10b981', '#0a1f17') +
-    _mfrKpiCard('💸 Expense', fmt(monthData.totalExp),  '#f43f5e', '#1f0a14') +
-    _mfrKpiCard('📈 Net Profit', fmt(net), net >= 0 ? '#38bdf8' : '#f43f5e', net >= 0 ? '#07192a' : '#1f0a14') +
-    _mfrKpiCard('📊 Margin', pct(margin), '#a78bfa', '#150e2a') +
-    _mfrKpiCard('🚶 Walk-ins', walkData.total,           '#fb923c', '#1f1007') +
-    _mfrKpiCard('✅ Converted', walkData.converted + ' (' + convRate + '%)', '#34d399', '#091f17') +
+  var kpiHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px">' +
+    _mfrKpiCard('💰 Revenue', fmt(monthData.totalInc), '#10b981', '#0a1f17', 'Total Inflow') +
+    _mfrKpiCard('💸 Expenses', fmt(monthData.totalExp), '#f43f5e', '#1f0a14', 'Total Outflow') +
+    _mfrKpiCard(isNetLossModal ? '🔴 Net Loss' : '🟢 Net Profit', (isNetLossModal ? '-' : '+') + fmt(net), isNetLossModal ? '#f43f5e' : '#38bdf8', isNetLossModal ? '#1f0a14' : '#07192a', isNetLossModal ? 'Deficit' : 'Surplus') +
+    _mfrKpiCard('📊 Margin', pct(margin), '#a78bfa', '#150e2a', isNetLossModal ? 'Negative Margin' : 'Healthy Margin') +
+    _mfrKpiCard('🚶 Walk-ins', walkData.total, '#fb923c', '#1f1007', 'Visitors') +
+    _mfrKpiCard('✅ Converted', walkData.converted + ' (' + convRate + '%)', '#34d399', '#091f17', 'New Members') +
   '</div>';
 
   // ── Walk-in bar (outcome breakdown) ──
@@ -16859,10 +16860,13 @@ function renderMonthlyFinReport() {
   document.getElementById('mfr-body').innerHTML = kpiHtml + walkBarHtml + tableHtml;
 }
 
-function _mfrKpiCard(label, value, color, bg) {
-  return '<div style="background:' + bg + ';border:1px solid ' + color + '33;border-radius:12px;padding:14px 16px">' +
-    '<div style="font-size:11px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">' + label + '</div>' +
-    '<div style="font-size:20px;font-weight:800;color:' + color + '">' + value + '</div>' +
+function _mfrKpiCard(label, value, color, bg, desc) {
+  return '<div style="background:' + bg + ';border:1.5px solid ' + color + '44;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;justify-content:space-between">' +
+    '<div>' +
+      '<div style="font-size:11px;font-weight:700;color:' + color + ';text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">' + label + '</div>' +
+      '<div style="font-size:22px;font-weight:900;color:' + color + ';line-height:1.2">' + value + '</div>' +
+    '</div>' +
+    (desc ? '<div style="font-size:11px;color:' + color + 'aa;margin-top:6px;font-weight:600">' + desc + '</div>' : '') +
   '</div>';
 }
 
@@ -16891,23 +16895,27 @@ function downloadFinancialReportPDF(targetYm) {
   var d = new Date(ym + '-01');
   var monthLabel = d.toLocaleString('default', { month: 'long', year: 'numeric' });
   var net = monthData.totalInc - monthData.totalExp;
-  var margin = monthData.totalInc > 0 ? Math.round((net / monthData.totalInc) * 100) : 0;
+  var margin = monthData.totalInc > 0 ? ((net / monthData.totalInc) * 100).toFixed(1) : 0;
   var convRate = walkData.total > 0 ? Math.round((walkData.converted / walkData.total) * 100) : 0;
+  var isNetLoss = net < 0;
 
   function fmt(n) { return '₹' + Math.abs(Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
   // ── KPI cards ──
   var kpiCards = [
-    { label: 'Total Income', value: fmt(monthData.totalInc), color: '#10b981', icon: '💰' },
-    { label: 'Total Expense', value: fmt(monthData.totalExp), color: '#f43f5e', icon: '💸' },
-    { label: 'Net Profit', value: fmt(net), color: net >= 0 ? '#3b82f6' : '#f43f5e', icon: '📈' },
-    { label: 'Profit Margin', value: Number(margin).toFixed(1) + '%', color: '#8b5cf6', icon: '📊' },
-    { label: 'Walk-ins', value: walkData.total, color: '#f97316', icon: '🚶' },
-    { label: 'Converted', value: walkData.converted + ' (' + convRate + '%)', color: '#06d6a0', icon: '✅' },
+    { label: 'Total Revenue', value: fmt(monthData.totalInc), color: '#10b981', bg: '#f0fdf4', icon: '💰', desc: 'Total Inflow' },
+    { label: 'Total Expenses', value: fmt(monthData.totalExp), color: '#f43f5e', bg: '#fef2f2', icon: '💸', desc: 'Total Outflow' },
+    { label: isNetLoss ? 'Net Loss' : 'Net Profit', value: (isNetLoss ? '-' : '+') + fmt(net), color: isNetLoss ? '#dc2626' : '#059669', bg: isNetLoss ? '#fef2f2' : '#f0fdf4', icon: isNetLoss ? '🔴' : '📈', desc: isNetLoss ? 'Deficit' : 'Surplus' },
+    { label: 'Profit Margin', value: margin + '%', color: '#8b5cf6', bg: '#f5f3ff', icon: '📊', desc: isNetLoss ? 'Negative Margin' : 'Healthy Margin' },
+    { label: 'Total Walk-ins', value: walkData.total, color: '#f97316', bg: '#fff7ed', icon: '🚶', desc: 'Visitors' },
+    { label: 'Converted', value: walkData.converted + ' (' + convRate + '%)', color: '#06b6d4', bg: '#ecfeff', icon: '✅', desc: 'New Members' },
   ].map(function(c) {
-    return '<div style="background:#fff;border-radius:14px;padding:18px 20px;border-left:4px solid ' + c.color + ';box-shadow:0 2px 12px rgba(0,0,0,0.08)">' +
-      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#9ca3af;margin-bottom:6px">' + c.icon + ' ' + c.label + '</div>' +
-      '<div style="font-size:26px;font-weight:900;color:' + c.color + '">' + c.value + '</div>' +
+    return '<div style="background:' + c.bg + ';border-radius:16px;padding:22px 24px;border:1.5px solid ' + c.color + '33;box-shadow:0 4px 16px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between">' +
+      '<div>' +
+        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:' + c.color + ';margin-bottom:8px">' + c.icon + ' ' + c.label + '</div>' +
+        '<div style="font-size:26px;font-weight:900;color:' + c.color + ';line-height:1.1">' + c.value + '</div>' +
+      '</div>' +
+      '<div style="font-size:11px;font-weight:600;color:' + c.color + 'cc;margin-top:10px">' + c.desc + '</div>' +
     '</div>';
   }).join('');
 
