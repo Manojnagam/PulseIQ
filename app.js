@@ -7228,7 +7228,7 @@ function renderFinance() {
       plBody.innerHTML = html;
     }
   } else if (plCard) { plCard.style.display = 'none'; }
-
+}
 
 // ── SAVE CENTERS ──
 async function saveOnboardCustomer() {
