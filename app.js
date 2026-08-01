@@ -16594,33 +16594,61 @@ async function generateFinanceInsights() {
                            "Income Change: " + incChange + "% | Expense Change: " + expChange + "%\n";
   }
 
-  _lastFinanceContext += "\n=== 4-MONTH TRENDS ===\n" + JSON.stringify(monthsData) + "\n";
+  // Build sections 1-3 directly from data (no AI needed for raw numbers)
+  var margin = curAgg.inc > 0 ? ((curAgg.net / curAgg.inc) * 100).toFixed(1) : 0;
+  var topExpCat = Object.entries(curAgg.cats.expense).sort(function(a,b){return b[1]-a[1];})[0] || ['N/A', 0];
+  var topIncCat = Object.entries(curAgg.cats.income).sort(function(a,b){return b[1]-a[1];})[0] || ['N/A', 0];
 
-  var sysPrompt = "You are a financial advisor for a wellness center. Analyze the data and write ALL FOUR sections below. Do not stop after the first section. Write all 4 sections completely.\n\n" +
-                  "💰 MONEY STATUS: State the net profit (₹), profit margin (%), total income (₹), and total expenses (₹). If previous period data exists, state whether income grew or fell and by how much (%).\n\n" +
-                  "⚠️ URGENT — COLLECT THIS MONEY: State exactly how much is pending (₹) and from how many payment records. Emphasize this is cash already owed to the business.\n\n" +
-                  "🔴 WATCH OUT: Name the biggest expense category and its amount. List any customers who are expiring soon (names and sessions left). Flag any category where spending jumped vs previous period.\n\n" +
-                  "✅ THIS WEEK — 3 ACTIONS: Write exactly 3 numbered action items. Each must be specific to THIS business's data (use real ₹ amounts and customer names from the data). No generic advice.\n\n" +
-                  "Rules: Use ₹ symbol before every number. Keep each section to 2-3 sentences. Total response should be around 200 words.";
+  var prevCompar = '';
+  if (prevPeriodAgg && prevPeriodAgg.inc > 0) {
+    var incPct = (((curAgg.inc - prevPeriodAgg.inc) / prevPeriodAgg.inc) * 100).toFixed(1);
+    prevCompar = ' Income ' + (incPct >= 0 ? 'grew' : 'fell') + ' by ' + Math.abs(incPct) + '% vs the previous period.';
+  }
+
+  var pendingStr = totalPending > 0
+    ? 'You have <strong>₹' + totalPending.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' uncollected</strong> across ' + pendingCount + ' payment records. This is real money owed to your business — follow up immediately.'
+    : 'All payments are collected. No outstanding dues.';
+
+  var expirStr = expiringSoon.length > 0
+    ? '<strong>Expiring soon (≤5 sessions):</strong> ' + expiringSoon.join(', ') + '. Contact them today to renew.'
+    : 'No customers expiring in the next 5 sessions.';
+
+  var preBuilt = '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:14px;margin-bottom:4px">💰 MONEY STATUS</div>' +
+    'Net profit: <strong>₹' + curAgg.net.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</strong> | ' +
+    'Margin: <strong>' + margin + '%</strong> | ' +
+    'Income: ₹' + curAgg.inc.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' | ' +
+    'Expenses: ₹' + curAgg.exp.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + prevCompar + '</div>' +
+
+    '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:14px;margin-bottom:4px">⚠️ COLLECT THIS MONEY</div>' + pendingStr + '</div>' +
+
+    '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:14px;margin-bottom:4px">🔴 WATCH OUT</div>' +
+    'Biggest expense: <strong>' + topExpCat[0] + '</strong> at ₹' + Number(topExpCat[1]).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') +
+    ' (' + (curAgg.exp > 0 ? ((topExpCat[1]/curAgg.exp)*100).toFixed(0) : 0) + '% of total expenses). ' + expirStr + '</div>' +
+
+    '<div style="margin-bottom:6px"><div style="font-weight:700;font-size:14px;margin-bottom:4px">✅ THIS WEEK — AI ACTIONS</div>' +
+    '<span style="color:var(--muted);font-size:12px">Generating personalised actions...</span></div>';
+
+  summaryEl.innerHTML = preBuilt;
+  followupContainer.style.display = 'block';
+  setTimeout(function() { summaryEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100);
+
+  // Now ask AI ONLY for the 3 action items (small focused call)
+  var actionPrompt = "You are advising a wellness center owner. Based on this data, write EXACTLY 3 numbered action items they should do THIS WEEK. Each action must mention specific amounts in ₹ or customer names from the data. Be direct. No intros. Just the 3 numbered items.\n\nData:\n" + _lastFinanceContext;
 
   try {
-    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { model: 'llama-3.3-70b-versatile', maxTokens: 700, temperature: 0.4 });
-    _lastFinanceAiResponse = aiText;
-    summaryEl.innerHTML = typeof formatAiText === 'function' ? formatAiText(aiText) : aiText.replace(/\n/g, '<br>');
-    followupContainer.style.display = 'block';
-    
-    // Automatically scroll down to the insights so the user doesn't have to search for them
-    setTimeout(function() {
-      summaryEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
-    
+    var actText = await callGroq('', actionPrompt, { model: 'llama-3.3-70b-versatile', maxTokens: 300, temperature: 0.5 });
+    var actionsDiv = summaryEl.querySelector('span[style*="Generating"]');
+    if (actionsDiv) actionsDiv.outerHTML = (typeof formatAiText === 'function' ? formatAiText(actText) : actText.replace(/\n/g, '<br>'));
+    _lastFinanceAiResponse = preBuilt + actText;
   } catch(e) {
-    summaryEl.innerHTML = '<span style="color:var(--danger)">Error generating insights: ' + (e.message || String(e)) + '</span>';
+    var actionsDiv2 = summaryEl.querySelector('span[style*="Generating"]');
+    if (actionsDiv2) actionsDiv2.outerHTML = '<span style="color:var(--muted)">Could not generate AI actions: ' + (e.message||'') + '</span>';
   }
-  
+
   btn.disabled = false;
   btn.textContent = 'Refresh Insights';
 }
+
 
 async function askFinanceFollowup() {
   var inputEl = document.getElementById('fin-ai-question');
