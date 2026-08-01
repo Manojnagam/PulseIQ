@@ -16590,16 +16590,16 @@ async function generateFinanceInsights() {
                          JSON.stringify(monthsData) + "\n";
 
   var sysPrompt = "You are an expert financial advisor and business strategist for a wellness center. Provide a highly detailed, insightful, and actionable business intelligence report based on the provided data.\n\n" +
-                  "Analyze the metrics deeply and format your response with the following headers (use Markdown `##` for headers):\n" +
+                  "Analyze the metrics deeply and format your response STRICTLY with the following headers (use Markdown `##` for headers):\n" +
                   "## FINANCIAL HEALTH\nDeep dive into net profit margins, revenue growth vs previous period, and overall financial stability.\n\n" +
                   "## PROFIT ALLOCATION\nAnalyze income vs expense categories. Where is the money coming from and where is it going? Are expenses well-managed?\n\n" +
                   "## BUSINESS METRICS\nDiscuss the active customer count, coach count, and uncollected payments. How do these impact cash flow and business sustainability?\n\n" +
                   "## ACTION ITEMS\nProvide 3-4 specific, actionable steps to improve profitability, reduce uncollected payments, or optimize expenses.\n\n" +
                   "## RED FLAGS\nHighlight any genuine anomalies, dangerous trends, or significant cash flow risks.\n\n" +
-                  "Make the insights directly applicable to growing a wellness center. Be precise, analytical, and avoid generic filler. Give real numbers and percentages in your analysis.";
+                  "IMPORTANT: You MUST generate a full, detailed report containing all of the sections above. Do not give a 1-sentence summary. You must write a comprehensive analysis giving real numbers and percentages.";
 
   try {
-    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { maxTokens: 600, temperature: 0.3 });
+    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { maxTokens: 1500, temperature: 0.5 });
     _lastFinanceAiResponse = aiText;
     summaryEl.innerHTML = typeof formatAiText === 'function' ? formatAiText(aiText) : aiText.replace(/\n/g, '<br>');
     followupContainer.style.display = 'block';
