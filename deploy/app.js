@@ -16899,13 +16899,17 @@ function downloadFinancialReportPDF(targetYm) {
   var convRate = walkData.total > 0 ? Math.round((walkData.converted / walkData.total) * 100) : 0;
   var isNetLoss = net < 0;
 
-  function fmt(n) { return '₹' + Math.abs(Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtDec(n) {
+    var val = Math.abs(Number(n) || 0);
+    var parts = val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).split('.');
+    return '₹' + parts[0] + '<span style="font-size:0.68em;font-weight:700;opacity:0.85;margin-left:1px">.' + parts[1] + '</span>';
+  }
 
   // ── KPI cards ──
   var kpiCards = [
-    { label: 'Total Revenue', value: fmt(monthData.totalInc), color: '#10b981', bg: '#f0fdf4', icon: '💰', desc: 'Total Inflow' },
-    { label: 'Total Expenses', value: fmt(monthData.totalExp), color: '#f43f5e', bg: '#fef2f2', icon: '💸', desc: 'Total Outflow' },
-    { label: isNetLoss ? 'Net Loss' : 'Net Profit', value: (isNetLoss ? '-' : '+') + fmt(net), color: isNetLoss ? '#dc2626' : '#059669', bg: isNetLoss ? '#fef2f2' : '#f0fdf4', icon: isNetLoss ? '🔴' : '📈', desc: isNetLoss ? 'Deficit' : 'Surplus' },
+    { label: 'Total Revenue', value: fmtDec(monthData.totalInc), color: '#10b981', bg: '#f0fdf4', icon: '💰', desc: 'Total Inflow' },
+    { label: 'Total Expenses', value: fmtDec(monthData.totalExp), color: '#f43f5e', bg: '#fef2f2', icon: '💸', desc: 'Total Outflow' },
+    { label: isNetLoss ? 'Net Loss' : 'Net Profit', value: (isNetLoss ? '-' : '+') + fmtDec(net), color: isNetLoss ? '#dc2626' : '#059669', bg: isNetLoss ? '#fef2f2' : '#f0fdf4', icon: isNetLoss ? '🔴' : '📈', desc: isNetLoss ? 'Deficit' : 'Surplus' },
     { label: 'Profit Margin', value: margin + '%', color: '#8b5cf6', bg: '#f5f3ff', icon: '📊', desc: isNetLoss ? 'Negative Margin' : 'Healthy Margin' },
     { label: 'Total Walk-ins', value: walkData.total, color: '#f97316', bg: '#fff7ed', icon: '🚶', desc: 'Visitors' },
     { label: 'Converted', value: walkData.converted + ' (' + convRate + '%)', color: '#06b6d4', bg: '#ecfeff', icon: '✅', desc: 'New Members' },
@@ -16913,7 +16917,7 @@ function downloadFinancialReportPDF(targetYm) {
     return '<div style="background:' + c.bg + ';border-radius:16px;padding:22px 24px;border:1.5px solid ' + c.color + '33;box-shadow:0 4px 16px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between">' +
       '<div>' +
         '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:' + c.color + ';margin-bottom:8px">' + c.icon + ' ' + c.label + '</div>' +
-        '<div style="font-size:26px;font-weight:900;color:' + c.color + ';line-height:1.1">' + c.value + '</div>' +
+        '<div style="font-size:24px;font-weight:900;color:' + c.color + ';line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + c.value + '</div>' +
       '</div>' +
       '<div style="font-size:11px;font-weight:600;color:' + c.color + 'cc;margin-top:10px">' + c.desc + '</div>' +
     '</div>';
