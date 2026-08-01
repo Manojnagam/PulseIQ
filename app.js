@@ -16613,20 +16613,34 @@ async function generateFinanceInsights() {
     ? '<strong>Expiring soon (≤5 sessions):</strong> ' + expiringSoon.join(', ') + '. Contact them today to renew.'
     : 'No customers expiring in the next 5 sessions.';
 
-  var preBuilt = '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:14px;margin-bottom:4px">💰 MONEY STATUS</div>' +
-    'Net profit: <strong>₹' + curAgg.net.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</strong> | ' +
-    'Margin: <strong>' + margin + '%</strong> | ' +
-    'Income: ₹' + curAgg.inc.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' | ' +
-    'Expenses: ₹' + curAgg.exp.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + prevCompar + '</div>' +
+  var preBuilt = 
+    '<div style="background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.18);border-radius:12px;padding:14px 16px;margin-bottom:12px">' +
+      '<div style="font-weight:700;font-size:13.5px;color:#3b82f6;margin-bottom:6px;display:flex;align-items:center;gap:6px"><span>💰</span><span>MONEY STATUS</span></div>' +
+      '<div style="font-size:13px;line-height:1.55;color:var(--text)">' +
+        'Net profit: <strong>₹' + curAgg.net.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</strong> &bull; ' +
+        'Margin: <strong>' + margin + '%</strong> &bull; ' +
+        'Income: ₹' + curAgg.inc.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' &bull; ' +
+        'Expenses: ₹' + curAgg.exp.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + prevCompar +
+      '</div>' +
+    '</div>' +
 
-    '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:14px;margin-bottom:4px">⚠️ COLLECT THIS MONEY</div>' + pendingStr + '</div>' +
+    '<div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:14px 16px;margin-bottom:12px">' +
+      '<div style="font-weight:700;font-size:13.5px;color:#f59e0b;margin-bottom:6px;display:flex;align-items:center;gap:6px"><span>⚠️</span><span>COLLECT THIS MONEY</span></div>' +
+      '<div style="font-size:13px;line-height:1.55;color:var(--text)">' + pendingStr + '</div>' +
+    '</div>' +
 
-    '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:14px;margin-bottom:4px">🔴 WATCH OUT</div>' +
-    'Biggest expense: <strong>' + topExpCat[0] + '</strong> at ₹' + Number(topExpCat[1]).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') +
-    ' (' + (curAgg.exp > 0 ? ((topExpCat[1]/curAgg.exp)*100).toFixed(0) : 0) + '% of total expenses). ' + expirStr + '</div>' +
+    '<div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.18);border-radius:12px;padding:14px 16px;margin-bottom:12px">' +
+      '<div style="font-weight:700;font-size:13.5px;color:#ef4444;margin-bottom:6px;display:flex;align-items:center;gap:6px"><span>🔴</span><span>WATCH OUT</span></div>' +
+      '<div style="font-size:13px;line-height:1.55;color:var(--text)">' +
+        'Biggest expense: <strong>' + topExpCat[0] + '</strong> at ₹' + Number(topExpCat[1]).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') +
+        ' (' + (curAgg.exp > 0 ? ((topExpCat[1]/curAgg.exp)*100).toFixed(0) : 0) + '% of total expenses).<br><div style="margin-top:6px">' + expirStr + '</div>' +
+      '</div>' +
+    '</div>' +
 
-    '<div style="margin-bottom:6px"><div style="font-weight:700;font-size:14px;margin-bottom:4px">✅ THIS WEEK — AI ACTIONS</div>' +
-    '<span style="color:var(--muted);font-size:12px">Generating personalised actions...</span></div>';
+    '<div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:14px 16px">' +
+      '<div style="font-weight:700;font-size:13.5px;color:#10b981;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span>✅</span><span>THIS WEEK — ACTION PLAN</span></div>' +
+      '<div id="fin-ai-action-list" style="font-size:13px;line-height:1.6;color:var(--text)"><span style="color:var(--muted);font-style:italic">Generating 3 personalized weekly actions...</span></div>' +
+    '</div>';
 
   summaryEl.innerHTML = preBuilt;
   followupContainer.style.display = 'block';
@@ -16637,12 +16651,12 @@ async function generateFinanceInsights() {
 
   try {
     var actText = await callGroq('', actionPrompt, { model: 'llama-3.3-70b-versatile', maxTokens: 300, temperature: 0.5 });
-    var actionsDiv = summaryEl.querySelector('span[style*="Generating"]');
-    if (actionsDiv) actionsDiv.outerHTML = (typeof formatAiText === 'function' ? formatAiText(actText) : actText.replace(/\n/g, '<br>'));
-    _lastFinanceAiResponse = preBuilt + actText;
+    var actionsDiv = summaryEl.querySelector('#fin-ai-action-list');
+    if (actionsDiv) actionsDiv.innerHTML = (typeof formatAiText === 'function' ? formatAiText(actText) : actText.replace(/\n/g, '<br>'));
+    _lastFinanceAiResponse = preBuilt;
   } catch(e) {
-    var actionsDiv2 = summaryEl.querySelector('span[style*="Generating"]');
-    if (actionsDiv2) actionsDiv2.outerHTML = '<span style="color:var(--muted)">Could not generate AI actions: ' + (e.message||'') + '</span>';
+    var actionsDiv2 = summaryEl.querySelector('#fin-ai-action-list');
+    if (actionsDiv2) actionsDiv2.innerHTML = '<span style="color:var(--muted)">Could not generate AI actions: ' + (e.message||'') + '</span>';
   }
 
   btn.disabled = false;
