@@ -828,7 +828,10 @@ tr:nth-child(even) td {
 /* ── 33. MOBILE OVERRIDES ─────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .main {
-    padding: 56px 14px 28px !important;
+    padding: 76px 16px 36px !important;
+  }
+  #fin-breakdown {
+    grid-template-columns: 1fr !important;
   }
 
   .stat::before {
@@ -1436,7 +1439,7 @@ tr:nth-child(even) td {
 }
 
 /* ── Bento Card Base ── */
-.ov-card, .tcard {
+.ov-card {
   background: linear-gradient(160deg, rgba(16,16,28,0.92) 0%, rgba(10,10,18,0.92) 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 20px !important;
@@ -1445,6 +1448,16 @@ tr:nth-child(even) td {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35) !important;
   transition: transform 0.22s var(--spring), box-shadow 0.22s, border-color 0.22s !important;
   position: relative !important;
+}
+
+.tcard {
+  background: linear-gradient(160deg, rgba(16,16,28,0.92) 0%, rgba(10,10,18,0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.22s var(--spring), box-shadow 0.22s, border-color 0.22s;
+  position: relative;
 }
 
 .ov-card:hover, .tcard:hover {
