@@ -1415,4 +1415,218 @@ tr:nth-child(even) td {
 }
 .login-footer strong { color: rgba(255,255,255,0.55); font-weight: 600; }
 
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 3 — BENTO GRID DASHBOARD
+   Inspired by: Apple product feature grids · Linear · Vercel Analytics
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Bento Main Grid Layout ── */
+.ov-grid {
+  display: grid !important;
+  grid-template-columns: 1.4fr 1fr !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+
+@media (max-width: 1024px) {
+  .ov-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Bento Card Base ── */
+.ov-card, .tcard {
+  background: linear-gradient(160deg, rgba(16,16,28,0.92) 0%, rgba(10,10,18,0.92) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35) !important;
+  transition: transform 0.22s var(--spring), box-shadow 0.22s, border-color 0.22s !important;
+  position: relative !important;
+}
+
+.ov-card:hover, .tcard:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 217, 126, 0.05) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Card Header */
+.ov-card-h {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 18px 22px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.ov-card-h h3 {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.02em !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.ov-count {
+  background: rgba(0, 217, 126, 0.12) !important;
+  color: #00d97e !important;
+  border: 1px solid rgba(0, 217, 126, 0.25) !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  padding: 2px 10px !important;
+  border-radius: 20px !important;
+}
+
+/* Card Body */
+.ov-card-body {
+  padding: 20px 22px !important;
+}
+
+/* Rows inside Bento Cards */
+.ov-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 12px !important;
+  border-radius: 12px !important;
+  transition: background 0.15s !important;
+  margin-bottom: 4px !important;
+}
+
+.ov-row:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.ov-row-name {
+  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  color: #f0f0fa !important;
+}
+
+.ov-row-sub {
+  font-size: 11px !important;
+  color: var(--muted) !important;
+  margin-top: 2px !important;
+}
+
+.ov-empty {
+  text-align: center !important;
+  padding: 24px 0 !important;
+  color: rgba(255, 255, 255, 0.35) !important;
+  font-size: 13px !important;
+}
+
+/* ── 7-Day Attendance Bars ── */
+.ov-bars {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  height: 100px !important;
+  padding-top: 14px !important;
+}
+
+.ov-bar-col {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  height: 100% !important;
+  justify-content: flex-end !important;
+}
+
+.ov-bar-val {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: var(--muted) !important;
+  margin-bottom: 6px !important;
+}
+
+.ov-bar {
+  width: 100% !important;
+  max-width: 28px !important;
+  background: linear-gradient(180deg, #00d97e 0%, rgba(0, 217, 126, 0.3) 100%) !important;
+  border-radius: 6px 6px 3px 3px !important;
+  transition: height 0.4s var(--spring), background 0.2s !important;
+  min-height: 4px !important;
+  box-shadow: 0 0 12px rgba(0, 217, 126, 0.2) !important;
+}
+
+.ov-bar-col:hover .ov-bar {
+  background: linear-gradient(180deg, #38d9f5 0%, #00d97e 100%) !important;
+  box-shadow: 0 0 16px rgba(56, 217, 245, 0.4) !important;
+}
+
+.ov-bar-lbl {
+  font-size: 10.5px !important;
+  color: var(--muted) !important;
+  margin-top: 8px !important;
+  font-weight: 600 !important;
+}
+
+/* ── Quick Actions Row ── */
+.ov-quick {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-bottom: 18px !important;
+}
+
+.ov-quick-btn {
+  background: rgba(16, 16, 28, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 10px 16px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #f0f0fa !important;
+  cursor: pointer !important;
+  transition: all 0.2s var(--spring) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+.ov-quick-btn:hover {
+  background: rgba(0, 217, 126, 0.12) !important;
+  border-color: rgba(0, 217, 126, 0.3) !important;
+  color: #00d97e !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(0, 217, 126, 0.2) !important;
+}
+
+/* ── Global Search Input ── */
+#ov-global-search {
+  background: rgba(16, 16, 28, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 14px !important;
+  padding: 14px 18px !important;
+  font-size: 14px !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s !important;
+}
+
+#ov-global-search:focus {
+  border-color: #00d97e !important;
+  box-shadow: 0 0 0 3px rgba(0, 217, 126, 0.15), 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+#ov-global-results {
+  background: rgba(12, 12, 20, 0.96) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
+}
+
+
 
