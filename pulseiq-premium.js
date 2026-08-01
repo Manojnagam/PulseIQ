@@ -176,4 +176,128 @@
       appObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
     }
   });
+
+  /* ─── 8. MONTHLY & DETAILED ATTENDANCE CSV EXPORT ─── */
+  window.exportAttendanceCSV = function () {
+    var atts = window.D && window.D.attendance ? window.D.attendance : [];
+    var custs = window.D && window.D.customers ? window.D.customers : [];
+    var centers = window.D && window.D.centers ? window.D.centers : [];
+
+    if (!atts.length) {
+      if (typeof window.showToast === 'function') window.showToast('No attendance records to export', 'error');
+      else alert('No attendance records to export');
+      return;
+    }
+
+    var csvRows = [];
+    csvRows.push(['Date', 'Month', 'Customer Name', 'Contact', 'Center', 'Status', 'Time', 'Servings'].join(','));
+
+    var sorted = atts.slice().sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); });
+
+    sorted.forEach(function (a) {
+      var cust = custs.find(function (c) { return c.id === a.customer_id; }) || {};
+      var center = centers.find(function (c) { return c.id === (cust.center_id || a.center_id); }) || {};
+      var name = (cust.name || a.customer_name || 'Unknown').replace(/,/g, ' ');
+      var phone = (cust.contact || a.phone || '').replace(/,/g, '');
+      var centerName = (center.name || '').replace(/,/g, ' ');
+      var month = a.date ? a.date.substring(0, 7) : '';
+
+      csvRows.push([
+        a.date || '',
+        month,
+        '"' + name + '"',
+        '"' + phone + '"',
+        '"' + centerName + '"',
+        a.status || 'present',
+        a.time || '',
+        a.servings || 1
+      ].join(','));
+    });
+
+    var blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'attendance_records_' + new Date().toISOString().split('T')[0] + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (typeof window.showToast === 'function') window.showToast('Downloaded Attendance Records CSV ✓', 'success');
+  };
+
+  window.exportMonthlyAttendanceSummaryCSV = function () {
+    var atts = window.D && window.D.attendance ? window.D.attendance : [];
+    var custs = window.D && window.D.customers ? window.D.customers : [];
+
+    if (!atts.length) {
+      if (typeof window.showToast === 'function') window.showToast('No attendance records found', 'error');
+      else alert('No attendance records found');
+      return;
+    }
+
+    var monthlyMap = {};
+
+    atts.forEach(function (a) {
+      if (!a.date) return;
+      var m = a.date.substring(0, 7);
+      if (!monthlyMap[m]) {
+        monthlyMap[m] = {
+          month: m,
+          totalVisits: 0,
+          uniqueCustomers: new Set(),
+          servings: 0
+        };
+      }
+      if (a.status === 'present' || !a.status) {
+        monthlyMap[m].totalVisits += 1;
+        if (a.customer_id) monthlyMap[m].uniqueCustomers.add(a.customer_id);
+        monthlyMap[m].servings += Number(a.servings || 1);
+      }
+    });
+
+    var csvRows = [];
+    csvRows.push(['MONTHLY ATTENDANCE SUMMARY (WELLNESS CENTER)']);
+    csvRows.push(['Month (YYYY-MM)', 'Total Unique People Attended (Count)', 'Total Check-ins / Visits', 'Total Servings'].join(','));
+
+    var sortedMonths = Object.keys(monthlyMap).sort().reverse();
+    sortedMonths.forEach(function (m) {
+      var data = monthlyMap[m];
+      csvRows.push([
+        m,
+        data.uniqueCustomers.size,
+        data.totalVisits,
+        data.servings
+      ].join(','));
+    });
+
+    csvRows.push([]);
+    csvRows.push(['CUSTOMER WISE MONTHLY ATTENDANCE BREAKDOWN']);
+
+    var header = ['Customer Name', 'Contact'].concat(sortedMonths).concat(['Total Visits']);
+    csvRows.push(header.join(','));
+
+    custs.forEach(function (c) {
+      var row = ['"' + (c.name || 'Unknown').replace(/,/g, ' ') + '"', '"' + (c.contact || '').replace(/,/g, '') + '"'];
+      var totalCustVisits = 0;
+
+      sortedMonths.forEach(function (m) {
+        var count = atts.filter(function (a) {
+          return a.customer_id === c.id && a.date && a.date.startsWith(m) && (a.status === 'present' || !a.status);
+        }).length;
+        row.push(count);
+        totalCustVisits += count;
+      });
+
+      row.push(totalCustVisits);
+      if (totalCustVisits > 0) csvRows.push(row.join(','));
+    });
+
+    var blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'monthly_attendance_summary_' + new Date().toISOString().split('T')[0] + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (typeof window.showToast === 'function') window.showToast('Downloaded Monthly Attendance Summary CSV ✓', 'success');
+  };
 })();

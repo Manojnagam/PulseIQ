@@ -2129,6 +2129,7 @@ if ('caches' in window) {
       <div class="ph">
         <div><div class="pt" data-t="pt_attendance">Attendance</div><div class="ps" data-t="ps_attendance">Track customer visit history</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-p" onclick="exportMonthlyAttendanceSummaryCSV()" style="background:linear-gradient(135deg,#00d97e,#00b868);color:#03120a;font-weight:700">📊 Monthly Count Report CSV</button>
           <button class="btn-p" onclick="openQrKioskModal()" style="background:#5865F2;border-color:#5865F2;color:#fff;font-weight:600">📱 QR Kiosk</button>
           <button class="btn-e" onclick="sendDailySummaryWA()" style="background:#25D366;color:#fff;border-color:#25D366;font-weight:600">📊 Daily Summary</button>
           <button class="btn-p" onclick="openBackfillModal()" style="background:var(--accent);border-color:var(--accent)">📅 Backfill Past Days</button>
@@ -2136,10 +2137,10 @@ if ('caches' in window) {
       </div>
       <div class="stats" id="att-stats"><div class="stat"><div class="stat-l">Today's Present</div><div class="stat-v" style="color:var(--success)">0</div></div><div class="stat"><div class="stat-l">Not Yet</div><div class="stat-v" style="color:var(--danger)">0</div></div></div>
       <div class="tabs">
-        <button class="tab-btn active" id="tab-daily" onclick="switchAttTab(&#39;daily&#39;)">Daily Check-in</button>
-        <button class="tab-btn" id="tab-monthly" onclick="switchAttTab(&#39;monthly&#39;)">Monthly Grid</button>
-        <button class="tab-btn" id="tab-coach-att" onclick="switchAttTab(&#39;coach&#39;)">👨‍🏫 Coach Check-in</button>
-        <button class="tab-btn" id="tab-nudges" onclick="switchAttTab(&#39;nudges&#39;)">🚨 Absence Nudges</button>
+        <button class="tab-btn active" id="tab-daily" onclick="switchAttTab('daily')">Daily Check-in</button>
+        <button class="tab-btn" id="tab-monthly" onclick="switchAttTab('monthly')">Monthly Grid</button>
+        <button class="tab-btn" id="tab-coach-att" onclick="switchAttTab('coach')">👨‍🏫 Coach Check-in</button>
+        <button class="tab-btn" id="tab-nudges" onclick="switchAttTab('nudges')">🚨 Absence Nudges</button>
       </div>
       <!-- WhatsApp prompt bar (shown after marking attendance) -->
       <div id="att-wa-bar" style="display:none;background:#e6f9ee;border:1.5px solid #25D366;border-radius:10px;padding:12px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
@@ -2154,7 +2155,8 @@ if ('caches' in window) {
         <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center">
           <input class="search" id="att-search" placeholder="🔍 Search customers..." oninput="renderAttendance()" style="flex:1;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:12px 16px;font-family:inherit;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.02);">
           <button id="att-inactive-toggle" onclick="toggleInactiveAtt()" style="white-space:nowrap;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-family:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s">😴 Show Inactive</button>
-          <button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportAttendanceCSV()">⬇️ CSV</button>
+          <button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportMonthlyAttendanceSummaryCSV()" title="Download monthly attendee counts CSV">📊 Monthly Report CSV</button>
+          <button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportAttendanceCSV()" title="Download raw attendance logs CSV">⬇️ Logs CSV</button>
         </div>
         
         <div class="att-list-panel" style="margin-bottom:20px; background:rgba(0,180,100,0.05); border-top: 4px solid var(--success);">
