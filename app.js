@@ -16596,16 +16596,15 @@ async function generateFinanceInsights() {
 
   _lastFinanceContext += "\n=== 4-MONTH TRENDS ===\n" + JSON.stringify(monthsData) + "\n";
 
-  var sysPrompt = "You are a sharp financial advisor for a wellness center owner. Be direct, specific, and practical — like a trusted advisor texting the owner.\n\n" +
-                  "Using ONLY the data provided, write a SHORT, punchy report with these 4 sections:\n\n" +
-                  "💰 MONEY STATUS\nOne paragraph: net profit, margin %, and whether income grew or shrank vs last period (use exact ₹ amounts).\n\n" +
-                  "⚠️ URGENT: COLLECT THIS MONEY\nList the pending uncollected amount and how many customers owe money. Stress urgency — this is cash sitting outside the business.\n\n" +
-                  "🔴 WATCH OUT\nFlag any expense category that is unusually high, any income category that dropped, and customers expiring soon who haven't renewed (list their names if provided).\n\n" +
-                  "✅ 3 ACTIONS FOR THIS WEEK\nThree very specific tasks the owner should do THIS WEEK based on the data — like 'Call these 3 customers about renewal', 'Review your Nutrition Stock order (₹X spent)', etc.\n\n" +
-                  "Keep the total response under 300 words. Use real rupee numbers everywhere. No generic advice.";
+  var sysPrompt = "You are a financial advisor for a wellness center. Analyze the data and write ALL FOUR sections below. Do not stop after the first section. Write all 4 sections completely.\n\n" +
+                  "💰 MONEY STATUS: State the net profit (₹), profit margin (%), total income (₹), and total expenses (₹). If previous period data exists, state whether income grew or fell and by how much (%).\n\n" +
+                  "⚠️ URGENT — COLLECT THIS MONEY: State exactly how much is pending (₹) and from how many payment records. Emphasize this is cash already owed to the business.\n\n" +
+                  "🔴 WATCH OUT: Name the biggest expense category and its amount. List any customers who are expiring soon (names and sessions left). Flag any category where spending jumped vs previous period.\n\n" +
+                  "✅ THIS WEEK — 3 ACTIONS: Write exactly 3 numbered action items. Each must be specific to THIS business's data (use real ₹ amounts and customer names from the data). No generic advice.\n\n" +
+                  "Rules: Use ₹ symbol before every number. Keep each section to 2-3 sentences. Total response should be around 200 words.";
 
   try {
-    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { model: 'gemini-2.5-flash', maxTokens: 800, temperature: 0.4 });
+    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { model: 'llama-3.3-70b-versatile', maxTokens: 700, temperature: 0.4 });
     _lastFinanceAiResponse = aiText;
     summaryEl.innerHTML = typeof formatAiText === 'function' ? formatAiText(aiText) : aiText.replace(/\n/g, '<br>');
     followupContainer.style.display = 'block';
