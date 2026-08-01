@@ -1099,35 +1099,40 @@ tr:nth-child(even) td {
 
 .ov-rev-card {
   border-radius: 16px !important;
-  padding: 18px 16px !important;
+  padding: 16px 20px !important;
   position: relative !important;
   overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
   transition: transform 0.2s var(--spring), box-shadow 0.2s !important;
 }
 
 .ov-rev-card .ov-rev-lbl {
-  font-size: 10.5px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
   color: var(--muted) !important;
-  margin-bottom: 8px !important;
-  display: block !important;
+  margin: 0 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+  flex: 1 !important;
 }
 
 .ov-rev-card .ov-rev-val {
   font-family: 'Geist Mono', 'JetBrains Mono', monospace !important;
-  font-size: clamp(16px, 1.7vw, 23px) !important;
+  font-size: clamp(15px, 1.6vw, 22px) !important;
   font-weight: 800 !important;
   letter-spacing: -0.04em !important;
-  line-height: 1.1 !important;
-  display: block !important;
+  line-height: 1 !important;
+  display: inline-block !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+  text-align: right !important;
 }
 
 .ov-rev-card.inc { background: rgba(0, 217, 126, 0.07) !important; border: 1px solid rgba(0, 217, 126, 0.15) !important; }
