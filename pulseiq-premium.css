@@ -1054,11 +1054,11 @@ tr:nth-child(even) td {
   font-weight: 800 !important;
   letter-spacing: -0.04em !important;
   color: #ffffff !important;
-  line-height: 1.1 !important;
+  line-height: 1.25 !important;
   display: block !important;
   position: relative !important;
   z-index: 2 !important;
-  padding: 0 !important;
+  padding: 2px 0 !important;
   white-space: nowrap !important;
   overflow: visible !important;
   text-overflow: clip !important;
@@ -1099,13 +1099,13 @@ tr:nth-child(even) td {
 
 .ov-rev-card {
   border-radius: 16px !important;
-  padding: 16px 18px !important;
+  padding: 18px 20px !important;
   position: relative !important;
   overflow: visible !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 8px !important;
   transition: transform 0.2s var(--spring), box-shadow 0.2s !important;
 }
 
@@ -1114,7 +1114,7 @@ tr:nth-child(even) td {
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
-  color: var(--muted) !important;
+  color: rgba(200, 200, 220, 0.75) !important;
   margin: 0 !important;
   white-space: nowrap !important;
   overflow: visible !important;
@@ -1125,20 +1125,21 @@ tr:nth-child(even) td {
   font-size: clamp(16px, 1.6vw, 24px) !important;
   font-weight: 800 !important;
   letter-spacing: -0.04em !important;
-  line-height: 1.1 !important;
+  line-height: 1.25 !important;
   display: block !important;
   white-space: nowrap !important;
   overflow: visible !important;
   text-overflow: clip !important;
+  padding: 2px 0 !important;
 }
 
-.ov-rev-card.inc { background: rgba(0, 217, 126, 0.07) !important; border: 1px solid rgba(0, 217, 126, 0.15) !important; }
-.ov-rev-card.exp { background: rgba(248, 113, 113, 0.07) !important; border: 1px solid rgba(248, 113, 113, 0.15) !important; }
-.ov-rev-card.net { background: rgba(124, 90, 240, 0.07) !important; border: 1px solid rgba(124, 90, 240, 0.15) !important; }
+.ov-rev-card.inc { background: rgba(0, 217, 126, 0.09) !important; border: 1px solid rgba(0, 217, 126, 0.22) !important; }
+.ov-rev-card.exp { background: rgba(248, 113, 113, 0.09) !important; border: 1px solid rgba(248, 113, 113, 0.22) !important; }
+.ov-rev-card.net { background: rgba(167, 139, 250, 0.14) !important; border: 1px solid rgba(167, 139, 250, 0.35) !important; }
 
-.ov-rev-card.inc .ov-rev-val { color: #00d97e !important; text-shadow: 0 0 20px rgba(0,217,126,0.3) !important; }
-.ov-rev-card.exp .ov-rev-val { color: #f87171 !important; text-shadow: 0 0 20px rgba(248,113,113,0.3) !important; }
-.ov-rev-card.net .ov-rev-val { color: #a78bfa !important; text-shadow: 0 0 20px rgba(167,139,250,0.3) !important; }
+.ov-rev-card.inc .ov-rev-val { color: #00d97e !important; text-shadow: 0 0 24px rgba(0,217,126,0.35) !important; }
+.ov-rev-card.exp .ov-rev-val { color: #f87171 !important; text-shadow: 0 0 24px rgba(248,113,113,0.35) !important; }
+.ov-rev-card.net .ov-rev-val { color: #e9d5ff !important; text-shadow: 0 0 24px rgba(192,132,252,0.45) !important; }
 
 .ov-rev-card:hover {
   transform: translateY(-2px) !important;
