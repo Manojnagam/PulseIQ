@@ -1050,7 +1050,7 @@ tr:nth-child(even) td {
 /* ── Value — THE HERO NUMBER ── */
 .stat-v {
   font-family: 'Geist Mono', 'JetBrains Mono', monospace !important;
-  font-size: clamp(20px, 2.2vw, 30px) !important;
+  font-size: clamp(18px, 2vw, 28px) !important;
   font-weight: 800 !important;
   letter-spacing: -0.04em !important;
   color: #ffffff !important;
@@ -1060,8 +1060,8 @@ tr:nth-child(even) td {
   z-index: 2 !important;
   padding: 0 !important;
   white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
 }
 
 /* Status color + glow */
@@ -1099,13 +1099,13 @@ tr:nth-child(even) td {
 
 .ov-rev-card {
   border-radius: 16px !important;
-  padding: 16px 20px !important;
+  padding: 16px 18px !important;
   position: relative !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 12px !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 6px !important;
   transition: transform 0.2s var(--spring), box-shadow 0.2s !important;
 }
 
@@ -1117,22 +1117,19 @@ tr:nth-child(even) td {
   color: var(--muted) !important;
   margin: 0 !important;
   white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  flex: 1 !important;
+  overflow: visible !important;
 }
 
 .ov-rev-card .ov-rev-val {
   font-family: 'Geist Mono', 'JetBrains Mono', monospace !important;
-  font-size: clamp(15px, 1.6vw, 22px) !important;
+  font-size: clamp(16px, 1.6vw, 24px) !important;
   font-weight: 800 !important;
   letter-spacing: -0.04em !important;
-  line-height: 1 !important;
-  display: inline-block !important;
+  line-height: 1.1 !important;
+  display: block !important;
   white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  text-align: right !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
 }
 
 .ov-rev-card.inc { background: rgba(0, 217, 126, 0.07) !important; border: 1px solid rgba(0, 217, 126, 0.15) !important; }
