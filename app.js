@@ -17117,28 +17117,31 @@ function downloadFinancialReportPDF(targetYm) {
 
     '</div></body></html>';
 
-  // ── TRIGGER DIRECT DOWNLOAD & OPEN NEW WINDOW ──
+  // ── TRIGGER DIRECT DOWNLOAD WITH MOBILE & POPUP FALLBACKS ──
   var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   var blobUrl = URL.createObjectURL(blob);
 
-  // 1. Direct file download so user ALWAYS receives file in Downloads folder
+  // 1. Direct file download anchor
   var a = document.createElement('a');
   a.href = blobUrl;
   a.download = 'PulseIQ_Financial_Report_' + ym + '.html';
+  a.target = '_blank';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
 
-  // 2. Also try opening in a popup/new window for instant printing
-  try {
-    var win = window.open('', '_blank');
-    if (win && !win.closed) {
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-    }
-  } catch (e) {}
+  // 2. Mobile/Popup Blocker Fallback: open Blob URL in new window
+  setTimeout(function() {
+    try {
+      var win = window.open(blobUrl, '_blank');
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        // Fallback for strict mobile pop-up blockers
+        window.location.href = blobUrl;
+      }
+    } catch (e) {}
+  }, 300);
 
-  setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 10000);
+  // Revoke Blob URL after 60 seconds to prevent memory leak
+  setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 60000);
   showToast('✅ Report downloaded for ' + monthLabel + '! Open the file to view/print.', 'success');
 }
