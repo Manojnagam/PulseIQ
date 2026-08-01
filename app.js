@@ -16567,39 +16567,45 @@ async function generateFinanceInsights() {
   });
 
   var totalPending = (D.payments||[]).reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0);
+  var pendingCount = (D.payments||[]).filter(function(p){return Number(p.total_amount)-Number(p.amount_paid)>0;}).length;
   var activeCusts = typeof getDaysLeft === 'function' ? (D.customers||[]).filter(function(c){return getDaysLeft(c).active;}).length : (D.customers||[]).length;
   var totalCoaches = (D.coaches||[]).length;
 
-  _lastFinanceContext = "=== BUSINESS CONTEXT ===\n" +
-                        "Active Customers: " + activeCusts + "\n" +
-                        "Total Coaches: " + totalCoaches + "\n" +
-                        "Uncollected Pending Payments: ₹" + totalPending + "\n\n" +
-                        "=== CURRENT PERIOD ===\n" +
-                        "Income: " + curAgg.inc + ", Expense: " + curAgg.exp + ", Net: " + curAgg.net + "\n" +
-                        "Income Categories: " + JSON.stringify(curAgg.cats.income) + "\n" +
-                        "Expense Categories: " + JSON.stringify(curAgg.cats.expense) + "\n";
-                        
-  if (prevPeriodAgg) {
-    _lastFinanceContext += "\n=== PREVIOUS PERIOD (same length) ===\n" +
-                           "Income: " + prevPeriodAgg.inc + ", Expense: " + prevPeriodAgg.exp + ", Net: " + prevPeriodAgg.net + "\n" +
-                           "Income Categories: " + JSON.stringify(prevPeriodAgg.cats.income) + "\n" +
-                           "Expense Categories: " + JSON.stringify(prevPeriodAgg.cats.expense) + "\n";
-  }
-  
-  _lastFinanceContext += "\n=== LAST 4 MONTHS CATEGORY TRENDS ===\n" +
-                         JSON.stringify(monthsData) + "\n";
+  // Customers expiring soon (≤5 sessions left)
+  var expiringSoon = typeof getDaysLeft === 'function' ? (D.customers||[]).filter(function(c){
+    var dl = getDaysLeft(c); return dl.active && dl.days <= 5;
+  }).map(function(c){ return (c.name||'Unknown') + ' (' + getDaysLeft(c).days + ' left)'; }) : [];
 
-  var sysPrompt = "You are an expert financial advisor and business strategist for a wellness center. Provide a highly detailed, insightful, and actionable business intelligence report based on the provided data.\n\n" +
-                  "Analyze the metrics deeply and format your response STRICTLY with the following headers (use Markdown `##` for headers):\n" +
-                  "## FINANCIAL HEALTH\nDeep dive into net profit margins, revenue growth vs previous period, and overall financial stability.\n\n" +
-                  "## PROFIT ALLOCATION\nAnalyze income vs expense categories. Where is the money coming from and where is it going? Are expenses well-managed?\n\n" +
-                  "## BUSINESS METRICS\nDiscuss the active customer count, coach count, and uncollected payments. How do these impact cash flow and business sustainability?\n\n" +
-                  "## ACTION ITEMS\nProvide 3-4 specific, actionable steps to improve profitability, reduce uncollected payments, or optimize expenses.\n\n" +
-                  "## RED FLAGS\nHighlight any genuine anomalies, dangerous trends, or significant cash flow risks.\n\n" +
-                  "IMPORTANT: You MUST generate a full, detailed report containing all of the sections above. Do not give a 1-sentence summary. You must write a comprehensive analysis giving real numbers and percentages.";
+  _lastFinanceContext = "=== BUSINESS SNAPSHOT ===\n" +
+                        "Active Customers: " + activeCusts + " | Total Coaches: " + totalCoaches + "\n" +
+                        "Pending Uncollected: ₹" + totalPending.toFixed(2) + " from " + pendingCount + " payment records\n" +
+                        "Customers expiring soon (≤5 sessions): " + (expiringSoon.length ? expiringSoon.join(', ') : 'None') + "\n\n" +
+                        "=== CURRENT PERIOD ===\n" +
+                        "Income: ₹" + curAgg.inc.toFixed(2) + " | Expense: ₹" + curAgg.exp.toFixed(2) + " | Net Profit: ₹" + curAgg.net.toFixed(2) + "\n" +
+                        "Profit Margin: " + (curAgg.inc > 0 ? ((curAgg.net/curAgg.inc)*100).toFixed(1) : 0) + "%\n" +
+                        "Income by Category: " + JSON.stringify(curAgg.cats.income) + "\n" +
+                        "Expense by Category: " + JSON.stringify(curAgg.cats.expense) + "\n";
+
+  if (prevPeriodAgg) {
+    var incChange = prevPeriodAgg.inc > 0 ? (((curAgg.inc - prevPeriodAgg.inc)/prevPeriodAgg.inc)*100).toFixed(1) : 'N/A';
+    var expChange = prevPeriodAgg.exp > 0 ? (((curAgg.exp - prevPeriodAgg.exp)/prevPeriodAgg.exp)*100).toFixed(1) : 'N/A';
+    _lastFinanceContext += "\n=== VS PREVIOUS PERIOD ===\n" +
+                           "Prev Income: ₹" + prevPeriodAgg.inc.toFixed(2) + " | Prev Expense: ₹" + prevPeriodAgg.exp.toFixed(2) + " | Prev Net: ₹" + prevPeriodAgg.net.toFixed(2) + "\n" +
+                           "Income Change: " + incChange + "% | Expense Change: " + expChange + "%\n";
+  }
+
+  _lastFinanceContext += "\n=== 4-MONTH TRENDS ===\n" + JSON.stringify(monthsData) + "\n";
+
+  var sysPrompt = "You are a sharp financial advisor for a wellness center owner. Be direct, specific, and practical — like a trusted advisor texting the owner.\n\n" +
+                  "Using ONLY the data provided, write a SHORT, punchy report with these 4 sections:\n\n" +
+                  "💰 MONEY STATUS\nOne paragraph: net profit, margin %, and whether income grew or shrank vs last period (use exact ₹ amounts).\n\n" +
+                  "⚠️ URGENT: COLLECT THIS MONEY\nList the pending uncollected amount and how many customers owe money. Stress urgency — this is cash sitting outside the business.\n\n" +
+                  "🔴 WATCH OUT\nFlag any expense category that is unusually high, any income category that dropped, and customers expiring soon who haven't renewed (list their names if provided).\n\n" +
+                  "✅ 3 ACTIONS FOR THIS WEEK\nThree very specific tasks the owner should do THIS WEEK based on the data — like 'Call these 3 customers about renewal', 'Review your Nutrition Stock order (₹X spent)', etc.\n\n" +
+                  "Keep the total response under 300 words. Use real rupee numbers everywhere. No generic advice.";
 
   try {
-    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { model: 'gemini-2.5-flash', maxTokens: 2000, temperature: 0.5 });
+    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { model: 'gemini-2.5-flash', maxTokens: 800, temperature: 0.4 });
     _lastFinanceAiResponse = aiText;
     summaryEl.innerHTML = typeof formatAiText === 'function' ? formatAiText(aiText) : aiText.replace(/\n/g, '<br>');
     followupContainer.style.display = 'block';
