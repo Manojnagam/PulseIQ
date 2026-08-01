@@ -2678,9 +2678,10 @@ function autofillBodyHeightAge(custId) {
   // 2. Resolve walkin vs customer/coach
   var isWalkin = custId.startsWith('walkin__');
   var resolvedId = isWalkin ? custId.slice(8) : custId;
+  var linkedIds = typeof getLinkedBodyCustomerIds === 'function' ? getLinkedBodyCustomerIds(custId) : [resolvedId, 'walkin__' + resolvedId];
 
-  // Find latest record in body composition
-  var lastRec = (D.body||[]).filter(function(b){return b.customer_id === resolvedId;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0];
+  // Find latest record in body composition across all linked IDs (including converted walk-in scans)
+  var lastRec = (D.body||[]).filter(function(b){ return linkedIds.indexOf(b.customer_id) !== -1; }).sort(function(a,b){ return new Date(b.date) - new Date(a.date); })[0];
   
   var heightVal = '';
   var ageVal = '';
@@ -2696,8 +2697,8 @@ function autofillBodyHeightAge(custId) {
     if (isWalkin) {
       person = (D.walkins||[]).find(function(w){return w.id === resolvedId;});
     } else {
-      person = D.customers.find(function(c){return c.id === resolvedId;})
-            || D.coaches.find(function(c){return c.id === resolvedId;});
+      person = (D.customers||[]).find(function(c){return c.id === resolvedId;})
+            || (D.coaches||[]).find(function(c){return c.id === resolvedId;});
     }
 
     if (person) {
@@ -2710,10 +2711,19 @@ function autofillBodyHeightAge(custId) {
         }
       }
     }
+
+    // Also check converted walk-in profile if customer profile didn't have height/age
+    if ((!heightVal || !ageVal) && !isWalkin) {
+      var walkinMatch = (D.walkins||[]).find(function(w){ return w.converted_customer_id === resolvedId || w.id === resolvedId; });
+      if (walkinMatch) {
+        if (!heightVal && walkinMatch.height) heightVal = walkinMatch.height;
+        if (!ageVal && walkinMatch.age) ageVal = walkinMatch.age;
+      }
+    }
   }
 
-  el_h.value = heightVal;
-  el_a.value = ageVal;
+  el_h.value = heightVal || '';
+  el_a.value = ageVal || '';
 }
 
 // ── MODALS ──
