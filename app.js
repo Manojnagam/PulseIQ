@@ -16912,12 +16912,12 @@ function downloadFinancialReportPDF(targetYm) {
     { label: isNetLoss ? 'Net Loss' : 'Net Profit', value: (isNetLoss ? '-' : '+') + fmtDec(net), color: isNetLoss ? '#dc2626' : '#059669', bg: isNetLoss ? '#fef2f2' : '#f0fdf4', icon: isNetLoss ? '🔴' : '📈', desc: isNetLoss ? 'Deficit' : 'Surplus' },
     { label: 'Profit Margin', value: margin + '%', color: '#8b5cf6', bg: '#f5f3ff', icon: '📊', desc: isNetLoss ? 'Negative Margin' : 'Healthy Margin' },
     { label: 'Total Walk-ins', value: walkData.total, color: '#f97316', bg: '#fff7ed', icon: '🚶', desc: 'Visitors' },
-    { label: 'Converted', value: walkData.converted + ' (' + convRate + '%)', color: '#06b6d4', bg: '#ecfeff', icon: '✅', desc: 'New Members' },
+    { label: 'Converted', value: walkData.converted + ' <span style="font-size:14px;font-weight:700;opacity:0.85">(' + convRate + '%)</span>', color: '#06b6d4', bg: '#ecfeff', icon: '✅', desc: convRate + '% Conversion Rate' },
   ].map(function(c) {
-    return '<div style="background:' + c.bg + ';border-radius:16px;padding:22px 24px;border:1.5px solid ' + c.color + '33;box-shadow:0 4px 16px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between">' +
+    return '<div style="background:' + c.bg + ';border-radius:16px;padding:20px 22px;border:1.5px solid ' + c.color + '33;box-shadow:0 4px 16px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between">' +
       '<div>' +
         '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:' + c.color + ';margin-bottom:8px">' + c.icon + ' ' + c.label + '</div>' +
-        '<div style="font-size:24px;font-weight:900;color:' + c.color + ';line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + c.value + '</div>' +
+        '<div style="font-size:22px;font-weight:900;color:' + c.color + ';line-height:1.2;white-space:nowrap">' + c.value + '</div>' +
       '</div>' +
       '<div style="font-size:11px;font-weight:600;color:' + c.color + 'cc;margin-top:10px">' + c.desc + '</div>' +
     '</div>';
