@@ -16657,7 +16657,7 @@ function _buildDayByDayReport() {
     if (!d) return;
     var ym = d.slice(0, 7);
     if (!monthMap[ym]) monthMap[ym] = { totalInc: 0, totalExp: 0, days: {} };
-    if (!monthMap[ym].days[d]) monthMap[ym].days[d] = { inc: 0, exp: 0, rows: [] };
+    if (!monthMap[ym].days[d]) monthMap[ym].days[d] = { inc: 0, exp: 0, rows: [], wRows: [] };
     var amt = Number(f.amount) || 0;
     if (f.type === 'income') { monthMap[ym].totalInc += amt; monthMap[ym].days[d].inc += amt; }
     else { monthMap[ym].totalExp += amt; monthMap[ym].days[d].exp += amt; }
@@ -16669,6 +16669,10 @@ function _buildDayByDayReport() {
   allWalk.forEach(function(w) {
     var d = (w.date || '').slice(0, 10); if (!d) return;
     var ym = d.slice(0, 7);
+    if (!monthMap[ym]) monthMap[ym] = { totalInc: 0, totalExp: 0, days: {} };
+    if (!monthMap[ym].days[d]) monthMap[ym].days[d] = { inc: 0, exp: 0, rows: [], wRows: [] };
+    monthMap[ym].days[d].wRows.push(w);
+
     if (!walkMonthMap[ym]) walkMonthMap[ym] = { total: 0, converted: 0, trial: 0, checkup: 0, revenue: 0 };
     walkMonthMap[ym].total++;
     if (w.converted) walkMonthMap[ym].converted++;
@@ -16869,8 +16873,15 @@ function _mfrKpiCard(label, value, color, bg) {
  */
 function downloadFinancialReportPDF(targetYm) {
   var selEl = document.getElementById('mfr-month-sel');
+  var finMonthPicker = document.getElementById('fin-month-picker');
+  var finFrom = document.getElementById('fin-from') ? document.getElementById('fin-from').value : '';
+
+  var activeMonthFromFilter = (finMonthPicker && finMonthPicker.value)
+    ? finMonthPicker.value
+    : (finFrom ? finFrom.slice(0, 7) : null);
+
   var now = new Date();
-  var ym = targetYm || (selEl ? selEl.value : null) || (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
+  var ym = targetYm || (selEl ? selEl.value : null) || activeMonthFromFilter || (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
 
   var report = _buildDayByDayReport();
   var monthData = report.data[ym] || { totalInc: 0, totalExp: 0, days: {} };
@@ -16880,10 +16891,10 @@ function downloadFinancialReportPDF(targetYm) {
   var d = new Date(ym + '-01');
   var monthLabel = d.toLocaleString('default', { month: 'long', year: 'numeric' });
   var net = monthData.totalInc - monthData.totalExp;
-  var margin = monthData.totalInc > 0 ? ((net / monthData.totalInc) * 100).toFixed(1) : 0;
-  var convRate = walkData.total > 0 ? ((walkData.converted / walkData.total) * 100).toFixed(0) : 0;
+  var margin = monthData.totalInc > 0 ? Math.round((net / monthData.totalInc) * 100) : 0;
+  var convRate = walkData.total > 0 ? Math.round((walkData.converted / walkData.total) * 100) : 0;
 
-  function fmt(n) { return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 0 }); }
+  function fmt(n) { return '₹' + Math.abs(Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
   // ── KPI cards ──
   var kpiCards = [
