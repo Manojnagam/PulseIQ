@@ -16599,7 +16599,7 @@ async function generateFinanceInsights() {
                   "IMPORTANT: You MUST generate a full, detailed report containing all of the sections above. Do not give a 1-sentence summary. You must write a comprehensive analysis giving real numbers and percentages.";
 
   try {
-    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { maxTokens: 1500, temperature: 0.5 });
+    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { model: 'gemini-2.5-flash', maxTokens: 2000, temperature: 0.5 });
     _lastFinanceAiResponse = aiText;
     summaryEl.innerHTML = typeof formatAiText === 'function' ? formatAiText(aiText) : aiText.replace(/\n/g, '<br>');
     followupContainer.style.display = 'block';
