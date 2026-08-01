@@ -459,7 +459,7 @@ async function loadAndStartDashboard() {
     if (typeof window.bootDashboard !== 'function') {
       try {
         visualDebug("Before loading app.min.js");
-        await loadScript('app.min.js?v=1.7.4', 30000);
+        await loadScript('app.min.js?v=1.7.5', 30000);
         visualDebug("After loading app.min.js");
       } catch (scriptErr) {
         visualDebug('FAILED app.min.js: ' + scriptErr.message);

@@ -4,7 +4,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <title>PulseZen Dashboard</title>
 <meta name="apple-mobile-web-app-title" content="PulseZen">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="PulseZen Supervisor Dashboard - Manage wellness centers, track coach performance, consult customers, and monitor revenue dynamically with AI wellness scans.">
@@ -568,7 +567,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
   .sidebar.open{transform:translateX(0)}
   .sb-overlay{z-index:999}
   .sb-overlay.open{display:block}
-  .main{margin-left:0;padding:72px 16px 32px;width:100%;box-sizing:border-box}
+  .main{margin-left:0;padding:64px 12px 24px;width:100%;box-sizing:border-box}
   .menu-btn{display:block;z-index:1001}
   .sb-logo h1{font-size:14px}
   .sb-nav #g-portals, .sb-nav #g-analytics, .sb-nav #g-ops, .sb-nav #g-setup{display:block !important}
@@ -1257,7 +1256,7 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
-<link rel="stylesheet" href="pulseiq-premium.css?v=2.4">
+<link rel="stylesheet" href="pulseiq-premium.css?v=2.5">
 <script>
 window.onerror = function(msg, url, line) {
   console.error('Global emergency error handler caught:', msg, 'at', url, 'line', line);
@@ -1291,8 +1290,8 @@ if ('caches' in window) {
 }
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
-<script defer src="auth.core.min.js?v=1.7.4"></script>
-<script defer src="app.min.js?v=1.7.4"></script>
+<script defer src="auth.core.min.js?v=1.7.5"></script>
+<script defer src="app.min.js?v=1.7.5"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>
 <script defer src="shared/formatting.js"></script>
@@ -2412,7 +2411,6 @@ if ('caches' in window) {
           <input type="date" id="fin-from" style="border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px" onchange="setFinPeriod('custom',null)">
           <span style="font-size:12px;color:var(--muted)">to</span>
           <input type="date" id="fin-to" style="border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px" onchange="setFinPeriod('custom',null)">
-          <span id="fin-period-badge" style="font-size:12px;color:var(--primary);font-weight:600;margin-left:auto;background:rgba(39,174,96,0.1);padding:4px 10px;border-radius:8px">📅 All dates</span>
         </div>
       </div>
       <!-- Summary stats -->

@@ -7129,10 +7129,8 @@ function renderFinance() {
   var from = document.getElementById('fin-from').value;
   var to   = document.getElementById('fin-to').value;
   var periodLabel = (from && to) ? from + ' → ' + to : (from ? 'From ' + from : (to ? 'Until ' + to : 'All dates'));
-  var pBadge = document.getElementById('fin-period-badge');
-  if (pBadge) pBadge.textContent = '📅 ' + periodLabel;
   document.getElementById('fin-stats').innerHTML =
-    '<div class="stat"><div class="stat-l">Total Income</div><div class="stat-v" style="color:var(--success)">₹'+inc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Total Income<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:2px">📅 '+periodLabel+'</div></div><div class="stat-v" style="color:var(--success)">₹'+inc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Total Expense</div><div class="stat-v" style="color:var(--danger)">₹'+exp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="color:'+(net>=0?'var(--primary)':'var(--danger)')+'">₹'+net.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Profit Margin</div><div class="stat-v" id="fin-margin" style="color:'+(margin>=0?'var(--primary)':'var(--danger)')+'">'+margin+'%</div></div>';
@@ -16568,103 +16566,38 @@ async function generateFinanceInsights() {
     }
   });
 
-  var totalPending = (D.payments||[]).reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0);
-  var pendingCount = (D.payments||[]).filter(function(p){return Number(p.total_amount)-Number(p.amount_paid)>0;}).length;
-  var activeCusts = typeof getDaysLeft === 'function' ? (D.customers||[]).filter(function(c){return getDaysLeft(c).active;}).length : (D.customers||[]).length;
-  var totalCoaches = (D.coaches||[]).length;
-
-  // Customers expiring soon (≤5 sessions left)
-  var expiringSoon = typeof getDaysLeft === 'function' ? (D.customers||[]).filter(function(c){
-    var dl = getDaysLeft(c); return dl.active && dl.days <= 5;
-  }).map(function(c){ return (c.name||'Unknown') + ' (' + getDaysLeft(c).days + ' left)'; }) : [];
-
-  _lastFinanceContext = "=== BUSINESS SNAPSHOT ===\n" +
-                        "Active Customers: " + activeCusts + " | Total Coaches: " + totalCoaches + "\n" +
-                        "Pending Uncollected: ₹" + totalPending.toFixed(2) + " from " + pendingCount + " payment records\n" +
-                        "Customers expiring soon (≤5 sessions): " + (expiringSoon.length ? expiringSoon.join(', ') : 'None') + "\n\n" +
-                        "=== CURRENT PERIOD ===\n" +
-                        "Income: ₹" + curAgg.inc.toFixed(2) + " | Expense: ₹" + curAgg.exp.toFixed(2) + " | Net Profit: ₹" + curAgg.net.toFixed(2) + "\n" +
-                        "Profit Margin: " + (curAgg.inc > 0 ? ((curAgg.net/curAgg.inc)*100).toFixed(1) : 0) + "%\n" +
-                        "Income by Category: " + JSON.stringify(curAgg.cats.income) + "\n" +
-                        "Expense by Category: " + JSON.stringify(curAgg.cats.expense) + "\n";
-
+  _lastFinanceContext = "=== CURRENT PERIOD ===\n" +
+                        "Income: " + curAgg.inc + ", Expense: " + curAgg.exp + ", Net: " + curAgg.net + "\n" +
+                        "Income Categories: " + JSON.stringify(curAgg.cats.income) + "\n" +
+                        "Expense Categories: " + JSON.stringify(curAgg.cats.expense) + "\n";
+                        
   if (prevPeriodAgg) {
-    var incChange = prevPeriodAgg.inc > 0 ? (((curAgg.inc - prevPeriodAgg.inc)/prevPeriodAgg.inc)*100).toFixed(1) : 'N/A';
-    var expChange = prevPeriodAgg.exp > 0 ? (((curAgg.exp - prevPeriodAgg.exp)/prevPeriodAgg.exp)*100).toFixed(1) : 'N/A';
-    _lastFinanceContext += "\n=== VS PREVIOUS PERIOD ===\n" +
-                           "Prev Income: ₹" + prevPeriodAgg.inc.toFixed(2) + " | Prev Expense: ₹" + prevPeriodAgg.exp.toFixed(2) + " | Prev Net: ₹" + prevPeriodAgg.net.toFixed(2) + "\n" +
-                           "Income Change: " + incChange + "% | Expense Change: " + expChange + "%\n";
+    _lastFinanceContext += "\n=== PREVIOUS PERIOD (same length) ===\n" +
+                           "Income: " + prevPeriodAgg.inc + ", Expense: " + prevPeriodAgg.exp + ", Net: " + prevPeriodAgg.net + "\n" +
+                           "Income Categories: " + JSON.stringify(prevPeriodAgg.cats.income) + "\n" +
+                           "Expense Categories: " + JSON.stringify(prevPeriodAgg.cats.expense) + "\n";
   }
+  
+  _lastFinanceContext += "\n=== LAST 4 MONTHS CATEGORY TRENDS ===\n" +
+                         JSON.stringify(monthsData) + "\n";
 
-  // Build sections 1-3 directly from data (no AI needed for raw numbers)
-  var margin = curAgg.inc > 0 ? ((curAgg.net / curAgg.inc) * 100).toFixed(1) : 0;
-  var topExpCat = Object.entries(curAgg.cats.expense).sort(function(a,b){return b[1]-a[1];})[0] || ['N/A', 0];
-  var topIncCat = Object.entries(curAgg.cats.income).sort(function(a,b){return b[1]-a[1];})[0] || ['N/A', 0];
-
-  var prevCompar = '';
-  if (prevPeriodAgg && prevPeriodAgg.inc > 0) {
-    var incPct = (((curAgg.inc - prevPeriodAgg.inc) / prevPeriodAgg.inc) * 100).toFixed(1);
-    prevCompar = ' Income ' + (incPct >= 0 ? 'grew' : 'fell') + ' by ' + Math.abs(incPct) + '% vs the previous period.';
-  }
-
-  var pendingStr = totalPending > 0
-    ? 'You have <strong>₹' + totalPending.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' uncollected</strong> across ' + pendingCount + ' payment records. This is real money owed to your business — follow up immediately.'
-    : 'All payments are collected. No outstanding dues.';
-
-  var expirStr = expiringSoon.length > 0
-    ? '<strong>Expiring soon (≤5 sessions):</strong> ' + expiringSoon.join(', ') + '. Contact them today to renew.'
-    : 'No customers expiring in the next 5 sessions.';
-
-  var preBuilt = 
-    '<div style="background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.18);border-radius:12px;padding:14px 16px;margin-bottom:12px">' +
-      '<div style="font-weight:700;font-size:13.5px;color:#3b82f6;margin-bottom:6px;display:flex;align-items:center;gap:6px"><span>💰</span><span>MONEY STATUS</span></div>' +
-      '<div style="font-size:13px;line-height:1.55;color:var(--text)">' +
-        'Net profit: <strong>₹' + curAgg.net.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</strong> &bull; ' +
-        'Margin: <strong>' + margin + '%</strong> &bull; ' +
-        'Income: ₹' + curAgg.inc.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' &bull; ' +
-        'Expenses: ₹' + curAgg.exp.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + prevCompar +
-      '</div>' +
-    '</div>' +
-
-    '<div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:14px 16px;margin-bottom:12px">' +
-      '<div style="font-weight:700;font-size:13.5px;color:#f59e0b;margin-bottom:6px;display:flex;align-items:center;gap:6px"><span>⚠️</span><span>COLLECT THIS MONEY</span></div>' +
-      '<div style="font-size:13px;line-height:1.55;color:var(--text)">' + pendingStr + '</div>' +
-    '</div>' +
-
-    '<div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.18);border-radius:12px;padding:14px 16px;margin-bottom:12px">' +
-      '<div style="font-weight:700;font-size:13.5px;color:#ef4444;margin-bottom:6px;display:flex;align-items:center;gap:6px"><span>🔴</span><span>WATCH OUT</span></div>' +
-      '<div style="font-size:13px;line-height:1.55;color:var(--text)">' +
-        'Biggest expense: <strong>' + topExpCat[0] + '</strong> at ₹' + Number(topExpCat[1]).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') +
-        ' (' + (curAgg.exp > 0 ? ((topExpCat[1]/curAgg.exp)*100).toFixed(0) : 0) + '% of total expenses).<br><div style="margin-top:6px">' + expirStr + '</div>' +
-      '</div>' +
-    '</div>' +
-
-    '<div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:14px 16px">' +
-      '<div style="font-weight:700;font-size:13.5px;color:#10b981;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span>✅</span><span>THIS WEEK — ACTION PLAN</span></div>' +
-      '<div id="fin-ai-action-list" style="font-size:13px;line-height:1.6;color:var(--text)"><span style="color:var(--muted);font-style:italic">Generating 3 personalized weekly actions...</span></div>' +
-    '</div>';
-
-  summaryEl.innerHTML = preBuilt;
-  followupContainer.style.display = 'block';
-  setTimeout(function() { summaryEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100);
-
-  // Now ask AI ONLY for the 3 action items (small focused call)
-  var actionPrompt = "You are advising a wellness center owner. Based on this data, write EXACTLY 3 numbered action items they should do THIS WEEK. Each action must mention specific amounts in ₹ or customer names from the data. Be direct. No intros. Just the 3 numbered items.\n\nData:\n" + _lastFinanceContext;
+  var sysPrompt = "You are an expert financial advisor for a wellness center owner. Analyze the provided financial summary data. Keep it concise, professional but accessible (no heavy jargon).\n\n" +
+                  "1. Summarize the overall trends (Net profit, Income vs Expense). Compare the current period vs the previous period (% change) if available.\n" +
+                  "2. Identify any category with an unusual trend over the last few months (not just high in isolation).\n" +
+                  "3. Flag genuine anomalies or red flags relative to historical patterns.";
 
   try {
-    var actText = await callGroq('', actionPrompt, { model: 'llama-3.3-70b-versatile', maxTokens: 300, temperature: 0.5 });
-    var actionsDiv = summaryEl.querySelector('#fin-ai-action-list');
-    if (actionsDiv) actionsDiv.innerHTML = (typeof formatAiText === 'function' ? formatAiText(actText) : actText.replace(/\n/g, '<br>'));
-    _lastFinanceAiResponse = preBuilt;
+    var aiText = await callGroq(sysPrompt, _lastFinanceContext, { maxTokens: 600, temperature: 0.3 });
+    _lastFinanceAiResponse = aiText;
+    summaryEl.innerHTML = typeof formatAiText === 'function' ? formatAiText(aiText) : aiText.replace(/\n/g, '<br>');
+    followupContainer.style.display = 'block';
   } catch(e) {
-    var actionsDiv2 = summaryEl.querySelector('#fin-ai-action-list');
-    if (actionsDiv2) actionsDiv2.innerHTML = '<span style="color:var(--muted)">Could not generate AI actions: ' + (e.message||'') + '</span>';
+    summaryEl.innerHTML = '<span style="color:var(--danger)">Error generating insights: ' + (e.message || String(e)) + '</span>';
   }
-
+  
   btn.disabled = false;
   btn.textContent = 'Refresh Insights';
 }
-
 
 async function askFinanceFollowup() {
   var inputEl = document.getElementById('fin-ai-question');
