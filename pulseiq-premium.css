@@ -945,3 +945,243 @@ tr:nth-child(even) td {
 @supports not (-webkit-background-clip: text) {
   .pt { color: #f0f0fa !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 1 — STAT CARDS REDESIGN
+   Inspired by: Linear's metric cards · Stripe Dashboard · Vercel Analytics
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Grid: 4 columns on desktop, tighter gap ── */
+.stats {
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 14px !important;
+}
+@media (max-width: 1200px) { .stats { grid-template-columns: repeat(3, 1fr) !important; } }
+@media (max-width: 900px)  { .stats { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-width: 600px)  { .stats { grid-template-columns: 1fr !important; } }
+
+/* ── Base card — elevated glassmorphic panel ── */
+.stat {
+  position: relative !important;
+  background: rgba(10, 10, 18, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 18px !important;
+  border-top: none !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  cursor: default !important;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  min-height: 130px !important;
+}
+
+/* Inner padding wrapper — keeps beam pseudo-element flush to top */
+.stat-ic,
+.stat-l,
+.stat-v {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+.stat-ic { padding-top: 20px !important; }
+.stat-v  { padding-bottom: 20px !important; }
+
+/* ── Top animated beam — unique color per position ── */
+.stat::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 55% !important;
+  height: 1.5px !important;
+  background: linear-gradient(90deg, transparent, var(--stat-beam, #00d97e), transparent) !important;
+  animation: beam-slide 3.5s ease-in-out infinite !important;
+  animation-delay: var(--stat-delay, 0s) !important;
+  z-index: 3 !important;
+}
+
+/* Assign unique beam color + delay per slot */
+.stats .stat:nth-child(1) { --stat-beam: #00d97e; --stat-delay: 0.0s; }
+.stats .stat:nth-child(2) { --stat-beam: #38d9f5; --stat-delay: 0.4s; }
+.stats .stat:nth-child(3) { --stat-beam: #f59e0b; --stat-delay: 0.8s; }
+.stats .stat:nth-child(4) { --stat-beam: #7c5af0; --stat-delay: 1.2s; }
+.stats .stat:nth-child(5) { --stat-beam: #f87171; --stat-delay: 0.2s; }
+.stats .stat:nth-child(6) { --stat-beam: #34d399; --stat-delay: 0.6s; }
+
+/* ── Spotlight glow hover (via JS CSS var) ── */
+.stat::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(0, 217, 126, 0.07) 0%,
+    transparent 65%
+  ) !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.stat:hover::after { opacity: 1 !important; }
+
+/* ── Inner top shine — gives depth ── */
+.stat .stat-shine {
+  display: none; /* injected by JS if needed */
+}
+
+/* ── Icon — glow pill ── */
+.stat-ic {
+  font-size: 22px !important;
+  line-height: 1 !important;
+  display: block !important;
+  margin-bottom: 12px !important;
+  width: fit-content !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 10px !important;
+  padding: 7px 9px !important;
+  margin-top: 20px !important;
+  margin-left: 20px !important;
+  margin-right: 0 !important;
+  padding-left: 9px !important;
+  padding-right: 9px !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* ── Label — compact uppercase ── */
+.stat-l {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: rgba(107, 112, 128, 0.9) !important;
+  margin-bottom: 6px !important;
+  display: block !important;
+  position: relative !important;
+  z-index: 2 !important;
+  padding-top: 0 !important;
+}
+
+/* ── Value — big, bold, tabular ── */
+.stat-v {
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace !important;
+  font-size: clamp(26px, 2.8vw, 36px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.04em !important;
+  color: #f0f0fa !important;
+  line-height: 1 !important;
+  display: block !important;
+  position: relative !important;
+  z-index: 2 !important;
+  padding-top: 0 !important;
+}
+
+/* ── Color overrides for status values (keep app's inline style intent) ── */
+.stat-v[style*="color:var(--success)"],
+.stat-v[style*="color: var(--success)"] {
+  color: #00d97e !important;
+  text-shadow: 0 0 20px rgba(0, 217, 126, 0.3) !important;
+}
+.stat-v[style*="color:var(--danger)"],
+.stat-v[style*="color: var(--danger)"] {
+  color: #f87171 !important;
+  text-shadow: 0 0 20px rgba(248, 113, 113, 0.3) !important;
+}
+.stat-v[style*="color:var(--accent)"],
+.stat-v[style*="color: var(--accent)"] {
+  color: #fbbf24 !important;
+  text-shadow: 0 0 20px rgba(251, 191, 36, 0.25) !important;
+}
+.stat-v[style*="color:var(--primary)"],
+.stat-v[style*="color: var(--primary)"] {
+  color: #00d97e !important;
+  text-shadow: 0 0 20px rgba(0, 217, 126, 0.3) !important;
+}
+
+/* ── Hover lift ── */
+.stat:hover {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 217, 126, 0.06),
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* ── Stagger entrance (overrides base) ── */
+.stats .stat:nth-child(1) { animation-delay: 0.02s !important; }
+.stats .stat:nth-child(2) { animation-delay: 0.07s !important; }
+.stats .stat:nth-child(3) { animation-delay: 0.12s !important; }
+.stats .stat:nth-child(4) { animation-delay: 0.17s !important; }
+.stats .stat:nth-child(5) { animation-delay: 0.22s !important; }
+.stats .stat:nth-child(6) { animation-delay: 0.27s !important; }
+
+/* ── Revenue row cards — Phase 1 polish ── */
+.ov-rev-row {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 14px !important;
+  margin-bottom: 20px !important;
+}
+
+@media (max-width: 700px) {
+  .ov-rev-row { grid-template-columns: 1fr !important; }
+}
+
+.ov-rev-card {
+  border-radius: 16px !important;
+  padding: 20px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: transform 0.2s var(--spring), box-shadow 0.2s !important;
+}
+
+.ov-rev-card::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.ov-rev-card .ov-rev-lbl {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--muted) !important;
+  margin-bottom: 10px !important;
+  display: block !important;
+}
+
+.ov-rev-card .ov-rev-val {
+  font-size: clamp(20px, 2.2vw, 28px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1.1 !important;
+  display: block !important;
+}
+
+.ov-rev-card.inc { background: rgba(0, 217, 126, 0.07) !important; border: 1px solid rgba(0, 217, 126, 0.15) !important; }
+.ov-rev-card.exp { background: rgba(248, 113, 113, 0.07) !important; border: 1px solid rgba(248, 113, 113, 0.15) !important; }
+.ov-rev-card.net { background: rgba(124, 90, 240, 0.07) !important; border: 1px solid rgba(124, 90, 240, 0.15) !important; }
+
+.ov-rev-card.inc .ov-rev-val { color: #00d97e !important; }
+.ov-rev-card.exp .ov-rev-val { color: #f87171 !important; }
+.ov-rev-card.net .ov-rev-val { color: #a78bfa !important; }
+
+.ov-rev-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
+}
+
