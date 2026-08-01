@@ -1050,26 +1050,25 @@ tr:nth-child(even) td {
 /* ── Value — THE HERO NUMBER ── */
 .stat-v {
   font-family: 'Geist Mono', 'JetBrains Mono', monospace !important;
-  font-size: 40px !important;
+  font-size: clamp(20px, 2.2vw, 30px) !important;
   font-weight: 800 !important;
-  letter-spacing: -0.05em !important;
+  letter-spacing: -0.04em !important;
   color: #ffffff !important;
-  line-height: 1 !important;
+  line-height: 1.1 !important;
   display: block !important;
   position: relative !important;
   z-index: 2 !important;
   padding: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 /* Status color + glow */
-.stat-v[style*="color:var(--success)"],
-.stat-v[style*="color: var(--success)"] { color: #00d97e !important; text-shadow: 0 0 30px rgba(0,217,126,0.4) !important; }
-.stat-v[style*="color:var(--danger)"],
-.stat-v[style*="color: var(--danger)"]  { color: #f87171 !important; text-shadow: 0 0 30px rgba(248,113,113,0.4) !important; }
-.stat-v[style*="color:var(--accent)"],
-.stat-v[style*="color: var(--accent)"]  { color: #fbbf24 !important; text-shadow: 0 0 30px rgba(251,191,36,0.35) !important; }
-.stat-v[style*="color:var(--primary)"],
-.stat-v[style*="color: var(--primary)"] { color: #00d97e !important; text-shadow: 0 0 30px rgba(0,217,126,0.4) !important; }
+.stat-v[style*="danger"]  { color: #f87171 !important; text-shadow: 0 0 20px rgba(248,113,113,0.4) !important; }
+.stat-v[style*="success"] { color: #00d97e !important; text-shadow: 0 0 20px rgba(0,217,126,0.4) !important; }
+.stat-v[style*="accent"]   { color: #fbbf24 !important; text-shadow: 0 0 20px rgba(251,191,36,0.35) !important; }
+.stat-v[style*="primary"]  { color: #00d97e !important; text-shadow: 0 0 20px rgba(0,217,126,0.4) !important; }
 
 /* ── Hover ── */
 .stat:hover {
