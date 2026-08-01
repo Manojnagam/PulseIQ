@@ -16566,7 +16566,15 @@ async function generateFinanceInsights() {
     }
   });
 
-  _lastFinanceContext = "=== CURRENT PERIOD ===\n" +
+  var totalPending = (D.payments||[]).reduce(function(s,p){return s+Math.max(0,Number(p.total_amount)-Number(p.amount_paid));},0);
+  var activeCusts = typeof getDaysLeft === 'function' ? (D.customers||[]).filter(function(c){return getDaysLeft(c).active;}).length : (D.customers||[]).length;
+  var totalCoaches = (D.coaches||[]).length;
+
+  _lastFinanceContext = "=== BUSINESS CONTEXT ===\n" +
+                        "Active Customers: " + activeCusts + "\n" +
+                        "Total Coaches: " + totalCoaches + "\n" +
+                        "Uncollected Pending Payments: ₹" + totalPending + "\n\n" +
+                        "=== CURRENT PERIOD ===\n" +
                         "Income: " + curAgg.inc + ", Expense: " + curAgg.exp + ", Net: " + curAgg.net + "\n" +
                         "Income Categories: " + JSON.stringify(curAgg.cats.income) + "\n" +
                         "Expense Categories: " + JSON.stringify(curAgg.cats.expense) + "\n";
@@ -16581,16 +16589,26 @@ async function generateFinanceInsights() {
   _lastFinanceContext += "\n=== LAST 4 MONTHS CATEGORY TRENDS ===\n" +
                          JSON.stringify(monthsData) + "\n";
 
-  var sysPrompt = "You are an expert financial advisor for a wellness center owner. Analyze the provided financial summary data. Keep it concise, professional but accessible (no heavy jargon).\n\n" +
-                  "1. Summarize the overall trends (Net profit, Income vs Expense). Compare the current period vs the previous period (% change) if available.\n" +
-                  "2. Identify any category with an unusual trend over the last few months (not just high in isolation).\n" +
-                  "3. Flag genuine anomalies or red flags relative to historical patterns.";
+  var sysPrompt = "You are an expert financial advisor and business strategist for a wellness center. Provide a highly detailed, insightful, and actionable business intelligence report based on the provided data.\n\n" +
+                  "Analyze the metrics deeply and format your response with the following headers (use Markdown `##` for headers):\n" +
+                  "## FINANCIAL HEALTH\nDeep dive into net profit margins, revenue growth vs previous period, and overall financial stability.\n\n" +
+                  "## PROFIT ALLOCATION\nAnalyze income vs expense categories. Where is the money coming from and where is it going? Are expenses well-managed?\n\n" +
+                  "## BUSINESS METRICS\nDiscuss the active customer count, coach count, and uncollected payments. How do these impact cash flow and business sustainability?\n\n" +
+                  "## ACTION ITEMS\nProvide 3-4 specific, actionable steps to improve profitability, reduce uncollected payments, or optimize expenses.\n\n" +
+                  "## RED FLAGS\nHighlight any genuine anomalies, dangerous trends, or significant cash flow risks.\n\n" +
+                  "Make the insights directly applicable to growing a wellness center. Be precise, analytical, and avoid generic filler. Give real numbers and percentages in your analysis.";
 
   try {
     var aiText = await callGroq(sysPrompt, _lastFinanceContext, { maxTokens: 600, temperature: 0.3 });
     _lastFinanceAiResponse = aiText;
     summaryEl.innerHTML = typeof formatAiText === 'function' ? formatAiText(aiText) : aiText.replace(/\n/g, '<br>');
     followupContainer.style.display = 'block';
+    
+    // Automatically scroll down to the insights so the user doesn't have to search for them
+    setTimeout(function() {
+      summaryEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+    
   } catch(e) {
     summaryEl.innerHTML = '<span style="color:var(--danger)">Error generating insights: ' + (e.message || String(e)) + '</span>';
   }

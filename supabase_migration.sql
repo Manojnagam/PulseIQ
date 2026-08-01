@@ -22,3 +22,17 @@ CREATE TABLE IF NOT EXISTS client_interactions (
 -- 4. Enable RLS and add public access policies
 ALTER TABLE client_interactions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "anon_all" ON client_interactions FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- 5. Create recurring expenses table
+CREATE TABLE IF NOT EXISTS recurring_expenses (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  amount numeric NOT NULL,
+  day_of_month integer NOT NULL,
+  category text,
+  wellness_center_id text,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE recurring_expenses ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_all_recurring" ON recurring_expenses FOR ALL TO anon USING (true) WITH CHECK (true);
