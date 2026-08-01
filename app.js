@@ -17271,12 +17271,17 @@ function _mfrKpiCard(label, value, color, bg) {
  * Covers: summary KPIs, walk-in analysis, monthly P&L, day-by-day table.
  */
 function downloadFinancialReportPDF() {
+  // If modal not open, show it first so user can pick any month
+  var selEl = document.getElementById('mfr-month-sel');
+  if (!selEl) {
+    showMonthlyFinancialReport();
+    showToast('📅 Select a month above, then click ⬇️ Download Report', 'success');
+    return;
+  }
+
   var report = _buildDayByDayReport();
   var now = new Date();
-
-  // Use selected month if the modal is open, else use current month
-  var selEl = document.getElementById('mfr-month-sel');
-  var ym = selEl ? selEl.value : (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
+  var ym = selEl.value;
 
   var monthData = report.data[ym] || { totalInc: 0, totalExp: 0, days: {} };
   var walkData = report.walkData[ym] || { total: 0, converted: 0, trial: 0, checkup: 0, revenue: 0 };
