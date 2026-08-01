@@ -1,0 +1,947 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PulseIQ — FUNDED STARTUP PREMIUM LAYER v2.0
+   Inspired by: Aceternity UI · Motion Primitives · Componentry
+   Pattern references: Linear · Vercel · Stripe · Notion · Attio
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 0. DESIGN TOKENS (override root) ──────────────────────────────────── */
+:root {
+  /* Premium dark palette — richer than stock zinc-950 */
+  --bg:             #050508;
+  --surface:        rgba(12, 12, 18, 0.82);
+  --surface-solid:  #0c0c12;
+  --surface2:       rgba(22, 22, 34, 0.75);
+
+  /* Signature accent: emerald + electric-violet duo */
+  --primary:        #00d97e;
+  --primary-mid:    #00b868;
+  --primary-light:  rgba(0, 217, 126, 0.12);
+  --accent:         #7c5af0;
+  --accent-light:   rgba(124, 90, 240, 0.12);
+
+  /* Typography */
+  --text:     #f0f0fa;
+  --muted:    #6b7080;
+
+  /* Borders — ultra-thin like Linear */
+  --border:          rgba(255, 255, 255, 0.07);
+  --border-solid:    rgba(255, 255, 255, 0.12);
+
+  /* Shadows — deep, diffuse */
+  --shadow:    0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5), 0 16px 40px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.6), 0 32px 64px rgba(0,0,0,0.5);
+
+  /* Glow accents */
+  --glow-green:  rgba(0, 217, 126, 0.25);
+  --glow-violet: rgba(124, 90, 240, 0.25);
+  --glow-blue:   rgba(56, 189, 248, 0.20);
+
+  /* Motion timing */
+  --spring:  cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Sidebar width refined */
+  --sw: 240px;
+  --radius: 14px;
+  --radius-xl: 20px;
+}
+
+/* ── 1. BASE RESET UPGRADES ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 217, 126, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 100% 80%, rgba(124, 90, 240, 0.05) 0%, transparent 60%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+  color: var(--text);
+}
+
+/* ── 2. TYPOGRAPHY — Premium font stack ────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap');
+
+h1, h2, h3, h4, h5, h6,
+.pt, .mt, .sb-logo h1, .setup-hero-h, .logo {
+  font-family: 'Geist', 'Space Grotesk', 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+}
+
+body, button, input, select, textarea {
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+/* Monospace numerics */
+.stat-v, .ov-rev-val, .report-stat-val,
+td.number, .mono, .revenue-val, .pin-metric-val {
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.03em;
+}
+
+/* ── 3. SIDEBAR — Premium SaaS sidebar like Linear ─────────────────────── */
+.sidebar {
+  background: rgba(6, 6, 10, 0.95) !important;
+  border-right: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  width: var(--sw) !important;
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 217, 126, 0.3) 30%,
+    rgba(124, 90, 240, 0.2) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.sb-logo {
+  padding: 20px 16px 16px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.sb-logo h1 {
+  font-size: 16px !important;
+  background: linear-gradient(135deg, #00d97e 0%, #38d9f5 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.sb-logo span {
+  color: rgba(255,255,255,0.28) !important;
+  font-size: 9px !important;
+  letter-spacing: 1.2px !important;
+  text-transform: uppercase !important;
+}
+
+.sb-logo-icon {
+  background: linear-gradient(135deg, rgba(0,217,126,0.15) 0%, rgba(124,90,240,0.15) 100%) !important;
+  border: 1px solid rgba(0,217,126,0.2) !important;
+  border-radius: 10px !important;
+}
+
+/* Nav labels */
+.nav-lbl {
+  font-size: 9px !important;
+  letter-spacing: 1.5px !important;
+  color: rgba(255,255,255,0.22) !important;
+  padding: 12px 12px 4px !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+}
+
+/* Nav items */
+.nav-item {
+  border-radius: 8px !important;
+  color: rgba(255,255,255,0.5) !important;
+  font-size: 13px !important;
+  font-weight: 450 !important;
+  padding: 7px 10px !important;
+  margin-bottom: 1px !important;
+  border: 1px solid transparent !important;
+  transition: all 0.15s var(--ease-out) !important;
+  transform: none !important;
+  letter-spacing: -0.01em !important;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.04) !important;
+  color: rgba(255,255,255,0.85) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  transform: none !important;
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(0,217,126,0.1) 0%, rgba(0,217,126,0.06) 100%) !important;
+  color: #00d97e !important;
+  border-color: rgba(0,217,126,0.18) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 0 0 1px rgba(0,217,126,0.08) inset !important;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 16px;
+  background: linear-gradient(180deg, #00d97e, #38d9f5);
+  border-radius: 0 2px 2px 0;
+}
+
+/* ── 4. MAIN CONTENT AREA ───────────────────────────────────────────────── */
+.main {
+  margin-left: var(--sw) !important;
+  padding: 32px 36px !important;
+  min-height: 100vh !important;
+}
+
+/* Page header */
+.ph {
+  margin-bottom: 32px !important;
+}
+
+.pt {
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.04em !important;
+  color: #f4f4f8 !important;
+  line-height: 1.15 !important;
+}
+
+.pt::after {
+  display: none !important;
+}
+
+.ps {
+  font-size: 13px !important;
+  color: var(--muted) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.01em !important;
+  margin-top: 4px !important;
+}
+
+/* ── 5. STAT CARDS — Aceternity-inspired glow cards ────────────────────── */
+.stat {
+  position: relative !important;
+  background: rgba(12, 12, 18, 0.85) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  border-top: none !important;
+  padding: 20px 22px !important;
+  overflow: hidden !important;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s var(--spring) !important;
+}
+
+/* Aceternity "border beam" — animated gradient top border */
+.stat::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 60% !important;
+  height: 1.5px !important;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent) !important;
+  animation: beam-slide 3s ease-in-out infinite !important;
+  z-index: 2 !important;
+}
+
+/* Aceternity "card spotlight" — radial glow on hover */
+.stat::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(0, 217, 126, 0.06) 0%,
+    transparent 70%
+  ) !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s !important;
+  pointer-events: none !important;
+  border-radius: inherit !important;
+  z-index: 1 !important;
+}
+
+.stat:hover::after {
+  opacity: 1 !important;
+}
+
+.stat:hover {
+  border-color: rgba(0, 217, 126, 0.2) !important;
+  box-shadow: 0 0 0 1px rgba(0,217,126,0.08), 0 8px 32px rgba(0,0,0,0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.stat-l {
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--muted) !important;
+  font-weight: 600 !important;
+}
+
+.stat-v {
+  font-size: clamp(22px, 2.2vw, 30px) !important;
+  font-weight: 700 !important;
+  color: #f0f0fa !important;
+  letter-spacing: -0.04em !important;
+  margin-top: 8px !important;
+  line-height: 1 !important;
+}
+
+/* ── 6. CARDS — tcard, ov-card, report-card ─────────────────────────────── */
+.tcard, .ov-card, .report-card, .ws-report-card, .pin-card {
+  background: rgba(10, 10, 16, 0.90) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--shadow) !important;
+  overflow: hidden !important;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.2s var(--spring) !important;
+  position: relative !important;
+}
+
+.tcard:hover, .ov-card:hover, .report-card:hover, .ws-report-card:hover {
+  border-color: rgba(255,255,255,0.12) !important;
+  box-shadow: 0 0 0 1px rgba(0,217,126,0.06), 0 12px 40px rgba(0,0,0,0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Card header separator — subtle gradient */
+.ov-card-h, .ttoolbar {
+  background: rgba(255,255,255,0.018) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.ov-card-h h3 {
+  font-size: 14px !important;
+  letter-spacing: -0.02em !important;
+  font-weight: 600 !important;
+  color: rgba(240,240,250,0.9) !important;
+}
+
+/* ── 7. BUTTONS — Premium CTAs ──────────────────────────────────────────── */
+.btn-p, .setup-btn {
+  background: linear-gradient(135deg, #00d97e 0%, #00b868 100%) !important;
+  color: #050508 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: -0.01em !important;
+  border-radius: 10px !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,217,126,0.3) inset !important;
+  transition: all 0.15s var(--ease-out) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.btn-p::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.btn-p:hover, .setup-btn:hover {
+  box-shadow: 0 0 20px rgba(0,217,126,0.35), 0 4px 12px rgba(0,0,0,0.3) !important;
+  transform: translateY(-1px) !important;
+  filter: brightness(1.08) !important;
+}
+
+.btn-p:active, .setup-btn:active {
+  transform: translateY(0) scale(0.98) !important;
+  box-shadow: none !important;
+}
+
+/* Secondary button */
+.btn-c, .btn-e, .btn-d, .ov-quick-btn, .fin-period {
+  border-radius: 9px !important;
+  font-weight: 500 !important;
+  font-size: 12.5px !important;
+  letter-spacing: -0.01em !important;
+  transition: all 0.15s !important;
+}
+
+.ov-quick-btn {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: rgba(240,240,250,0.7) !important;
+}
+
+.ov-quick-btn:hover {
+  background: rgba(255,255,255,0.07) !important;
+  border-color: rgba(0,217,126,0.2) !important;
+  color: #00d97e !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+}
+
+/* ── 8. TABLE — Clean data tables like Stripe ───────────────────────────── */
+.tcard {
+  border-radius: 16px !important;
+}
+
+.ttoolbar {
+  padding: 12px 16px !important;
+}
+
+th {
+  background: rgba(8, 8, 14, 0.95) !important;
+  color: rgba(107, 112, 128, 0.9) !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 11px 14px !important;
+}
+
+td {
+  padding: 12px 14px !important;
+  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+  color: rgba(240,240,250,0.88) !important;
+  font-size: 13px !important;
+}
+
+tr:last-child td {
+  border-bottom: none !important;
+}
+
+tr:hover td {
+  background: rgba(255,255,255,0.025) !important;
+}
+
+tr:nth-child(even) td {
+  background: rgba(255,255,255,0.012) !important;
+}
+
+/* Search input */
+.search {
+  background: rgba(8, 8, 14, 0.8) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 9px !important;
+  color: var(--text) !important;
+  font-size: 13px !important;
+  padding: 9px 14px !important;
+}
+
+.search:focus {
+  outline: none !important;
+  border-color: rgba(0,217,126,0.35) !important;
+  box-shadow: 0 0 0 3px rgba(0,217,126,0.08) !important;
+  background: rgba(10,10,18,0.95) !important;
+}
+
+/* ── 9. FORM INPUTS ──────────────────────────────────────────────────────── */
+.fg input, .fg select, .fg textarea,
+.fr input, .fr select,
+.slicer-select, .slicer-input, input[type="date"] {
+  background: rgba(8, 8, 14, 0.7) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 9px !important;
+  color: var(--text) !important;
+  font-size: 13px !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+
+.fg input:focus, .fg select:focus, .fg textarea:focus,
+.fr input:focus, .fr select:focus,
+.slicer-select:focus, .slicer-input:focus, input[type="date"]:focus {
+  border-color: rgba(0,217,126,0.4) !important;
+  box-shadow: 0 0 0 3px rgba(0,217,126,0.08) !important;
+  background: rgba(10,10,18,0.95) !important;
+  outline: none !important;
+}
+
+/* ── 10. MODAL — Premium overlay like Vercel ────────────────────────────── */
+.overlay {
+  background: rgba(2, 2, 6, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.modal {
+  background: rgba(10, 10, 16, 0.97) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 32px 64px rgba(0,0,0,0.7) !important;
+  border-top: 1.5px solid rgba(0,217,126,0.3) !important;
+  backdrop-filter: blur(32px) !important;
+  -webkit-backdrop-filter: blur(32px) !important;
+}
+
+.mh {
+  border-bottom: 1px solid var(--border) !important;
+  padding: 20px 24px 16px !important;
+}
+
+.mt {
+  font-size: 17px !important;
+  letter-spacing: -0.03em !important;
+}
+
+/* ── 11. BADGE SYSTEM ────────────────────────────────────────────────────── */
+.badge {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  padding: 3px 9px !important;
+  border-radius: 6px !important;
+  letter-spacing: 0.02em !important;
+}
+
+.bg { background: rgba(0,217,126,0.1) !important; color: #00d97e !important; border: 1px solid rgba(0,217,126,0.2) !important; }
+.br { background: rgba(239,68,68,0.1) !important; color: #f87171 !important; border: 1px solid rgba(239,68,68,0.2) !important; }
+.by { background: rgba(245,158,11,0.1) !important; color: #fbbf24 !important; border: 1px solid rgba(245,158,11,0.2) !important; }
+.bb { background: rgba(124,90,240,0.12) !important; color: #a78bfa !important; border: 1px solid rgba(124,90,240,0.25) !important; }
+
+/* ── 12. LOGIN SCREEN — Funded startup hero login ───────────────────────── */
+#login-screen {
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,217,126,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 40% at 80% 80%, rgba(124,90,240,0.06) 0%, transparent 55%),
+    #050508 !important;
+}
+
+#login-screen > div {
+  background: rgba(10, 10, 18, 0.92) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 22px !important;
+  box-shadow:
+    0 0 0 1px rgba(0,217,126,0.06),
+    0 32px 80px rgba(0,0,0,0.7),
+    0 0 60px rgba(0,217,126,0.04) !important;
+  backdrop-filter: blur(32px) !important;
+  -webkit-backdrop-filter: blur(32px) !important;
+}
+
+/* Shimmer text effect for app name */
+.login-logo-text {
+  background: linear-gradient(
+    90deg,
+    #f0f0fa 0%,
+    #00d97e 40%,
+    #38d9f5 60%,
+    #f0f0fa 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer-text 4s linear infinite;
+}
+
+/* ── 13. LOADING SPLASH — Premium animated ───────────────────────────────── */
+#app-loading {
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 30%, rgba(0,217,126,0.06) 0%, transparent 60%),
+    #050508 !important;
+}
+
+/* ── 14. TOAST — Minimal like Linear ────────────────────────────────────── */
+.toast {
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08) !important;
+  padding: 12px 18px !important;
+}
+
+.toast.success {
+  background: linear-gradient(135deg, rgba(0,217,126,0.15) 0%, rgba(0,184,104,0.1) 100%) !important;
+  border: 1px solid rgba(0,217,126,0.3) !important;
+  color: #00d97e !important;
+}
+
+.toast.error {
+  background: linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.1) 100%) !important;
+  border: 1px solid rgba(239,68,68,0.3) !important;
+  color: #f87171 !important;
+}
+
+/* ── 15. SLICER / FILTER BARS ────────────────────────────────────────────── */
+.slicer-bar {
+  background: rgba(10, 10, 16, 0.85) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--shadow) !important;
+}
+
+.slicer-chip {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  color: rgba(240,240,250,0.55) !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  transition: all 0.14s !important;
+}
+
+.slicer-chip:hover:not(.active) {
+  background: rgba(255,255,255,0.07) !important;
+  color: rgba(240,240,250,0.85) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  transform: none !important;
+}
+
+.slicer-chip.active {
+  background: rgba(0,217,126,0.1) !important;
+  color: #00d97e !important;
+  border-color: rgba(0,217,126,0.25) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 12px rgba(0,217,126,0.1) !important;
+}
+
+.fin-period.active {
+  background: rgba(0,217,126,0.1) !important;
+  color: #00d97e !important;
+  border-color: rgba(0,217,126,0.25) !important;
+  box-shadow: 0 0 12px rgba(0,217,126,0.1) !important;
+  font-weight: 700 !important;
+}
+
+/* ── 16. HEALTH SCORE CARD — Glow treatment ─────────────────────────────── */
+.hs-card {
+  background: linear-gradient(
+    135deg,
+    rgba(0,217,126,0.08) 0%,
+    rgba(10,10,16,0.95) 50%,
+    rgba(124,90,240,0.06) 100%
+  ) !important;
+  border: 1px solid rgba(0,217,126,0.15) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 0 30px rgba(0,217,126,0.06),
+    0 12px 32px rgba(0,0,0,0.4) !important;
+}
+
+.hs-score-big {
+  color: #00d97e !important;
+  font-size: 42px !important;
+  letter-spacing: -0.05em !important;
+}
+
+/* ── 17. REVENUE CARDS ───────────────────────────────────────────────────── */
+.ov-rev-card.inc {
+  background: rgba(0,217,126,0.06) !important;
+  border-color: rgba(0,217,126,0.15) !important;
+}
+.ov-rev-card.exp {
+  background: rgba(239,68,68,0.06) !important;
+  border-color: rgba(239,68,68,0.15) !important;
+}
+.ov-rev-card.net {
+  background: rgba(124,90,240,0.06) !important;
+  border-color: rgba(124,90,240,0.15) !important;
+}
+.ov-rev-card.inc .ov-rev-val { color: #00d97e !important; }
+.ov-rev-card.net .ov-rev-val { color: #a78bfa !important; }
+
+/* ── 18. TABS ────────────────────────────────────────────────────────────── */
+.tab-btn, .lead-tab, .contest-type-chip, .ws-tab-btn,
+.contest-detail-tab, .btp-subtab {
+  transition: all 0.14s !important;
+  border-radius: 8px !important;
+}
+
+.tab-btn.active, .lead-tab.active {
+  background: rgba(0,217,126,0.1) !important;
+  color: #00d97e !important;
+  border-color: rgba(0,217,126,0.2) !important;
+}
+
+.ws-tab-btn.active {
+  color: #00d97e !important;
+  border-bottom-color: #00d97e !important;
+}
+
+/* ── 19. PROGRESS BARS ───────────────────────────────────────────────────── */
+.pin-progress, .cp-bar-wrap, .goal-progress-wrap,
+.payment-bar, .contest-days-bar {
+  background: rgba(255,255,255,0.06) !important;
+  border-radius: 99px !important;
+}
+
+.pin-fill, .cp-bar, .goal-progress-fill {
+  background: linear-gradient(90deg, #00d97e, #38d9f5) !important;
+  box-shadow: 0 0 10px rgba(0,217,126,0.3) !important;
+}
+
+/* ── 20. SCROLLBAR — Minimal ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px !important;
+  height: 4px !important;
+}
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08) !important;
+  border-radius: 99px !important;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,217,126,0.25) !important;
+}
+
+/* ── 21. MOTION PRIMITIVES — Section entrance animations ─────────────────── */
+
+/* Stagger entrance for stat cards */
+@keyframes fade-up-in {
+  0%   { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Section active transition — spring-based */
+.sec.active {
+  animation: fade-up-in 0.32s var(--spring) both !important;
+}
+
+/* Stagger children */
+.stats .stat:nth-child(1) { animation: fade-up-in 0.3s 0.02s var(--spring) both; }
+.stats .stat:nth-child(2) { animation: fade-up-in 0.3s 0.06s var(--spring) both; }
+.stats .stat:nth-child(3) { animation: fade-up-in 0.3s 0.10s var(--spring) both; }
+.stats .stat:nth-child(4) { animation: fade-up-in 0.3s 0.14s var(--spring) both; }
+.stats .stat:nth-child(5) { animation: fade-up-in 0.3s 0.18s var(--spring) both; }
+.stats .stat:nth-child(6) { animation: fade-up-in 0.3s 0.22s var(--spring) both; }
+
+/* ── 22. ACETERNITY BORDER BEAM ANIMATION ────────────────────────────────── */
+@keyframes beam-slide {
+  0%   { left: -60%; }
+  100% { left: 160%; }
+}
+
+/* Rotating glow border for key stat cards */
+.stat:first-child {
+  background: rgba(10, 10, 16, 0.9) !important;
+}
+
+/* ── 23. SHIMMER TEXT (ACETERNITY) ───────────────────────────────────────── */
+@keyframes shimmer-text {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* ── 24. MOTION COUNTER ANIMATION ────────────────────────────────────────── */
+@keyframes count-in {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.stat-v {
+  animation: count-in 0.4s 0.2s var(--spring) both;
+}
+
+/* ── 25. MODAL SPRING ENTRANCE ────────────────────────────────────────────── */
+@keyframes modal-spring {
+  0%   { opacity: 0; transform: translateY(24px) scale(0.95); }
+  60%  { opacity: 1; }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.overlay.open .modal {
+  animation: modal-spring 0.35s var(--spring) both !important;
+}
+
+/* ── 26. ACETERNITY CARD GLOW HOVER (JS-assisted spotlight) ──────────────── */
+/* CSS variables --mouse-x and --mouse-y are set by pulseiq-premium.js */
+.stat, .ov-card, .tcard, .report-card {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+}
+
+/* ── 27. STATUS DOT PULSES ────────────────────────────────────────────────── */
+@keyframes status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,217,126,0.4); }
+  50%       { box-shadow: 0 0 0 5px rgba(0,217,126,0); }
+}
+
+/* ── 28. NOTIFICATION BADGE ──────────────────────────────────────────────── */
+.notif-badge {
+  font-size: 9.5px !important;
+  padding: 2px 7px !important;
+  border-radius: 5px !important;
+}
+
+/* ── 29. SIDEBAR CENTER SWITCH ────────────────────────────────────────────── */
+.sb-center-switch {
+  padding: 10px 14px !important;
+  border-top: 1px solid var(--border) !important;
+}
+
+.sb-center-switch select {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 8px !important;
+  color: rgba(240,240,250,0.7) !important;
+  font-size: 12px !important;
+}
+
+/* ── 30. DISC / FOOT BUTTONS ─────────────────────────────────────────────── */
+.disc-btn {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  border-radius: 8px !important;
+  color: rgba(255,255,255,0.4) !important;
+  font-size: 13px !important;
+  transition: all 0.14s !important;
+}
+
+.disc-btn:hover {
+  background: rgba(255,255,255,0.06) !important;
+  color: rgba(255,255,255,0.75) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+/* ── 31. EMPTY STATES ────────────────────────────────────────────────────── */
+.empty {
+  color: var(--muted) !important;
+}
+
+.empty .ei, .ov-empty-icon {
+  animation: none !important;
+  font-size: 36px !important;
+  opacity: 0.35 !important;
+}
+
+/* ── 32. SLICER RESET ─────────────────────────────────────────────────────── */
+.slicer-reset {
+  background: rgba(239,68,68,0.08) !important;
+  border-color: rgba(239,68,68,0.15) !important;
+  color: #f87171 !important;
+  border-radius: 8px !important;
+}
+
+/* ── 33. MOBILE OVERRIDES ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .main {
+    padding: 56px 14px 28px !important;
+  }
+
+  .stat::before {
+    animation: none !important;
+  }
+}
+
+/* ── 34. BODY COMPOSITION CARDS ───────────────────────────────────────────── */
+.body-profile {
+  background: linear-gradient(135deg, rgba(0,217,126,0.15) 0%, rgba(0,184,104,0.08) 100%) !important;
+  border: 1px solid rgba(0,217,126,0.2) !important;
+  border-radius: 16px !important;
+}
+
+/* ── 35. PREMIUM INLINE GLOBAL ACCENTS ────────────────────────────────────── */
+
+/* Green success accent */
+.text-success, .ov-link { color: #00d97e !important; }
+
+/* Inline stat icon glow */
+.stat-ic {
+  font-size: 20px !important;
+  opacity: 0.8 !important;
+  margin-bottom: 10px !important;
+  display: block !important;
+}
+
+/* ── 36. "FUNDED STARTUP" GLOW RING on brand logo ─────────────────────────── */
+.sb-logo-icon {
+  box-shadow: 0 0 16px rgba(0,217,126,0.15), 0 0 0 1px rgba(0,217,126,0.12) !important;
+  animation: logo-breathe 4s ease-in-out infinite;
+}
+
+@keyframes logo-breathe {
+  0%, 100% { box-shadow: 0 0 16px rgba(0,217,126,0.15), 0 0 0 1px rgba(0,217,126,0.12); }
+  50%       { box-shadow: 0 0 28px rgba(0,217,126,0.30), 0 0 0 1px rgba(0,217,126,0.22); }
+}
+
+/* ── 37. ACETERNITY "SHIMMER BUTTON" EFFECT ──────────────────────────────── */
+@keyframes btn-shimmer {
+  0%   { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(300%) skewX(-15deg); }
+}
+
+.btn-p::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: skewX(-15deg);
+  animation: btn-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── 38. AGENT CARDS ──────────────────────────────────────────────────────── */
+.agent-card {
+  background: rgba(10,10,16,0.88) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 14px !important;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.2s var(--spring) !important;
+}
+
+.agent-card:hover {
+  border-color: rgba(0,217,126,0.2) !important;
+  box-shadow: 0 0 20px rgba(0,217,126,0.07), 0 8px 32px rgba(0,0,0,0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.agent-run-btn {
+  background: linear-gradient(135deg, #7c5af0, #9c6bf8) !important;
+  border-radius: 9px !important;
+  font-size: 12.5px !important;
+  box-shadow: 0 0 16px rgba(124,90,240,0.2) !important;
+}
+
+.agent-run-btn:hover {
+  opacity: 1 !important;
+  filter: brightness(1.1) !important;
+  box-shadow: 0 0 24px rgba(124,90,240,0.35) !important;
+}
+
+/* ── 39. LOYALTY BANNERS ─────────────────────────────────────────────────── */
+.loyalty-gold   { background: linear-gradient(135deg, #92700a, #d4a21a, #92700a) !important; }
+.loyalty-purple { background: linear-gradient(135deg, #5b21b6, #7c5af0) !important; }
+
+/* ── 40. FOCUS VISIBLE — accessibility ───────────────────────────────────── */
+:focus-visible {
+  outline: none !important;
+  border-color: rgba(0,217,126,0.5) !important;
+  box-shadow: 0 0 0 3px rgba(0,217,126,0.12) !important;
+}
+
+/* ── 41. WA (WhatsApp) BUTTON ─────────────────────────────────────────────── */
+.wa-btn {
+  background: #075e54 !important;
+  border-radius: 7px !important;
+  font-size: 11.5px !important;
+}
+.wa-btn:hover { background: #128c7e !important; }
+
+/* ── 42. PAGE TITLE GRADIENT ACCENT ──────────────────────────────────────── */
+.pt {
+  background: linear-gradient(135deg, #f0f0fa 0%, rgba(240,240,250,0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Fallback for non-webkit */
+@supports not (-webkit-background-clip: text) {
+  .pt { color: #f0f0fa !important; }
+}
