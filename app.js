@@ -16899,33 +16899,13 @@ function downloadFinancialReportPDF(targetYm) {
   var convRate = walkData.total > 0 ? Math.round((walkData.converted / walkData.total) * 100) : 0;
   var isNetLoss = net < 0;
 
-  function fmtDec(n) {
-    var val = Math.abs(Number(n) || 0);
-    var parts = val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).split('.');
-    return '₹' + parts[0] + '<span style="font-size:0.68em;font-weight:700;opacity:0.85;margin-left:1px">.' + parts[1] + '</span>';
+  function fmt(n) {
+    return '₹' + Math.abs(Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  // ── KPI cards ──
-  var kpiCards = [
-    { label: 'Total Revenue', value: fmtDec(monthData.totalInc), color: '#10b981', bg: '#f0fdf4', icon: '💰', desc: 'Total Inflow' },
-    { label: 'Total Expenses', value: fmtDec(monthData.totalExp), color: '#f43f5e', bg: '#fef2f2', icon: '💸', desc: 'Total Outflow' },
-    { label: isNetLoss ? 'Net Loss' : 'Net Profit', value: (isNetLoss ? '-' : '+') + fmtDec(net), color: isNetLoss ? '#dc2626' : '#059669', bg: isNetLoss ? '#fef2f2' : '#f0fdf4', icon: isNetLoss ? '🔴' : '📈', desc: isNetLoss ? 'Deficit' : 'Surplus' },
-    { label: 'Profit Margin', value: margin + '%', color: '#8b5cf6', bg: '#f5f3ff', icon: '📊', desc: isNetLoss ? 'Negative Margin' : 'Healthy Margin' },
-    { label: 'Total Walk-ins', value: walkData.total, color: '#f97316', bg: '#fff7ed', icon: '🚶', desc: 'Visitors' },
-    { label: 'Converted', value: walkData.converted + ' <span style="font-size:14px;font-weight:700;opacity:0.85">(' + convRate + '%)</span>', color: '#06b6d4', bg: '#ecfeff', icon: '✅', desc: convRate + '% Conversion Rate' },
-  ].map(function(c) {
-    return '<div style="background:' + c.bg + ';border-radius:16px;padding:20px 22px;border:1.5px solid ' + c.color + '33;box-shadow:0 4px 16px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between">' +
-      '<div>' +
-        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:' + c.color + ';margin-bottom:8px">' + c.icon + ' ' + c.label + '</div>' +
-        '<div style="font-size:22px;font-weight:900;color:' + c.color + ';line-height:1.2;white-space:nowrap">' + c.value + '</div>' +
-      '</div>' +
-      '<div style="font-size:11px;font-weight:600;color:' + c.color + 'cc;margin-top:10px">' + c.desc + '</div>' +
-    '</div>';
-  }).join('');
-
-  // ── Walk-in outcome table ──
+  // ── Walk-in outcome table rows ──
   var OUT_LABELS = { checkup: '🔬 Free Checkup', trial: '📦 Trial Pack', product_sale: '🛒 Product Sale', other: 'Other' };
-  var OUT_COLORS = { checkup: '#3b82f6', trial: '#f59e0b', product_sale: '#10b981', other: '#6b7280' };
+  var OUT_COLORS = { checkup: '#146357', trial: '#d97706', product_sale: '#059669', other: '#6b7280' };
   var outCounts = {}; var outRevenue = {};
   allWalk.forEach(function(w) {
     var key = w.outcome || 'other';
@@ -16934,55 +16914,54 @@ function downloadFinancialReportPDF(targetYm) {
   });
   var walkTableRows = Object.entries(outCounts).map(function(e) {
     var pct2 = walkData.total > 0 ? ((e[1] / walkData.total) * 100).toFixed(0) : 0;
-    return '<tr>' +
-      '<td style="padding:10px 14px;font-weight:600;color:#374151">' + (OUT_LABELS[e[0]] || e[0]) + '</td>' +
+    return '<tr style="border-bottom:1px solid var(--teal-100)">' +
+      '<td style="padding:10px 14px;font-weight:600;color:#1f2937">' + (OUT_LABELS[e[0]] || e[0]) + '</td>' +
       '<td style="padding:10px 14px;text-align:center;font-weight:700;color:' + (OUT_COLORS[e[0]] || '#6b7280') + '">' + e[1] + '</td>' +
-      '<td style="padding:10px 14px;text-align:center;color:#6b7280">' + pct2 + '%' +
+      '<td style="padding:10px 14px;text-align:center;color:#4b5563">' + pct2 + '%' +
         '<div style="height:4px;border-radius:2px;background:#e5e7eb;margin-top:4px"><div style="height:4px;border-radius:2px;background:' + (OUT_COLORS[e[0]] || '#6b7280') + ';width:' + pct2 + '%"></div></div>' +
       '</td>' +
-      '<td style="padding:10px 14px;text-align:right;font-weight:600;color:#374151">' + (outRevenue[e[0]] > 0 ? fmt(outRevenue[e[0]]) : '—') + '</td>' +
+      '<td style="padding:10px 14px;text-align:right;font-weight:700;color:#047857;font-variant-numeric:tabular-nums">' + (outRevenue[e[0]] > 0 ? fmt(outRevenue[e[0]]) : '—') + '</td>' +
     '</tr>';
   }).join('');
 
-  // ── Day-by-day table ──
+  // ── Day-by-day table rows ──
   var days = Object.keys(monthData.days).sort();
   var dayRows = days.map(function(day, i) {
     var dd = monthData.days[day];
     var dayNet = dd.inc - dd.exp;
     var dt = new Date(day + 'T00:00:00');
     var dayLabel = dt.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
-    var rowBg = i % 2 === 0 ? '#f9fafb' : '#fff';
-    var netColor = dayNet >= 0 ? '#10b981' : '#f43f5e';
-    // Inline bar
+    var rowBg = i % 2 === 0 ? '#ffffff' : '#f2f9f7';
+    var netColor = dayNet >= 0 ? '#047857' : '#b91c1c';
     var barW = monthData.totalInc > 0 ? Math.min(100, Math.round((dd.inc / monthData.totalInc) * 100)) : 0;
-    return '<tr style="background:' + rowBg + '">' +
-      '<td style="padding:9px 12px;font-size:13px;color:#374151;font-weight:600">' + dayLabel + '</td>' +
-      '<td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:700;color:#10b981">' + (dd.inc > 0 ? fmt(dd.inc) : '—') + '</td>' +
-      '<td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:700;color:#f43f5e">' + (dd.exp > 0 ? fmt(dd.exp) : '—') + '</td>' +
-      '<td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:800;color:' + netColor + '">' + fmt(dayNet) + '</td>' +
-      '<td style="padding:9px 12px">' +
-        '<div style="height:6px;border-radius:3px;background:#e5e7eb"><div style="height:6px;border-radius:3px;background:linear-gradient(90deg,#10b981,#3b82f6);width:' + barW + '%"></div></div>' +
+    return '<tr style="background:' + rowBg + ';border-bottom:1px solid #e5e7eb">' +
+      '<td style="padding:10px 14px;font-size:13px;color:#1f2937;font-weight:600">' + dayLabel + '</td>' +
+      '<td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:700;color:#047857;font-variant-numeric:tabular-nums">' + (dd.inc > 0 ? fmt(dd.inc) : '—') + '</td>' +
+      '<td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:700;color:#b91c1c;font-variant-numeric:tabular-nums">' + (dd.exp > 0 ? fmt(dd.exp) : '—') + '</td>' +
+      '<td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:800;color:' + netColor + ';font-variant-numeric:tabular-nums">' + (dayNet < 0 ? '-' : '') + fmt(dayNet) + '</td>' +
+      '<td style="padding:10px 14px">' +
+        '<div style="height:6px;border-radius:3px;background:#e5e7eb"><div style="height:6px;border-radius:3px;background:linear-gradient(90deg,#059669,#146357);width:' + barW + '%"></div></div>' +
       '</td>' +
-      '<td style="padding:9px 12px;font-size:11px;color:#9ca3af;max-width:180px">' +
+      '<td style="padding:10px 14px;font-size:12px;color:#6b7280;max-width:220px">' +
         dd.rows.slice(0, 3).map(function(r){ return r.description || r.category || r.type; }).join(', ') +
         (dd.rows.length > 3 ? ' +' + (dd.rows.length - 3) + ' more' : '') +
       '</td>' +
     '</tr>';
   }).join('');
 
-  // ── Monthly P&L mini-trend (last 6 months) ──
+  // ── Monthly P&L trend ──
   var trendRows = report.months.slice(0, 6).reverse().map(function(m) {
     var md = report.data[m] || { totalInc: 0, totalExp: 0 };
     var mNet = md.totalInc - md.totalExp;
     var mDate = new Date(m + '-01');
     var mLabel = mDate.toLocaleString('default', { month: 'short', year: '2-digit' });
-    var netCol = mNet >= 0 ? '#10b981' : '#f43f5e';
-    var highlight = m === ym ? 'background:#eff6ff;font-weight:800;' : '';
+    var netCol = mNet >= 0 ? '#047857' : '#b91c1c';
+    var highlight = m === ym ? 'background:#e6f4f1;font-weight:800;' : '';
     return '<tr style="' + highlight + 'border-bottom:1px solid #e5e7eb">' +
-      '<td style="padding:8px 12px;font-size:13px;color:#374151;font-weight:600">' + mLabel + (m === ym ? ' ◀ this report' : '') + '</td>' +
-      '<td style="padding:8px 12px;text-align:right;font-size:13px;color:#10b981;font-weight:700">' + fmt(md.totalInc) + '</td>' +
-      '<td style="padding:8px 12px;text-align:right;font-size:13px;color:#f43f5e;font-weight:700">' + fmt(md.totalExp) + '</td>' +
-      '<td style="padding:8px 12px;text-align:right;font-size:13px;color:' + netCol + ';font-weight:700">' + fmt(mNet) + '</td>' +
+      '<td style="padding:10px 14px;font-size:13px;color:#1f2937;font-weight:600">' + mLabel + (m === ym ? ' ◀ this report' : '') + '</td>' +
+      '<td style="padding:10px 14px;text-align:right;font-size:13px;color:#047857;font-weight:700;font-variant-numeric:tabular-nums">' + fmt(md.totalInc) + '</td>' +
+      '<td style="padding:10px 14px;text-align:right;font-size:13px;color:#b91c1c;font-weight:700;font-variant-numeric:tabular-nums">' + fmt(md.totalExp) + '</td>' +
+      '<td style="padding:10px 14px;text-align:right;font-size:13px;color:' + netCol + ';font-weight:800;font-variant-numeric:tabular-nums">' + (mNet < 0 ? '-' : '') + fmt(mNet) + '</td>' +
     '</tr>';
   }).join('');
 
@@ -16991,94 +16970,147 @@ function downloadFinancialReportPDF(targetYm) {
 
   var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>Financial Report — ' + monthLabel + ' | ' + orgName + '</title>' +
-    '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f1f5f9;color:#1f2937;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
-    '@media print{body{background:#fff}.no-print{display:none!important}@page{margin:15mm;size:A4}}' +
-    '.page{max-width:960px;margin:0 auto;padding:24px}' +
-    'table{width:100%;border-collapse:collapse}th{padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}' +
-    'h2{font-size:16px;font-weight:800;color:#111827;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e5e7eb}' +
-    '.section{background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 1px 8px rgba(0,0,0,0.08)}' +
-    '.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}' +
-    'button.print-btn{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}' +
-    'button.print-btn:hover{opacity:.9}' +
+    '<style>' +
+      ':root{' +
+        '--teal-900:#0b3d3a;--teal-800:#0f4c46;--teal-700:#146357;--teal-600:#1b7a68;--teal-500:#2a9d8f;' +
+        '--teal-100:#e6f4f1;--teal-50:#f2f9f7;--emerald:#059669;--emerald-dark:#047857;--rose:#dc2626;--rose-dark:#b91c1c;' +
+      '}' +
+      '*{box-sizing:border-box;margin:0;padding:0}' +
+      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f8fafc;color:#1f2937;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      '@media print{' +
+        'body{background:#fff}' +
+        '.no-print{display:none!important}' +
+        '@page{margin:15mm;size:A4}' +
+        'tr,.section,.hero-card,.stat-card{break-inside:avoid;page-break-inside:avoid}' +
+      '}' +
+      '.page{max-width:980px;margin:0 auto;padding:24px}' +
+      'table{width:100%;border-collapse:collapse}' +
+      'th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}' +
+      'h2{font-size:16px;font-weight:800;color:var(--teal-900);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--teal-100)}' +
+      '.section{background:#fff;border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid var(--teal-100);box-shadow:0 2px 10px rgba(11,61,58,0.04)}' +
+      'button.print-btn{background:linear-gradient(135deg,var(--teal-700),var(--teal-500));color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}' +
+      'button.print-btn:hover{opacity:.9}' +
     '</style></head><body>' +
     '<div class="page">' +
 
-    // ── Cover header ──
-    '<div style="background:linear-gradient(135deg,#1e3a5f,#0f2027,#2c5364);border-radius:20px;padding:32px;margin-bottom:20px;color:#fff;position:relative;overflow:hidden">' +
-      '<div style="position:absolute;right:-20px;top:-20px;width:200px;height:200px;background:rgba(255,255,255,0.04);border-radius:50%"></div>' +
-      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.5);margin-bottom:8px">MONTHLY FINANCIAL REPORT</div>' +
-      '<div style="font-size:32px;font-weight:900;letter-spacing:-1px">' + monthLabel + '</div>' +
-      '<div style="font-size:15px;color:rgba(255,255,255,0.7);margin-top:4px">📍 ' + orgName + '</div>' +
-      '<div style="margin-top:20px;display:flex;gap:20px;flex-wrap:wrap">' +
-        '<div><div style="font-size:11px;color:rgba(255,255,255,0.5)">GENERATED ON</div><div style="font-size:14px;font-weight:700">' + now.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) + '</div></div>' +
-        '<div><div style="font-size:11px;color:rgba(255,255,255,0.5)">ACTIVE DAYS</div><div style="font-size:14px;font-weight:700">' + days.length + ' days</div></div>' +
-        '<div><div style="font-size:11px;color:rgba(255,255,255,0.5)">HEALTH</div><div style="font-size:14px;font-weight:700">' + (net >= 0 ? '🟢 Profitable' : '🔴 Loss') + '</div></div>' +
+    // ── 1. Header band ──
+    '<div style="background:linear-gradient(135deg,var(--teal-900),var(--teal-700) 55%,var(--teal-500));border-radius:20px;padding:32px;margin-bottom:24px;color:#fff;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(11,61,58,0.15)">' +
+      '<div style="position:absolute;right:-30px;top:-30px;width:220px;height:220px;background:rgba(255,255,255,0.05);border-radius:50%"></div>' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.7);margin-bottom:8px">MONTHLY FINANCIAL STATEMENT</div>' +
+      '<div style="font-size:34px;font-weight:900;letter-spacing:-1px">' + monthLabel + '</div>' +
+      '<div style="font-size:15px;color:rgba(255,255,255,0.85);margin-top:4px">📍 ' + orgName + '</div>' +
+      '<div style="margin-top:20px;display:flex;gap:24px;flex-wrap:wrap">' +
+        '<div><div style="font-size:11px;color:rgba(255,255,255,0.6)">GENERATED ON</div><div style="font-size:14px;font-weight:700">' + now.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) + '</div></div>' +
+        '<div><div style="font-size:11px;color:rgba(255,255,255,0.6)">ACTIVE DAYS</div><div style="font-size:14px;font-weight:700">' + days.length + ' days</div></div>' +
+        '<div><div style="font-size:11px;color:rgba(255,255,255,0.6)">FINANCIAL HEALTH</div><div style="font-size:14px;font-weight:700">' + (net >= 0 ? '🟢 Surplus / Profitable' : '🔴 Deficit / Net Loss') + '</div></div>' +
       '</div>' +
       '<div class="no-print" style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">' +
         '<button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>' +
-        '<button class="print-btn" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(4px)" onclick="window.close()">✕ Close</button>' +
+        '<button class="print-btn" style="background:rgba(255,255,255,0.15);backdrop-filter:blur(4px)" onclick="window.close()">✕ Close</button>' +
       '</div>' +
     '</div>' +
 
-    // ── KPI grid ──
-    '<div class="section"><h2>📊 Financial Summary</h2>' +
-      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">' + kpiCards + '</div>' +
+    // ── 2. Summary Section — 3 Hero Cards ──
+    '<div class="section"><h2>📊 Financial Overview</h2>' +
+      // 3 Hero cards
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px">' +
+        // Total Income
+        '<div class="hero-card" style="background:linear-gradient(135deg,var(--emerald),var(--emerald-dark));border-radius:16px;padding:24px;color:#fff;box-shadow:0 4px 14px rgba(5,150,105,0.2)">' +
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.9;margin-bottom:8px">💰 Total Revenue</div>' +
+          '<div style="font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1">' + fmt(monthData.totalInc) + '</div>' +
+          '<div style="font-size:11px;opacity:0.85;margin-top:10px;font-weight:600">Total Monthly Inflow</div>' +
+        '</div>' +
+        // Total Expense
+        '<div class="hero-card" style="background:linear-gradient(135deg,var(--rose),var(--rose-dark));border-radius:16px;padding:24px;color:#fff;box-shadow:0 4px 14px rgba(220,38,38,0.2)">' +
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.9;margin-bottom:8px">💸 Total Expenses</div>' +
+          '<div style="font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1">' + fmt(monthData.totalExp) + '</div>' +
+          '<div style="font-size:11px;opacity:0.85;margin-top:10px;font-weight:600">Total Monthly Outflow</div>' +
+        '</div>' +
+        // Net Profit / Net Loss
+        '<div class="hero-card" style="background:' + (isNetLoss ? 'linear-gradient(135deg,var(--rose-dark),#991b1b)' : 'linear-gradient(135deg,var(--teal-800),var(--teal-900))') + ';border-radius:16px;padding:24px;color:#fff;box-shadow:0 4px 14px rgba(15,76,70,0.2)">' +
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.9;margin-bottom:8px">' + (isNetLoss ? '🔴 Net Loss' : '📈 Net Profit') + '</div>' +
+          '<div style="font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1">' + (isNetLoss ? '-' : '+') + fmt(net) + '</div>' +
+          '<div style="font-size:11px;opacity:0.85;margin-top:10px;font-weight:600">' + (isNetLoss ? 'Monthly Operating Deficit' : 'Net Operating Profit') + '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // 3 Smaller stat cards below
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">' +
+        '<div class="stat-card" style="background:var(--teal-50);border:1px solid var(--teal-100);border-radius:12px;padding:16px 20px">' +
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--teal-700);margin-bottom:4px">📊 Profit Margin</div>' +
+          '<div style="font-size:22px;font-weight:900;color:var(--teal-900);font-variant-numeric:tabular-nums">' + margin + '%</div>' +
+        '</div>' +
+        '<div class="stat-card" style="background:var(--teal-50);border:1px solid var(--teal-100);border-radius:12px;padding:16px 20px">' +
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--teal-700);margin-bottom:4px">🚶 Total Walk-ins</div>' +
+          '<div style="font-size:22px;font-weight:900;color:var(--teal-900);font-variant-numeric:tabular-nums">' + walkData.total + '</div>' +
+        '</div>' +
+        '<div class="stat-card" style="background:var(--teal-50);border:1px solid var(--teal-100);border-radius:12px;padding:16px 20px">' +
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--teal-700);margin-bottom:4px">✅ Converted</div>' +
+          '<div style="font-size:22px;font-weight:900;color:var(--teal-900);font-variant-numeric:tabular-nums">' + walkData.converted + ' <span style="font-size:14px;font-weight:700;color:var(--teal-600)">(' + convRate + '%)</span></div>' +
+        '</div>' +
+      '</div>' +
     '</div>' +
 
     // ── Walk-in analysis ──
     (allWalk.length ? '<div class="section"><h2>🚶 Walk-in Analysis &amp; Conversions</h2>' +
-      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px">' +
-        '<div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0"><div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">📥 Total Walk-ins</div><div style="font-size:24px;font-weight:900;color:#0f172a">' + walkData.total + '</div></div>' +
-        '<div style="background:#ecfdf5;border-radius:12px;padding:16px;border:1px solid #10b98144"><div style="font-size:11px;color:#059669;font-weight:700;text-transform:uppercase;margin-bottom:4px">✅ Converted</div><div style="font-size:24px;font-weight:900;color:#059669">' + walkData.converted + ' <span style="font-size:14px;font-weight:700">(' + convRate + '%)</span></div></div>' +
-        '<div style="background:#eff6ff;border-radius:12px;padding:16px;border:1px solid #3b82f644"><div style="font-size:11px;color:#1d4ed8;font-weight:700;text-transform:uppercase;margin-bottom:4px">🔬 Free Checkups</div><div style="font-size:24px;font-weight:900;color:#1d4ed8">' + walkData.checkup + '</div></div>' +
-        '<div style="background:#fff7ed;border-radius:12px;padding:16px;border:1px solid #f9731644"><div style="font-size:11px;color:#c2410c;font-weight:700;text-transform:uppercase;margin-bottom:4px">💵 Walk-in Revenue</div><div style="font-size:24px;font-weight:900;color:#c2410c">' + fmt(walkData.revenue) + '</div></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px">' +
+        '<div style="background:var(--teal-50);border-radius:12px;padding:14px 16px;border:1px solid var(--teal-100)"><div style="font-size:11px;color:var(--teal-700);font-weight:700;text-transform:uppercase;margin-bottom:4px">📥 Total Walk-ins</div><div style="font-size:22px;font-weight:900;color:var(--teal-900)">' + walkData.total + '</div></div>' +
+        '<div style="background:#ecfdf5;border-radius:12px;padding:14px 16px;border:1px solid #a7f3d0"><div style="font-size:11px;color:var(--emerald-dark);font-weight:700;text-transform:uppercase;margin-bottom:4px">✅ Converted</div><div style="font-size:22px;font-weight:900;color:var(--emerald-dark)">' + walkData.converted + ' <span style="font-size:14px">(' + convRate + '%)</span></div></div>' +
+        '<div style="background:var(--teal-50);border-radius:12px;padding:14px 16px;border:1px solid var(--teal-100)"><div style="font-size:11px;color:var(--teal-700);font-weight:700;text-transform:uppercase;margin-bottom:4px">🔬 Free Checkups</div><div style="font-size:22px;font-weight:900;color:var(--teal-900)">' + walkData.checkup + '</div></div>' +
+        '<div style="background:#fff7ed;border-radius:12px;padding:14px 16px;border:1px solid #fed7aa"><div style="font-size:11px;color:#c2410c;font-weight:700;text-transform:uppercase;margin-bottom:4px">💵 Walk-in Revenue</div><div style="font-size:22px;font-weight:900;color:#c2410c;font-variant-numeric:tabular-nums">' + fmt(walkData.revenue) + '</div></div>' +
       '</div>' +
-      '<table style="margin-bottom:12px">' +
-        '<thead style="background:#f8fafc"><tr>' +
+      '<table>' +
+        '<thead style="background:linear-gradient(135deg,var(--teal-900),var(--teal-700));color:#fff"><tr>' +
           '<th style="padding:10px 14px">Outcome</th><th style="text-align:center;padding:10px 14px">Count</th><th style="text-align:center;padding:10px 14px">Share</th><th style="text-align:right;padding:10px 14px">Revenue</th>' +
         '</tr></thead>' +
         '<tbody>' + walkTableRows + '</tbody>' +
+        '<tfoot style="background:var(--teal-100);border-top:2px solid var(--teal-600)"><tr>' +
+          '<th style="padding:12px 14px;color:var(--teal-900);font-weight:800">TOTAL WALK-INS</th>' +
+          '<th style="padding:12px 14px;text-align:center;color:var(--teal-900);font-weight:800">' + walkData.total + '</th>' +
+          '<th style="padding:12px 14px;text-align:center;color:var(--teal-700);font-weight:800">100%</th>' +
+          '<th style="padding:12px 14px;text-align:right;color:var(--emerald-dark);font-weight:800;font-variant-numeric:tabular-nums">' + fmt(walkData.revenue) + '</th>' +
+        '</tr></tfoot>' +
       '</table>' +
     '</div>' : '') +
 
-    // ── Day-by-Day table ──
-    '<div class="section"><h2>📋 Day-by-Day Breakdown</h2>' +
+    // ── 4. Daily breakdown table ──
+    '<div class="section"><h2>📋 Day-by-Day Financial Breakdown</h2>' +
       '<table>' +
-        '<thead style="background:linear-gradient(135deg,#1e3a5f,#2c5364);color:#fff"><tr>' +
-          '<th>Date</th>' +
-          '<th style="text-align:right;color:#6ee7b7">Income</th>' +
-          '<th style="text-align:right;color:#fca5a5">Expense</th>' +
-          '<th style="text-align:right;color:#93c5fd">Net</th>' +
-          '<th>Income Bar</th>' +
-          '<th>Details</th>' +
+        '<thead style="background:linear-gradient(135deg,var(--teal-900),var(--teal-700));color:#fff"><tr>' +
+          '<th style="padding:12px 14px">Date</th>' +
+          '<th style="text-align:right;padding:12px 14px;color:#a7f3d0">Income</th>' +
+          '<th style="text-align:right;padding:12px 14px;color:#fecaca">Expense</th>' +
+          '<th style="text-align:right;padding:12px 14px;color:#99f6e4">Net Amount</th>' +
+          '<th style="padding:12px 14px">Volume Bar</th>' +
+          '<th style="padding:12px 14px">Details &amp; Notes</th>' +
         '</tr></thead>' +
         '<tbody>' + dayRows + '</tbody>' +
-        '<tfoot style="background:#f0fdf4"><tr>' +
-          '<th style="padding:11px 12px;color:#374151">TOTAL</th>' +
-          '<th style="padding:11px 12px;text-align:right;color:#10b981">' + fmt(monthData.totalInc) + '</th>' +
-          '<th style="padding:11px 12px;text-align:right;color:#f43f5e">' + fmt(monthData.totalExp) + '</th>' +
-          '<th style="padding:11px 12px;text-align:right;color:' + (net >= 0 ? '#10b981' : '#f43f5e') + '">' + fmt(net) + '</th>' +
-          '<th style="padding:11px 12px;color:#6b7280">' + days.length + ' active days</th>' +
-          '<th style="padding:11px 12px;color:#6b7280">Margin: ' + Number(margin).toFixed(1) + '%</th>' +
+        '<tfoot style="background:var(--teal-100)"><tr>' +
+          '<th style="padding:12px 14px;color:var(--teal-900);font-weight:800">MONTH TOTAL</th>' +
+          '<th style="padding:12px 14px;text-align:right;color:var(--emerald-dark);font-weight:800;font-variant-numeric:tabular-nums">' + fmt(monthData.totalInc) + '</th>' +
+          '<th style="padding:12px 14px;text-align:right;color:var(--rose-dark);font-weight:800;font-variant-numeric:tabular-nums">' + fmt(monthData.totalExp) + '</th>' +
+          '<th style="padding:12px 14px;text-align:right;color:' + (net >= 0 ? 'var(--emerald-dark)' : 'var(--rose-dark)') + ';font-weight:800;font-variant-numeric:tabular-nums">' + (isNetLoss ? '-' : '+') + fmt(net) + '</th>' +
+          '<th style="padding:12px 14px;color:var(--teal-700);font-size:12px">' + days.length + ' active days</th>' +
+          '<th style="padding:12px 14px;color:var(--teal-700);font-size:12px">Margin: ' + margin + '%</th>' +
         '</tr></tfoot>' +
       '</table>' +
     '</div>' +
 
     // ── 6-month P&L trend ──
-    (report.months.length > 1 ? '<div class="section"><h2>📅 6-Month P&amp;L Trend</h2>' +
+    (report.months.length > 1 ? '<div class="section"><h2>📅 6-Month P&amp;L Comparative Trend</h2>' +
       '<table>' +
-        '<thead style="background:#f8fafc"><tr>' +
-          '<th>Month</th>' +
-          '<th style="text-align:right;color:#10b981">Income</th>' +
-          '<th style="text-align:right;color:#f43f5e">Expense</th>' +
-          '<th style="text-align:right;color:#3b82f6">Net Profit</th>' +
+        '<thead style="background:linear-gradient(135deg,var(--teal-900),var(--teal-700));color:#fff"><tr>' +
+          '<th style="padding:10px 14px">Month</th>' +
+          '<th style="text-align:right;padding:10px 14px;color:#a7f3d0">Income</th>' +
+          '<th style="text-align:right;padding:10px 14px;color:#fecaca">Expense</th>' +
+          '<th style="text-align:right;padding:10px 14px;color:#99f6e4">Net Profit</th>' +
         '</tr></thead>' +
         '<tbody>' + trendRows + '</tbody>' +
       '</table>' +
     '</div>' : '') +
 
     // Footer
-    '<div style="text-align:center;font-size:11px;color:#9ca3af;padding:16px 0;border-top:1px solid #e5e7eb;margin-top:8px">' +
+    '<div style="text-align:center;font-size:11px;color:#6b7280;padding:16px 0;border-top:1px solid var(--teal-100);margin-top:8px">' +
       '📊 Generated by PulseIQ · ' + orgName + ' · ' + now.toLocaleDateString('en-IN') +
       '<div style="margin-top:4px">This report is confidential and intended for internal business use only.</div>' +
     '</div>' +
