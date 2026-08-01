@@ -5754,7 +5754,7 @@ async function renderNotesHistory(custId) {
   var el = document.getElementById('notes-history'); if (!el) return;
   var notes = [];
   try {
-    notes = await dbGet('customer_notes', { customer_id: 'eq.' + custId, order: 'created_at.desc' });
+    notes = await dbGet('customer_notes', 'created_at', 'customer_id=eq.' + custId);
   } catch(e) { notes = []; }
   if (!notes.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">No notes yet. Add one below.</div>'; return; }
   el.innerHTML = notes.map(function(n) {
@@ -5800,7 +5800,7 @@ async function loadFollowUps() {
   // Load today's follow-ups into overview banner
   var today = new Date().toISOString().split('T')[0];
   try {
-    var due = await dbGet('customer_notes', { follow_up_date: 'eq.' + today });
+    var due = await dbGet('customer_notes', 'created_at', 'follow_up_date=eq.' + today);
     if (!due || !due.length) return;
     // Deduplicate by customer
     var seen = {};
@@ -14494,7 +14494,7 @@ async function viewDietHistory(custId, custName) {
   openModal('diet-history');
   var records = [];
   try {
-    records = await dbGet('diet_plan_history', { customer_id: 'eq.' + custId, order: 'created_at.desc' });
+    records = await dbGet('diet_plan_history', 'created_at', 'customer_id=eq.' + custId);
   } catch(e) { records = []; }
 
   // Also show current plan if no history yet
