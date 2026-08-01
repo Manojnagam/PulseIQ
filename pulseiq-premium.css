@@ -1628,5 +1628,234 @@ tr:nth-child(even) td {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 4 — PREMIUM SIDEBAR UPGRADE
+   Inspired by: Linear · Vercel · Stripe Dashboard Navigation
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Sidebar Container ── */
+.sidebar {
+  background: rgba(7, 7, 12, 0.96) !important;
+  backdrop-filter: blur(24px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Logo Section ── */
+.sb-logo {
+  padding: 20px 16px 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.sb-logo-inner {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.sb-logo-icon {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, #00d97e 0%, #2563eb 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 20px !important;
+  box-shadow: 0 4px 16px rgba(0, 217, 126, 0.3) !important;
+}
+
+.sb-logo h1 {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  margin: 0 !important;
+  letter-spacing: -0.03em !important;
+}
+
+.sb-logo span {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: #00d97e !important;
+}
+
+/* ── Greeting Badge ── */
+.sb-greeting {
+  padding: 12px 16px !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  margin-bottom: 8px !important;
+}
+
+#sb-greeting-time {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--muted) !important;
+}
+
+.sb-greeting-name {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  margin-top: 2px !important;
+}
+
+/* ── Nav Group Labels ── */
+.nav-lbl {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: rgba(160, 160, 180, 0.6) !important;
+  padding: 10px 14px 6px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  transition: color 0.15s !important;
+}
+
+.nav-lbl:hover {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.nav-arrow {
+  font-size: 10px !important;
+  transition: transform 0.2s var(--spring) !important;
+}
+
+.nav-lbl.collapsed .nav-arrow {
+  transform: rotate(-90deg) !important;
+}
+
+/* ── Nav Items ── */
+.nav-item {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 9px 14px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: rgba(200, 200, 220, 0.8) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
+  margin-bottom: 2px !important;
+  position: relative !important;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+}
+
+/* Active Nav Item — Signature Glow */
+.nav-item.active {
+  background: rgba(0, 217, 126, 0.12) !important;
+  color: #00d97e !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(0, 217, 126, 0.25) !important;
+  box-shadow: 0 0 16px rgba(0, 217, 126, 0.15) !important;
+}
+
+.nav-item.active::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 6px !important;
+  bottom: 6px !important;
+  width: 3px !important;
+  background: #00d97e !important;
+  border-radius: 0 4px 4px 0 !important;
+  box-shadow: 0 0 8px #00d97e !important;
+}
+
+.nav-item .ic {
+  font-size: 15px !important;
+  width: 20px !important;
+  text-align: center !important;
+}
+
+/* ── Active Center Switcher ── */
+.sb-center-switch {
+  padding: 12px 14px !important;
+  margin: 10px 12px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 12px !important;
+}
+
+.sb-center-switch label {
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--muted) !important;
+  display: block !important;
+  margin-bottom: 6px !important;
+}
+
+.sb-center-switch select {
+  width: 100% !important;
+  background: rgba(10, 10, 18, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  outline: none !important;
+  cursor: pointer !important;
+}
+
+.sb-center-switch select:focus {
+  border-color: #00d97e !important;
+}
+
+/* ── Sidebar Footer ── */
+.sb-foot {
+  padding: 12px 14px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+.sb-foot-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+}
+
+.disc-btn {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
+  color: var(--muted) !important;
+}
+
+.disc-btn:hover {
+  background: rgba(0, 217, 126, 0.12) !important;
+  border-color: rgba(0, 217, 126, 0.3) !important;
+  color: #00d97e !important;
+  transform: translateY(-1px) !important;
+}
+
+
 
 
