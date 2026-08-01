@@ -459,7 +459,7 @@ async function loadAndStartDashboard() {
     if (typeof window.bootDashboard !== 'function') {
       try {
         visualDebug("Before loading app.min.js");
-        await loadScript('app.min.js?v=1.5.8', 30000);
+        await loadScript('app.min.js?v=1.7.0', 30000);
         visualDebug("After loading app.min.js");
       } catch (scriptErr) {
         visualDebug('FAILED app.min.js: ' + scriptErr.message);
@@ -468,7 +468,7 @@ async function loadAndStartDashboard() {
     if (typeof window.bootDashboard !== 'function') {
       try {
         visualDebug("Before loading app.js fallback");
-        await loadScript('app.js?v=1.5.0', 30000);
+        await loadScript('app.js?v=1.7.0', 30000);
         visualDebug("After loading app.js fallback");
       } catch (fallbackErr) {
         visualDebug('FAILED app.js: ' + fallbackErr.message);
