@@ -965,17 +965,18 @@ tr:nth-child(even) td {
   background: linear-gradient(160deg, rgba(16,16,28,0.97) 0%, rgba(10,10,18,0.97) 100%) !important;
   border: 1px solid rgba(255,255,255,0.08) !important;
   border-top: 2px solid var(--stat-accent, #00d97e) !important;
-  border-radius: 16px !important;
-  padding: 18px 20px 20px !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
   overflow: visible !important;
   cursor: default !important;
   box-shadow: 0 4px 24px rgba(0,0,0,0.4) !important;
   transition: transform 0.22s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.22s, border-color 0.22s !important;
-  min-height: 115px !important;
+  min-height: 78px !important;
   height: auto !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: space-between !important;
+  justify-content: center !important;
+  gap: 4px !important;
   box-sizing: border-box !important;
 }
 
@@ -1046,7 +1047,7 @@ tr:nth-child(even) td {
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
   color: rgba(180,180,200,0.85) !important;
-  margin-bottom: 6px !important;
+  margin-bottom: 2px !important;
   display: block !important;
   position: relative !important;
   z-index: 2 !important;
