@@ -133,7 +133,6 @@
         if (node.nodeType !== 1) continue;
         const targets = ['.att-card', '.lead-card', '.recheck-card', '.retention-card'];
         if (targets.some(sel => node.matches && node.matches(sel))) {
-          // Single card added
           node.style.opacity = '0';
           node.style.transform = 'translateY(10px)';
           node.style.transition = 'opacity 0.25s var(--ease-out), transform 0.25s var(--spring)';
@@ -142,14 +141,15 @@
             node.style.transform = 'translateY(0)';
           }));
         }
-        if (node.querySelector) {
-          staggerEnter(node);
-        }
+        if (node.querySelector) staggerEnter(node);
       }
     }
   });
 
-  staggerObserver.observe(document.body, { childList: true, subtree: true });
+  // Observe only after body exists (called from init)
+  function startStaggerObserver() {
+    if (document.body) staggerObserver.observe(document.body, { childList: true, subtree: true });
+  }
 
   /* ─── 4. SIDEBAR ACTIVE INDICATOR GLOW ─── */
   function patchNavItems() {
@@ -200,16 +200,19 @@
   function init() {
     initSpotlight();
     initCounters();
+    startStaggerObserver();
     patchNavItems();
     patchToast();
     enhanceSectionTransitions();
     console.log('[PulseIQ Premium] ✓ Effects initialised');
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    // App loads async after Supabase auth — wait for #app to appear
+  // Always defer to DOMContentLoaded — script is in <head> so body may not exist yet
+  document.addEventListener('DOMContentLoaded', function () {
+    initSpotlight();
+    startStaggerObserver();
+
+    // Wait for the app to actually boot (Supabase auth is async)
     const appObserver = new MutationObserver(() => {
       const app = document.getElementById('app');
       if (app && app.style.display !== 'none') {
@@ -217,9 +220,8 @@
         appObserver.disconnect();
       }
     });
-    appObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
-
-    // Init spotlight immediately (login screen also benefits)
-    initSpotlight();
-  }
+    if (document.body) {
+      appObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
+    }
+  });
 })();
