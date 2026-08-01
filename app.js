@@ -7129,8 +7129,10 @@ function renderFinance() {
   var from = document.getElementById('fin-from').value;
   var to   = document.getElementById('fin-to').value;
   var periodLabel = (from && to) ? from + ' → ' + to : (from ? 'From ' + from : (to ? 'Until ' + to : 'All dates'));
+  var pBadge = document.getElementById('fin-period-badge');
+  if (pBadge) pBadge.textContent = '📅 ' + periodLabel;
   document.getElementById('fin-stats').innerHTML =
-    '<div class="stat"><div class="stat-l">Total Income<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:2px">📅 '+periodLabel+'</div></div><div class="stat-v" style="color:var(--success)">₹'+inc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Total Income</div><div class="stat-v" style="color:var(--success)">₹'+inc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Total Expense</div><div class="stat-v" style="color:var(--danger)">₹'+exp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="color:'+(net>=0?'var(--primary)':'var(--danger)')+'">₹'+net.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Profit Margin</div><div class="stat-v" id="fin-margin" style="color:'+(margin>=0?'var(--primary)':'var(--danger)')+'">'+margin+'%</div></div>';
