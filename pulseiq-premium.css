@@ -1856,6 +1856,157 @@ tr:nth-child(even) td {
   transform: translateY(-1px) !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 5 — COMMAND BAR & GLOBAL UI POLISH
+   Inspired by: Linear Header · Notion Search · Stripe Tables
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Sticky Page Header (.ph) ── */
+.ph {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 16px 0 20px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  margin-bottom: 24px !important;
+}
+
+.pt {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.04em !important;
+  color: #ffffff !important;
+  margin-bottom: 4px !important;
+}
+
+.ps {
+  font-size: 13px !important;
+  color: var(--muted) !important;
+}
+
+/* ── Primary Action Buttons ── */
+.btn-p {
+  background: linear-gradient(135deg, #00d97e 0%, #00b868 100%) !important;
+  color: #03120a !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 10px 18px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  transition: all 0.2s var(--spring) !important;
+  box-shadow: 0 4px 16px rgba(0, 217, 126, 0.35) !important;
+}
+
+.btn-p:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(0, 217, 126, 0.5) !important;
+}
+
+.btn-c {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 10px 18px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #f0f0fa !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+.btn-c:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ── Glassmorphic Data Tables ── */
+.twrap {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(10, 10, 18, 0.7) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 13px !important;
+}
+
+thead th {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: rgba(160, 160, 180, 0.8) !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  padding: 14px 18px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  text-align: left !important;
+}
+
+tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  transition: background 0.15s !important;
+}
+
+tbody tr:hover {
+  background: rgba(0, 217, 126, 0.04) !important;
+}
+
+tbody td {
+  padding: 14px 18px !important;
+  color: #f0f0fa !important;
+  vertical-align: middle !important;
+}
+
+/* ── Modals & Dialogs ── */
+.overlay {
+  background: rgba(3, 3, 6, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+.modal {
+  background: linear-gradient(160deg, rgba(16,16,28,0.96) 0%, rgba(10,10,18,0.96) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 217, 126, 0.08) !important;
+  padding: 28px !important;
+  animation: fade-up-in 0.3s var(--spring) both !important;
+}
+
+.mh {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  padding-bottom: 16px !important;
+  margin-bottom: 20px !important;
+}
+
+.mt {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+}
+
+/* ── Global Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(5, 5, 8, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 217, 126, 0.4);
+}
+
+
 
 
 

@@ -134,6 +134,20 @@
     sections.forEach(s => observer.observe(s));
   }
 
+  /* ─── 7. KEYBOARD SHORTCUTS (Linear-style Cmd+K search focus) ─── */
+  function initKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        const searchInput = document.getElementById('ov-global-search');
+        if (searchInput) {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+    });
+  }
+
   /* ─── INIT ─── */
   function init() {
     initSpotlight();
@@ -141,6 +155,7 @@
     patchNavItems();
     patchToast();
     enhanceSectionTransitions();
+    initKeyboardShortcuts();
     console.log('[PulseIQ Premium] ✓ Effects initialised');
   }
 
