@@ -17114,10 +17114,22 @@ function showMonthlyFinancialReport() {
   var now = new Date();
   var defaultMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
 
-  var MONTH_OPTIONS = report.months.map(function(m) {
+  // Always show last 12 months — regardless of whether they have data
+  var last12 = [];
+  for (var mi = 0; mi < 12; mi++) {
+    var d0 = new Date(now.getFullYear(), now.getMonth() - mi, 1);
+    last12.push(d0.getFullYear() + '-' + String(d0.getMonth() + 1).padStart(2, '0'));
+  }
+  // Also include any months from actual data that fall outside last 12
+  report.months.forEach(function(m) { if (last12.indexOf(m) === -1) last12.push(m); });
+  last12.sort().reverse();
+
+  var MONTH_OPTIONS = last12.map(function(m) {
     var d = new Date(m + '-01');
     var label = d.toLocaleString('default', { month: 'long', year: 'numeric' });
-    return '<option value="' + m + '"' + (m === defaultMonth ? ' selected' : '') + '>' + label + '</option>';
+    var hasData = !!report.data[m];
+    return '<option value="' + m + '"' + (m === defaultMonth ? ' selected' : '') + '>' +
+      label + (hasData ? ' ●' : '') + '</option>';
   }).join('');
 
   var overlay = document.createElement('div');
@@ -17211,7 +17223,11 @@ function renderMonthlyFinReport() {
   var days = Object.keys(monthData.days).sort();
   var tableHtml = '';
   if (!days.length) {
-    tableHtml = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.3);font-size:14px">📭 No transactions recorded for ' + monthLabel + '</div>';
+    tableHtml = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.4);font-size:14px">' +
+      '<div style="font-size:32px;margin-bottom:12px">📭</div>' +
+      '<div style="font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px">No transactions for ' + monthLabel + '</div>' +
+      '<div style="font-size:12px">Months with data show a <span style="color:#10b981">●</span> in the dropdown above.</div>' +
+    '</div>';
   } else {
     var rows = days.map(function(day) {
       var dayData = monthData.days[day];
