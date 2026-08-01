@@ -300,4 +300,89 @@
     document.body.removeChild(link);
     if (typeof window.showToast === 'function') window.showToast('Downloaded Monthly Attendance Summary CSV ✓', 'success');
   };
+
+  /* ─── 9. PRINT-FRIENDLY ATTENDANCE PDF REPORT ─── */
+  window.generateAttendancePDFReport = function () {
+    var atts = window.D && window.D.attendance ? window.D.attendance : [];
+    var centerName = typeof window.getCenterName === 'function' ? window.getCenterName() : 'Wellness Center';
+
+    if (!atts.length) {
+      if (typeof window.showToast === 'function') window.showToast('No attendance records found', 'error');
+      else alert('No attendance records found');
+      return;
+    }
+
+    var monthlyMap = {};
+    atts.forEach(function (a) {
+      if (!a.date) return;
+      var m = a.date.substring(0, 7);
+      if (!monthlyMap[m]) {
+        monthlyMap[m] = { month: m, totalVisits: 0, uniqueCustomers: new Set(), servings: 0 };
+      }
+      if (a.status === 'present' || !a.status) {
+        monthlyMap[m].totalVisits += 1;
+        if (a.customer_id) monthlyMap[m].uniqueCustomers.add(a.customer_id);
+        monthlyMap[m].servings += Number(a.servings || 1);
+      }
+    });
+
+    var sortedMonths = Object.keys(monthlyMap).sort().reverse();
+    var totalUniqueAllTime = new Set(atts.map(function (a) { return a.customer_id; })).size;
+    var totalVisitsAllTime = atts.length;
+
+    var monthlyRowsHtml = sortedMonths.map(function (m) {
+      var data = monthlyMap[m];
+      var dObj = new Date(m + '-01');
+      var mLabel = isNaN(dObj.getTime()) ? m : dObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+      var avg = data.uniqueCustomers.size > 0 ? (data.totalVisits / data.uniqueCustomers.size).toFixed(1) : '0';
+      return '<tr>' +
+        '<td style="font-weight:700;color:#0f172a">' + mLabel + '</td>' +
+        '<td style="text-align:center;font-weight:800;color:#059669">' + data.uniqueCustomers.size + ' people</td>' +
+        '<td style="text-align:center;font-weight:700">' + data.totalVisits + ' check-ins</td>' +
+        '<td style="text-align:center;color:#64748b">' + avg + ' visits/person</td>' +
+        '<td style="text-align:center;font-weight:700;color:#2563eb">' + data.servings + ' servings</td>' +
+        '</tr>';
+    }).join('');
+
+    var html = '<!DOCTYPE html><html><head><title>Monthly Attendance Report — ' + centerName + '</title>' +
+      '<style>' +
+      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f8fafc;color:#1e293b;padding:32px;line-height:1.5}' +
+      '@media print{.no-print{display:none!important}@page{margin:1.5cm}}' +
+      '.card{background:#fff;border-radius:16px;padding:24px;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.04);margin-bottom:24px}' +
+      '.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}' +
+      '.kpi{background:#f1f5f9;border-radius:12px;padding:16px 20px;border-left:4px solid #10b981}' +
+      '.kpi-lbl{font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:1px;margin-bottom:6px}' +
+      '.kpi-val{font-size:26px;font-weight:800;color:#0f172a}' +
+      'table{width:100%;border-collapse:collapse;margin-top:12px}' +
+      'th{background:#f8fafc;padding:12px 16px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#64748b;border-bottom:2px solid #e2e8f0}' +
+      'td{padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:13px}' +
+      'button.print-btn{background:#10b981;color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer}' +
+      '</style></head><body>' +
+      '<div class="no-print" style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">' +
+      '  <div><strong style="font-size:16px">PDF Attendance Report Ready</strong></div>' +
+      '  <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>' +
+      '</div>' +
+      '<div class="card">' +
+      '  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
+      '    <div><h1 style="margin:0;font-size:24px;color:#0f172a">📊 Monthly Attendance Report</h1><div style="color:#64748b;font-size:13px;margin-top:4px">' + centerName + ' · Wellness Intelligence</div></div>' +
+      '    <div style="font-size:12px;color:#64748b">Generated: ' + new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + '</div>' +
+      '  </div>' +
+      '  <div class="kpi-grid">' +
+      '    <div class="kpi" style="border-color:#10b981"><div class="kpi-lbl">Total People Attended</div><div class="kpi-val" style="color:#10b981">' + totalUniqueAllTime + ' Customers</div></div>' +
+      '    <div class="kpi" style="border-color:#3b82f6"><div class="kpi-lbl">Total Visits Recorded</div><div class="kpi-val" style="color:#3b82f6">' + totalVisitsAllTime + ' Check-ins</div></div>' +
+      '    <div class="kpi" style="border-color:#8b5cf6"><div class="kpi-lbl">Months Tracked</div><div class="kpi-val" style="color:#8b5cf6">' + sortedMonths.length + ' Months</div></div>' +
+      '  </div>' +
+      '  <h3 style="margin-top:24px;margin-bottom:12px;font-size:16px">📅 Monthly Attendance Summary</h3>' +
+      '  <table><thead><tr><th>Month</th><th style="text-align:center">People Attended (Count)</th><th style="text-align:center">Total Visits</th><th style="text-align:center">Avg Visits/Person</th><th style="text-align:center">Total Servings</th></tr></thead>' +
+      '  <tbody>' + monthlyRowsHtml + '</tbody></table>' +
+      '</div></body></html>';
+
+    var win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    } else {
+      alert('Pop-up blocked! Please allow pop-ups for this site to view the PDF report.');
+    }
+  };
 })();
