@@ -2656,6 +2656,8 @@ function autofillBodyHeightAge(custId) {
   if (!custId) {
     el_h.value = '';
     el_a.value = '';
+    el_h.placeholder = '170';
+    el_a.placeholder = '30';
     return;
   }
 
@@ -2707,7 +2709,28 @@ function autofillBodyHeightAge(custId) {
         if (person.age) {
           ageVal = person.age;
         } else if (person.dob) {
-          ageVal = Math.floor((new Date() - new Date(person.dob)) / (365.25 * 24 * 3600 * 1000));
+          var dobStr = String(person.dob).trim();
+          var dobDate = null;
+          if (dobStr.includes('-')) {
+            var parts = dobStr.split('-');
+            if (parts[0].length === 4) {
+              // YYYY-MM-DD
+              dobDate = new Date(dobStr);
+            } else if (parts[2] && parts[2].length === 4) {
+              // DD-MM-YYYY
+              dobDate = new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
+            } else {
+              dobDate = new Date(dobStr);
+            }
+          } else {
+            dobDate = new Date(dobStr);
+          }
+          if (dobDate && !isNaN(dobDate.getTime())) {
+            var calcAge = Math.floor((new Date() - dobDate) / (365.25 * 24 * 3600 * 1000));
+            if (!isNaN(calcAge) && calcAge > 0 && calcAge < 120) {
+              ageVal = calcAge;
+            }
+          }
         }
       }
     }
@@ -2724,6 +2747,8 @@ function autofillBodyHeightAge(custId) {
 
   el_h.value = heightVal || '';
   el_a.value = ageVal || '';
+  el_h.placeholder = heightVal ? String(heightVal) : 'Not on file — please enter';
+  el_a.placeholder = ageVal ? String(ageVal) : 'Not on file — please enter';
 }
 
 // ── MODALS ──
