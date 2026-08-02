@@ -7690,7 +7690,15 @@ async function saveCustomer() {
     if(id) { await dbUpdate('customers',id,payload); auditLog('Updated','Customer',payload.name+(payload.pack_type?' — '+payload.pack_type:'')); }
     else { savedRecords = await dbInsert('customers',payload); auditLog('Added','Customer',payload.name+(payload.pack_type?' — '+payload.pack_type:'')); }
     // ── Auto-create finance/payment records for new customers only ──
-    if (!id && payload.pack_price) {
+    var isConvertingWalkin = window._convertingWalkinId;
+    var origWalkin = isConvertingWalkin ? (D.walkins||[]).find(function(w){ return w.id === isConvertingWalkin; }) : null;
+    var alreadyHasFinance = origWalkin && origWalkin.finance_id;
+    var isSameWalkinAmount = alreadyHasFinance && (
+      Number(payload.pack_price) <= Number(origWalkin.amount_received) ||
+      Math.abs(Number(payload.pack_price) - Number(origWalkin.amount_received)) <= 10
+    );
+
+    if (!id && payload.pack_price && !isSameWalkinAmount) {
       var payMode = (document.getElementById('customer-pay-mode')||{value:'full'}).value;
       var packPrice = Number(payload.pack_price);
       var payDateEl = document.getElementById('customer-pay-date');
@@ -12535,8 +12543,10 @@ function renderCustomers() {
     var riskBadge = risk.label ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;display:block;margin-top:2px;'+(risk.level==='critical'?'background:var(--danger-light);color:var(--text-danger)':'background:var(--warning-light);color:var(--warning-text)')+'" title="'+risk.reasons.join(', ')+'">'+risk.label+'</span>' : '';
     var msBadges = getMilestones(c.id).slice(-2).map(function(m){ return '<span class="milestone-badge ms-gold" style="font-size:9px;display:inline-block;margin-top:2px">'+m.icon+' '+m.label+'</span>'; }).join('');
     var issuesDisplay = c.issues ? '<div style="font-size:11px;color:var(--danger);margin-top:2px" title="Issues: '+c.issues+'">⚠️ Issues: '+c.issues+'</div>' : '';
+    var isShakePartyCust = (D.walkins||[]).some(function(w){ return (w.converted_customer_id === c.id || w.id === c.id) && w.source === 'shake_party'; });
+    var shakeBadge = isShakePartyCust ? '<span class="badge" style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;font-size:9px;display:inline-block;margin-left:4px">🎉 Shake Party</span>' : '';
     return '<tr>'
-      +'<td><strong>'+c.name+bdayFlag+'</strong>'+noDobBadge+freeDay+sharedBadge+memberBadge+coachBadge+riskBadge+issuesDisplay+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
+      +'<td><strong>'+c.name+bdayFlag+'</strong>'+noDobBadge+freeDay+shakeBadge+sharedBadge+memberBadge+coachBadge+riskBadge+issuesDisplay+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
       +'<td>'+(c.contact||'—')+'</td>'
       +'<td>'+(c.pack_owner_id ? '↗ shared' : (c.pack_type||'—'))+'</td>'
       +'<td>'+(c.pack_owner_id ? '—' : (c.pack_start_date||'—'))+'</td>'
@@ -12965,6 +12975,7 @@ async function loadWalkins() {
 function renderWalkins() {
   var q = ((document.getElementById('walkins-search')||{}).value||'').toLowerCase();
   var filterOutcome = (document.getElementById('walkins-filter-outcome')||{}).value||'';
+  var filterSource = (document.getElementById('walkins-filter-source')||{}).value||'';
   var filterDate = (document.getElementById('walkins-filter-date')||{}).value||'';
   
   var filterMonthEl = document.getElementById('walkins-filter-month');
@@ -12983,6 +12994,7 @@ function renderWalkins() {
 
   var rows = all.filter(function(w) {
     if(filterOutcome && w.outcome !== filterOutcome) return false;
+    if(filterSource && w.source !== filterSource) return false;
     if(filterDate && w.date !== filterDate) return false;
     if(filterMonth && w.date && !w.date.startsWith(filterMonth)) return false;
     return (w.name||'').toLowerCase().includes(q) || (w.phone||'').includes(q);
@@ -13002,6 +13014,7 @@ function renderWalkins() {
       }
     }
   }
+  si = document.getElementById('wi-stat-shakeparty'); if(si) si.textContent = rows.filter(function(w){return w.source==='shake_party';}).length;
   si = document.getElementById('wi-stat-checkup'); if(si) si.textContent = rows.filter(function(w){return w.outcome==='checkup';}).length;
   si = document.getElementById('wi-stat-trial'); if(si) si.textContent = rows.filter(function(w){return w.outcome==='trial';}).length;
   si = document.getElementById('wi-stat-sale'); if(si) si.textContent = rows.filter(function(w){return w.outcome==='product_sale';}).length;
@@ -13012,7 +13025,7 @@ function renderWalkins() {
     tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="ei">🚶</div><p>No walk-ins yet. Add your first visitor!</p></div></td></tr>';
     return;
   }
-  var SRC = {google:'🔍 Google',customer_referral:'👤 Customer',coach_referral:'👨‍🏫 Coach',owner:'🏢 Owner',other:'Other'};
+  var SRC = {google:'🔍 Google',customer_referral:'👤 Customer',coach_referral:'👨‍🏫 Coach',owner:'🏢 Owner',shake_party:'🎉 Shake Party',other:'Other'};
   var OUT = {checkup:'🔬 Checkup',trial:'📦 Trial Pack',product_sale:'🛒 Product Sale',other:'Other'};
   var OUT_COL = {checkup:'#1d4ed8',trial:'#b07800',product_sale:'#16a34a',other:'var(--muted)'};
   window._limWalk = window._limWalk || 50;
@@ -13059,7 +13072,7 @@ function exportWalkinsCSV() {
   
   if(!rows.length) { showToast('No walk-ins to export for this selection!', 'error'); return; }
   
-  var SRC = {google:'Google',customer_referral:'Customer',coach_referral:'Coach',owner:'Owner',other:'Other'};
+  var SRC = {google:'Google',customer_referral:'Customer',coach_referral:'Coach',owner:'Owner',shake_party:'Shake Party',other:'Other'};
   var OUT = {checkup:'Checkup',trial:'Trial Pack',product_sale:'Product Sale',other:'Other'};
 
   var headers = ['Date', 'Name', 'Phone', 'Source', 'Referred By', 'Outcome', 'Amount Received', 'Converted to Customer', 'Notes'];
@@ -13152,10 +13165,31 @@ function onWalkinSourceChange(){
   if (persons.length === 1) {
     sdSetValue('walkin-ref', persons[0].value);
   }
+  syncWalkinTrialAmount();
 }
 function onWalkinOutcomeChange(){
   var out=document.getElementById('walkin-outcome').value;
   document.getElementById('walkin-amount-wrap').style.display=(out==='trial'||out==='product_sale')?'block':'none';
+  syncWalkinTrialAmount();
+}
+
+function syncWalkinTrialAmount() {
+  var out = (document.getElementById('walkin-outcome')||{}).value;
+  var src = (document.getElementById('walkin-source')||{}).value;
+  var amtEl = document.getElementById('walkin-amount');
+  var prodEl = document.getElementById('walkin-product');
+  if (!amtEl) return;
+
+  if (out === 'trial') {
+    var curVal = (amtEl.value || '').toString().trim();
+    var targetAmt = (src === 'shake_party') ? '300' : '900';
+    if (!curVal || curVal === '0' || curVal === '900' || curVal === '300') {
+      amtEl.value = targetAmt;
+    }
+    if (prodEl && (!prodEl.value.trim() || prodEl.value === '3-Day Trial Pack' || prodEl.value === '3-Day Trial Pack (Shake Party Promo)')) {
+      prodEl.value = (src === 'shake_party') ? '3-Day Trial Pack (Shake Party Promo)' : '3-Day Trial Pack';
+    }
+  }
 }
 
 async function saveWalkin(){
@@ -13186,8 +13220,12 @@ async function saveWalkin(){
   };
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Supabase not configured','error');return;}
   var existingFinanceId = document.getElementById('walkin-finance-id') ? document.getElementById('walkin-finance-id').value : '';
-  var hasAmount = data.outcome === 'product_sale' && data.amount_received > 0;
-  var finDesc = 'Walk-in product sale — ' + name + (data.product_details ? ' (' + data.product_details + ')' : '');
+  var isShakePromo = data.source === 'shake_party';
+  var hasAmount = (data.outcome === 'product_sale' || (isShakePromo && data.outcome === 'trial')) && data.amount_received > 0;
+  var finCategory = isShakePromo ? 'Shake Party Promo' : 'Walk-in product sale';
+  var finDesc = isShakePromo 
+    ? 'Walk-in ' + (data.outcome === 'trial' ? '3-day trial' : 'sale') + ' — ' + name + ' (Shake Party Promo)'
+    : 'Walk-in product sale — ' + name + (data.product_details ? ' (' + data.product_details + ')' : '');
   try{
     if(id){
       // ── Edit mode ──
@@ -13203,7 +13241,7 @@ async function saveWalkin(){
         showToast('Walk-in updated (finance entry removed)','success');
       } else if(!existingFinanceId && hasAmount){
         // Amount newly added on edit — create finance record and link it
-        var newFin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:'Walk-in product sale',date:data.date,wellness_center_id:data.wellness_center_id||null});
+        var newFin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:finCategory,date:data.date,wellness_center_id:data.wellness_center_id||null});
         if(newFin && newFin[0] && newFin[0].id) await dbUpdate('walkins', id, {finance_id: newFin[0].id});
         showToast('Walk-in updated · ₹'+data.amount_received.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' added to finance ✅','success');
       } else {
@@ -13213,7 +13251,7 @@ async function saveWalkin(){
       // ── New entry ──
       var savedWalkin = await dbInsert('walkins', data);
       if(hasAmount){
-        var fin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:'Walk-in product sale',date:data.date,wellness_center_id:data.wellness_center_id||null});
+        var fin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:finCategory,date:data.date,wellness_center_id:data.wellness_center_id||null});
         if(fin && fin[0] && fin[0].id && savedWalkin && savedWalkin[0] && savedWalkin[0].id){
           await dbUpdate('walkins', savedWalkin[0].id, {finance_id: fin[0].id});
         }

@@ -2098,6 +2098,7 @@ if ('caches' in window) {
       <div class="stats">
         <div class="stat"><div class="stat-ic">📅</div><div class="stat-l">Today</div><div class="stat-v" id="wi-stat-today">0</div></div>
         <div class="stat"><div class="stat-ic">📆</div><div class="stat-l" id="wi-stat-month-lbl">This Month</div><div class="stat-v" style="color:var(--accent)" id="wi-stat-month">0</div></div>
+        <div class="stat"><div class="stat-ic">🎉</div><div class="stat-l">Shake Party</div><div class="stat-v" style="color:#8b5cf6" id="wi-stat-shakeparty">0</div></div>
         <div class="stat"><div class="stat-ic">🔬</div><div class="stat-l">Checkups</div><div class="stat-v" id="wi-stat-checkup">0</div></div>
         <div class="stat"><div class="stat-ic">📦</div><div class="stat-l">Trial Packs</div><div class="stat-v" id="wi-stat-trial">0</div></div>
         <div class="stat"><div class="stat-ic">🛒</div><div class="stat-l">Product Sales</div><div class="stat-v" id="wi-stat-sale">0</div></div>
@@ -2106,6 +2107,15 @@ if ('caches' in window) {
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <input class="search" id="walkins-search" placeholder="🔍 Search name or phone..." oninput="renderWalkins()" style="flex:1;min-width:160px;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:10px 14px;font-family:inherit;font-size:14px">
         <input type="month" id="walkins-filter-month" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)" title="Filter by month">
+        <select id="walkins-filter-source" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)">
+          <option value="">All Sources</option>
+          <option value="shake_party">🎉 Shake Party</option>
+          <option value="google">🔍 Google</option>
+          <option value="customer_referral">👤 Customer Referral</option>
+          <option value="coach_referral">👨‍🏫 Coach Referral</option>
+          <option value="owner">🏢 Center Owner</option>
+          <option value="other">Other</option>
+        </select>
         <select id="walkins-filter-outcome" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)">
           <option value="">All Outcomes</option>
           <option value="checkup">🔬 Checkup</option>
@@ -2114,7 +2124,7 @@ if ('caches' in window) {
           <option value="other">Other</option>
         </select>
         <input type="date" id="walkins-filter-date" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)" title="Filter by date">
-        <button class="btn-c" onclick="document.getElementById('walkins-filter-date').value='';document.getElementById('walkins-filter-outcome').value='';document.getElementById('walkins-filter-month').value='';renderWalkins()">Clear</button>
+        <button class="btn-c" onclick="document.getElementById('walkins-filter-date').value='';document.getElementById('walkins-filter-outcome').value='';document.getElementById('walkins-filter-source').value='';document.getElementById('walkins-filter-month').value='';renderWalkins()">Clear</button>
       </div>
       <div class="tcard">
         <div class="twrap"><table>
@@ -2462,7 +2472,7 @@ if ('caches' in window) {
 
       <!-- Transactions table -->
       <div class="tcard">
-        <div class="ttoolbar" style="justify-content:space-between"><input class="search" id="fin-search" placeholder="🔍 Search..." oninput="renderFinance()" style="flex:1"><button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportFinanceCSV()">⬇️ CSV</button></div>
+        <div class="ttoolbar" style="justify-content:space-between;gap:8px"><input class="search" id="fin-search" placeholder="🔍 Search..." oninput="renderFinance()" style="flex:1"><button class="btn-c" style="font-size:12px;white-space:nowrap;background:rgba(139,92,246,0.1);color:#8b5cf6;border-color:rgba(139,92,246,0.2)" onclick="var s=document.getElementById('fin-search');s.value=s.value==='Shake Party'?'':'Shake Party';renderFinance()">🎉 Shake Party</button><button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportFinanceCSV()">⬇️ CSV</button></div>
         <div class="twrap"><table>
           <thead><tr><th>Type</th><th>Description</th><th>Amount(₹)</th><th>Category</th><th>Date</th><th>Actions</th></tr></thead>
           <tbody id="fin-body"><tr><td colspan="6"><div class="empty"><div class="ei">💰</div><p>No transactions yet.</p></div></td></tr></tbody>
@@ -5077,6 +5087,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <div class="fg"><label for="walkin-source">How did they find us?</label>
         <select id="walkin-source" onchange="onWalkinSourceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="">Select source</option>
+          <option value="shake_party">🎉 Shake Party</option>
           <option value="google">🔍 Google</option>
           <option value="customer_referral">👤 Referred by Customer</option>
           <option value="coach_referral">👨‍🏫 Referred by Coach</option>
