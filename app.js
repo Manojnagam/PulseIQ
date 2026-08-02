@@ -2488,6 +2488,8 @@ function isSupervisor() {
 }
 
 function goTo(name, el) {
+  // Debounce guard: ignore rapid duplicate calls to the same tab while render is in progress
+  if (window._goToInProgress === name) return;
   if (isTrialExpired() && name !== 'profile' && name !== 'guide') {
     showToast('Your 14-day trial has ended. Please subscribe to continue.', 'error');
     showTrialExpiredScreen();
@@ -2554,21 +2556,52 @@ function goTo(name, el) {
     if (sbo) sbo.classList.remove('open');
   }
 
+  // Lightweight tab-switch loading indicator (shows before blocking render work)
+  var _tabSpinner = (function() {
+    var el = document.getElementById('_tab-loading-bar');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = '_tab-loading-bar';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;height:3px;z-index:99999;background:linear-gradient(90deg,#00d97e,#38bdf8);transform:scaleX(0);transform-origin:left;transition:transform 0.25s ease;pointer-events:none;opacity:0;';
+      document.body.appendChild(el);
+    }
+    return {
+      show: function() { el.style.opacity='1'; el.style.transform='scaleX(0.7)'; },
+      hide: function() { el.style.transform='scaleX(1)'; setTimeout(function(){ el.style.opacity='0'; el.style.transform='scaleX(0)'; }, 200); }
+    };
+  })();
+
   // Helper for immediate cached execution & performance measurement
   function execTabModule(tabKey, renderFn) {
     var t0 = performance.now();
     var isFirst = !window._loadedTabs[tabKey] || window._tabDirty[tabKey];
     if (isFirst) {
-      renderFn();
-      window._loadedTabs[tabKey] = true;
-      delete window._tabDirty[tabKey];
+      // Lock debounce, show spinner, yield one frame so it paints, then render
+      window._goToInProgress = name;
+      _tabSpinner.show();
+      requestAnimationFrame(function() {
+        try {
+          renderFn();
+          window._loadedTabs[tabKey] = true;
+          delete window._tabDirty[tabKey];
+        } catch(e) { console.error('Tab render error:', e); }
+        var t1 = performance.now();
+        window._tabPerfMetrics[tabKey] = {
+          firstRenderTimeMs: Math.round(t1 - t0),
+          cachedRenderTimeMs: 0,
+          mainThreadBlockingMs: Math.max(0, Math.round((t1 - t0) - 16))
+        };
+        _tabSpinner.hide();
+        window._goToInProgress = null;
+      });
+    } else {
+      var t1 = performance.now();
+      window._tabPerfMetrics[tabKey] = {
+        firstRenderTimeMs: window._tabPerfMetrics[tabKey] ? window._tabPerfMetrics[tabKey].firstRenderTimeMs : 0,
+        cachedRenderTimeMs: Math.round(t1 - t0),
+        mainThreadBlockingMs: 0
+      };
     }
-    var t1 = performance.now();
-    window._tabPerfMetrics[tabKey] = {
-      firstRenderTimeMs: isFirst ? Math.round(t1 - t0) : (window._tabPerfMetrics[tabKey] ? window._tabPerfMetrics[tabKey].firstRenderTimeMs : 0),
-      cachedRenderTimeMs: isFirst ? 0 : Math.round(t1 - t0),
-      mainThreadBlockingMs: Math.max(0, Math.round((t1 - t0) - 16))
-    };
   }
 
   // Direct execution with caching
