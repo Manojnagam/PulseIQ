@@ -2844,6 +2844,7 @@ function updateCustSelects() {
   // Body composition — ALL coaches regardless of pack status + walk-ins + Center Owner / Supervisor
   var bodySel = document.getElementById('body-customer');
   if(bodySel) {
+    var prevVal = bodySel.value;
     var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
     var _svProf = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
     var _ownerName = _opProf.name || _svProf.name || 'Myself (Center Owner)';
@@ -2852,6 +2853,10 @@ function updateCustSelects() {
     var _walkinList = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER||w.center_id===ACTIVE_CENTER; });
     var bWalkinOpts = _walkinList.length ? '<optgroup label="── Walk-ins ──">'+_walkinList.map(function(w){return '<option value="walkin__'+w.id+'">'+w.name+' 🚶 ('+(w.date||'')+')</option>';}).join('')+'</optgroup>' : '';
     bodySel.innerHTML = '<option value="">Select person</option><option value="__sv__">👤 ' + _ownerName + ' (Myself / Owner)</option>' + bCustOpts + bCoachOpts + bWalkinOpts;
+    if (prevVal) {
+      bodySel.value = prevVal;
+      autofillBodyHeightAge(prevVal);
+    }
   }
   var cCoach = document.getElementById('customer-coach');
   if(cCoach) cCoach.innerHTML = '<option value="">Select coach</option>' + D.coaches.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
@@ -6989,6 +6994,12 @@ function selectBodyCustomer(cid) {
   _selectedBodyCustId = cid;
   var sel = document.getElementById('body-cust-select');
   if (sel) sel.value = cid;
+  var bodyCust = document.getElementById('body-customer');
+  if (bodyCust) {
+    var _isWalkin = (D.walkins||[]).some(function(w){ return w.id === cid; });
+    bodyCust.value = _isWalkin ? 'walkin__' + cid : cid;
+    autofillBodyHeightAge(bodyCust.value);
+  }
   switchBodyTab('records', document.getElementById('body-tab-records'));
   renderBody();
 }
