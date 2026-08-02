@@ -96,9 +96,15 @@ td.number, .mono, .revenue-val, .pin-metric-val {
   background: rgba(6, 6, 10, 0.95) !important;
   border-right: 1px solid var(--border) !important;
   box-shadow: none !important;
+  width: var(--sw) !important;
+  /* backdrop-filter intentionally omitted from base rule:
+     on Android Chrome, backdrop-filter on a translateX-offscreen fixed element
+     bleeds into the visible viewport. Applied only when sidebar is open. */
+}
+
+.sidebar.open {
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
-  width: var(--sw) !important;
 }
 
 .sidebar::after {
@@ -465,6 +471,11 @@ tr:nth-child(even) td {
 /* ── 10. MODAL — Premium overlay like Vercel ────────────────────────────── */
 .overlay {
   background: rgba(2, 2, 6, 0.8) !important;
+  /* backdrop-filter moved to .overlay.open — opacity:0 state is still GPU-composited
+     and the blur bleeds on Android Chrome even when the overlay is invisible */
+}
+
+.overlay.open {
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
 }
@@ -834,6 +845,11 @@ tr:nth-child(even) td {
 
   .stat::before {
     animation: none !important;
+  }
+
+  /* Sidebar drawer width on mobile: override the desktop var(--sw)/240px */
+  .sidebar {
+    width: min(285px, 85vw) !important;
   }
 }
 
@@ -1640,9 +1656,9 @@ tr:nth-child(even) td {
 /* ── Sidebar Container ── */
 .sidebar {
   background: rgba(7, 7, 12, 0.96) !important;
-  backdrop-filter: blur(24px) !important;
   border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4) !important;
+  /* backdrop-filter intentionally on .sidebar.open only — see base rule comment */
 }
 
 /* ── Logo Section ── */
@@ -1968,6 +1984,10 @@ tbody td {
 /* ── Modals & Dialogs ── */
 .overlay {
   background: rgba(3, 3, 6, 0.85) !important;
+  /* backdrop-filter on .overlay.open only — opacity:0 state is still GPU-composited */
+}
+
+.overlay.open {
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
 }
