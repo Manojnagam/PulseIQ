@@ -4055,14 +4055,23 @@ function renderOverview() {
     }
   } catch(e) { console.error('celebration err:', e); }
 
+  // ── Default values so rendering can proceed even if computation partially fails ──
   var todayStr = new Date().toISOString().split('T')[0];
   var today = new Date(); today.setHours(0,0,0,0);
   var currentMonth = todayStr.substring(0,7);
+  var _custs = [], _att = [], _fin = [];
+  var activeCusts=0, expCusts=0, inactiveCusts=0, expiringCusts=[], inactiveList=[];
+  var attTodayList=[], attToday=0, checkedInNames=[];
+  var mInc=0, mExp=0, mNet=0;
+  var _walkins=[], walkinsToday=[], walkinsMonth=[], walkinRevMonth=0;
+  var lowCount=0, outCount=0, expiryAlerts=[];
+  var weekData=[], maxAtt=1, pendingPay=[];
 
+  try {
   // ── Filter by active center ──
-  var _custs = filterByCenter(D.customers);
-  var _att = filterByCenterViaCustomer(D.attendance);
-  var _fin = ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance;
+  _custs = filterByCenter(D.customers) || [];
+  _att = filterByCenterViaCustomer(D.attendance) || [];
+  _fin = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance) || [];
 
   // ── Compute customer stats ──
   var activeCusts=0, expCusts=0, inactiveCusts=0, expiringCusts=[], inactiveList=[];
@@ -4135,6 +4144,12 @@ function renderOverview() {
     if(phone.length===10) phone = COUNTRY_CODE+phone;
     return {name:p.person_name||'Unknown', bal:Math.max(0,Number(p.total_amount)-Number(p.amount_paid)), due:p.due_date||'', overdue:p.due_date&&p.due_date<todayStr, phone:phone, desc:p.description||'pack'};
   });
+  } catch(ovComputeErr) {
+    console.error('renderOverview compute err:', ovComputeErr);
+    if (typeof window.showMobileDebugError === 'function') {
+      window.showMobileDebugError('Overview compute error', ovComputeErr && ovComputeErr.message ? ovComputeErr.message : String(ovComputeErr));
+    }
+  }
 
   // ══════════ RENDER ══════════
 
