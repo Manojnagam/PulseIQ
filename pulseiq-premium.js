@@ -26,20 +26,19 @@
     }
 
     // Attach to existing cards
-    document.querySelectorAll(SELECTORS).forEach(attachSpotlight);
+    if (document.body) document.querySelectorAll(SELECTORS).forEach(attachSpotlight);
 
-    // Watch for dynamically rendered cards (module sections render async)
-    const observer = new MutationObserver((mutations) => {
-      for (const m of mutations) {
-        for (const node of m.addedNodes) {
-          if (node.nodeType !== 1) continue;
-          if (node.matches && node.matches(SELECTORS)) attachSpotlight(node);
-          node.querySelectorAll && node.querySelectorAll(SELECTORS).forEach(attachSpotlight);
-        }
-      }
+    // Throttled observer for dynamically rendered cards
+    let spotlightTimeout = null;
+    const observer = new MutationObserver(() => {
+      if (spotlightTimeout) return;
+      spotlightTimeout = requestAnimationFrame(() => {
+        spotlightTimeout = null;
+        if (document.body) document.querySelectorAll(SELECTORS).forEach(attachSpotlight);
+      });
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    if (document.body) observer.observe(document.body, { childList: true, subtree: true });
   }
 
   /* ─── 2. ANIMATED COUNTER ─── DISABLED

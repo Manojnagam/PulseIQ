@@ -4280,7 +4280,8 @@ function renderOverview() {
     leftHtml += '</div></div>';
   }
 
-  document.getElementById('ov-col-left').innerHTML = leftHtml;
+  var elLeft = document.getElementById('ov-col-left');
+  if (elLeft) elLeft.innerHTML = leftHtml;
 
   // ── Right Column ──
   var rightHtml = '';
@@ -4591,7 +4592,8 @@ function renderOverview() {
       + '</div></div>';
   }
 
-  document.getElementById('ov-col-right').innerHTML = rightHtml;
+  var elRight = document.getElementById('ov-col-right');
+  if (elRight) elRight.innerHTML = rightHtml;
 
   // ── Pin Progress Mini Widget ──
   var pinWidget = document.getElementById('ov-pin-widget');
@@ -4628,10 +4630,12 @@ function renderOverview() {
 
 // ── RENDER COACHES ──
 function renderCoaches() {
-  var q = document.getElementById('coaches-search').value.toLowerCase();
+  var cs = document.getElementById('coaches-search');
+  var q = cs ? (cs.value || '').toLowerCase() : '';
   var _coaches = filterByCenter(D.coaches);
   var rows = _coaches.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.contact||'').toLowerCase().includes(q); });
   var tb = document.getElementById('coaches-body');
+  if (!tb) return;
   if (!rows.length) { tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">👨‍🏫</div><p>No coaches found. Add your first one!</p></div></td></tr>'; }
   else {
     window._limCoach = window._limCoach || 50;
@@ -4651,7 +4655,8 @@ function renderCoaches() {
   }).join('');
     if(rows.length > window._limCoach) { tb.innerHTML += '<tr><td colspan="7" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCoach+=50;renderCoaches()">⬇️ Load More (' + (rows.length - window._limCoach) + ' remaining)</button></td></tr>'; }
   }
-  document.getElementById('coaches-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Coaches</div><div class="stat-v">'+_coaches.length+'</div></div><div class="stat"><div class="stat-l">Active</div><div class="stat-v">'+_coaches.filter(function(c){return (c.status||'Active')==='Active';}).length+'</div></div>';
+  var cStats = document.getElementById('coaches-stats');
+  if (cStats) cStats.innerHTML = '<div class="stat"><div class="stat-l">Total Coaches</div><div class="stat-v">'+_coaches.length+'</div></div><div class="stat"><div class="stat-l">Active</div><div class="stat-v">'+_coaches.filter(function(c){return (c.status||'Active')==='Active';}).length+'</div></div>';
 }
 
 async function loadInventory() {
@@ -6472,7 +6477,8 @@ async function gridServRemove(id, name, date) {
 
 function renderAttendance() {
   if(ATT_TAB==='monthly') return renderAttGrid();
-  var q = document.getElementById('att-search').value.toLowerCase();
+  var attSearch = document.getElementById('att-search');
+  var q = attSearch ? (attSearch.value || '').toLowerCase() : '';
   var _tn=new Date(); var todayStr=_tn.getFullYear()+'-'+String(_tn.getMonth()+1).padStart(2,'0')+'-'+String(_tn.getDate()).padStart(2,'0');
   
   var activeCusts = filterByCenter(D.customers).filter(function(c){
@@ -6528,16 +6534,25 @@ function renderAttendance() {
   });
   
   var pList = document.getElementById('att-present-list');
-  if(!present.length) pList.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:15px;text-align:center;">No one present yet.</div>';
-  else pList.innerHTML = present.join('');
-  document.getElementById('att-present-count').textContent = '('+present.length+')';
-  
-  var nList = document.getElementById('att-absent-list');
-  if(!notYet.length) nList.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:15px;text-align:center;">All completed! 🎉</div>';
-  else nList.innerHTML = notYet.join('');
-  document.getElementById('att-absent-count').textContent = '('+notYet.length+')';
+  if (pList) {
+    if(!present.length) pList.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:15px;text-align:center;">No one present yet.</div>';
+    else pList.innerHTML = present.join('');
+  }
+  var pCnt = document.getElementById('att-present-count');
+  if (pCnt) pCnt.textContent = '('+present.length+')';
 
-  document.getElementById('att-stats').innerHTML = '<div class="stat"><div class="stat-l">Today\'s Present</div><div class="stat-v" style="color:var(--success)">'+present.length+'</div></div><div class="stat"><div class="stat-l">Not Yet</div><div class="stat-v" style="color:var(--danger)">'+notYet.length+'</div></div><div class="stat"><div class="stat-l">Coaches Active</div><div class="stat-v">'+activeCoaches.length+'</div></div>';
+  var nList = document.getElementById('att-absent-list');
+  if (nList) {
+    if(!notYet.length) nList.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:15px;text-align:center;">All completed! 🎉</div>';
+    else nList.innerHTML = notYet.join('');
+  }
+  var aCnt = document.getElementById('att-absent-count');
+  if (aCnt) aCnt.textContent = '('+notYet.length+')';
+
+  var aStats = document.getElementById('att-stats');
+  if (aStats) {
+    aStats.innerHTML = '<div class="stat"><div class="stat-l">Today\'s Present</div><div class="stat-v" style="color:var(--success)">'+present.length+'</div></div><div class="stat"><div class="stat-l">Not Yet</div><div class="stat-v" style="color:var(--danger)">'+notYet.length+'</div></div><div class="stat"><div class="stat-l">Coaches Active</div><div class="stat-v">'+activeCoaches.length+'</div></div>';
+  }
 }
 
 // ── ARROW HELPER ──
@@ -6568,11 +6583,11 @@ function renderBody() {
 
   var goalCard = document.getElementById('body-goal-card');
   if (!_selectedBodyCustId) {
-    profileCard.style.display = 'none';
+    if (profileCard) profileCard.style.display = 'none';
     if (idealCard) idealCard.style.display = 'none';
     if (goalCard) goalCard.style.display = 'none';
-    emptyPrompt.style.display = 'block';
-    recordsWrap.style.display = 'none';
+    if (emptyPrompt) emptyPrompt.style.display = 'block';
+    if (recordsWrap) recordsWrap.style.display = 'none';
     if (tb) tb.innerHTML = '';
     var btnShare = document.getElementById('btn-body-share-card');
     if (btnShare) btnShare.style.display = 'none';
@@ -7125,8 +7140,10 @@ function setFinPeriod(period, btn) {
     else if (period === 'lastmonth') { from = new Date(y,m-1,1); to = new Date(y,m,0); }
     else if (period === 'year') { from = new Date(y,0,1); to = new Date(y,11,31); }
     else { from = null; to = null; }
-    document.getElementById('fin-from').value = from ? from.toISOString().split('T')[0] : '';
-    document.getElementById('fin-to').value = to ? to.toISOString().split('T')[0] : '';
+    var ff = document.getElementById('fin-from');
+    var ft = document.getElementById('fin-to');
+    if (ff) ff.value = from ? from.toISOString().split('T')[0] : '';
+    if (ft) ft.value = to ? to.toISOString().split('T')[0] : '';
   }
   renderFinance();
 }
@@ -7138,14 +7155,19 @@ function setFinMonthPicker(ym) {
   var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1;
   var from = new Date(y, m, 1);
   var to = new Date(y, m + 1, 0);
-  document.getElementById('fin-from').value = from.toISOString().split('T')[0];
-  document.getElementById('fin-to').value = to.toISOString().split('T')[0];
+  var ff = document.getElementById('fin-from');
+  var ft = document.getElementById('fin-to');
+  if (ff) ff.value = from.toISOString().split('T')[0];
+  if (ft) ft.value = to.toISOString().split('T')[0];
   renderFinance();
 }
 function _getFinFiltered() {
-  var from = document.getElementById('fin-from').value;
-  var to   = document.getElementById('fin-to').value;
-  var q    = document.getElementById('fin-search').value.toLowerCase();
+  var ff = document.getElementById('fin-from');
+  var ft = document.getElementById('fin-to');
+  var fs = document.getElementById('fin-search');
+  var from = ff ? ff.value : '';
+  var to   = ft ? ft.value : '';
+  var q    = fs ? (fs.value || '').toLowerCase() : '';
   var base = ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance;
   return base.filter(function(f){
     if (!f.date) return false;                    // exclude null-dated entries
@@ -7163,6 +7185,7 @@ function renderFinance() {
   }
   var rows = _getFinFiltered();
   var tb = document.getElementById('fin-body');
+  if (!tb) return;
   if (!rows.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="ei">💰</div><p>No transactions yet.</p></div></td></tr>'; }
   else {
     window._limFin = window._limFin || 50;
@@ -8756,8 +8779,8 @@ function renderAnalytics() {
   if (genderFilter) tags.push('👤 '+genderFilter);
   if (statusFilter) tags.push('🟢 '+statusFilter);
   if (centerFilter) { var ct=D.centers.find(function(x){return x.id===centerFilter;}); tags.push('🏢 '+(ct?ct.name:centerFilter)); }
-  document.getElementById('slicer-summary').innerHTML =
-    '<strong>Showing:</strong> ' + filtCusts.length + ' customers &nbsp;|&nbsp; ' + tags.join(' &nbsp;·&nbsp; ');
+  var elSlicer = document.getElementById('slicer-summary');
+  if (elSlicer) elSlicer.innerHTML = '<strong>Showing:</strong> ' + filtCusts.length + ' customers &nbsp;|&nbsp; ' + tags.join(' &nbsp;·&nbsp; ');
 
   // ── KPIs ──
   var totalCusts   = filtCusts.length;
@@ -8767,21 +8790,27 @@ function renderAnalytics() {
   var totalExpense = filtFin.filter(function(f){return f.type==='expense';}).reduce(function(s,f){return s+Number(f.amount);},0);
   var stars = filtCusts.filter(function(c){return D.customers.filter(function(x){return x.referred_by_id===c.id;}).length>=2;}).length;
 
-  document.getElementById('analytics-kpis').innerHTML =
-    '<div class="stat"><div class="stat-l">Customers<span class="analytics-badge">'+totalCusts+'</span></div><div class="stat-v" style="color:'+(retentionRate>=70?'var(--success)':'var(--danger)')+'">'+retentionRate+'% retention</div></div>'+
-    '<div class="stat"><div class="stat-l">Revenue (period)</div><div class="stat-v" style="font-size:18px;color:var(--success)">₹'+totalIncome.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Expense (period)</div><div class="stat-v" style="font-size:18px;color:var(--danger)">₹'+totalExpense.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="font-size:18px;color:'+(totalIncome-totalExpense>=0?'var(--primary)':'var(--danger)')+'">₹'+(totalIncome-totalExpense).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-    '<div class="stat"><div class="stat-l">⭐ Star Customers</div><div class="stat-v" style="color:#b07800">'+stars+'</div></div>';
+  var elKpis = document.getElementById('analytics-kpis');
+  if (elKpis) {
+    elKpis.innerHTML =
+      '<div class="stat"><div class="stat-l">Customers<span class="analytics-badge">'+totalCusts+'</span></div><div class="stat-v" style="color:'+(retentionRate>=70?'var(--success)':'var(--danger)')+'">'+retentionRate+'% retention</div></div>'+
+      '<div class="stat"><div class="stat-l">Revenue (period)</div><div class="stat-v" style="font-size:18px;color:var(--success)">₹'+totalIncome.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '<div class="stat"><div class="stat-l">Expense (period)</div><div class="stat-v" style="font-size:18px;color:var(--danger)">₹'+totalExpense.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="font-size:18px;color:'+(totalIncome-totalExpense>=0?'var(--primary)':'var(--danger)')+'">₹'+(totalIncome-totalExpense).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '<div class="stat"><div class="stat-l">⭐ Star Customers</div><div class="stat-v" style="color:#b07800">'+stars+'</div></div>';
+  }
 
   // ── Retention bars ──
   var inactive = filtCusts.filter(function(c){return isInactive(c.id);}).length;
   var expired  = filtCusts.length - active;
-  document.getElementById('analytics-retention').innerHTML =
-    '<div style="margin-bottom:8px;font-size:13px;color:var(--muted)">Based on '+totalCusts+' filtered customers</div>'+
-    mkRetRow('Active', active, totalCusts, 'var(--success)')+
-    mkRetRow('Inactive 7d+', inactive, totalCusts, 'var(--accent)')+
-    mkRetRow('Expired Pack', expired, totalCusts, 'var(--danger)');
+  var elRet = document.getElementById('analytics-retention');
+  if (elRet) {
+    elRet.innerHTML =
+      '<div style="margin-bottom:8px;font-size:13px;color:var(--muted)">Based on '+totalCusts+' filtered customers</div>'+
+      mkRetRow('Active', active, totalCusts, 'var(--success)')+
+      mkRetRow('Inactive 7d+', inactive, totalCusts, 'var(--accent)')+
+      mkRetRow('Expired Pack', expired, totalCusts, 'var(--danger)');
+  }
 
   // ── Revenue trend ──
   var numMonths = periodMonths > 0 ? Math.min(periodMonths, 12) : 12;
@@ -8985,14 +9014,16 @@ function renderAnalytics() {
     if(!c){ var co=D.coaches.find(function(x){return x.id===id;}); if(co) c=co; }
     return {name:c?c.name:id,count:refMap[id]};
   }).sort(function(a,b){return b.count-a.count;}).slice(0,8);
-  var refEl=document.getElementById('analytics-referrers');
-  if(!topRefs.length){ refEl.innerHTML='<div style="color:var(--muted);font-size:13px">No referrals in this filter.</div>'; }
-  else refEl.innerHTML=topRefs.map(function(r,i){
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--surface2)">'
-      +'<span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'  ')+'  <strong>'+r.name+'</strong></span>'
-      +'<span class="badge '+(r.count>=2?'ms-gold':'ms-green')+'" style="border-radius:12px">'+r.count+' referral'+(r.count>1?'s':'')+'</span>'
-      +'</div>';
-  }).join('');
+  var refEl = document.getElementById('analytics-referrers');
+  if (refEl) {
+    if (!topRefs.length) { refEl.innerHTML='<div style="color:var(--muted);font-size:13px">No referrals in this filter.</div>'; }
+    else refEl.innerHTML=topRefs.map(function(r,i){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--surface2)">'
+        +'<span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'  ')+'  <strong>'+r.name+'</strong></span>'
+        +'<span class="badge '+(r.count>=2?'ms-gold':'ms-green')+'" style="border-radius:12px">'+r.count+' referral'+(r.count>1?'s':'')+'</span>'
+        +'</div>';
+    }).join('');
+  }
 
   // ── Pack distribution (filtered) ──
   var packMap={};

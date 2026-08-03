@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <title>PulseZen Dashboard</title>
 <meta name="apple-mobile-web-app-title" content="PulseZen">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="PulseZen Supervisor Dashboard - Manage wellness centers, track coach performance, consult customers, and monitor revenue dynamically with AI wellness scans.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1256,6 +1256,7 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
+<link rel="stylesheet" href="pulseiq-premium.css?v=3.2">
 <script>
 window.onerror = function(msg, url, line) {
   console.error('Global emergency error handler caught:', msg, 'at', url, 'line', line);
@@ -1289,8 +1290,8 @@ if ('caches' in window) {
 }
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
-<script defer src="auth.core.min.js?v=1.7.1"></script>
-<script defer src="app.min.js?v=1.7.1"></script>
+<script defer src="auth.core.min.js?v=1.7.7"></script>
+<script defer src="app.min.js?v=1.7.9"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>
 <script defer src="shared/formatting.js"></script>
@@ -1397,49 +1398,112 @@ if ('caches' in window) {
 <script defer src="release/documentation-engine.js"></script>
 <script defer src="release/release-renderer.js"></script>
 <script defer src="release/index.js"></script>
+<script defer src="pulseiq-premium.js?v=3.3"></script>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
 
-<!-- ── LOGIN SCREEN ── -->
-<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;background:#09090b;background:radial-gradient(circle at 50% 25%, rgba(39, 174, 96, 0.08) 0%, rgba(9, 9, 11, 0.98) 75%);align-items:center;justify-content:center;padding:24px;font-family:'Plus Jakarta Sans', sans-serif">
-  <div style="background:rgba(24, 24, 27, 0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:24px;padding:44px 38px;width:100%;max-width:410px;box-shadow:0 30px 60px -12px rgba(0,0,0,0.7);border:1px solid rgba(255, 255, 255, 0.12);color:var(--text)">
-    <div style="text-align:center;margin-bottom:32px;position:relative;">
-      <div style="position:absolute;top:-30px;right:-10px;background:#ef4444;color:#fff;font-size:10px;font-weight:900;padding:4px 8px;border-radius:12px;letter-spacing:1px;text-transform:uppercase;">BUILD 1.5.11</div>
-      <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#27AE60 0%,#2563EB 100%);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 10px 25px -5px rgba(39, 174, 96, 0.4)">🌿</div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:var(--text);letter-spacing:-0.5px;line-height:1.2">PulseZen</div>
-      <div style="font-size:11px;color:var(--primary);margin-top:6px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700">Supervisor Operating System</div>
+<!-- ── LOGIN SCREEN — Phase 2 Premium ── -->
+<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:24px;font-family:'Plus Jakarta Sans',sans-serif;overflow:hidden;background:#030306">
+
+  <!-- Animated gradient orbs -->
+  <div class="login-orb login-orb-1"></div>
+  <div class="login-orb login-orb-2"></div>
+  <div class="login-orb login-orb-3"></div>
+
+  <!-- Noise grid overlay -->
+  <div class="login-grid-overlay"></div>
+
+  <!-- Card -->
+  <div class="login-card">
+
+    <!-- Brand -->
+    <div class="login-brand">
+      <!-- Build badge -->
+      <div class="login-build-badge">BUILD 1.5.11</div>
+
+      <!-- Logo with pulse ring -->
+      <div class="login-logo-wrap">
+        <div class="login-pulse-ring"></div>
+        <div class="login-logo-icon">🌿</div>
+      </div>
+
+      <div class="login-logo-text">PulseZen</div>
+      <div class="login-logo-tag">
+        <span class="login-tag-dot"></span>
+        Supervisor Operating System
+      </div>
     </div>
+
     <!-- Step 1: Email -->
     <div id="login-email-state">
-      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">Sign in to your dashboard</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6">We'll send a 6-digit verification code to your email.</div>
-      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:block;margin-bottom:8px">Email Address</label>
-      <input type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendOtpCode()" style="width:100%;padding:14px 16px;border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;font-size:14px;font-family:inherit;margin-bottom:14px;outline:none;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);background:rgba(9, 9, 11, 0.6);color:var(--text)" onfocus="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(39, 174, 96, 0.2)'" onblur="this.style.borderColor='rgba(255,255,255,0.12)';this.style.boxShadow='none'">
-      <label style="display:flex;align-items:center;gap:10px;margin-bottom:18px;cursor:pointer;user-select:none">
-        <input type="checkbox" id="remember-device" checked style="width:17px;height:17px;accent-color:#27AE60;cursor:pointer;border-radius:4px">
-        <span style="font-size:13px;color:var(--text);font-weight:500">Remember this device</span>
+      <div class="login-step-title">Sign in to your dashboard</div>
+      <div class="login-step-sub">We'll send a 6-digit verification code to your email.</div>
+
+      <label class="login-label">Email Address</label>
+      <input type="email" id="login-email" placeholder="your@email.com"
+        onkeydown="if(event.key==='Enter')sendOtpCode()"
+        class="login-input"
+        onfocus="this.classList.add('login-input-focus')"
+        onblur="this.classList.remove('login-input-focus')">
+
+      <label class="login-remember">
+        <input type="checkbox" id="remember-device" checked class="login-checkbox">
+        <span>Remember this device</span>
       </label>
-      <button id="login-btn" onclick="sendOtpCode()" style="width:100%;padding:15px;background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.4)">Send Code →</button>
-      <div id="login-error" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.12);border-radius:10px;font-size:13px;color:#ef4444;border-left:3.5px solid #ef4444;font-weight:500"></div>
+
+      <button id="login-btn" onclick="sendOtpCode()" class="login-btn login-btn-primary">
+        <span>Send Code</span>
+        <span class="login-btn-arrow">→</span>
+      </button>
+
+      <div id="login-error" class="login-error" style="display:none"></div>
     </div>
-    <!-- Step 2: Code input -->
+
+    <!-- Step 2: OTP -->
     <div id="login-code-state" style="display:none">
-      <div style="text-align:center;margin-bottom:22px">
-        <div style="font-size:38px;margin-bottom:10px">📩</div>
-        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">Check your inbox</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6">We sent a 6-digit verification code to<br><strong id="login-sent-to" style="color:var(--primary);font-weight:700"></strong></div>
+      <div class="login-otp-header">
+        <div class="login-otp-icon">📩</div>
+        <div class="login-step-title">Check your inbox</div>
+        <div class="login-step-sub">
+          We sent a 6-digit code to<br>
+          <strong id="login-sent-to" class="login-email-highlight"></strong>
+        </div>
       </div>
-      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:block;margin-bottom:8px">6-Digit Code</label>
-      <input type="text" id="login-otp" placeholder="······" maxlength="8" inputmode="numeric" onkeydown="if(event.key==='Enter')verifyOtpCode()" style="width:100%;padding:14px;border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;font-size:24px;font-family:inherit;margin-bottom:14px;outline:none;text-align:center;letter-spacing:10px;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);background:rgba(9, 9, 11, 0.6);color:var(--text);font-weight:700" onfocus="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(39, 174, 96, 0.2)'" onblur="this.style.borderColor='rgba(255,255,255,0.12)';this.style.boxShadow='none'">
-      <button id="verify-btn" onclick="verifyOtpCode()" style="width:100%;padding:15px;background:linear-gradient(135deg, #27AE60 0%, #219653 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 6px 20px -4px rgba(39, 174, 96, 0.4)">Verify & Sign In →</button>
-      <div id="login-code-error" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.12);border-radius:10px;font-size:13px;color:#ef4444;border-left:3.5px solid #ef4444;font-weight:500"></div>
-      <button onclick="document.getElementById('login-code-state').style.display='none';document.getElementById('login-email-state').style.display='block';document.getElementById('login-btn').textContent='Send Code →';document.getElementById('login-btn').disabled=false" style="width:100%;margin-top:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 16px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s">← Change email</button>
+
+      <label class="login-label">6-Digit Code</label>
+      <input type="text" id="login-otp" placeholder="······" maxlength="8" inputmode="numeric"
+        onkeydown="if(event.key==='Enter')verifyOtpCode()"
+        class="login-input login-otp-input"
+        onfocus="this.classList.add('login-input-focus')"
+        onblur="this.classList.remove('login-input-focus')">
+
+      <button id="verify-btn" onclick="verifyOtpCode()" class="login-btn login-btn-primary">
+        <span>Verify &amp; Sign In</span>
+        <span class="login-btn-arrow">→</span>
+      </button>
+
+      <div id="login-code-error" class="login-error" style="display:none"></div>
+
+      <button onclick="document.getElementById('login-code-state').style.display='none';document.getElementById('login-email-state').style.display='block';document.getElementById('login-btn').textContent='Send Code →';document.getElementById('login-btn').disabled=false"
+        class="login-btn-ghost">← Change email</button>
     </div>
-    <div style="margin-top:30px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);text-align:center;font-size:12px;color:var(--muted)">Powered by <strong style="color:var(--text)">PulseZen</strong> · Wellness Intelligence Platform</div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <span>Secured by</span>
+      <strong>Supabase</strong>
+      <span>·</span>
+      <span>Deployed on</span>
+      <strong>Vercel</strong>
+      <span>·</span>
+      <strong>PulseZen</strong>
+    </div>
+
   </div>
 </div>
+
 
 <!-- LOADING SPLASH -->
 <div id="app-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#09090b;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;gap:20px;font-family:'Plus Jakarta Sans',sans-serif">
@@ -2034,6 +2098,7 @@ if ('caches' in window) {
       <div class="stats">
         <div class="stat"><div class="stat-ic">📅</div><div class="stat-l">Today</div><div class="stat-v" id="wi-stat-today">0</div></div>
         <div class="stat"><div class="stat-ic">📆</div><div class="stat-l" id="wi-stat-month-lbl">This Month</div><div class="stat-v" style="color:var(--accent)" id="wi-stat-month">0</div></div>
+        <div class="stat"><div class="stat-ic">🎉</div><div class="stat-l">Shake Party</div><div class="stat-v" style="color:#8b5cf6" id="wi-stat-shakeparty">0</div></div>
         <div class="stat"><div class="stat-ic">🔬</div><div class="stat-l">Checkups</div><div class="stat-v" id="wi-stat-checkup">0</div></div>
         <div class="stat"><div class="stat-ic">📦</div><div class="stat-l">Trial Packs</div><div class="stat-v" id="wi-stat-trial">0</div></div>
         <div class="stat"><div class="stat-ic">🛒</div><div class="stat-l">Product Sales</div><div class="stat-v" id="wi-stat-sale">0</div></div>
@@ -2042,6 +2107,15 @@ if ('caches' in window) {
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <input class="search" id="walkins-search" placeholder="🔍 Search name or phone..." oninput="renderWalkins()" style="flex:1;min-width:160px;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:10px 14px;font-family:inherit;font-size:14px">
         <input type="month" id="walkins-filter-month" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)" title="Filter by month">
+        <select id="walkins-filter-source" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)">
+          <option value="">All Sources</option>
+          <option value="shake_party">🎉 Shake Party</option>
+          <option value="google">🔍 Google</option>
+          <option value="customer_referral">👤 Customer Referral</option>
+          <option value="coach_referral">👨‍🏫 Coach Referral</option>
+          <option value="owner">🏢 Center Owner</option>
+          <option value="other">Other</option>
+        </select>
         <select id="walkins-filter-outcome" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)">
           <option value="">All Outcomes</option>
           <option value="checkup">🔬 Checkup</option>
@@ -2050,7 +2124,7 @@ if ('caches' in window) {
           <option value="other">Other</option>
         </select>
         <input type="date" id="walkins-filter-date" onchange="renderWalkins()" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface)" title="Filter by date">
-        <button class="btn-c" onclick="document.getElementById('walkins-filter-date').value='';document.getElementById('walkins-filter-outcome').value='';document.getElementById('walkins-filter-month').value='';renderWalkins()">Clear</button>
+        <button class="btn-c" onclick="document.getElementById('walkins-filter-date').value='';document.getElementById('walkins-filter-outcome').value='';document.getElementById('walkins-filter-source').value='';document.getElementById('walkins-filter-month').value='';renderWalkins()">Clear</button>
       </div>
       <div class="tcard">
         <div class="twrap"><table>
@@ -2065,6 +2139,8 @@ if ('caches' in window) {
       <div class="ph">
         <div><div class="pt" data-t="pt_attendance">Attendance</div><div class="ps" data-t="ps_attendance">Track customer visit history</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-p" onclick="generateAttendancePDFReport()" style="background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;font-weight:700">📄 Attendance PDF Report</button>
+          <button class="btn-p" onclick="exportMonthlyAttendanceSummaryCSV()" style="background:linear-gradient(135deg,#00d97e,#00b868);color:#03120a;font-weight:700">📊 Monthly Count Report CSV</button>
           <button class="btn-p" onclick="openQrKioskModal()" style="background:#5865F2;border-color:#5865F2;color:#fff;font-weight:600">📱 QR Kiosk</button>
           <button class="btn-e" onclick="sendDailySummaryWA()" style="background:#25D366;color:#fff;border-color:#25D366;font-weight:600">📊 Daily Summary</button>
           <button class="btn-p" onclick="openBackfillModal()" style="background:var(--accent);border-color:var(--accent)">📅 Backfill Past Days</button>
@@ -2072,10 +2148,10 @@ if ('caches' in window) {
       </div>
       <div class="stats" id="att-stats"><div class="stat"><div class="stat-l">Today's Present</div><div class="stat-v" style="color:var(--success)">0</div></div><div class="stat"><div class="stat-l">Not Yet</div><div class="stat-v" style="color:var(--danger)">0</div></div></div>
       <div class="tabs">
-        <button class="tab-btn active" id="tab-daily" onclick="switchAttTab(&#39;daily&#39;)">Daily Check-in</button>
-        <button class="tab-btn" id="tab-monthly" onclick="switchAttTab(&#39;monthly&#39;)">Monthly Grid</button>
-        <button class="tab-btn" id="tab-coach-att" onclick="switchAttTab(&#39;coach&#39;)">👨‍🏫 Coach Check-in</button>
-        <button class="tab-btn" id="tab-nudges" onclick="switchAttTab(&#39;nudges&#39;)">🚨 Absence Nudges</button>
+        <button class="tab-btn active" id="tab-daily" onclick="switchAttTab('daily')">Daily Check-in</button>
+        <button class="tab-btn" id="tab-monthly" onclick="switchAttTab('monthly')">Monthly Grid</button>
+        <button class="tab-btn" id="tab-coach-att" onclick="switchAttTab('coach')">👨‍🏫 Coach Check-in</button>
+        <button class="tab-btn" id="tab-nudges" onclick="switchAttTab('nudges')">🚨 Absence Nudges</button>
       </div>
       <!-- WhatsApp prompt bar (shown after marking attendance) -->
       <div id="att-wa-bar" style="display:none;background:#e6f9ee;border:1.5px solid #25D366;border-radius:10px;padding:12px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
@@ -2090,7 +2166,8 @@ if ('caches' in window) {
         <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center">
           <input class="search" id="att-search" placeholder="🔍 Search customers..." oninput="renderAttendance()" style="flex:1;border-radius:8px;background:var(--surface);border:1px solid var(--border);padding:12px 16px;font-family:inherit;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.02);">
           <button id="att-inactive-toggle" onclick="toggleInactiveAtt()" style="white-space:nowrap;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-family:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s">😴 Show Inactive</button>
-          <button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportAttendanceCSV()">⬇️ CSV</button>
+          <button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportMonthlyAttendanceSummaryCSV()" title="Download monthly attendee counts CSV">📊 Monthly Report CSV</button>
+          <button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportAttendanceCSV()" title="Download raw attendance logs CSV">⬇️ Logs CSV</button>
         </div>
         
         <div class="att-list-panel" style="margin-bottom:20px; background:rgba(0,180,100,0.05); border-top: 4px solid var(--success);">
@@ -2344,6 +2421,7 @@ if ('caches' in window) {
           <input type="date" id="fin-from" style="border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px" onchange="setFinPeriod('custom',null)">
           <span style="font-size:12px;color:var(--muted)">to</span>
           <input type="date" id="fin-to" style="border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px" onchange="setFinPeriod('custom',null)">
+          <span id="fin-period-badge" style="font-size:12px;color:var(--primary);font-weight:600;margin-left:auto;background:rgba(39,174,96,0.1);padding:4px 10px;border-radius:8px">📅 All dates</span>
         </div>
       </div>
       <!-- Summary stats -->
@@ -2394,7 +2472,7 @@ if ('caches' in window) {
 
       <!-- Transactions table -->
       <div class="tcard">
-        <div class="ttoolbar" style="justify-content:space-between"><input class="search" id="fin-search" placeholder="🔍 Search..." oninput="renderFinance()" style="flex:1"><button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportFinanceCSV()">⬇️ CSV</button></div>
+        <div class="ttoolbar" style="justify-content:space-between;gap:8px"><input class="search" id="fin-search" placeholder="🔍 Search..." oninput="renderFinance()" style="flex:1"><button class="btn-c" style="font-size:12px;white-space:nowrap;background:rgba(139,92,246,0.1);color:#8b5cf6;border-color:rgba(139,92,246,0.2)" onclick="var s=document.getElementById('fin-search');s.value=s.value==='Shake Party'?'':'Shake Party';renderFinance()">🎉 Shake Party</button><button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportFinanceCSV()">⬇️ CSV</button></div>
         <div class="twrap"><table>
           <thead><tr><th>Type</th><th>Description</th><th>Amount(₹)</th><th>Category</th><th>Date</th><th>Actions</th></tr></thead>
           <tbody id="fin-body"><tr><td colspan="6"><div class="empty"><div class="ei">💰</div><p>No transactions yet.</p></div></td></tr></tbody>
@@ -5009,6 +5087,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
       <div class="fg"><label for="walkin-source">How did they find us?</label>
         <select id="walkin-source" onchange="onWalkinSourceChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
           <option value="">Select source</option>
+          <option value="shake_party">🎉 Shake Party</option>
           <option value="google">🔍 Google</option>
           <option value="customer_referral">👤 Referred by Customer</option>
           <option value="coach_referral">👨‍🏫 Referred by Coach</option>
