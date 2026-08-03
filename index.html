@@ -1256,7 +1256,7 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
-<link rel="stylesheet" href="pulseiq-premium.css?v=3.5">
+<link rel="stylesheet" href="pulseiq-premium.css?v=3.6">
 <script>
 window.onerror = function(msg, url, line) {
   console.error('Global emergency error handler caught:', msg, 'at', url, 'line', line);
@@ -1290,8 +1290,8 @@ if ('caches' in window) {
 }
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
-<script defer src="auth.core.min.js?v=1.8.2"></script>
-<script defer src="app.min.js?v=1.8.2"></script>
+<script defer src="auth.core.min.js?v=1.8.3"></script>
+<script defer src="app.min.js?v=1.8.3"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>
 <script defer src="shared/formatting.js"></script>
@@ -1596,13 +1596,13 @@ if ('caches' in window) {
         <button class="nav-item" onclick="goTo(&#39;finance&#39;,this)"><span class="ic">💰</span><span data-t="nav_finance">Finance</span></button>
       </div>
       <button class="nav-item" onclick="goTo('agents',this)" style="border:1.5px solid #7c3aed;color:#7c3aed;margin-bottom:4px"><span class="ic">🤖</span><span>AI Agents</span></button>
-      <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-portals')"><span>Portals</span><span class="nav-arrow">▾</span></div>
-      <div id="g-portals" style="display:none">
+      <div class="nav-lbl" style="margin-top:6px" onclick="toggleNavGroup('g-portals')"><span>Portals</span><span class="nav-arrow">▾</span></div>
+      <div id="g-portals">
         <a class="nav-item" id="nav-coach-portal-link" href="coach.html" target="_blank" rel="noopener" style="text-decoration:none" onclick="updateCoachPortalNavLink()"><span class="ic">👨‍🏫</span><span>Coach Portal ↗</span></a>
         <a class="nav-item" id="nav-client-portal-link" href="https://client.pulsezen.in/" target="_blank" rel="noopener" style="text-decoration:none" onclick="updateClientPortalNavLink()"><span class="ic">👤</span><span>Client Portal ↗</span></a>
       </div>
-      <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-analytics')"><span>Analytics & Reports</span><span class="nav-arrow">▾</span></div>
-      <div id="g-analytics" style="display:none">
+      <div class="nav-lbl" style="margin-top:6px" onclick="toggleNavGroup('g-analytics')"><span>Analytics & Reports</span><span class="nav-arrow">▾</span></div>
+      <div id="g-analytics">
         <button class="nav-item" onclick="goTo('analytics',this)"><span class="ic">📈</span><span data-t="nav_analytics">Analytics</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span><span data-t="nav_bizanalyst">Biz Analyst</span></button>
         <button class="nav-item" onclick="goTo('customerrisk',this)" style="border:1.5px solid #ef4444;color:#ef4444;margin-bottom:4px"><span class="ic">🎯</span><span>Customer Risk</span></button>
@@ -1610,8 +1610,8 @@ if ('caches' in window) {
         <button class="nav-item nav-supervisor-only" onclick="goTo('forecasting',this)" style="border:1.5px solid #a78bfa;color:#a78bfa;margin-bottom:4px"><span class="ic">📈</span><span>Forecasting</span></button>
         <button class="nav-item" onclick="goTo('notifications',this)"><span class="ic">🔔</span><span data-t="nav_notifications">Notifications</span></button>
       </div>
-      <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
-      <div id="g-ops" style="display:none">
+      <div class="nav-lbl" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
+      <div id="g-ops">
         <button class="nav-item" onclick="goTo('actioncenter',this)" style="border:1.5px solid #27AE60;color:#27AE60;margin-bottom:4px"><span class="ic">⚡</span><span>Action Centre</span></button>
         <button class="nav-item" onclick="goTo('customerfollowup',this)" style="border:1.5px solid #25D366;color:#25D366;margin-bottom:4px"><span class="ic">📲</span><span>Follow-up Queue</span></button>
         <button class="nav-item" onclick="goTo('goaltracking',this)" style="border:1.5px solid #f59e0b;color:#f59e0b;margin-bottom:4px"><span class="ic">🎯</span><span>Goal Tracking</span></button>
@@ -1624,8 +1624,8 @@ if ('caches' in window) {
         <button class="nav-item nav-supervisor-only" onclick="goTo('orgtree',this)"><span class="ic">🌳</span><span data-t="nav_orgtree">Org Tree</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('planmgmt',this)"><span class="ic">💎</span><span>Plan Management</span></button>
       </div>
-      <div class="nav-lbl collapsed" style="margin-top:6px" onclick="toggleNavGroup('g-setup')"><span data-t="nav_setup">Setup</span><span class="nav-arrow">▾</span></div>
-      <div id="g-setup" style="display:none">
+      <div class="nav-lbl" style="margin-top:6px" onclick="toggleNavGroup('g-setup')"><span data-t="nav_setup">Setup</span><span class="nav-arrow">▾</span></div>
+      <div id="g-setup">
         <button class="nav-item" onclick="goTo('guide',this)"><span class="ic">📖</span><span data-t="nav_guide">How to Use</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('profile',this)"><span class="ic">👤</span><span data-t="nav_profile">My Profile</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo(&#39;sql&#39;,this)"><span class="ic">🛠️</span><span data-t="nav_sql">SQL Setup Guide</span></button>
@@ -1656,6 +1656,19 @@ if ('caches' in window) {
   </nav>
 
   <main class="main">
+    <!-- MOBILE QUICK TAB BAR -->
+    <div class="mobile-quick-nav" id="mobile-quick-nav">
+      <button class="mq-item active" onclick="goTo('overview',this)">🏠 Overview</button>
+      <button class="mq-item" onclick="goTo('customers',this)">👤 Customers</button>
+      <button class="mq-item" onclick="goTo('attendance',this)">📅 Attendance</button>
+      <button class="mq-item" onclick="goTo('finance',this)">💰 Finance</button>
+      <button class="mq-item" onclick="goTo('analytics',this)">📈 Analytics</button>
+      <button class="mq-item" onclick="goTo('coaches',this)">👨‍🏫 Coaches</button>
+      <button class="mq-item" onclick="goTo('actioncenter',this)">⚡ Action Centre</button>
+      <button class="mq-item" onclick="goTo('customerrisk',this)">🎯 Risk</button>
+      <button class="mq-item" onclick="goTo('expenses',this)">🧾 Expenses</button>
+      <button class="mq-item" onclick="toggleSidebar()">☰ All Tabs</button>
+    </div>
     <!-- OVERDUE LEADS BANNER -->
     <div id="overdue-leads-banner" style="display:none;background:#c0392b;color:#fff;padding:12px 18px;border-radius:10px;margin-bottom:18px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 4px 14px rgba(192,57,43,.35)">
       <div style="display:flex;align-items:center;gap:10px">

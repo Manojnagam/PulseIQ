@@ -2528,8 +2528,10 @@ function goTo(name, el) {
   // Single-element targeted class removal (avoids iterating over all DOM sections/navs)
   var currSec = document.querySelector('.sec.active');
   var currNav = document.querySelector('.nav-item.active');
+  var currMq  = document.querySelector('.mq-item.active');
   if (currSec) currSec.classList.remove('active');
   if (currNav) currNav.classList.remove('active');
+  if (currMq)  currMq.classList.remove('active');
 
   var sec = document.getElementById('sec-'+name);
   if (!sec && window._domCache) {
@@ -2547,6 +2549,9 @@ function goTo(name, el) {
       }
     } catch(e) {}
   }
+  var targetMq = document.querySelector('.mq-item[onclick*="' + name + '"]');
+  if (targetMq) targetMq.classList.add('active');
+
   if (window.innerWidth <= 768) {
     var sb = document.getElementById('sidebar');
     var sbo = document.getElementById('sb-overlay');
@@ -2586,7 +2591,7 @@ function goTo(name, el) {
   if (name==='profile')     execTabModule('profile', function(){ renderProfileCard(); updateProfileCoachSelect(); renderSvDietPlan(); });
   if (name==='leads')       execTabModule('leads', function(){ renderLeadsStats(); renderLeads(); updateLeadCenterSel(); });
   if (name==='guide')       execTabModule('guide', renderGuide);
-  if (name==='finance')     execTabModule('finance', function(){ setFinPeriod('all', document.querySelector('.fin-period[onclick*="all"]')); });
+  if (name==='finance')     execTabModule('finance', function(){ if (typeof renderFinance === 'function') renderFinance(); });
   if (name==='reports')     execTabModule('reports', function(){ if (typeof renderReportsView === 'function') renderReportsView(); });
   if (name==='expenses') {
     (async function() {
