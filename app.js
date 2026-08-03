@@ -3744,13 +3744,13 @@ async function generateWellnessScanReport() {
     if (!res.ok) throw new Error(report.error || 'Failed to generate report');
 
     // Populate Report Content
-    document.getElementById('ws-status').textContent = report.client_summary?.status || 'Unknown Status';
-    document.getElementById('ws-concern').textContent = report.client_summary?.primary_concern || 'None Identified';
+    document.getElementById('ws-status').textContent = (report.client_summary && report.client_summary.status) || 'Unknown Status';
+    document.getElementById('ws-concern').textContent = (report.client_summary && report.client_summary.primary_concern) || 'None Identified';
     
-    document.getElementById('ws-metabolic-risks').textContent = report.health_risk_report?.metabolic_risks || 'No metabolic risks identified.';
-    document.getElementById('ws-energy-analysis').textContent = report.health_risk_report?.energy_and_fatigue_analysis || 'No energy analysis details.';
-    document.getElementById('ws-digestive-analysis').textContent = report.health_risk_report?.digestive_analysis || 'No digestive analysis details.';
-    document.getElementById('ws-tone').textContent = report.empathic_communication_strategy?.recommended_tone || 'Encouraging & informative';
+    document.getElementById('ws-metabolic-risks').textContent = (report.health_risk_report && report.health_risk_report.metabolic_risks) || 'No metabolic risks identified.';
+    document.getElementById('ws-energy-analysis').textContent = (report.health_risk_report && report.health_risk_report.energy_and_fatigue_analysis) || 'No energy analysis details.';
+    document.getElementById('ws-digestive-analysis').textContent = (report.health_risk_report && report.health_risk_report.digestive_analysis) || 'No digestive analysis details.';
+    document.getElementById('ws-tone').textContent = (report.empathic_communication_strategy && report.empathic_communication_strategy.recommended_tone) || 'Encouraging & informative';
 
     // Nutrient Gaps Badges
     var gapContainer = document.getElementById('ws-nutrient-gaps');
@@ -3770,7 +3770,7 @@ async function generateWellnessScanReport() {
     // Icebreaker Phrases
     var iceContainer = document.getElementById('ws-icebreakers');
     iceContainer.innerHTML = '';
-    var icebreakers = report.empathic_communication_strategy?.icebreaker_phrases || [];
+    var icebreakers = (report.empathic_communication_strategy && report.empathic_communication_strategy.icebreaker_phrases) || [];
     if (icebreakers.length === 0) {
       iceContainer.innerHTML = '<div style="color:var(--muted); font-size:12px;">No icebreakers suggested.</div>';
     } else {
@@ -8720,16 +8720,27 @@ function renderAnalytics() {
   }
 
   // ── Read all slicers ──
-  var periodMonths = parseInt(document.getElementById('slicer-from')?.dataset?.customActive === '1' ? '-1' : (document.querySelector('.slicer-chip.active[data-slicer="period"]')?.dataset?.val || '3'));
-  var fromDate = document.getElementById('slicer-from')?.value || '';
-  var toDate   = document.getElementById('slicer-to')?.value   || '';
-  var packFilter   = document.getElementById('slicer-pack')?.value   || '';
-  var goalFilter   = document.getElementById('slicer-goal')?.value   || '';
-  var genderFilter = document.getElementById('slicer-gender')?.value || '';
-  var statusFilter = document.querySelector('.slicer-chip.active[data-slicer="status"]')?.dataset?.val || '';
-  var centerFilter = document.getElementById('slicer-center')?.value || '';
-  var revTypeFilter = document.getElementById('slicer-revenue-type')?.value || '';
-  var metricFilter = document.getElementById('slicer-metric')?.value || 'weight';
+  var elSlicerFrom = document.getElementById('slicer-from');
+  var elSlicerTo = document.getElementById('slicer-to');
+  var elSlicerPack = document.getElementById('slicer-pack');
+  var elSlicerGoal = document.getElementById('slicer-goal');
+  var elSlicerGender = document.getElementById('slicer-gender');
+  var elSlicerStatus = document.querySelector('.slicer-chip.active[data-slicer="status"]');
+  var elSlicerCenter = document.getElementById('slicer-center');
+  var elSlicerRev = document.getElementById('slicer-revenue-type');
+  var elSlicerMetric = document.getElementById('slicer-metric');
+  var elSlicerPeriod = document.querySelector('.slicer-chip.active[data-slicer="period"]');
+
+  var periodMonths = parseInt((elSlicerFrom && elSlicerFrom.dataset && elSlicerFrom.dataset.customActive === '1') ? '-1' : ((elSlicerPeriod && elSlicerPeriod.dataset && elSlicerPeriod.dataset.val) || '3'));
+  var fromDate = elSlicerFrom ? (elSlicerFrom.value || '') : '';
+  var toDate   = elSlicerTo   ? (elSlicerTo.value || '')   : '';
+  var packFilter   = elSlicerPack   ? (elSlicerPack.value || '')   : '';
+  var goalFilter   = elSlicerGoal   ? (elSlicerGoal.value || '')   : '';
+  var genderFilter = elSlicerGender ? (elSlicerGender.value || '') : '';
+  var statusFilter = (elSlicerStatus && elSlicerStatus.dataset) ? (elSlicerStatus.dataset.val || '') : '';
+  var centerFilter = elSlicerCenter ? (elSlicerCenter.value || '') : '';
+  var revTypeFilter = elSlicerRev ? (elSlicerRev.value || '') : '';
+  var metricFilter = elSlicerMetric ? (elSlicerMetric.value || 'weight') : 'weight';
 
   // ── Populate center dropdown cleanly while preserving value ──
   var cSel = document.getElementById('slicer-center');

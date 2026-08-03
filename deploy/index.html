@@ -1258,22 +1258,47 @@ input:focus, select:focus, textarea:focus {
 </style>
 <link rel="stylesheet" href="pulseiq-premium.css?v=3.6">
 <script>
-window.onerror = function(msg, url, line) {
-  console.error('Global emergency error handler caught:', msg, 'at', url, 'line', line);
+window.showMobileDebugError = function(title, details) {
+  try {
+    var box = document.getElementById('mobile-debug-console');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'mobile-debug-console';
+      box.style.cssText = 'position:fixed;bottom:10px;left:10px;right:10px;z-index:999999;background:#991b1b;color:#ffffff;padding:14px;border-radius:12px;font-size:12px;font-family:monospace;max-height:220px;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.8);border:1.5px solid #f87171;line-height:1.4';
+      document.body.appendChild(box);
+    }
+    box.style.display = 'block';
+    box.innerHTML = '<strong>⚠️ MOBILE ERROR DETECTED:</strong><br>' + title + '<br><div style="font-size:10px;opacity:0.9;margin-top:6px;word-break:break-all">' + (details || '') + '</div><button onclick="this.parentElement.style.display=\'none\'" style="margin-top:8px;background:#ffffff;color:#991b1b;border:none;border-radius:6px;padding:3px 10px;font-weight:bold;font-size:11px">Dismiss ✖</button>';
+  } catch(e) {}
+};
+
+window.onerror = function(msg, url, line, col, err) {
+  console.error('Global error caught:', msg, 'at', url, 'line', line);
+  var details = (url || '') + ':' + (line || 0) + (err && err.stack ? '<br>' + err.stack : '');
+  window.showMobileDebugError(msg, details);
   var al = document.getElementById('app-loading');
   var ls = document.getElementById('login-screen');
   if (al && getComputedStyle(al).display !== 'none') {
     al.style.display = 'none';
-    if (ls) ls.style.display = 'flex';
+    if (ls) {
+      ls.style.removeProperty('display');
+      ls.style.display = 'flex';
+    }
   }
 };
+
 window.onunhandledrejection = function(e) {
-  console.error('Unhandled Promise Rejection:', e.reason);
+  var reason = e && e.reason ? (e.reason.message || e.reason.toString()) : 'Unhandled Promise Rejection';
+  console.error('Unhandled Promise Rejection:', reason);
+  window.showMobileDebugError('Unhandled Promise Rejection', reason);
   var al = document.getElementById('app-loading');
   var ls = document.getElementById('login-screen');
   if (al && getComputedStyle(al).display !== 'none') {
     al.style.display = 'none';
-    if (ls) ls.style.display = 'flex';
+    if (ls) {
+      ls.style.removeProperty('display');
+      ls.style.display = 'flex';
+    }
   }
 };
 </script>
@@ -1290,8 +1315,8 @@ if ('caches' in window) {
 }
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
-<script defer src="auth.core.min.js?v=1.8.3"></script>
-<script defer src="app.min.js?v=1.8.3"></script>
+<script defer src="auth.core.min.js?v=1.8.4"></script>
+<script defer src="app.min.js?v=1.8.4"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>
 <script defer src="shared/formatting.js"></script>
