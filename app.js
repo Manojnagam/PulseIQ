@@ -4134,30 +4134,39 @@ function renderOverview() {
   // ══════════ RENDER ══════════
 
   // ── Quick Actions ──
-  document.getElementById('ov-quick-actions').innerHTML =
-    '<button class="ov-quick-btn" onclick="openModal(\'attendance\')">📋 Mark Attendance</button>'+
-    '<button class="ov-quick-btn" onclick="openModal(\'customer\')">👤 Add Customer</button>'+
-    '<button class="ov-quick-btn" onclick="openModal(\'finance\')">💰 Add Transaction</button>'+
-    '<button class="ov-quick-btn" onclick="goTo(\'analytics\',document.querySelector(\'[onclick*=analytics]\'))">📊 Analytics</button>'+
-    '<button class="ov-quick-btn" onclick="goTo(\'agents\',document.querySelector(\'[onclick*=agents]\'))" style="border-color:#7c3aed;color:#7c3aed">🤖 AI Agents</button>';
+  var _elQa = document.getElementById('ov-quick-actions');
+  if (_elQa) {
+    _elQa.innerHTML =
+      '<button class="ov-quick-btn" onclick="openModal(\'attendance\')">📋 Mark Attendance</button>'+
+      '<button class="ov-quick-btn" onclick="openModal(\'customer\')">👤 Add Customer</button>'+
+      '<button class="ov-quick-btn" onclick="openModal(\'finance\')">💰 Add Transaction</button>'+
+      '<button class="ov-quick-btn" onclick="goTo(\'analytics\',document.querySelector(\'[onclick*=analytics]\'))">📊 Analytics</button>'+
+      '<button class="ov-quick-btn" onclick="goTo(\'agents\',document.querySelector(\'[onclick*=agents]\'))" style="border-color:#7c3aed;color:#7c3aed">🤖 AI Agents</button>';
+  }
 
   // ── Stat Cards ──
-  document.getElementById('overview-stats').innerHTML =
-    '<div class="stat"><div class="stat-ic">👥</div><div class="stat-l">Total Customers</div><div class="stat-v">'+_custs.length+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">✅</div><div class="stat-l">Active Packs</div><div class="stat-v" style="color:var(--success)">'+activeCusts+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">⏰</div><div class="stat-l">Expiring (≤5 days)</div><div class="stat-v" style="color:'+(expiringCusts.length?'var(--accent)':'var(--success)')+'">'+expiringCusts.length+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">📋</div><div class="stat-l">Today\'s Check-ins</div><div class="stat-v">'+attToday+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">😴</div><div class="stat-l">Inactive (7d+)</div><div class="stat-v" style="color:'+(inactiveCusts?'var(--danger)':'var(--success)')+'">'+inactiveCusts+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">🚶</div><div class="stat-l">Walk-ins Today</div><div class="stat-v" style="color:'+(walkinsToday.length?'var(--primary)':'var(--text)')+'">'+walkinsToday.length+'</div></div>'+
-    (expiryAlerts.length?'<div class="stat" style="border-left:3px solid var(--danger);grid-column:1/-1"><div class="stat-l" style="color:var(--danger)">🚨 Stock Expiry Alerts</div><div style="margin-top:6px;font-size:13px">'+expiryAlerts.map(function(a){return '<span style="display:inline-block;margin:2px 6px 2px 0;padding:2px 8px;border-radius:12px;background:'+(a.isExpired?'var(--danger-light)':'var(--accent-light)')+';color:'+(a.isExpired?'var(--danger)':'#b07800')+'">'+a.name+' — '+a.date+(a.isExpired?' EXPIRED':'')+'</span>';}).join('')+'</div></div>':'');
+  var _elSt = document.getElementById('overview-stats');
+  if (_elSt) {
+    _elSt.innerHTML =
+      '<div class="stat"><div class="stat-ic">👥</div><div class="stat-l">Total Customers</div><div class="stat-v">'+_custs.length+'</div></div>'+
+      '<div class="stat"><div class="stat-ic">✅</div><div class="stat-l">Active Packs</div><div class="stat-v" style="color:var(--success)">'+activeCusts+'</div></div>'+
+      '<div class="stat"><div class="stat-ic">⏰</div><div class="stat-l">Expiring (≤5 days)</div><div class="stat-v" style="color:'+(expiringCusts.length?'var(--accent)':'var(--success)')+'">'+expiringCusts.length+'</div></div>'+
+      '<div class="stat"><div class="stat-ic">📋</div><div class="stat-l">Today\'s Check-ins</div><div class="stat-v">'+attToday+'</div></div>'+
+      '<div class="stat"><div class="stat-ic">😴</div><div class="stat-l">Inactive (7d+)</div><div class="stat-v" style="color:'+(inactiveCusts?'var(--danger)':'var(--success)')+'">'+inactiveCusts+'</div></div>'+
+      '<div class="stat"><div class="stat-ic">🚶</div><div class="stat-l">Walk-ins Today</div><div class="stat-v" style="color:'+(walkinsToday.length?'var(--primary)':'var(--text)')+'">'+walkinsToday.length+'</div></div>'+
+      (expiryAlerts.length?'<div class="stat" style="border-left:3px solid var(--danger);grid-column:1/-1"><div class="stat-l" style="color:var(--danger)">🚨 Stock Expiry Alerts</div><div style="margin-top:6px;font-size:13px">'+expiryAlerts.map(function(a){return '<span style="display:inline-block;margin:2px 6px 2px 0;padding:2px 8px;border-radius:12px;background:'+(a.isExpired?'var(--danger-light)':'var(--accent-light)')+';color:'+(a.isExpired?'var(--danger)':'#b07800')+'">'+a.name+' — '+a.date+(a.isExpired?' EXPIRED':'')+'</span>';}).join('')+'</div></div>':'');
+  }
 
   // ── Revenue Row ──
-  document.getElementById('ov-revenue-row').innerHTML =
-    '<div class="ov-rev-row">'+
-      '<div class="ov-rev-card inc"><div class="ov-rev-lbl">Income ('+currentMonth+')</div><div class="ov-rev-val">₹'+mInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-      '<div class="ov-rev-card exp"><div class="ov-rev-lbl">Expenses ('+currentMonth+')</div><div class="ov-rev-val">₹'+mExp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-      '<div class="ov-rev-card net"><div class="ov-rev-lbl">Net Profit</div><div class="ov-rev-val">'+(mNet>=0?'+':'')+' ₹'+mNet.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-    '</div>';
+  var _elRr = document.getElementById('ov-revenue-row');
+  if (_elRr) {
+    _elRr.innerHTML =
+      '<div class="ov-rev-row">'+
+        '<div class="ov-rev-card inc"><div class="ov-rev-lbl">Income ('+currentMonth+')</div><div class="ov-rev-val">₹'+mInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+        '<div class="ov-rev-card exp"><div class="ov-rev-lbl">Expenses ('+currentMonth+')</div><div class="ov-rev-val">₹'+mExp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+        '<div class="ov-rev-card net"><div class="ov-rev-lbl">Net Profit</div><div class="ov-rev-val">'+(mNet>=0?'+':'')+' ₹'+mNet.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '</div>';
+  }
 
   // ── Customer Health Score Rankings ──
   var hsRanks = getCustomerHealthRankings();
@@ -5466,9 +5475,11 @@ function getCenterOwnerName(c) {
 
 // ── RENDER CENTERS ──
 function renderCenters() {
-  var q = document.getElementById('centers-search').value.toLowerCase();
+  var cs = document.getElementById('centers-search');
+  var q = cs ? (cs.value || '').toLowerCase() : '';
   var rows = D.centers.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.location||'').toLowerCase().includes(q); });
   var tb = document.getElementById('centers-body');
+  if (!tb) return;
   var _pins = JSON.parse(safeStorage.getItem('centerPins') || '{}');
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">🏢</div><p>No centers found. Add your first one!</p></div></td></tr>'; }
   else tb.innerHTML = rows.map(function(c){
@@ -12499,10 +12510,12 @@ function startAutoPing(){
 
 // ── RENDER CUSTOMERS ──
 function renderCustomers() {
-  var q = document.getElementById('customers-search').value.toLowerCase();
+  var cs = document.getElementById('customers-search');
+  var q = cs ? (cs.value || '').toLowerCase() : '';
   var _custs = filterByCenter(D.customers);
   var rows = _custs.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.contact||'').toLowerCase().includes(q); });
   var tb = document.getElementById('customers-body');
+  if (!tb) return;
   var todayMMDD = new Date().toISOString().slice(5,10);
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">👤</div><p>No customers found.</p></div></td></tr>'; }
   else {
