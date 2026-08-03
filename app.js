@@ -2067,6 +2067,7 @@ async function loadAll() {
     }
     
     _daysLeftCache = {};  // initial critical data loaded
+    buildDataIndexes();   // build O(1) lookup maps after Phase 1
     try { await chartPromise; } catch(scErr) {}
     if (typeof Chart === 'undefined') {
       window.Chart = function() {
@@ -2112,6 +2113,7 @@ async function loadAll() {
       return loadBody();
     }).then(function() {
       _daysLeftCache = {}; // recalculate with full data
+      buildDataIndexes();  // rebuild O(1) lookup maps with Phase 3 data
       try { renderCustomers(); } catch(re){}
       try { renderOverview(); } catch(re){}
       if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
@@ -2869,6 +2871,47 @@ function updateCustSelects() {
   if(assignSel) assignSel.innerHTML = '<option value="">— Not assigned —</option>' + filterByCenter(D.coaches).map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
 }
 
+// ── DATA INDEXES ──
+// Pre-built O(1) lookup maps. Call buildDataIndexes() after each data load phase.
+window._idx = window._idx || {};
+function buildDataIndexes() {
+  var idx = {};
+  // attendance grouped by customer_id
+  idx.attByCustomer = {};
+  (D.attendance || []).forEach(function(a) {
+    (idx.attByCustomer[a.customer_id] = idx.attByCustomer[a.customer_id] || []).push(a);
+  });
+  // body records grouped by customer_id
+  idx.bodyByCustomer = {};
+  (D.body || []).forEach(function(b) {
+    (idx.bodyByCustomer[b.customer_id] = idx.bodyByCustomer[b.customer_id] || []).push(b);
+  });
+  // referral count per referrer id
+  idx.refCountByCust = {};
+  (D.customers || []).forEach(function(c) {
+    if (c.referred_by_id) idx.refCountByCust[c.referred_by_id] = (idx.refCountByCust[c.referred_by_id] || 0) + 1;
+  });
+  // pack members grouped by pack_owner_id
+  idx.membersByOwner = {};
+  (D.customers || []).forEach(function(c) {
+    if (c.pack_owner_id) (idx.membersByOwner[c.pack_owner_id] = idx.membersByOwner[c.pack_owner_id] || []).push(c);
+  });
+  // walkins converted via shake_party, keyed by converted_customer_id
+  idx.walkinConv = {};
+  (D.walkins || []).forEach(function(w) {
+    if (w.converted_customer_id && w.source === 'shake_party') idx.walkinConv[w.converted_customer_id] = true;
+  });
+  // pack history count per customer
+  idx.packHistoryCount = {};
+  (D.packHistory || []).forEach(function(h) {
+    idx.packHistoryCount[h.customer_id] = (idx.packHistoryCount[h.customer_id] || 0) + 1;
+  });
+  // customer lookup by id
+  idx.customerById = {};
+  (D.customers || []).forEach(function(c) { idx.customerById[c.id] = c; });
+  window._idx = idx;
+}
+
 // ── NEW LOGIC HELPERS ──
 function getPersonIds(id) {
   var ids = [id];
@@ -2968,8 +3011,9 @@ function getChurnRisk(custId) {
   var reasons = [];
 
   // Factor 1: Days since last attendance (0-40 pts)
-  var atts = D.attendance
-    .filter(function(a){ return a.customer_id === custId && a.status === 'present'; })
+  var _attSrc = (window._idx && window._idx.attByCustomer && window._idx.attByCustomer[custId]) || D.attendance.filter(function(a){ return a.customer_id === custId; });
+  var atts = _attSrc
+    .filter(function(a){ return a.status === 'present'; })
     .sort(function(a,b){ return b.date.localeCompare(a.date); });
   var daysSinceLast = atts.length
     ? Math.floor((new Date(today) - new Date(atts[0].date)) / 86400000)
@@ -8644,11 +8688,13 @@ function sendInactiveWA(cid) {
 
 // ── P3: Milestone Badge Detection ──
 function getMilestones(cid) {
-  var recs = D.body.filter(function(b){return b.customer_id===cid;}).sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+  var _bodySrc = (window._idx && window._idx.bodyByCustomer && window._idx.bodyByCustomer[cid]) || (D.body||[]).filter(function(b){return b.customer_id===cid;});
+  var recs = _bodySrc.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
   var milestones = [];
-  var attCount = D.attendance.filter(function(a){return a.customer_id===cid&&a.status==='present';}).length;
+  var _attSrc = (window._idx && window._idx.attByCustomer && window._idx.attByCustomer[cid]) || D.attendance.filter(function(a){return a.customer_id===cid;});
+  var attCount = _attSrc.filter(function(a){return a.status==='present';}).length;
   var streak = getStreak(cid);
-  var renewals = (D.packHistory||[]).filter(function(h){return h.customer_id===cid;}).length;
+  var renewals = (window._idx && window._idx.packHistoryCount) ? (window._idx.packHistoryCount[cid] || 0) : (D.packHistory||[]).filter(function(h){return h.customer_id===cid;}).length;
 
   // Body composition milestones (need 2+ scans)
   if (recs.length >= 2) {
@@ -12582,43 +12628,52 @@ function renderCustomers() {
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">👤</div><p>No customers found.</p></div></td></tr>'; }
   else {
     window._limCust = window._limCust || 50;
+    // Use pre-built indexes for O(1) per-row lookups (built by buildDataIndexes())
+    var _rIdx = window._idx || {};
+    var _rAttByCust   = _rIdx.attByCustomer  || {};
+    var _rBodyByCust  = _rIdx.bodyByCustomer  || {};
+    var _rRefCount    = _rIdx.refCountByCust  || {};
+    var _rMembers     = _rIdx.membersByOwner  || {};
+    var _rWalkinConv  = _rIdx.walkinConv      || {};
+    var _rCustById    = _rIdx.customerById    || {};
+    // Build coach lookup once (coaches array is small)
+    var _coachById = {};
+    D.coaches.forEach(function(co){ _coachById[co.id] = co; });
     tb.innerHTML = rows.slice(0, window._limCust).map(function(c){
     var st = getDaysLeft(c);
     var streak = getStreak(c.id);
     var bdg = st.days > 3 ? 'bg' : (st.days > 0 ? 'by' : 'br');
-    var refs = D.customers.filter(function(x){return x.referred_by_id===c.id;}).length;
+    var refs = _rRefCount[c.id] || 0;
     var refBadge = refs>=2?'<span class="star-cust">⭐ '+refs+'</span>':(refs===1?'<span style="color:var(--muted);font-size:12px">1</span>':'<span style="color:var(--muted);font-size:12px">—</span>');
     var bdayFlag = (c.dob&&c.dob.slice(5,10)===todayMMDD)?' 🎂':'';
     var noDobBadge = !c.dob ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:var(--warning-light);color:var(--warning-text);display:inline-block;margin-left:4px" title="Add DOB so client can log in securely">⚠️ No DOB</span>' : '';
     var wasReferred = c.referred_by_id || c.external_referrer_name;
-    var custAttCount = D.attendance.filter(function(a){return a.customer_id===c.id;}).length;
+    var custAttCount = (_rAttByCust[c.id] || []).length;
     var freeDay = (wasReferred && custAttCount===0)?' <span class="badge by" style="font-size:9px" title="Free checkup, counselling &amp; shake">🆓 Free 1st Day</span>':'';
     var waRenew = (st.active&&st.days<=3&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px" onclick="sendRenewalWA(\''+c.id+'\')">💬 Renew</button> ':'';
     var waReeng = (isInactive(c.id)&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px;background:#8b5cf6" onclick="sendInactiveWA(\''+c.id+'\')">💬 Re-engage</button> ':'';
-    var bodyCount = D.body.filter(function(b){return b.customer_id===c.id;}).length;
+    var bodyCount = (_rBodyByCust[c.id] || []).length;
     var waWeekly = (bodyCount>=2&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px;background:#0ea5e9" onclick="sendWeeklyProgressWA(\''+c.id+'\')">📊</button> ':'';
-    var isConvertedCoach = c.pack_owner_id && D.coaches.some(function(co){ 
-      return co.id === c.pack_owner_id && (
-        co.name && c.name && co.name.trim().toLowerCase() === c.name.trim().toLowerCase()
-      ); 
-    });
+    var isConvertedCoach = c.pack_owner_id && (function(){
+      var co = _coachById[c.pack_owner_id];
+      return co && co.name && c.name && co.name.trim().toLowerCase() === c.name.trim().toLowerCase();
+    })();
     var sharedBadge = '';
     if(isConvertedCoach) {
       sharedBadge = '<span class="badge" style="background:var(--warning-light);color:var(--warning-text);border:1px solid var(--border-accent);font-size:9px;display:block;margin-top:2px">⭐ Converted to Coach</span>';
     } else if(c.pack_owner_id) {
-      var po = D.customers.find(function(x){return x.id===c.pack_owner_id;})
-            || D.coaches.find(function(x){return x.id===c.pack_owner_id;});
+      var po = _rCustById[c.pack_owner_id] || _coachById[c.pack_owner_id];
       sharedBadge = '<span class="badge bb" style="font-size:9px;display:block;margin-top:2px">👥 On '+(po?po.name:'?')+'\'s pack</span>';
     }
-    var members = D.customers.filter(function(x){return x.pack_owner_id===c.id;});
+    var members = _rMembers[c.id] || [];
     var memberBadge = members.length ? '<span class="badge by" style="font-size:9px;display:block;margin-top:2px">👥 '+members.map(function(m){return m.name;}).join(', ')+'</span>' : '';
-    var enrollCoach = c.referred_by_id ? D.coaches.find(function(x){return x.id===c.referred_by_id;}) : null;
+    var enrollCoach = c.referred_by_id ? _coachById[c.referred_by_id] : null;
     var coachBadge = enrollCoach ? '<span class="badge" style="background:var(--info-light);color:var(--info-text);font-size:9px;display:block;margin-top:2px">👨‍🏫 '+enrollCoach.name+'</span>' : '';
     var risk = getChurnRisk(c.id);
     var riskBadge = risk.label ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;display:block;margin-top:2px;'+(risk.level==='critical'?'background:var(--danger-light);color:var(--text-danger)':'background:var(--warning-light);color:var(--warning-text)')+'" title="'+risk.reasons.join(', ')+'">'+risk.label+'</span>' : '';
     var msBadges = getMilestones(c.id).slice(-2).map(function(m){ return '<span class="milestone-badge ms-gold" style="font-size:9px;display:inline-block;margin-top:2px">'+m.icon+' '+m.label+'</span>'; }).join('');
     var issuesDisplay = c.issues ? '<div style="font-size:11px;color:var(--danger);margin-top:2px" title="Issues: '+c.issues+'">⚠️ Issues: '+c.issues+'</div>' : '';
-    var isShakePartyCust = (D.walkins||[]).some(function(w){ return (w.converted_customer_id === c.id || w.id === c.id) && w.source === 'shake_party'; });
+    var isShakePartyCust = !!_rWalkinConv[c.id];
     var shakeBadge = isShakePartyCust ? '<span class="badge" style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;font-size:9px;display:inline-block;margin-left:4px">🎉 Shake Party</span>' : '';
     return '<tr>'
       +'<td><strong>'+c.name+bdayFlag+'</strong>'+noDobBadge+freeDay+shakeBadge+sharedBadge+memberBadge+coachBadge+riskBadge+issuesDisplay+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
@@ -12646,7 +12701,8 @@ function renderCustomers() {
   }
   var active=_custs.filter(function(c){return getDaysLeft(c).active;}).length;
   var expiring=_custs.filter(function(c){var s=getDaysLeft(c);return s.active&&s.days<=3;}).length;
-  var stars=_custs.filter(function(c){return _custs.filter(function(x){return x.referred_by_id===c.id;}).length>=2;}).length;
+  var _starsRef = (window._idx && window._idx.refCountByCust) || {};
+  var stars=_custs.filter(function(c){return (_starsRef[c.id]||0)>=2;}).length;
   document.getElementById('customers-stats').innerHTML=
     '<div class="stat"><div class="stat-l">Total</div><div class="stat-v">'+_custs.length+'</div></div>'+
     '<div class="stat"><div class="stat-l">Active Packs</div><div class="stat-v">'+active+'</div></div>'+
