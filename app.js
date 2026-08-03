@@ -7220,11 +7220,11 @@ function renderFinance() {
     if (!entries.length) { el.innerHTML='<div style="color:var(--muted);font-size:12px">No records in this period</div>'; return; }
     el.innerHTML = entries.map(function(e){
       var pct = total > 0 ? Math.round((e[1]/total)*100) : 0;
-      return '<div style="margin-bottom:8px">'+
-        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'+
-          '<span>'+e[0]+'</span><span style="font-weight:600">₹'+e[1].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' <span style="color:var(--muted)">('+pct+'%)</span></span>'+
+      return '<div style="margin-bottom:14px">'+
+        '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">'+
+          '<span style="font-weight:500">'+e[0]+'</span><span style="font-weight:700">₹'+e[1].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' <span style="color:var(--muted);font-weight:400">('+pct+'%)</span></span>'+
         '</div>'+
-        '<div style="height:5px;border-radius:3px;background:var(--border)"><div style="height:5px;border-radius:3px;background:'+color+';width:'+pct+'%"></div></div>'+
+        '<div style="height:7px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden"><div style="height:7px;border-radius:6px;background:'+color+';width:'+pct+'%"></div></div>'+
       '</div>';
     }).join('');
   }
