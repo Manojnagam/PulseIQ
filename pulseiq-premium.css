@@ -2010,6 +2010,179 @@ tbody td {
   background: rgba(0, 217, 126, 0.4);
 }
 
+/* ── 43. FINANCE SECTION PREMIUM SPACING & RESPONSIVE LAYOUT ── */
+#sec-finance {
+  display: none;
+  padding: 12px 6px 36px !important;
+}
+
+#sec-finance.active {
+  display: block !important;
+}
+
+#sec-finance .ph {
+  margin-bottom: 24px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 16px !important;
+  padding: 4px 2px !important;
+}
+
+#sec-finance .ph > div:last-child {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+
+#sec-finance .tcard {
+  padding: 22px 24px !important;
+  margin-bottom: 20px !important;
+  border-radius: 18px !important;
+  background: rgba(14, 14, 24, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+#sec-finance .tcard > div {
+  gap: 12px 14px !important;
+}
+
+#sec-finance input[type="date"] {
+  background: rgba(8, 8, 14, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #f0f0fa !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+#sec-finance input[type="date"]:focus {
+  border-color: #00d97e !important;
+  box-shadow: 0 0 10px rgba(0, 217, 126, 0.2) !important;
+  outline: none !important;
+}
+
+#sec-finance .fin-period {
+  padding: 8px 14px !important;
+  border-radius: 10px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+#sec-finance .stats#fin-stats {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 16px !important;
+  margin-bottom: 20px !important;
+}
+
+#sec-finance .stats#fin-stats .stat {
+  padding: 20px 22px !important;
+  border-radius: 16px !important;
+  margin: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(14, 14, 24, 0.85) !important;
+}
+
+#sec-finance #fin-breakdown {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 18px !important;
+  margin-bottom: 20px !important;
+}
+
+#sec-finance .ttoolbar {
+  padding-bottom: 14px !important;
+  margin-bottom: 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  display: flex !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+
+#sec-finance table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+#sec-finance th {
+  padding: 14px 18px !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: var(--muted) !important;
+}
+
+#sec-finance td {
+  padding: 16px 18px !important;
+}
+
+@media (max-width: 768px) {
+  #sec-finance {
+    padding: 4px 0 24px !important;
+  }
+
+  #sec-finance .ph {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    margin-bottom: 18px !important;
+  }
+
+  #sec-finance .ph > div:last-child {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  #sec-finance .ph button {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 10px 8px !important;
+    font-size: 12px !important;
+  }
+
+  #sec-finance .tcard {
+    padding: 16px 14px !important;
+    margin-bottom: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  #sec-finance .stats#fin-stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  #sec-finance .stats#fin-stats .stat {
+    padding: 14px 12px !important;
+  }
+
+  #sec-finance #fin-breakdown {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  #sec-finance .ttoolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  #sec-finance .ttoolbar .search {
+    width: 100% !important;
+  }
+}
+
 
 
 
