@@ -2067,7 +2067,7 @@ async function loadAll() {
     }
     
     _daysLeftCache = {};  // initial critical data loaded
-    buildDataIndexes();   // build O(1) lookup maps after Phase 1
+    try { buildDataIndexes(); } catch(idxErr){ console.error('buildDataIndexes Phase1 err:', idxErr); } // build O(1) lookup maps after Phase 1
     try { await chartPromise; } catch(scErr) {}
     if (typeof Chart === 'undefined') {
       window.Chart = function() {
@@ -2113,12 +2113,21 @@ async function loadAll() {
       return loadBody();
     }).then(function() {
       _daysLeftCache = {}; // recalculate with full data
-      buildDataIndexes();  // rebuild O(1) lookup maps with Phase 3 data
+      try { buildDataIndexes(); } catch(idxErr){ console.error('buildDataIndexes Phase3 err:', idxErr); }
+      // Invalidate ALL tab caches — every tab visited before Phase 3 completed
+      // has stale/empty data. Next visit will trigger a fresh render with full data.
+      try { window.invalidateTabCache(); } catch(e){}
+      // Re-render currently visible tabs directly (don't wait for user to re-click)
       try { renderCustomers(); } catch(re){}
       try { renderOverview(); } catch(re){}
       if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
       if(typeof renderCoupons==='function') try { renderCoupons(); } catch(e){}
       if(typeof renderPayments==='function') try { renderPayments(); } catch(e){}
+      if(typeof renderLeadsStats==='function') try { renderLeadsStats(); } catch(e){}
+      if(typeof renderLeads==='function') try { renderLeads(); } catch(e){}
+      if(typeof renderAttendance==='function') try { renderAttendance(); } catch(e){}
+      if(typeof renderFoodStats==='function') try { renderFoodStats(); } catch(e){}
+      if(typeof renderFoods==='function') try { renderFoods(); } catch(e){}
       updateCustSelects();
       try { autoApplyRecurring(); } catch(re){ console.error('autoApplyRecurring crash:',re); }
       try { loadFollowUps(); } catch(re){ console.error('loadFollowUps crash:',re); }
