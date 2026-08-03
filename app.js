@@ -2909,13 +2909,19 @@ function buildDataIndexes() {
   // customer lookup by id
   idx.customerById = {};
   (D.customers || []).forEach(function(c) { idx.customerById[c.id] = c; });
+  // pre-computed getPersonIds for all customers and coaches (expensive call, memoize here)
+  idx.personIds = {};
+  (D.customers || []).concat(D.coaches || []).forEach(function(p) {
+    if (p.id && !idx.personIds[p.id]) idx.personIds[p.id] = getPersonIds(p.id);
+  });
   window._idx = idx;
 }
 
 // ── NEW LOGIC HELPERS ──
 function getPersonIds(id) {
+  if (!id) return [id];
+  if (window._idx && window._idx.personIds && window._idx.personIds[id]) return window._idx.personIds[id];
   var ids = [id];
-  if (!id) return ids;
   var cust = D.customers.find(function(x){ return x.id === id; });
   var coach = D.coaches.find(function(x){ return x.id === id; });
   if (coach) {
@@ -2977,7 +2983,12 @@ function getDaysLeft(c) {
 function getStreak(cid) {
   var attsSet = new Set();
   var pIds = getPersonIds(cid);
-  D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1 && a.status==='present') attsSet.add(a.date); });
+  var _attIdx = window._idx && window._idx.attByCustomer;
+  if (_attIdx) {
+    pIds.forEach(function(pid){ (_attIdx[pid]||[]).forEach(function(a){ if(a.status==='present') attsSet.add(a.date); }); });
+  } else {
+    D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1 && a.status==='present') attsSet.add(a.date); });
+  }
   var atts = Array.from(attsSet).sort().reverse();
   var streak=0, d=new Date();
   for(var i=0; i<atts.length; i++){
@@ -2988,10 +2999,18 @@ function getStreak(cid) {
   return streak;
 }
 function isInactive(c) {
-  if (typeof c === 'string') c = D.customers.find(function(x){return x.id===c;})||D.coaches.find(function(x){return x.id===c;})||{};
+  if (typeof c === 'string') {
+    var _cIdx = window._idx && window._idx.customerById;
+    c = (_cIdx && _cIdx[c]) || D.customers.find(function(x){return x.id===c;}) || D.coaches.find(function(x){return x.id===c;}) || {};
+  }
   var attsSet = new Set();
   var pIds = getPersonIds(c.id);
-  D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1) attsSet.add(a.date); });
+  var _attIdx = window._idx && window._idx.attByCustomer;
+  if (_attIdx) {
+    pIds.forEach(function(pid){ (_attIdx[pid]||[]).forEach(function(a){ attsSet.add(a.date); }); });
+  } else {
+    D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1) attsSet.add(a.date); });
+  }
   var atts = Array.from(attsSet).sort().reverse();
   var diff = 0;
   if(atts.length) diff = Math.floor((new Date() - new Date(atts[0]))/(1000*60*60*24));
@@ -6544,16 +6563,32 @@ function renderAttendance() {
   var attSearch = document.getElementById('att-search');
   var q = attSearch ? (attSearch.value || '').toLowerCase() : '';
   var _tn=new Date(); var todayStr=_tn.getFullYear()+'-'+String(_tn.getMonth()+1).padStart(2,'0')+'-'+String(_tn.getDate()).padStart(2,'0');
-  
+
+  // Build today-attendance lookup for O(1) per-person today check
+  var _attTodayByPId = {};
+  (window._idx && window._idx.attByCustomer
+    ? Object.keys(window._idx.attByCustomer).forEach(function(pid){
+        var rec = (window._idx.attByCustomer[pid]||[]).find(function(a){ return a.date===todayStr; });
+        if (rec) _attTodayByPId[pid] = rec;
+      })
+    : D.attendance.forEach(function(a){ if(a.date===todayStr) _attTodayByPId[a.customer_id]=a; })
+  );
+  function _presentToday(pIds) {
+    for(var i=0;i<pIds.length;i++){ var r=_attTodayByPId[pIds[i]]; if(r&&isPresentStatus(r.status)) return true; } return false;
+  }
+  function _attToday(pIds) {
+    for(var i=0;i<pIds.length;i++){ if(_attTodayByPId[pIds[i]]) return _attTodayByPId[pIds[i]]; } return null;
+  }
+
   var activeCusts = filterByCenter(D.customers).filter(function(c){
     var pIds = getPersonIds(c.id);
-    var isConvertedCoach = pIds.length > 1 && D.coaches.some(function(co){ return co.id === c.pack_owner_id; });
+    var isConvertedCoach = pIds.length > 1 && c.pack_owner_id && D.coaches.some(function(co){ return co.id === c.pack_owner_id; });
     if (isConvertedCoach) return false;
 
     var packActive = getDaysLeft(c).active;
-    var presentToday = D.attendance.some(function(a){ return pIds.indexOf(a.customer_id) !== -1 && a.date===todayStr && isPresentStatus(a.status); });
-    if (!packActive && !presentToday) return false; // hide expired-pack customers unless present today
-    if (isInactive(c) && !ATT_SHOW_INACTIVE && !presentToday) return false; // hide inactive unless toggled or present today
+    var presentTdy = _presentToday(pIds);
+    if (!packActive && !presentTdy) return false; // hide expired-pack customers unless present today
+    if (isInactive(c) && !ATT_SHOW_INACTIVE && !presentTdy) return false; // hide inactive unless toggled or present today
     return (c.name||'').toLowerCase().includes(q);
   });
 
@@ -6572,7 +6607,7 @@ function renderAttendance() {
 
   allPersons.forEach(function(p){
     var pIds = getPersonIds(p.id);
-    var att = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===todayStr;});
+    var att = _attToday(pIds);
     var stst = att ? att.status : 'None';
     var servings = att ? (Number(att.servings) || 1) : 0;
     var st = getDaysLeft(p.obj);
