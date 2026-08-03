@@ -828,6 +828,7 @@ tr:nth-child(even) td {
 /* ── 33. MOBILE OVERRIDES ─────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .main {
+    margin-left: 0 !important;
     padding: 56px 14px 28px !important;
   }
 
