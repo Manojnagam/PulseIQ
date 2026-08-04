@@ -289,7 +289,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
 .ov-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px}
 @media(max-width:900px){.ov-grid,.ov-grid-3{grid-template-columns:1fr}}
-.ov-card{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);overflow:hidden;transition:border-color .2s}
+.ov-card{background:#181819;border-radius:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);overflow:hidden;transition:border-color .2s}
 .ov-card:hover{border-color:rgba(255, 255, 255, 0.18)}
 .ov-card-h{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255, 255, 255, 0.08);background:rgba(255, 255, 255, 0.02)}
 .ov-card-h h3{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px}
@@ -345,7 +345,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .pin-center-row:last-child{border-bottom:none}
 .pin-action{background:var(--success-light);border:1px solid var(--border-success);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--text);margin-top:10px;line-height:1.6}
 /* TABLE */
-.tcard{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);overflow:hidden}
+.tcard{background:#181819;border-radius:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);overflow:hidden}
 .ttoolbar{padding:14px 18px;border-bottom:1px solid rgba(255, 255, 255, 0.08);display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(255, 255, 255, 0.02)}
 .search{padding:11px 16px;border:1.5px solid rgba(255, 255, 255, 0.12);border-radius:12px;font-family:inherit;font-size:13.5px;flex:1;min-width:180px;color:var(--text);background:rgba(18, 18, 20, 0.85);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1)}
 .search:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(39, 174, 96, 0.2);background:rgba(24, 24, 27, 0.95)}
@@ -399,7 +399,7 @@ tr:hover td{background:rgba(255, 255, 255, 0.04) !important}
 .toast.success{background:var(--success);color:#fff}
 .toast.error{background:var(--danger);color:#fff}
 /* SECTIONS */
-.sec{display:none}.sec.active{display:block}
+.sec{display:none;contain:layout style}.sec.active{display:block;contain:layout style}
 /* SQL BOX */
 pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font-size:11px;overflow-x:auto;line-height:1.7;white-space:pre-wrap}
 /* CUSTOM EXTRAS */
@@ -699,7 +699,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 }
 
 /* ── SLICERS & REPORTS ── */
-.slicer-bar{background:rgba(24, 24, 27, 0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.12);border-radius:20px;padding:18px 22px;margin-bottom:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5)}
+.slicer-bar{background:#161618;border:1px solid rgba(255, 255, 255, 0.12);border-radius:20px;padding:18px 22px;margin-bottom:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5)}
 .slicer-bar-inner{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .slicer-group{display:flex;flex-direction:column;gap:6px;min-width:130px}
 .slicer-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-family:'Space Grotesk',sans-serif}
@@ -717,9 +717,9 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 .slicer-chip:active:not(.active){background:rgba(255, 255, 255, 0.18);transform:scale(0.98)}
 .slicer-reset{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(239, 68, 68, 0.3);background:rgba(239, 68, 68, 0.15);color:#ef4444;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);user-select:none;-webkit-tap-highlight-color:transparent}
 .slicer-reset:active{background:rgba(239, 68, 68, 0.35);transform:scale(0.98)}
-.report-card,.ws-report-card{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:16px;padding:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
+.report-card,.ws-report-card{background:#181819;border-radius:16px;padding:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
 .report-card:active,.ws-report-card:active,#sec-export .tcard:active{transform:scale(0.99)}
-#sec-export .tcard{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
+#sec-export .tcard{background:#181819;border-radius:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
 #sec-export .tcard:hover{transform:translateY(-3px);border-color:rgba(39, 174, 96, 0.4);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65), 0 0 20px rgba(39, 174, 96, 0.15)}
 #sec-export .tcard[style*="dashed"]{background:linear-gradient(135deg, rgba(39, 174, 96, 0.08) 0%, rgba(24, 24, 27, 0.85) 100%);border:2px dashed rgba(39, 174, 96, 0.5) !important}
 :focus-visible{outline:none !important;border-color:#27AE60 !important;box-shadow:0 0 0 3px rgba(39, 174, 96, 0.3) !important}
@@ -982,7 +982,7 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
 .fhint-low{background:var(--low-bg);color:var(--low-text)}
 
 /* ── HEALTH SCORE GAUGE ── */
-.hs-card{background:linear-gradient(135deg, rgba(39, 174, 96, 0.14) 0%, rgba(24, 24, 27, 0.85) 60%, rgba(37, 99, 235, 0.1) 100%);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;padding:22px 24px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:22px;flex-wrap:wrap;box-shadow:0 12px 35px -10px rgba(0, 0, 0, 0.6);border:1px solid rgba(39, 174, 96, 0.35);transition:all .22s cubic-bezier(0.4, 0, 0.2, 1)}
+.hs-card{background:linear-gradient(135deg, rgba(39, 174, 96, 0.14) 0%, #161618 60%, rgba(37, 99, 235, 0.1) 100%);border-radius:20px;padding:22px 24px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:22px;flex-wrap:wrap;box-shadow:0 12px 35px -10px rgba(0, 0, 0, 0.6);border:1px solid rgba(39, 174, 96, 0.35);transition:all .22s cubic-bezier(0.4, 0, 0.2, 1)}
 .hs-card:hover{border-color:rgba(39, 174, 96, 0.55);box-shadow:0 18px 42px -10px rgba(0, 0, 0, 0.75)}
 .hs-gauge{flex-shrink:0}
 .hs-info{flex:1;min-width:160px}
@@ -1001,7 +1001,7 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
 .hs-grade-pip{padding:3px 10px;border-radius:12px;font-size:10.5px;font-weight:700}
 
 /* ── DIET PLAN ── */
-.diet-header{background:linear-gradient(135deg,rgba(39, 174, 96, 0.2) 0%,rgba(24, 24, 27, 0.9) 60%,rgba(37, 99, 235, 0.15) 100%);backdrop-filter:blur(16px);border-radius:20px;padding:22px 24px;margin-bottom:18px;color:#fff;border:1px solid rgba(39, 174, 96, 0.3)}
+.diet-header{background:linear-gradient(135deg,rgba(39, 174, 96, 0.2) 0%,#171719 60%,rgba(37, 99, 235, 0.15) 100%);border-radius:20px;padding:22px 24px;margin-bottom:18px;color:#fff;border:1px solid rgba(39, 174, 96, 0.3)}
 .diet-header h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px}
 .diet-header p{font-size:13px;color:var(--muted)}
 .diet-macros{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
@@ -1116,9 +1116,6 @@ h1, h2, h3, h4, h5, h6, .pt, .welcome-name, .mt, .sb-logo h1, .login-logo h1, .r
 .tcard, .stat, .report-card, .login-box, .modal {
   position: relative;
   overflow: hidden;
-  background: rgba(18, 26, 44, 0.65) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
   border: 1px solid rgba(255, 255, 255, 0.07) !important;
   border-radius: 16px !important;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1330,7 +1327,7 @@ if ('caches' in window) {
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
 <script defer src="auth.core.min.js?v=1.8.4"></script>
-<script defer src="app.min.js?v=1.9.1"></script>
+<script defer src="app.min.js?v=1.9.2"></script>
 <script defer src="mobile-debug.js?v=5.0"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>

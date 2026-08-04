@@ -2579,19 +2579,23 @@ function goTo(name, el) {
 
   // Helper for immediate cached execution & performance measurement
   function execTabModule(tabKey, renderFn) {
-    var t0 = performance.now();
     var isFirst = !window._loadedTabs[tabKey] || window._tabDirty[tabKey];
     if (isFirst) {
-      renderFn();
-      window._loadedTabs[tabKey] = true;
-      delete window._tabDirty[tabKey];
+      // Yield one frame so the browser can paint the section skeleton first,
+      // then render content — avoids freezing the UI on heavy tabs.
+      requestAnimationFrame(function() {
+        var t0 = performance.now();
+        renderFn();
+        window._loadedTabs[tabKey] = true;
+        delete window._tabDirty[tabKey];
+        var t1 = performance.now();
+        window._tabPerfMetrics[tabKey] = {
+          firstRenderTimeMs: Math.round(t1 - t0),
+          cachedRenderTimeMs: 0,
+          mainThreadBlockingMs: Math.max(0, Math.round((t1 - t0) - 16))
+        };
+      });
     }
-    var t1 = performance.now();
-    window._tabPerfMetrics[tabKey] = {
-      firstRenderTimeMs: isFirst ? Math.round(t1 - t0) : (window._tabPerfMetrics[tabKey] ? window._tabPerfMetrics[tabKey].firstRenderTimeMs : 0),
-      cachedRenderTimeMs: isFirst ? 0 : Math.round(t1 - t0),
-      mainThreadBlockingMs: Math.max(0, Math.round((t1 - t0) - 16))
-    };
   }
 
   // Direct execution with caching
