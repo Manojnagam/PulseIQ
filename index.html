@@ -1256,7 +1256,7 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
-<link rel="stylesheet" href="pulseiq-premium.css?v=3.7">
+<link rel="stylesheet" href="pulseiq-premium.css?v=4.0">
 <script>
 window.showMobileDebugError = function(title, details) {
   try {
@@ -1316,7 +1316,8 @@ if ('caches' in window) {
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
 <script defer src="auth.core.min.js?v=1.8.4"></script>
-<script defer src="app.min.js?v=1.8.8"></script>
+<script defer src="app.min.js?v=1.9.1"></script>
+<script defer src="mobile-debug.js?v=5.0"></script>
 <script defer src="shared/constants.js"></script>
 <script defer src="shared/date-utils.js"></script>
 <script defer src="shared/formatting.js"></script>
@@ -1737,6 +1738,8 @@ if ('caches' in window) {
         <button onclick="goTo('leads',document.querySelector('[onclick*=leads]'))" style="background:#0369a1;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(3,105,161,0.2)">Call Leads →</button>
       </div>
       <div id="ai-overview-summary" class="tcard" style="display:none; padding:20px; line-height:1.6; margin-bottom:20px;"></div>
+      <!-- Stat Cards — first so they're visible on mobile without scrolling -->
+      <div class="stats" id="overview-stats"></div>
       <!-- Quick Actions -->
       <div class="ov-quick" id="ov-quick-actions"></div>
       <!-- Global Search -->
@@ -1744,8 +1747,6 @@ if ('caches' in window) {
         <input type="text" id="ov-global-search" placeholder="🔍 Search customers, coaches, or centers..." oninput="renderGlobalSearch()" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--surface);color:var(--text);outline:none;transition:border .2s" onfocus="this.style.borderColor='var(--primary-light)'" onblur="this.style.borderColor='var(--border)'">
         <div id="ov-global-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);z-index:100;max-height:320px;overflow-y:auto"></div>
       </div>
-      <!-- Stat Cards -->
-      <div class="stats" id="overview-stats"></div>
       <!-- Revenue Row -->
       <div id="ov-revenue-row" style="margin-bottom:20px"></div>
       <!-- Center Health Score -->

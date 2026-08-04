@@ -2210,6 +2210,13 @@ async function loadCustomers() {
 async function loadAttendance() {
   D.attendance = await dbGet('attendance','date', _custIdsFilter());
   _daysLeftCache = {};
+  // Rebuild attendance index so renderAttendance sees fresh data immediately
+  if (window._idx) {
+    window._idx.attByCustomer = {};
+    D.attendance.forEach(function(a) {
+      (window._idx.attByCustomer[a.customer_id] = window._idx.attByCustomer[a.customer_id] || []).push(a);
+    });
+  }
   try { renderAttendance(); } catch(e) {}
   try { renderOverview(); } catch(e) {}
 }
@@ -2977,10 +2984,11 @@ function getDaysLeft(c) {
   var memberIds = [owner.id];
   D.customers.forEach(function(m){ if(m.pack_owner_id === owner.id) memberIds.push(m.id); });
   D.coaches.forEach(function(m){ if(m.pack_owner_id === owner.id) memberIds.push(m.id); });
-  // Sum servings across all members
+  // Sum servings across all members — count both 'present' and 'coupon_shake'
+  // (coupon_shake is a shake dispensed from the pack and must deplete the pack total)
   var totalServings = 0;
   D.attendance.forEach(function(a) {
-    if(memberIds.indexOf(a.customer_id) !== -1 && a.status==='present' && a.date >= owner.pack_start_date) {
+    if(memberIds.indexOf(a.customer_id) !== -1 && (a.status==='present' || a.status==='coupon_shake') && a.date >= owner.pack_start_date) {
       totalServings += (Number(a.servings) || 1);
     }
   });
@@ -4155,8 +4163,15 @@ function renderOverview() {
   });
   expiringCusts.sort(function(a,b){return a.days-b.days;});
 
-  // ── Today's check-ins ──
-  var attTodayList = _att.filter(function(a){return a.date===todayStr && isPresentStatus(a.status);});
+  // ── Today's check-ins — deduplicate by customer_id so one person with
+  //    multiple same-day records is counted once (matches attendance tab) ──
+  var _attSeenToday = {};
+  var attTodayList = _att.filter(function(a){
+    if(a.date!==todayStr || !isPresentStatus(a.status)) return false;
+    if(_attSeenToday[a.customer_id]) return false;
+    _attSeenToday[a.customer_id] = true;
+    return true;
+  });
   var attToday = attTodayList.length;
   var checkedInNames = attTodayList.map(function(a){
     var cu = _custs.find(function(x){return x.id===a.customer_id;});
@@ -6223,7 +6238,9 @@ async function toggleAtt(cid, cname, date, currentStatus) {
       showToast(cname+' — marked present (1 serving)','success');
     }
     _daysLeftCache = {};
+    if(window._loadedTabs) delete window._loadedTabs['sec-attendance'];
     await loadAttendance(); renderOverview();
+    if(document.getElementById('sec-attendance') && document.getElementById('sec-attendance').classList.contains('active')) renderAttendance();
     sendAttendanceWhatsApp(cid, cname, date);
   } catch(e) { showToast('Error: '+e.message,'error'); }
   finally { delete _attInFlight[key]; }
@@ -6248,7 +6265,9 @@ async function resetAtt(cid, cname, date) {
     await req('POST', 'attendance', payload, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
     showToast(cname+' — attendance removed','info');
     _daysLeftCache = {};
+    if(window._loadedTabs) delete window._loadedTabs['sec-attendance'];
     await loadAttendance(); renderOverview();
+    if(document.getElementById('sec-attendance') && document.getElementById('sec-attendance').classList.contains('active')) renderAttendance();
   } catch(e) { showToast('Error: '+e.message,'error'); }
   finally { delete _attInFlight[key]; }
 }

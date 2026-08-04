@@ -2215,6 +2215,37 @@ tbody td {
 }
 
 @media (max-width: 768px) {
+  /* Zero out sidebar-width variable so .main margin-left: var(--sw) collapses to 0 */
+  :root {
+    --sw: 0px !important;
+  }
+
+  /* Ensure .main does not overflow viewport horizontally */
+  .main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Sections must not shift or overflow */
+  .sec, .sec.active {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+    position: static !important;
+    left: auto !important;
+    margin-left: 0 !important;
+  }
+
+  /* Kill backdrop-filter on ALL stat variants — WebKit renders black boxes */
+  .stat, .stat:first-child, .stats .stat {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   .mobile-quick-nav {
     display: flex !important;
     gap: 8px !important;
@@ -2269,12 +2300,44 @@ tbody td {
     transform: none !important;
   }
 
-  /* Disable sec.active entrance animation on mobile — re-triggers each time goTo()
-     is called, causing a brief opacity:0 flash of the entire section */
-  .sec.active {
+  /* Disable ALL section entrance animations on mobile.
+     Both secIn (index.html) and fade-up-in (premium CSS) start at opacity:0.
+     We kill animations on .sec, .sec.active, AND their direct parent .main
+     so no inherited opacity/transform can keep the content invisible. */
+  .sec, .sec.active {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+    visibility: visible !important;
+  }
+
+  /* Kill any inherited animation on .main that could affect its children */
+  .main {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* count-in animation on .stat-v starts at opacity:0 — was missing from original
+     mobile fix, leaving stat values permanently invisible on mobile */
+  .stat-v {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* backdrop-filter is disabled on mobile to prevent WebKit black-box artifacts,
+     but that leaves rgba(12,12,18,0.85) stat backgrounds invisible on dark page.
+     Use solid colors so cards are actually visible. */
+  .stat {
+    background: #1a1a2e !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  }
+
+  /* Quick action buttons nearly invisible without backdrop-filter */
+  .ov-quick-btn {
+    background: rgba(30, 30, 50, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
   }
 }
 
