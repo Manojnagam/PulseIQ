@@ -94,7 +94,7 @@
         };
 
       case 'GOAL_PROGRESS':
-        const goals = window.PulseIQ_GoalTracking ? window.PulseIQ_GoalTracking.getEvaluation() : {};
+        const goals = (window.PulseIQ_GoalTracking ? window.PulseIQ_GoalTracking.getEvaluation() : null) || {};
         return {
           ...reportBase,
           title: 'Goal Progress & KPI Achievement Report',

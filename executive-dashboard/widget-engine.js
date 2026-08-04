@@ -16,7 +16,7 @@
     const risks = window.PulseIQ_CustomerRisk ? window.PulseIQ_CustomerRisk.getProfiles() : [];
     const coaches = window.PulseIQ_CoachAnalytics ? window.PulseIQ_CoachAnalytics.getCoaches() : [];
     const queue = window.PulseIQ_CustomerFollowup ? window.PulseIQ_CustomerFollowup.getQueue() : [];
-    const goals = window.PulseIQ_GoalTracking ? window.PulseIQ_GoalTracking.getEvaluation() : { businessHealthScore: 87, kpiResults: [] };
+    const goals = (window.PulseIQ_GoalTracking ? window.PulseIQ_GoalTracking.getEvaluation() : null) || { businessHealthScore: 87, kpiResults: [] };
     const forecasts = window.PulseIQ_Forecasting ? window.PulseIQ_Forecasting.getForecasts() : [];
 
     const inventory = D.inventory || [];
