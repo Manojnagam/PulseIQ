@@ -279,7 +279,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .btn-p:active{transform:translateY(0)}
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
-.stat{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;padding:22px 24px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);transition:all .22s cubic-bezier(0.4, 0, 0.2, 1)}
+.stat{background:rgba(24, 24, 27, 0.75);border-radius:20px;padding:22px 24px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);transition:all .22s cubic-bezier(0.4, 0, 0.2, 1)}
 .stat:hover{transform:translateY(-2px);border-color:rgba(39, 174, 96, 0.35);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65)}
 .stat-l{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700}
 .stat-v{font-family:'Space Grotesk','Plus Jakarta Sans',sans-serif;font-size:clamp(20px, 2vw, 32px);word-break:break-word;font-weight:700;color:var(--primary);margin-top:6px;letter-spacing:-0.5px}
@@ -1256,7 +1256,21 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
-<link rel="stylesheet" href="pulseiq-premium.css?v=4.0">
+<link rel="stylesheet" href="pulseiq-premium.css?v=4.3">
+<style>
+@media(max-width:768px){
+  .stat,.stat:first-child,.stats .stat,
+  .ov-card,.tcard,.report-card,.ws-report-card,
+  .hs-card,.diet-header,.login-card,
+  .sidebar,.overlay,.modal,#login-screen>div,
+  .mobile-quick-nav{
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important
+  }
+  .sidebar{background:#07070c!important}
+  .modal,.tcard{background:#0a0a10!important}
+}
+</style>
 <script>
 window.showMobileDebugError = function(title, details) {
   try {
