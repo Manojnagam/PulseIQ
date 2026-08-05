@@ -13573,9 +13573,15 @@ function openWalkinModal(id) {
       document.getElementById('walkin-gender').value=w.gender||'';
       document.getElementById('walkin-height').value=w.height||'';
       onWalkinSourceChange(); onWalkinOutcomeChange();
-      // Restore saved referred_by after onWalkinSourceChange clears the dropdown
-      if(w.referred_by_id){ sdSetValue('walkin-ref', w.referred_by_id); }
-      else if(w.referred_by_name){ document.getElementById('sd-walkin-ref-input').value=w.referred_by_name; }
+      // Restore saved referred_by after onWalkinSourceChange repopulates controls
+      if(w.source==='coach_referral' && w.referred_by_id){
+        document.getElementById('walkin-coach-sel').value = w.referred_by_id;
+        onWalkinCoachPick(document.getElementById('walkin-coach-sel'));
+      } else if(w.referred_by_id){
+        sdSetValue('walkin-ref', w.referred_by_id);
+      } else if(w.referred_by_name){
+        document.getElementById('sd-walkin-ref-input').value=w.referred_by_name;
+      }
     }
   }
   openModal('walkin');
@@ -13583,36 +13589,33 @@ function openWalkinModal(id) {
 
 function onWalkinSourceChange(){
   var src=document.getElementById('walkin-source').value;
-  document.getElementById('walkin-referred-wrap').style.display=(src==='customer_referral'||src==='coach_referral')?'block':'none';
+  var showRef = src==='customer_referral'||src==='coach_referral';
+  document.getElementById('walkin-referred-wrap').style.display=showRef?'block':'none';
+  document.getElementById('walkin-coach-ref-wrap').style.display=src==='coach_referral'?'block':'none';
+  document.getElementById('walkin-cust-ref-wrap').style.display=src==='customer_referral'?'block':'none';
   // Clear previous selection
   document.getElementById('walkin-referred-by-id').value='';
   document.getElementById('sd-walkin-ref-input').value='';
-  // Filter dropdown to only customers or only coaches from the active center
-  var persons=[];
-  var loggedInCoachId = (OWNER_PROFILE && OWNER_PROFILE.coach_id) || null;
 
-  if(src==='customer_referral'){
-    var list = D.customers || [];
-    if (loggedInCoachId) {
-      list = list.filter(function(c){ return c.referred_by_id === loggedInCoachId || c.coach_id === loggedInCoachId; });
-    }
-    persons = list.map(function(c){
+  if(src==='coach_referral'){
+    // Populate plain <select> with coaches
+    var coaches = (D.coaches||[]);
+    var sel = document.getElementById('walkin-coach-sel');
+    sel.innerHTML = '<option value="">— Select a coach —</option>' +
+      coaches.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+    sel.value = '';
+  } else if(src==='customer_referral'){
+    // Populate searchable input with customers
+    var persons = (D.customers||[]).map(function(c){
       return { value: c.id, label: c.name, search: (c.name||'').toLowerCase() };
     });
-  } else if(src==='coach_referral'){
-    var list = D.coaches || [];
-    if (loggedInCoachId) {
-      list = list.filter(function(c){ return c.id === loggedInCoachId; });
-    }
-    persons = list.map(function(c){
-      return { value: c.id, label: c.name + ' 👨‍🏫', search: (c.name||'').toLowerCase() };
-    });
-  }
-  sdSetItems('walkin-ref', persons);
-  if (persons.length === 1) {
-    sdSetValue('walkin-ref', persons[0].value);
+    sdSetItems('walkin-ref', persons);
   }
   syncWalkinTrialAmount();
+}
+function onWalkinCoachPick(sel){
+  var opt = sel.options[sel.selectedIndex];
+  document.getElementById('walkin-referred-by-id').value = opt ? opt.value : '';
 }
 function onWalkinOutcomeChange(){
   var out=document.getElementById('walkin-outcome').value;
