@@ -302,7 +302,7 @@ td.number, .mono, .revenue-val, .pin-metric-val {
   border: 1px solid var(--border) !important;
   border-radius: 16px !important;
   box-shadow: var(--shadow) !important;
-  overflow: hidden !important;
+  overflow: clip !important;
   transition: border-color 0.18s, box-shadow 0.18s, transform 0.2s var(--spring) !important;
   position: relative !important;
 }
@@ -1444,7 +1444,7 @@ tr:nth-child(even) td {
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 20px !important;
   padding: 0 !important;
-  overflow: hidden !important;
+  overflow: clip !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35) !important;
   transition: transform 0.22s var(--spring), box-shadow 0.22s, border-color 0.22s !important;
   position: relative !important;
@@ -1927,9 +1927,15 @@ tr:nth-child(even) td {
 /* ── Glassmorphic Data Tables ── */
 .twrap {
   border-radius: 16px !important;
-  overflow: hidden !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  scroll-behavior: smooth !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   background: rgba(10, 10, 18, 0.7) !important;
+}
+.twrap table {
+  width: auto !important;
+  min-width: 1500px !important;
 }
 
 table {
@@ -2215,21 +2221,70 @@ tbody td {
 }
 
 @media (max-width: 768px) {
-  /* Zero out sidebar-width variable so .main margin-left: var(--sw) collapses to 0 */
+  /* ── 1. Zero out sidebar-width so .main margin-left collapses to 0 ── */
   :root {
     --sw: 0px !important;
   }
 
-  /* Ensure .main does not overflow viewport horizontally */
+  /* ── 2. Kill backdrop-filter on every element that sets it in premium CSS.
+     Must use SAME specificity as the original rule so source order (later = wins).
+     Android WebKit renders backdrop-filter as solid black — must be none on mobile. ── */
+
+  /* sidebar has it at specificity 0,1,0 — match it */
+  .sidebar {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: #07070c !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.8) !important;
+  }
+
+  /* overlay, modal, login panel */
+  .overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .modal {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: #0a0a10 !important;
+  }
+  #login-screen > div {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(10,10,18,0.99) !important;
+  }
+
+  /* tcard and any other blurred containers */
+  .tcard {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: #111118 !important;
+  }
+
+  /* ── 3. Kill ALL infinite/fill-mode animations on mobile.
+     These burn GPU, delay first paint, and leave elements at opacity:0. ── */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Re-enable only fast functional transitions (button tap feedback) */
+  .nav-item, .mq-item, .btn-p, button {
+    transition: background 0.15s ease !important;
+  }
+
+  /* ── 4. Layout: .main must not overflow or shift ── */
   .main {
     margin-left: 0 !important;
     width: 100% !important;
     max-width: 100vw !important;
     overflow-x: hidden !important;
     box-sizing: border-box !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 
-  /* Sections must not shift or overflow */
+  /* ── 5. Sections: force visible, no transform offset ── */
   .sec, .sec.active {
     width: 100% !important;
     max-width: 100% !important;
@@ -2238,12 +2293,29 @@ tbody td {
     position: static !important;
     left: auto !important;
     margin-left: 0 !important;
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
   }
 
-  /* Kill backdrop-filter on ALL stat variants — WebKit renders black boxes */
+  /* ── 6. Stat cards: solid background (no blur) ── */
   .stat, .stat:first-child, .stats .stat {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    background: #1a1a2e !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* ── 7. Stat values and labels: always visible ── */
+  .stat-v, .stat-label, .stat-ic {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* ── 8. Quick action buttons ── */
+  .ov-quick-btn {
+    background: rgba(30,30,50,0.9) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
   }
 
   .mobile-quick-nav {
@@ -2338,6 +2410,90 @@ tbody td {
   .ov-quick-btn {
     background: rgba(30, 30, 50, 0.9) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  }
+}
+
+/* ── Desktop Performance: laptop/desktop only (mobile untouched) ── */
+@media (min-width: 769px) {
+  /* Smooth GPU-accelerated table scroll */
+  .twrap {
+    will-change: scroll-position !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Reduce heavy backdrop-filter blur on desktop — mobile already disables it entirely */
+  .sidebar,
+  .modal,
+  .overlay {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  /* GPU layer for sidebar (prevents repaint on scroll) */
+  .sidebar {
+    transform: translateZ(0) !important;
+    contain: layout style !important;
+  }
+
+  /* Promote animated cards to compositor layer only on hover to avoid excess layers */
+  .tcard:hover,
+  .stat:hover,
+  .ov-card:hover {
+    will-change: transform !important;
+  }
+
+  /* Contain layout of each section so reflows don't cascade across tabs */
+  .sec {
+    contain: layout !important;
+  }
+  .sec.active {
+    contain: none !important;
+  }
+
+  /* ── Scroll-jank fix #1: background-attachment:fixed forces a full-viewport
+     repaint of the gradient + SVG-noise background on EVERY scroll frame.
+     Paint it once on a fixed, composited pseudo-element instead — visually
+     identical, zero repaint cost while scrolling. ── */
+  body {
+    background-image: none !important;
+    background-attachment: scroll !important;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 217, 126, 0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 100% 80%, rgba(124, 90, 240, 0.05) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+  }
+
+  /* ── Scroll-jank fix #2: every stat card ran an infinite "beam" animation
+     that animates `left` (layout + paint each frame, forever). Pause them by
+     default; the beam sweeps only while the card is hovered. ── */
+  .stat::before,
+  .stat::after,
+  .ov-card::before,
+  .ov-card::after {
+    animation-play-state: paused !important;
+  }
+  .stat:hover::before,
+  .stat:hover::after,
+  .ov-card:hover::before,
+  .ov-card:hover::after {
+    animation-play-state: running !important;
+  }
+
+  /* ── Scroll-jank fix #3: sidebar backdrop blur re-blurs on every frame the
+     content behind it scrolls. Its background is already 96% opaque, so the
+     blur is invisible — drop it and go near-solid. ── */
+  .sidebar {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(7, 7, 12, 0.98) !important;
   }
 }
 

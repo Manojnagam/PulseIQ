@@ -87,6 +87,7 @@ Key relationships:
 ```sql
 ALTER TABLE finance ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id);
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS issues text;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS pack_end_date date;
 ```
 
 ## Authentication

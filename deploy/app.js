@@ -2067,6 +2067,7 @@ async function loadAll() {
     }
     
     _daysLeftCache = {};  // initial critical data loaded
+    try { buildDataIndexes(); } catch(idxErr){ console.error('buildDataIndexes Phase1 err:', idxErr); } // build O(1) lookup maps after Phase 1
     try { await chartPromise; } catch(scErr) {}
     if (typeof Chart === 'undefined') {
       window.Chart = function() {
@@ -2104,22 +2105,33 @@ async function loadAll() {
       showTrialExpiredScreen();
     }
     
-    // Phase 3: Load remaining data (non-blocking background load)
+    // Phase 3: Load remaining data + body in parallel (non-blocking)
     Promise.all([
       loadCoupons(), loadPayments(), loadPackHistory(),
-      loadLeads(), loadWalkins(), loadFoods(), loadInventory(), loadRecurring()
+      loadLeads(), loadWalkins(), loadFoods(), loadInventory(), loadRecurring(),
+      loadBody()  // parallel with rest — no longer waits for phase 3 to finish first
     ]).then(function() {
-      return loadBody();
-    }).then(function() {
       _daysLeftCache = {}; // recalculate with full data
-      try { renderCustomers(); } catch(re){}
-      try { renderOverview(); } catch(re){}
-      if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
-      if(typeof renderCoupons==='function') try { renderCoupons(); } catch(e){}
-      if(typeof renderPayments==='function') try { renderPayments(); } catch(e){}
-      updateCustSelects();
-      try { autoApplyRecurring(); } catch(re){ console.error('autoApplyRecurring crash:',re); }
-      try { loadFollowUps(); } catch(re){ console.error('loadFollowUps crash:',re); }
+      try { buildDataIndexes(); } catch(idxErr){ console.error('buildDataIndexes Phase3 err:', idxErr); }
+      try { window.invalidateTabCache(); } catch(e){}
+      // Spread re-renders across two animation frames — avoids blocking the main thread
+      requestAnimationFrame(function() {
+        try { renderCustomers(); } catch(re){}
+        try { renderOverview(); } catch(re){}
+        requestAnimationFrame(function() {
+          if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
+          if(typeof renderCoupons==='function') try { renderCoupons(); } catch(e){}
+          if(typeof renderPayments==='function') try { renderPayments(); } catch(e){}
+          if(typeof renderLeadsStats==='function') try { renderLeadsStats(); } catch(e){}
+          if(typeof renderLeads==='function') try { renderLeads(); } catch(e){}
+          if(typeof renderAttendance==='function') try { renderAttendance(); } catch(e){}
+          if(typeof renderFoodStats==='function') try { renderFoodStats(); } catch(e){}
+          if(typeof renderFoods==='function') try { renderFoods(); } catch(e){}
+          updateCustSelects();
+          try { autoApplyRecurring(); } catch(re){ console.error('autoApplyRecurring crash:',re); }
+          try { loadFollowUps(); } catch(re){ console.error('loadFollowUps crash:',re); }
+        });
+      });
     }).catch(function(bgErr) {
       console.error('Background data loading failed:', bgErr);
     });
@@ -2199,6 +2211,13 @@ async function loadCustomers() {
 async function loadAttendance() {
   D.attendance = await dbGet('attendance','date', _custIdsFilter());
   _daysLeftCache = {};
+  // Rebuild attendance index so renderAttendance sees fresh data immediately
+  if (window._idx) {
+    window._idx.attByCustomer = {};
+    D.attendance.forEach(function(a) {
+      (window._idx.attByCustomer[a.customer_id] = window._idx.attByCustomer[a.customer_id] || []).push(a);
+    });
+  }
   try { renderAttendance(); } catch(e) {}
   try { renderOverview(); } catch(e) {}
 }
@@ -2528,8 +2547,10 @@ function goTo(name, el) {
   // Single-element targeted class removal (avoids iterating over all DOM sections/navs)
   var currSec = document.querySelector('.sec.active');
   var currNav = document.querySelector('.nav-item.active');
+  var currMq  = document.querySelector('.mq-item.active');
   if (currSec) currSec.classList.remove('active');
   if (currNav) currNav.classList.remove('active');
+  if (currMq)  currMq.classList.remove('active');
 
   var sec = document.getElementById('sec-'+name);
   if (!sec && window._domCache) {
@@ -2547,6 +2568,9 @@ function goTo(name, el) {
       }
     } catch(e) {}
   }
+  var targetMq = document.querySelector('.mq-item[onclick*="' + name + '"]');
+  if (targetMq) targetMq.classList.add('active');
+
   if (window.innerWidth <= 768) {
     var sb = document.getElementById('sidebar');
     var sbo = document.getElementById('sb-overlay');
@@ -2556,19 +2580,23 @@ function goTo(name, el) {
 
   // Helper for immediate cached execution & performance measurement
   function execTabModule(tabKey, renderFn) {
-    var t0 = performance.now();
     var isFirst = !window._loadedTabs[tabKey] || window._tabDirty[tabKey];
     if (isFirst) {
-      renderFn();
-      window._loadedTabs[tabKey] = true;
-      delete window._tabDirty[tabKey];
+      // Yield one frame so the browser can paint the section skeleton first,
+      // then render content — avoids freezing the UI on heavy tabs.
+      requestAnimationFrame(function() {
+        var t0 = performance.now();
+        renderFn();
+        window._loadedTabs[tabKey] = true;
+        delete window._tabDirty[tabKey];
+        var t1 = performance.now();
+        window._tabPerfMetrics[tabKey] = {
+          firstRenderTimeMs: Math.round(t1 - t0),
+          cachedRenderTimeMs: 0,
+          mainThreadBlockingMs: Math.max(0, Math.round((t1 - t0) - 16))
+        };
+      });
     }
-    var t1 = performance.now();
-    window._tabPerfMetrics[tabKey] = {
-      firstRenderTimeMs: isFirst ? Math.round(t1 - t0) : (window._tabPerfMetrics[tabKey] ? window._tabPerfMetrics[tabKey].firstRenderTimeMs : 0),
-      cachedRenderTimeMs: isFirst ? 0 : Math.round(t1 - t0),
-      mainThreadBlockingMs: Math.max(0, Math.round((t1 - t0) - 16))
-    };
   }
 
   // Direct execution with caching
@@ -2586,7 +2614,8 @@ function goTo(name, el) {
   if (name==='profile')     execTabModule('profile', function(){ renderProfileCard(); updateProfileCoachSelect(); renderSvDietPlan(); });
   if (name==='leads')       execTabModule('leads', function(){ renderLeadsStats(); renderLeads(); updateLeadCenterSel(); });
   if (name==='guide')       execTabModule('guide', renderGuide);
-  if (name==='finance')     execTabModule('finance', function(){ setFinPeriod('all', document.querySelector('.fin-period[onclick*="all"]')); });
+  if (name==='finance')     execTabModule('finance', function(){ if (typeof renderFinance === 'function') renderFinance(); });
+  if (name==='recovery')    execTabModule('recovery', function(){ if (typeof renderRecoveryHub === 'function') renderRecoveryHub(); });
   if (name==='reports')     execTabModule('reports', function(){ if (typeof renderReportsView === 'function') renderReportsView(); });
   if (name==='expenses') {
     (async function() {
@@ -2656,6 +2685,8 @@ function autofillBodyHeightAge(custId) {
   if (!custId) {
     el_h.value = '';
     el_a.value = '';
+    el_h.placeholder = '170';
+    el_a.placeholder = '30';
     return;
   }
 
@@ -2707,7 +2738,28 @@ function autofillBodyHeightAge(custId) {
         if (person.age) {
           ageVal = person.age;
         } else if (person.dob) {
-          ageVal = Math.floor((new Date() - new Date(person.dob)) / (365.25 * 24 * 3600 * 1000));
+          var dobStr = String(person.dob).trim();
+          var dobDate = null;
+          if (dobStr.includes('-')) {
+            var parts = dobStr.split('-');
+            if (parts[0].length === 4) {
+              // YYYY-MM-DD
+              dobDate = new Date(dobStr);
+            } else if (parts[2] && parts[2].length === 4) {
+              // DD-MM-YYYY
+              dobDate = new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
+            } else {
+              dobDate = new Date(dobStr);
+            }
+          } else {
+            dobDate = new Date(dobStr);
+          }
+          if (dobDate && !isNaN(dobDate.getTime())) {
+            var calcAge = Math.floor((new Date() - dobDate) / (365.25 * 24 * 3600 * 1000));
+            if (!isNaN(calcAge) && calcAge > 0 && calcAge < 120) {
+              ageVal = calcAge;
+            }
+          }
         }
       }
     }
@@ -2724,6 +2776,8 @@ function autofillBodyHeightAge(custId) {
 
   el_h.value = heightVal || '';
   el_a.value = ageVal || '';
+  el_h.placeholder = heightVal ? String(heightVal) : 'Not on file — please enter';
+  el_a.placeholder = ageVal ? String(ageVal) : 'Not on file — please enter';
 }
 
 // ── MODALS ──
@@ -2819,6 +2873,7 @@ function updateCustSelects() {
   // Body composition — ALL coaches regardless of pack status + walk-ins + Center Owner / Supervisor
   var bodySel = document.getElementById('body-customer');
   if(bodySel) {
+    var prevVal = bodySel.value;
     var _opProf = (typeof OWNER_PROFILE !== 'undefined' && OWNER_PROFILE && OWNER_PROFILE.name) ? OWNER_PROFILE : JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
     var _svProf = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
     var _ownerName = _opProf.name || _svProf.name || 'Myself (Center Owner)';
@@ -2827,6 +2882,10 @@ function updateCustSelects() {
     var _walkinList = (D.walkins||[]).filter(function(w){ return !ACTIVE_CENTER||w.wellness_center_id===ACTIVE_CENTER||w.center_id===ACTIVE_CENTER; });
     var bWalkinOpts = _walkinList.length ? '<optgroup label="── Walk-ins ──">'+_walkinList.map(function(w){return '<option value="walkin__'+w.id+'">'+w.name+' 🚶 ('+(w.date||'')+')</option>';}).join('')+'</optgroup>' : '';
     bodySel.innerHTML = '<option value="">Select person</option><option value="__sv__">👤 ' + _ownerName + ' (Myself / Owner)</option>' + bCustOpts + bCoachOpts + bWalkinOpts;
+    if (prevVal) {
+      bodySel.value = prevVal;
+      autofillBodyHeightAge(prevVal);
+    }
   }
   var cCoach = document.getElementById('customer-coach');
   if(cCoach) cCoach.innerHTML = '<option value="">Select coach</option>' + D.coaches.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
@@ -2834,10 +2893,57 @@ function updateCustSelects() {
   if(assignSel) assignSel.innerHTML = '<option value="">— Not assigned —</option>' + filterByCenter(D.coaches).map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');
 }
 
+// ── DATA INDEXES ──
+// Pre-built O(1) lookup maps. Call buildDataIndexes() after each data load phase.
+window._idx = window._idx || {};
+function buildDataIndexes() {
+  var idx = {};
+  // attendance grouped by customer_id
+  idx.attByCustomer = {};
+  (D.attendance || []).forEach(function(a) {
+    (idx.attByCustomer[a.customer_id] = idx.attByCustomer[a.customer_id] || []).push(a);
+  });
+  // body records grouped by customer_id
+  idx.bodyByCustomer = {};
+  (D.body || []).forEach(function(b) {
+    (idx.bodyByCustomer[b.customer_id] = idx.bodyByCustomer[b.customer_id] || []).push(b);
+  });
+  // referral count per referrer id
+  idx.refCountByCust = {};
+  (D.customers || []).forEach(function(c) {
+    if (c.referred_by_id) idx.refCountByCust[c.referred_by_id] = (idx.refCountByCust[c.referred_by_id] || 0) + 1;
+  });
+  // pack members grouped by pack_owner_id
+  idx.membersByOwner = {};
+  (D.customers || []).forEach(function(c) {
+    if (c.pack_owner_id) (idx.membersByOwner[c.pack_owner_id] = idx.membersByOwner[c.pack_owner_id] || []).push(c);
+  });
+  // walkins converted via shake_party, keyed by converted_customer_id
+  idx.walkinConv = {};
+  (D.walkins || []).forEach(function(w) {
+    if (w.converted_customer_id && w.source === 'shake_party') idx.walkinConv[w.converted_customer_id] = true;
+  });
+  // pack history count per customer
+  idx.packHistoryCount = {};
+  (D.packHistory || []).forEach(function(h) {
+    idx.packHistoryCount[h.customer_id] = (idx.packHistoryCount[h.customer_id] || 0) + 1;
+  });
+  // customer lookup by id
+  idx.customerById = {};
+  (D.customers || []).forEach(function(c) { idx.customerById[c.id] = c; });
+  // pre-computed getPersonIds for all customers and coaches (expensive call, memoize here)
+  idx.personIds = {};
+  (D.customers || []).concat(D.coaches || []).forEach(function(p) {
+    if (p.id && !idx.personIds[p.id]) idx.personIds[p.id] = getPersonIds(p.id);
+  });
+  window._idx = idx;
+}
+
 // ── NEW LOGIC HELPERS ──
 function getPersonIds(id) {
+  if (!id) return [id];
+  if (window._idx && window._idx.personIds && window._idx.personIds[id]) return window._idx.personIds[id];
   var ids = [id];
-  if (!id) return ids;
   var cust = D.customers.find(function(x){ return x.id === id; });
   var coach = D.coaches.find(function(x){ return x.id === id; });
   if (coach) {
@@ -2884,10 +2990,11 @@ function getDaysLeft(c) {
   var memberIds = [owner.id];
   D.customers.forEach(function(m){ if(m.pack_owner_id === owner.id) memberIds.push(m.id); });
   D.coaches.forEach(function(m){ if(m.pack_owner_id === owner.id) memberIds.push(m.id); });
-  // Sum servings across all members
+  // Sum servings across all members — count both 'present' and 'coupon_shake'
+  // (coupon_shake is a shake dispensed from the pack and must deplete the pack total)
   var totalServings = 0;
   D.attendance.forEach(function(a) {
-    if(memberIds.indexOf(a.customer_id) !== -1 && a.status==='present' && a.date >= owner.pack_start_date) {
+    if(memberIds.indexOf(a.customer_id) !== -1 && (a.status==='present' || a.status==='coupon_shake') && a.date >= owner.pack_start_date) {
       totalServings += (Number(a.servings) || 1);
     }
   });
@@ -2899,7 +3006,12 @@ function getDaysLeft(c) {
 function getStreak(cid) {
   var attsSet = new Set();
   var pIds = getPersonIds(cid);
-  D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1 && a.status==='present') attsSet.add(a.date); });
+  var _attIdx = window._idx && window._idx.attByCustomer;
+  if (_attIdx) {
+    pIds.forEach(function(pid){ (_attIdx[pid]||[]).forEach(function(a){ if(a.status==='present') attsSet.add(a.date); }); });
+  } else {
+    D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1 && a.status==='present') attsSet.add(a.date); });
+  }
   var atts = Array.from(attsSet).sort().reverse();
   var streak=0, d=new Date();
   for(var i=0; i<atts.length; i++){
@@ -2910,15 +3022,245 @@ function getStreak(cid) {
   return streak;
 }
 function isInactive(c) {
-  if (typeof c === 'string') c = D.customers.find(function(x){return x.id===c;})||D.coaches.find(function(x){return x.id===c;})||{};
+  if (typeof c === 'string') {
+    var _cIdx = window._idx && window._idx.customerById;
+    c = (_cIdx && _cIdx[c]) || D.customers.find(function(x){return x.id===c;}) || D.coaches.find(function(x){return x.id===c;}) || {};
+  }
   var attsSet = new Set();
   var pIds = getPersonIds(c.id);
-  D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1) attsSet.add(a.date); });
+  var _attIdx = window._idx && window._idx.attByCustomer;
+  if (_attIdx) {
+    pIds.forEach(function(pid){ (_attIdx[pid]||[]).forEach(function(a){ attsSet.add(a.date); }); });
+  } else {
+    D.attendance.forEach(function(a){ if(pIds.indexOf(a.customer_id) !== -1) attsSet.add(a.date); });
+  }
   var atts = Array.from(attsSet).sort().reverse();
   var diff = 0;
   if(atts.length) diff = Math.floor((new Date() - new Date(atts[0]))/(1000*60*60*24));
   else diff = Math.floor((new Date() - (c.join_date ? new Date(c.join_date) : new Date()))/(1000*60*60*24));
   return diff >= 7;
+}
+
+// ══════════════════════════════════════════════
+//  🔁 RECOVERY HUB — renewals, dues, absence
+// ══════════════════════════════════════════════
+function _packEndDate(c) {
+  if (!c || !c.pack_start_date || !c.pack_type) return null;
+  var dur = parsePack(c.pack_type);
+  if (dur >= 9999) return null; // Product User — never expires
+  var d = new Date(c.pack_start_date + 'T00:00:00');
+  if (isNaN(d)) return null;
+  d.setDate(d.getDate() + dur);
+  return d.toISOString().split('T')[0];
+}
+
+function waOpenMsg(contact, msg) {
+  var p = (contact || '').replace(/\D/g, '');
+  if (!p) { showToast('No phone number on file', 'error'); return; }
+  if (p.length === 10) p = COUNTRY_CODE + p;
+  window.open('https://api.whatsapp.com/send?phone=' + p + '&text=' + encodeURIComponent(msg), '_blank');
+}
+
+function getLapsedCustomers() {
+  var today = new Date().toISOString().split('T')[0];
+  return filterByCenter(D.customers || []).filter(function(c) {
+    if (c.pack_owner_id) return false;                 // shares someone else's pack
+    if (!c.pack_type || !c.pack_start_date) return false;
+    if (parsePack(c.pack_type) >= 9999) return false;  // product user
+    var st = getDaysLeft(c);
+    var end = _packEndDate(c);
+    return !st.active || (end && end < today);         // servings used up OR window passed
+  }).map(function(c) {
+    var st = getDaysLeft(c);
+    var end = _packEndDate(c);
+    var endedDays = end ? Math.floor((new Date() - new Date(end + 'T00:00:00')) / 864e5) : 0;
+    if (endedDays < 0) endedDays = 0; // servings exhausted before the date window closed
+    return { c: c, end: end, endedDays: endedDays, used: st.used, total: st.total };
+  }).sort(function(a, b) { return a.endedDays - b.endedDays; }); // freshest lapses first
+}
+
+function getDuesList() {
+  var today = new Date().toISOString().split('T')[0];
+  var byPerson = {};
+  (D.payments || []).forEach(function(p) {
+    var bal = Math.max(0, Number(p.total_amount || 0) - Number(p.amount_paid || 0));
+    if (bal <= 0) return;
+    var k = p.person_id || p.person_name || 'unknown';
+    if (!byPerson[k]) byPerson[k] = { personId: p.person_id, name: p.person_name || 'Unknown', bal: 0, earliestDue: null, descs: [] };
+    byPerson[k].bal += bal;
+    if (p.due_date && (!byPerson[k].earliestDue || p.due_date < byPerson[k].earliestDue)) byPerson[k].earliestDue = p.due_date;
+    if (p.description && byPerson[k].descs.indexOf(p.description) === -1) byPerson[k].descs.push(p.description);
+  });
+  return Object.keys(byPerson).map(function(k) {
+    var x = byPerson[k];
+    var person = (D.customers || []).find(function(c) { return c.id === x.personId; })
+              || (D.coaches   || []).find(function(c) { return c.id === x.personId; });
+    x.contact = person ? person.contact : null;
+    x.lang = (person && person.preferred_language) || WA_LANG || 'English';
+    x.overdue = !!(x.earliestDue && x.earliestDue < today);
+    return x;
+  }).sort(function(a, b) { return b.bal - a.bal; });
+}
+
+function getAbsenceList() {
+  var items = [];
+  filterByCenter(D.customers || []).forEach(function(c) {
+    var st = getDaysLeft(c);
+    if (!st.active || st.total >= 9999) return;
+    var atts = ((window._idx && window._idx.attByCustomer && window._idx.attByCustomer[c.id])
+      || (D.attendance || []).filter(function(a) { return a.customer_id === c.id; }))
+      .filter(function(a) { return a.status === 'present'; })
+      .map(function(a) { return a.date; }).sort().reverse();
+    var days = atts.length
+      ? Math.floor((new Date() - new Date(atts[0] + 'T00:00:00')) / 864e5)
+      : (c.join_date ? Math.floor((new Date() - new Date(c.join_date + 'T00:00:00')) / 864e5) : 0);
+    if (days >= 7) items.push({ c: c, days: days, left: st.days, last: atts[0] || null });
+  });
+  return items.sort(function(a, b) { return b.days - a.days; });
+}
+
+function _recoveryMsgRenewal(c, end) {
+  var first = (c.name || '').split(' ')[0];
+  var cn = getCenterName();
+  if ((c.preferred_language || WA_LANG) === 'Telugu') {
+    return 'హాయ్ ' + first + '! 🌿 మీ ' + (c.pack_type || '') + ' ప్యాక్ ' + (end ? end + 'న ' : '') + 'ముగిసింది. మీ వెల్‌నెస్ ప్రయాణాన్ని కొనసాగిద్దాం — ఈ వారంలో రెన్యూ చేసుకుంటారా? 💚 — ' + cn;
+  }
+  return 'Hi ' + first + '! 🌿 Your ' + (c.pack_type || 'wellness') + ' pack at ' + cn + (end ? ' ended on ' + end : ' has ended') + '. We\'d love to keep your progress going — shall I reserve your renewal this week? 💚 — ' + cn;
+}
+
+function _recoveryMsgDues(x) {
+  var cn = getCenterName();
+  if (x.lang === 'Telugu') {
+    return 'హాయ్ ' + x.name + ', ' + cn + ' నుండి చిన్న గుర్తింపు: మీ ' + (x.descs[0] || 'ప్యాక్') + ' కోసం ₹' + x.bal.toLocaleString('en-IN') + ' పెండింగ్‌లో ఉంది. మీ తదుపరి విజిట్‌లో లేదా UPI ద్వారా చెల్లించవచ్చు. ధన్యవాదాలు! 🙏 — ' + cn;
+  }
+  return 'Hi ' + x.name + ', a gentle reminder from ' + cn + ': ₹' + x.bal.toLocaleString('en-IN') + ' is pending for your ' + (x.descs[0] || 'pack') + (x.earliestDue ? ' (due ' + x.earliestDue + ')' : '') + '. You can clear it on your next visit or via UPI. Thank you! 🙏 — ' + cn;
+}
+
+function _recoveryMsgAbsence(item) {
+  var first = (item.c.name || '').split(' ')[0];
+  var cn = getCenterName();
+  if ((item.c.preferred_language || WA_LANG) === 'Telugu') {
+    return 'హాయ్ ' + first + '! ' + cn + 'లో మిమ్మల్ని మిస్ అవుతున్నాం — ' + item.days + ' రోజులైంది, మీ ప్యాక్‌లో ఇంకా ' + item.left + ' సెషన్లు ఉన్నాయి. ఈ వారం వచ్చి మళ్లీ మొదలుపెడదాం! 💪 — ' + cn;
+  }
+  return 'Hi ' + first + '! We\'ve missed you at ' + cn + ' — it\'s been ' + item.days + ' days and your pack still has ' + item.left + ' sessions left. Come in this week and let\'s restart! 💪 — ' + cn;
+}
+
+function waRecoveryRenewal(cid) {
+  var c = (D.customers || []).find(function(x) { return x.id === cid; });
+  if (!c) return;
+  waOpenMsg(c.contact, _recoveryMsgRenewal(c, _packEndDate(c)));
+}
+function waRecoveryDues(i) {
+  var x = (window._recoveryDues || [])[i];
+  if (!x) return;
+  waOpenMsg(x.contact, _recoveryMsgDues(x));
+}
+function waRecoveryAbsence(cid) {
+  var item = (window._recoveryAbsence || []).find(function(x) { return x.c.id === cid; });
+  if (!item) return;
+  waOpenMsg(item.c.contact, _recoveryMsgAbsence(item));
+}
+
+function _recoveryRow(left, mid, right) {
+  return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--border);flex-wrap:wrap">'
+    + '<div style="flex:1.4;min-width:140px">' + left + '</div>'
+    + '<div style="flex:1;min-width:110px;font-size:12.5px;color:var(--muted)">' + mid + '</div>'
+    + '<div style="display:flex;gap:6px;align-items:center">' + right + '</div>'
+    + '</div>';
+}
+
+function renderRecoveryHub() {
+  var statsEl = document.getElementById('recovery-stats');
+  var renEl   = document.getElementById('recovery-renewals');
+  var duesEl  = document.getElementById('recovery-dues');
+  var absEl   = document.getElementById('recovery-inactive');
+  if (!statsEl || !renEl || !duesEl || !absEl) return;
+
+  var lapsed  = getLapsedCustomers();
+  var dues    = getDuesList();
+  var absence = getAbsenceList();
+  window._recoveryDues = dues;
+  window._recoveryAbsence = absence;
+
+  var lapsedValue = lapsed.reduce(function(s, x) { return s + (Number(x.c.pack_price) || 0); }, 0);
+  var duesTotal   = dues.reduce(function(s, x) { return s + x.bal; }, 0);
+
+  statsEl.innerHTML =
+    '<div class="stat"><div class="stat-ic">🔁</div><div class="stat-l">Lapsed Renewals</div><div class="stat-v">' + lapsed.length + '</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px">~₹' + lapsedValue.toLocaleString('en-IN') + ' recoverable</div></div>'
+    + '<div class="stat"><div class="stat-ic">💰</div><div class="stat-l">Outstanding Dues</div><div class="stat-v">₹' + duesTotal.toLocaleString('en-IN') + '</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px">' + dues.length + ' member' + (dues.length === 1 ? '' : 's') + ' owe money</div></div>'
+    + '<div class="stat"><div class="stat-ic">😴</div><div class="stat-l">Absent 7+ Days</div><div class="stat-v">' + absence.length + '</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px">on active packs — churn risk</div></div>';
+
+  // ── Renewal recovery list ──
+  if (!lapsed.length) {
+    renEl.innerHTML = '<div class="empty" style="padding:20px"><div class="ei">🎉</div><p>No lapsed packs — everyone is renewed!</p></div>';
+  } else {
+    renEl.innerHTML = lapsed.map(function(x) {
+      var badge = x.endedDays === 0 ? '<span class="badge br">ended today</span>'
+        : '<span class="badge ' + (x.endedDays <= 14 ? 'by' : 'br') + '">' + x.endedDays + 'd ago</span>';
+      return _recoveryRow(
+        '<strong>' + x.c.name + '</strong><div style="font-size:12px;color:var(--muted)">' + (x.c.pack_type || '') + (x.c.pack_price ? ' · ₹' + Number(x.c.pack_price).toLocaleString('en-IN') : '') + '</div>',
+        (x.end ? 'ended ' + x.end + ' ' : 'sessions used up ') + badge + '<div>' + x.used + '/' + x.total + ' sessions used</div>',
+        (x.c.contact ? '<button class="btn-p" style="font-size:12px;padding:6px 12px" onclick="waRecoveryRenewal(\'' + x.c.id + '\')">💬 Remind</button>' : '<span style="font-size:11.5px;color:var(--muted)">no phone</span>')
+        + '<button class="btn-c" style="font-size:12px;padding:6px 12px" onclick="openRenewForCustomer(\'' + x.c.id + '\')">🔄 Renew</button>'
+      );
+    }).join('');
+  }
+
+  // ── Dues tracker ──
+  if (!dues.length) {
+    duesEl.innerHTML = '<div class="empty" style="padding:20px"><div class="ei">✅</div><p>No outstanding balances — all dues cleared!</p></div>';
+  } else {
+    duesEl.innerHTML = dues.map(function(x, i) {
+      return _recoveryRow(
+        '<strong>' + x.name + '</strong><div style="font-size:12px;color:var(--muted)">' + (x.descs.join(', ') || '') + '</div>',
+        '<strong style="color:var(--text);font-size:14px">₹' + x.bal.toLocaleString('en-IN') + '</strong> '
+          + (x.overdue ? '<span class="badge br">overdue</span>' : (x.earliestDue ? '<span class="badge by">due ' + x.earliestDue + '</span>' : '')),
+        (x.contact ? '<button class="btn-p" style="font-size:12px;padding:6px 12px" onclick="waRecoveryDues(' + i + ')">💬 Nudge</button>' : '<span style="font-size:11.5px;color:var(--muted)">no phone</span>')
+      );
+    }).join('');
+  }
+
+  // ── Absence alerts ──
+  if (!absence.length) {
+    absEl.innerHTML = '<div class="empty" style="padding:20px"><div class="ei">💪</div><p>No absent members — everyone on an active pack visited this week!</p></div>';
+  } else {
+    absEl.innerHTML = absence.map(function(x) {
+      return _recoveryRow(
+        '<strong>' + x.c.name + '</strong><div style="font-size:12px;color:var(--muted)">' + (x.c.pack_type || '') + ' · ' + x.left + ' sessions left</div>',
+        '<span class="badge ' + (x.days >= 14 ? 'br' : 'by') + '">' + x.days + ' days absent</span>' + (x.last ? '<div>last visit ' + x.last + '</div>' : '<div>never visited</div>'),
+        (x.c.contact ? '<button class="btn-p" style="font-size:12px;padding:6px 12px" onclick="waRecoveryAbsence(\'' + x.c.id + '\')">💬 We miss you</button>' : '<span style="font-size:11.5px;color:var(--muted)">no phone</span>')
+      );
+    }).join('');
+  }
+}
+
+async function backfillPackEndDates() {
+  var targets = (D.customers || []).filter(function(c) {
+    var end = _packEndDate(c);
+    return end && c.pack_end_date !== end;
+  });
+  if (!targets.length) { showToast('All pack end dates are already up to date ✅'); return; }
+  if (!confirm('Auto-fill pack_end_date for ' + targets.length + ' customer(s)?\n\nComputed as pack start date + pack duration. Existing values are overwritten with the computed date.')) return;
+  var btn = document.getElementById('recovery-backfill-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Updating…'; }
+  var ok = 0, fail = 0;
+  for (var i = 0; i < targets.length; i++) {
+    try {
+      await dbUpdate('customers', targets[i].id, { pack_end_date: _packEndDate(targets[i]) });
+      ok++;
+    } catch (e) {
+      fail++;
+      if (/pack_end_date|column/i.test(e.message || '')) {
+        showToast('The customers table has no pack_end_date column yet — run the SQL migration shown in the Guide.', 'error');
+        break;
+      }
+    }
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '📅 Auto-fill pack end dates'; }
+  showToast('Pack end dates: ' + ok + ' updated' + (fail ? ', ' + fail + ' failed' : '') + ' ✅');
+  try { await loadCustomers(); } catch (e) {}
+  try { window.invalidateTabCache('recovery'); } catch (e) {}
+  renderRecoveryHub();
 }
 
 // ── CHURN RISK SCORING ──
@@ -2933,8 +3275,9 @@ function getChurnRisk(custId) {
   var reasons = [];
 
   // Factor 1: Days since last attendance (0-40 pts)
-  var atts = D.attendance
-    .filter(function(a){ return a.customer_id === custId && a.status === 'present'; })
+  var _attSrc = (window._idx && window._idx.attByCustomer && window._idx.attByCustomer[custId]) || D.attendance.filter(function(a){ return a.customer_id === custId; });
+  var atts = _attSrc
+    .filter(function(a){ return a.status === 'present'; })
     .sort(function(a,b){ return b.date.localeCompare(a.date); });
   var daysSinceLast = atts.length
     ? Math.floor((new Date(today) - new Date(atts[0].date)) / 86400000)
@@ -3709,13 +4052,13 @@ async function generateWellnessScanReport() {
     if (!res.ok) throw new Error(report.error || 'Failed to generate report');
 
     // Populate Report Content
-    document.getElementById('ws-status').textContent = report.client_summary?.status || 'Unknown Status';
-    document.getElementById('ws-concern').textContent = report.client_summary?.primary_concern || 'None Identified';
+    document.getElementById('ws-status').textContent = (report.client_summary && report.client_summary.status) || 'Unknown Status';
+    document.getElementById('ws-concern').textContent = (report.client_summary && report.client_summary.primary_concern) || 'None Identified';
     
-    document.getElementById('ws-metabolic-risks').textContent = report.health_risk_report?.metabolic_risks || 'No metabolic risks identified.';
-    document.getElementById('ws-energy-analysis').textContent = report.health_risk_report?.energy_and_fatigue_analysis || 'No energy analysis details.';
-    document.getElementById('ws-digestive-analysis').textContent = report.health_risk_report?.digestive_analysis || 'No digestive analysis details.';
-    document.getElementById('ws-tone').textContent = report.empathic_communication_strategy?.recommended_tone || 'Encouraging & informative';
+    document.getElementById('ws-metabolic-risks').textContent = (report.health_risk_report && report.health_risk_report.metabolic_risks) || 'No metabolic risks identified.';
+    document.getElementById('ws-energy-analysis').textContent = (report.health_risk_report && report.health_risk_report.energy_and_fatigue_analysis) || 'No energy analysis details.';
+    document.getElementById('ws-digestive-analysis').textContent = (report.health_risk_report && report.health_risk_report.digestive_analysis) || 'No digestive analysis details.';
+    document.getElementById('ws-tone').textContent = (report.empathic_communication_strategy && report.empathic_communication_strategy.recommended_tone) || 'Encouraging & informative';
 
     // Nutrient Gaps Badges
     var gapContainer = document.getElementById('ws-nutrient-gaps');
@@ -3735,7 +4078,7 @@ async function generateWellnessScanReport() {
     // Icebreaker Phrases
     var iceContainer = document.getElementById('ws-icebreakers');
     iceContainer.innerHTML = '';
-    var icebreakers = report.empathic_communication_strategy?.icebreaker_phrases || [];
+    var icebreakers = (report.empathic_communication_strategy && report.empathic_communication_strategy.icebreaker_phrases) || [];
     if (icebreakers.length === 0) {
       iceContainer.innerHTML = '<div style="color:var(--muted); font-size:12px;">No icebreakers suggested.</div>';
     } else {
@@ -4020,14 +4363,23 @@ function renderOverview() {
     }
   } catch(e) { console.error('celebration err:', e); }
 
+  // ── Default values so rendering can proceed even if computation partially fails ──
   var todayStr = new Date().toISOString().split('T')[0];
   var today = new Date(); today.setHours(0,0,0,0);
   var currentMonth = todayStr.substring(0,7);
+  var _custs = [], _att = [], _fin = [];
+  var activeCusts=0, expCusts=0, inactiveCusts=0, expiringCusts=[], inactiveList=[];
+  var attTodayList=[], attToday=0, checkedInNames=[];
+  var mInc=0, mExp=0, mNet=0;
+  var _walkins=[], walkinsToday=[], walkinsMonth=[], walkinRevMonth=0;
+  var lowCount=0, outCount=0, expiryAlerts=[];
+  var weekData=[], maxAtt=1, pendingPay=[];
 
+  try {
   // ── Filter by active center ──
-  var _custs = filterByCenter(D.customers);
-  var _att = filterByCenterViaCustomer(D.attendance);
-  var _fin = ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance;
+  _custs = filterByCenter(D.customers) || [];
+  _att = filterByCenterViaCustomer(D.attendance) || [];
+  _fin = (ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance) || [];
 
   // ── Compute customer stats ──
   var activeCusts=0, expCusts=0, inactiveCusts=0, expiringCusts=[], inactiveList=[];
@@ -4039,8 +4391,15 @@ function renderOverview() {
   });
   expiringCusts.sort(function(a,b){return a.days-b.days;});
 
-  // ── Today's check-ins ──
-  var attTodayList = _att.filter(function(a){return a.date===todayStr && isPresentStatus(a.status);});
+  // ── Today's check-ins — deduplicate by customer_id so one person with
+  //    multiple same-day records is counted once (matches attendance tab) ──
+  var _attSeenToday = {};
+  var attTodayList = _att.filter(function(a){
+    if(a.date!==todayStr || !isPresentStatus(a.status)) return false;
+    if(_attSeenToday[a.customer_id]) return false;
+    _attSeenToday[a.customer_id] = true;
+    return true;
+  });
   var attToday = attTodayList.length;
   var checkedInNames = attTodayList.map(function(a){
     var cu = _custs.find(function(x){return x.id===a.customer_id;});
@@ -4100,34 +4459,49 @@ function renderOverview() {
     if(phone.length===10) phone = COUNTRY_CODE+phone;
     return {name:p.person_name||'Unknown', bal:Math.max(0,Number(p.total_amount)-Number(p.amount_paid)), due:p.due_date||'', overdue:p.due_date&&p.due_date<todayStr, phone:phone, desc:p.description||'pack'};
   });
+  } catch(ovComputeErr) {
+    console.error('renderOverview compute err:', ovComputeErr);
+    if (typeof window.showMobileDebugError === 'function') {
+      window.showMobileDebugError('Overview compute error', ovComputeErr && ovComputeErr.message ? ovComputeErr.message : String(ovComputeErr));
+    }
+  }
 
   // ══════════ RENDER ══════════
 
   // ── Quick Actions ──
-  document.getElementById('ov-quick-actions').innerHTML =
-    '<button class="ov-quick-btn" onclick="openModal(\'attendance\')">📋 Mark Attendance</button>'+
-    '<button class="ov-quick-btn" onclick="openModal(\'customer\')">👤 Add Customer</button>'+
-    '<button class="ov-quick-btn" onclick="openModal(\'finance\')">💰 Add Transaction</button>'+
-    '<button class="ov-quick-btn" onclick="goTo(\'analytics\',document.querySelector(\'[onclick*=analytics]\'))">📊 Analytics</button>'+
-    '<button class="ov-quick-btn" onclick="goTo(\'agents\',document.querySelector(\'[onclick*=agents]\'))" style="border-color:#7c3aed;color:#7c3aed">🤖 AI Agents</button>';
+  var _elQa = document.getElementById('ov-quick-actions');
+  if (_elQa) {
+    _elQa.innerHTML =
+      '<button class="ov-quick-btn" onclick="openModal(\'attendance\')">📋 Mark Attendance</button>'+
+      '<button class="ov-quick-btn" onclick="openModal(\'customer\')">👤 Add Customer</button>'+
+      '<button class="ov-quick-btn" onclick="openModal(\'finance\')">💰 Add Transaction</button>'+
+      '<button class="ov-quick-btn" onclick="goTo(\'analytics\',document.querySelector(\'[onclick*=analytics]\'))">📊 Analytics</button>'+
+      '<button class="ov-quick-btn" onclick="goTo(\'agents\',document.querySelector(\'[onclick*=agents]\'))" style="border-color:#7c3aed;color:#7c3aed">🤖 AI Agents</button>';
+  }
 
   // ── Stat Cards ──
-  document.getElementById('overview-stats').innerHTML =
-    '<div class="stat"><div class="stat-ic">👥</div><div class="stat-l">Total Customers</div><div class="stat-v">'+_custs.length+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">✅</div><div class="stat-l">Active Packs</div><div class="stat-v" style="color:var(--success)">'+activeCusts+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">⏰</div><div class="stat-l">Expiring (≤5 days)</div><div class="stat-v" style="color:'+(expiringCusts.length?'var(--accent)':'var(--success)')+'">'+expiringCusts.length+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">📋</div><div class="stat-l">Today\'s Check-ins</div><div class="stat-v">'+attToday+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">😴</div><div class="stat-l">Inactive (7d+)</div><div class="stat-v" style="color:'+(inactiveCusts?'var(--danger)':'var(--success)')+'">'+inactiveCusts+'</div></div>'+
-    '<div class="stat"><div class="stat-ic">🚶</div><div class="stat-l">Walk-ins Today</div><div class="stat-v" style="color:'+(walkinsToday.length?'var(--primary)':'var(--text)')+'">'+walkinsToday.length+'</div></div>'+
-    (expiryAlerts.length?'<div class="stat" style="border-left:3px solid var(--danger);grid-column:1/-1"><div class="stat-l" style="color:var(--danger)">🚨 Stock Expiry Alerts</div><div style="margin-top:6px;font-size:13px">'+expiryAlerts.map(function(a){return '<span style="display:inline-block;margin:2px 6px 2px 0;padding:2px 8px;border-radius:12px;background:'+(a.isExpired?'var(--danger-light)':'var(--accent-light)')+';color:'+(a.isExpired?'var(--danger)':'#b07800')+'">'+a.name+' — '+a.date+(a.isExpired?' EXPIRED':'')+'</span>';}).join('')+'</div></div>':'');
+  var _elSt = document.getElementById('overview-stats');
+  if (_elSt) {
+    _elSt.innerHTML =
+      '<div class="stat"><div class="stat-ic">👥</div><div class="stat-l">Total Customers</div><div class="stat-v">'+_custs.length+'</div></div>'+
+      '<div class="stat"><div class="stat-ic">✅</div><div class="stat-l">Active Packs</div><div class="stat-v" style="color:var(--success)">'+activeCusts+'</div></div>'+
+      '<div class="stat"><div class="stat-ic">⏰</div><div class="stat-l">Expiring (≤5 days)</div><div class="stat-v" style="color:'+(expiringCusts.length?'var(--accent)':'var(--success)')+'">'+expiringCusts.length+'</div></div>'+
+      '<div class="stat"><div class="stat-ic">📋</div><div class="stat-l">Today\'s Check-ins</div><div class="stat-v">'+attToday+'</div></div>'+
+      '<div class="stat"><div class="stat-ic">😴</div><div class="stat-l">Inactive (7d+)</div><div class="stat-v" style="color:'+(inactiveCusts?'var(--danger)':'var(--success)')+'">'+inactiveCusts+'</div></div>'+
+      '<div class="stat"><div class="stat-ic">🚶</div><div class="stat-l">Walk-ins Today</div><div class="stat-v" style="color:'+(walkinsToday.length?'var(--primary)':'var(--text)')+'">'+walkinsToday.length+'</div></div>'+
+      (expiryAlerts.length?'<div class="stat" style="border-left:3px solid var(--danger);grid-column:1/-1"><div class="stat-l" style="color:var(--danger)">🚨 Stock Expiry Alerts</div><div style="margin-top:6px;font-size:13px">'+expiryAlerts.map(function(a){return '<span style="display:inline-block;margin:2px 6px 2px 0;padding:2px 8px;border-radius:12px;background:'+(a.isExpired?'var(--danger-light)':'var(--accent-light)')+';color:'+(a.isExpired?'var(--danger)':'#b07800')+'">'+a.name+' — '+a.date+(a.isExpired?' EXPIRED':'')+'</span>';}).join('')+'</div></div>':'');
+  }
 
   // ── Revenue Row ──
-  document.getElementById('ov-revenue-row').innerHTML =
-    '<div class="ov-rev-row">'+
-      '<div class="ov-rev-card inc"><div class="ov-rev-lbl">Income ('+currentMonth+')</div><div class="ov-rev-val">₹'+mInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-      '<div class="ov-rev-card exp"><div class="ov-rev-lbl">Expenses ('+currentMonth+')</div><div class="ov-rev-val">₹'+mExp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-      '<div class="ov-rev-card net"><div class="ov-rev-lbl">Net Profit</div><div class="ov-rev-val">'+(mNet>=0?'+':'')+' ₹'+mNet.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-    '</div>';
+  var _elRr = document.getElementById('ov-revenue-row');
+  if (_elRr) {
+    _elRr.innerHTML =
+      '<div class="ov-rev-row">'+
+        '<div class="ov-rev-card inc"><div class="ov-rev-lbl">Income ('+currentMonth+')</div><div class="ov-rev-val">₹'+mInc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+        '<div class="ov-rev-card exp"><div class="ov-rev-lbl">Expenses ('+currentMonth+')</div><div class="ov-rev-val">₹'+mExp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+        '<div class="ov-rev-card net"><div class="ov-rev-lbl">Net Profit</div><div class="ov-rev-val">'+(mNet>=0?'+':'')+' ₹'+mNet.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '</div>';
+  }
 
   // ── Customer Health Score Rankings ──
   var hsRanks = getCustomerHealthRankings();
@@ -4241,7 +4615,8 @@ function renderOverview() {
     leftHtml += '</div></div>';
   }
 
-  document.getElementById('ov-col-left').innerHTML = leftHtml;
+  var elLeft = document.getElementById('ov-col-left');
+  if (elLeft) elLeft.innerHTML = leftHtml;
 
   // ── Right Column ──
   var rightHtml = '';
@@ -4552,7 +4927,8 @@ function renderOverview() {
       + '</div></div>';
   }
 
-  document.getElementById('ov-col-right').innerHTML = rightHtml;
+  var elRight = document.getElementById('ov-col-right');
+  if (elRight) elRight.innerHTML = rightHtml;
 
   // ── Pin Progress Mini Widget ──
   var pinWidget = document.getElementById('ov-pin-widget');
@@ -4589,10 +4965,12 @@ function renderOverview() {
 
 // ── RENDER COACHES ──
 function renderCoaches() {
-  var q = document.getElementById('coaches-search').value.toLowerCase();
+  var cs = document.getElementById('coaches-search');
+  var q = cs ? (cs.value || '').toLowerCase() : '';
   var _coaches = filterByCenter(D.coaches);
   var rows = _coaches.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.contact||'').toLowerCase().includes(q); });
   var tb = document.getElementById('coaches-body');
+  if (!tb) return;
   if (!rows.length) { tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">👨‍🏫</div><p>No coaches found. Add your first one!</p></div></td></tr>'; }
   else {
     window._limCoach = window._limCoach || 50;
@@ -4612,7 +4990,8 @@ function renderCoaches() {
   }).join('');
     if(rows.length > window._limCoach) { tb.innerHTML += '<tr><td colspan="7" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCoach+=50;renderCoaches()">⬇️ Load More (' + (rows.length - window._limCoach) + ' remaining)</button></td></tr>'; }
   }
-  document.getElementById('coaches-stats').innerHTML = '<div class="stat"><div class="stat-l">Total Coaches</div><div class="stat-v">'+_coaches.length+'</div></div><div class="stat"><div class="stat-l">Active</div><div class="stat-v">'+_coaches.filter(function(c){return (c.status||'Active')==='Active';}).length+'</div></div>';
+  var cStats = document.getElementById('coaches-stats');
+  if (cStats) cStats.innerHTML = '<div class="stat"><div class="stat-l">Total Coaches</div><div class="stat-v">'+_coaches.length+'</div></div><div class="stat"><div class="stat-l">Active</div><div class="stat-v">'+_coaches.filter(function(c){return (c.status||'Active')==='Active';}).length+'</div></div>';
 }
 
 async function loadInventory() {
@@ -5436,9 +5815,11 @@ function getCenterOwnerName(c) {
 
 // ── RENDER CENTERS ──
 function renderCenters() {
-  var q = document.getElementById('centers-search').value.toLowerCase();
+  var cs = document.getElementById('centers-search');
+  var q = cs ? (cs.value || '').toLowerCase() : '';
   var rows = D.centers.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.location||'').toLowerCase().includes(q); });
   var tb = document.getElementById('centers-body');
+  if (!tb) return;
   var _pins = JSON.parse(safeStorage.getItem('centerPins') || '{}');
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">🏢</div><p>No centers found. Add your first one!</p></div></td></tr>'; }
   else tb.innerHTML = rows.map(function(c){
@@ -6085,7 +6466,9 @@ async function toggleAtt(cid, cname, date, currentStatus) {
       showToast(cname+' — marked present (1 serving)','success');
     }
     _daysLeftCache = {};
+    if(window._loadedTabs) delete window._loadedTabs['sec-attendance'];
     await loadAttendance(); renderOverview();
+    if(document.getElementById('sec-attendance') && document.getElementById('sec-attendance').classList.contains('active')) renderAttendance();
     sendAttendanceWhatsApp(cid, cname, date);
   } catch(e) { showToast('Error: '+e.message,'error'); }
   finally { delete _attInFlight[key]; }
@@ -6110,7 +6493,9 @@ async function resetAtt(cid, cname, date) {
     await req('POST', 'attendance', payload, '', { 'Prefer': 'resolution=merge-duplicates, return=representation' });
     showToast(cname+' — attendance removed','info');
     _daysLeftCache = {};
+    if(window._loadedTabs) delete window._loadedTabs['sec-attendance'];
     await loadAttendance(); renderOverview();
+    if(document.getElementById('sec-attendance') && document.getElementById('sec-attendance').classList.contains('active')) renderAttendance();
   } catch(e) { showToast('Error: '+e.message,'error'); }
   finally { delete _attInFlight[key]; }
 }
@@ -6431,18 +6816,35 @@ async function gridServRemove(id, name, date) {
 
 function renderAttendance() {
   if(ATT_TAB==='monthly') return renderAttGrid();
-  var q = document.getElementById('att-search').value.toLowerCase();
+  var attSearch = document.getElementById('att-search');
+  var q = attSearch ? (attSearch.value || '').toLowerCase() : '';
   var _tn=new Date(); var todayStr=_tn.getFullYear()+'-'+String(_tn.getMonth()+1).padStart(2,'0')+'-'+String(_tn.getDate()).padStart(2,'0');
-  
+
+  // Build today-attendance lookup for O(1) per-person today check
+  var _attTodayByPId = {};
+  (window._idx && window._idx.attByCustomer
+    ? Object.keys(window._idx.attByCustomer).forEach(function(pid){
+        var rec = (window._idx.attByCustomer[pid]||[]).find(function(a){ return a.date===todayStr; });
+        if (rec) _attTodayByPId[pid] = rec;
+      })
+    : D.attendance.forEach(function(a){ if(a.date===todayStr) _attTodayByPId[a.customer_id]=a; })
+  );
+  function _presentToday(pIds) {
+    for(var i=0;i<pIds.length;i++){ var r=_attTodayByPId[pIds[i]]; if(r&&isPresentStatus(r.status)) return true; } return false;
+  }
+  function _attToday(pIds) {
+    for(var i=0;i<pIds.length;i++){ if(_attTodayByPId[pIds[i]]) return _attTodayByPId[pIds[i]]; } return null;
+  }
+
   var activeCusts = filterByCenter(D.customers).filter(function(c){
     var pIds = getPersonIds(c.id);
-    var isConvertedCoach = pIds.length > 1 && D.coaches.some(function(co){ return co.id === c.pack_owner_id; });
+    var isConvertedCoach = pIds.length > 1 && c.pack_owner_id && D.coaches.some(function(co){ return co.id === c.pack_owner_id; });
     if (isConvertedCoach) return false;
 
     var packActive = getDaysLeft(c).active;
-    var presentToday = D.attendance.some(function(a){ return pIds.indexOf(a.customer_id) !== -1 && a.date===todayStr && isPresentStatus(a.status); });
-    if (!packActive && !presentToday) return false; // hide expired-pack customers unless present today
-    if (isInactive(c) && !ATT_SHOW_INACTIVE && !presentToday) return false; // hide inactive unless toggled or present today
+    var presentTdy = _presentToday(pIds);
+    if (!packActive && !presentTdy) return false; // hide expired-pack customers unless present today
+    if (isInactive(c) && !ATT_SHOW_INACTIVE && !presentTdy) return false; // hide inactive unless toggled or present today
     return (c.name||'').toLowerCase().includes(q);
   });
 
@@ -6461,7 +6863,7 @@ function renderAttendance() {
 
   allPersons.forEach(function(p){
     var pIds = getPersonIds(p.id);
-    var att = D.attendance.find(function(a){return pIds.indexOf(a.customer_id) !== -1 && a.date===todayStr;});
+    var att = _attToday(pIds);
     var stst = att ? att.status : 'None';
     var servings = att ? (Number(att.servings) || 1) : 0;
     var st = getDaysLeft(p.obj);
@@ -6487,16 +6889,25 @@ function renderAttendance() {
   });
   
   var pList = document.getElementById('att-present-list');
-  if(!present.length) pList.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:15px;text-align:center;">No one present yet.</div>';
-  else pList.innerHTML = present.join('');
-  document.getElementById('att-present-count').textContent = '('+present.length+')';
-  
-  var nList = document.getElementById('att-absent-list');
-  if(!notYet.length) nList.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:15px;text-align:center;">All completed! 🎉</div>';
-  else nList.innerHTML = notYet.join('');
-  document.getElementById('att-absent-count').textContent = '('+notYet.length+')';
+  if (pList) {
+    if(!present.length) pList.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:15px;text-align:center;">No one present yet.</div>';
+    else pList.innerHTML = present.join('');
+  }
+  var pCnt = document.getElementById('att-present-count');
+  if (pCnt) pCnt.textContent = '('+present.length+')';
 
-  document.getElementById('att-stats').innerHTML = '<div class="stat"><div class="stat-l">Today\'s Present</div><div class="stat-v" style="color:var(--success)">'+present.length+'</div></div><div class="stat"><div class="stat-l">Not Yet</div><div class="stat-v" style="color:var(--danger)">'+notYet.length+'</div></div><div class="stat"><div class="stat-l">Coaches Active</div><div class="stat-v">'+activeCoaches.length+'</div></div>';
+  var nList = document.getElementById('att-absent-list');
+  if (nList) {
+    if(!notYet.length) nList.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:15px;text-align:center;">All completed! 🎉</div>';
+    else nList.innerHTML = notYet.join('');
+  }
+  var aCnt = document.getElementById('att-absent-count');
+  if (aCnt) aCnt.textContent = '('+notYet.length+')';
+
+  var aStats = document.getElementById('att-stats');
+  if (aStats) {
+    aStats.innerHTML = '<div class="stat"><div class="stat-l">Today\'s Present</div><div class="stat-v" style="color:var(--success)">'+present.length+'</div></div><div class="stat"><div class="stat-l">Not Yet</div><div class="stat-v" style="color:var(--danger)">'+notYet.length+'</div></div><div class="stat"><div class="stat-l">Coaches Active</div><div class="stat-v">'+activeCoaches.length+'</div></div>';
+  }
 }
 
 // ── ARROW HELPER ──
@@ -6527,11 +6938,11 @@ function renderBody() {
 
   var goalCard = document.getElementById('body-goal-card');
   if (!_selectedBodyCustId) {
-    profileCard.style.display = 'none';
+    if (profileCard) profileCard.style.display = 'none';
     if (idealCard) idealCard.style.display = 'none';
     if (goalCard) goalCard.style.display = 'none';
-    emptyPrompt.style.display = 'block';
-    recordsWrap.style.display = 'none';
+    if (emptyPrompt) emptyPrompt.style.display = 'block';
+    if (recordsWrap) recordsWrap.style.display = 'none';
     if (tb) tb.innerHTML = '';
     var btnShare = document.getElementById('btn-body-share-card');
     if (btnShare) btnShare.style.display = 'none';
@@ -6964,6 +7375,12 @@ function selectBodyCustomer(cid) {
   _selectedBodyCustId = cid;
   var sel = document.getElementById('body-cust-select');
   if (sel) sel.value = cid;
+  var bodyCust = document.getElementById('body-customer');
+  if (bodyCust) {
+    var _isWalkin = (D.walkins||[]).some(function(w){ return w.id === cid; });
+    bodyCust.value = _isWalkin ? 'walkin__' + cid : cid;
+    autofillBodyHeightAge(bodyCust.value);
+  }
   switchBodyTab('records', document.getElementById('body-tab-records'));
   renderBody();
 }
@@ -7078,8 +7495,10 @@ function setFinPeriod(period, btn) {
     else if (period === 'lastmonth') { from = new Date(y,m-1,1); to = new Date(y,m,0); }
     else if (period === 'year') { from = new Date(y,0,1); to = new Date(y,11,31); }
     else { from = null; to = null; }
-    document.getElementById('fin-from').value = from ? from.toISOString().split('T')[0] : '';
-    document.getElementById('fin-to').value = to ? to.toISOString().split('T')[0] : '';
+    var ff = document.getElementById('fin-from');
+    var ft = document.getElementById('fin-to');
+    if (ff) ff.value = from ? from.toISOString().split('T')[0] : '';
+    if (ft) ft.value = to ? to.toISOString().split('T')[0] : '';
   }
   renderFinance();
 }
@@ -7091,14 +7510,19 @@ function setFinMonthPicker(ym) {
   var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1;
   var from = new Date(y, m, 1);
   var to = new Date(y, m + 1, 0);
-  document.getElementById('fin-from').value = from.toISOString().split('T')[0];
-  document.getElementById('fin-to').value = to.toISOString().split('T')[0];
+  var ff = document.getElementById('fin-from');
+  var ft = document.getElementById('fin-to');
+  if (ff) ff.value = from.toISOString().split('T')[0];
+  if (ft) ft.value = to.toISOString().split('T')[0];
   renderFinance();
 }
 function _getFinFiltered() {
-  var from = document.getElementById('fin-from').value;
-  var to   = document.getElementById('fin-to').value;
-  var q    = document.getElementById('fin-search').value.toLowerCase();
+  var ff = document.getElementById('fin-from');
+  var ft = document.getElementById('fin-to');
+  var fs = document.getElementById('fin-search');
+  var from = ff ? ff.value : '';
+  var to   = ft ? ft.value : '';
+  var q    = fs ? (fs.value || '').toLowerCase() : '';
   var base = ACTIVE_CENTER ? filterFinanceByCenter(D.finance) : D.finance;
   return base.filter(function(f){
     if (!f.date) return false;                    // exclude null-dated entries
@@ -7116,6 +7540,7 @@ function renderFinance() {
   }
   var rows = _getFinFiltered();
   var tb = document.getElementById('fin-body');
+  if (!tb) return;
   if (!rows.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="ei">💰</div><p>No transactions yet.</p></div></td></tr>'; }
   else {
     window._limFin = window._limFin || 50;
@@ -7129,8 +7554,10 @@ function renderFinance() {
   var from = document.getElementById('fin-from').value;
   var to   = document.getElementById('fin-to').value;
   var periodLabel = (from && to) ? from + ' → ' + to : (from ? 'From ' + from : (to ? 'Until ' + to : 'All dates'));
+  var pBadge = document.getElementById('fin-period-badge');
+  if (pBadge) pBadge.textContent = '📅 ' + periodLabel;
   document.getElementById('fin-stats').innerHTML =
-    '<div class="stat"><div class="stat-l">Total Income<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:2px">📅 '+periodLabel+'</div></div><div class="stat-v" style="color:var(--success)">₹'+inc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Total Income</div><div class="stat-v" style="color:var(--success)">₹'+inc.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Total Expense</div><div class="stat-v" style="color:var(--danger)">₹'+exp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="color:'+(net>=0?'var(--primary)':'var(--danger)')+'">₹'+net.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
     '<div class="stat"><div class="stat-l">Profit Margin</div><div class="stat-v" id="fin-margin" style="color:'+(margin>=0?'var(--primary)':'var(--danger)')+'">'+margin+'%</div></div>';
@@ -7148,11 +7575,11 @@ function renderFinance() {
     if (!entries.length) { el.innerHTML='<div style="color:var(--muted);font-size:12px">No records in this period</div>'; return; }
     el.innerHTML = entries.map(function(e){
       var pct = total > 0 ? Math.round((e[1]/total)*100) : 0;
-      return '<div style="margin-bottom:8px">'+
-        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'+
-          '<span>'+e[0]+'</span><span style="font-weight:600">₹'+e[1].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' <span style="color:var(--muted)">('+pct+'%)</span></span>'+
+      return '<div style="margin-bottom:14px">'+
+        '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">'+
+          '<span style="font-weight:500">'+e[0]+'</span><span style="font-weight:700">₹'+e[1].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' <span style="color:var(--muted);font-weight:400">('+pct+'%)</span></span>'+
         '</div>'+
-        '<div style="height:5px;border-radius:3px;background:var(--border)"><div style="height:5px;border-radius:3px;background:'+color+';width:'+pct+'%"></div></div>'+
+        '<div style="height:7px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden"><div style="height:7px;border-radius:6px;background:'+color+';width:'+pct+'%"></div></div>'+
       '</div>';
     }).join('');
   }
@@ -7652,7 +8079,15 @@ async function saveCustomer() {
     if(id) { await dbUpdate('customers',id,payload); auditLog('Updated','Customer',payload.name+(payload.pack_type?' — '+payload.pack_type:'')); }
     else { savedRecords = await dbInsert('customers',payload); auditLog('Added','Customer',payload.name+(payload.pack_type?' — '+payload.pack_type:'')); }
     // ── Auto-create finance/payment records for new customers only ──
-    if (!id && payload.pack_price) {
+    var isConvertingWalkin = window._convertingWalkinId;
+    var origWalkin = isConvertingWalkin ? (D.walkins||[]).find(function(w){ return w.id === isConvertingWalkin; }) : null;
+    var alreadyHasFinance = origWalkin && origWalkin.finance_id;
+    var isSameWalkinAmount = alreadyHasFinance && (
+      Number(payload.pack_price) <= Number(origWalkin.amount_received) ||
+      Math.abs(Number(payload.pack_price) - Number(origWalkin.amount_received)) <= 10
+    );
+
+    if (!id && payload.pack_price && !isSameWalkinAmount) {
       var payMode = (document.getElementById('customer-pay-mode')||{value:'full'}).value;
       var packPrice = Number(payload.pack_price);
       var payDateEl = document.getElementById('customer-pay-date');
@@ -8544,11 +8979,13 @@ function sendInactiveWA(cid) {
 
 // ── P3: Milestone Badge Detection ──
 function getMilestones(cid) {
-  var recs = D.body.filter(function(b){return b.customer_id===cid;}).sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+  var _bodySrc = (window._idx && window._idx.bodyByCustomer && window._idx.bodyByCustomer[cid]) || (D.body||[]).filter(function(b){return b.customer_id===cid;});
+  var recs = _bodySrc.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
   var milestones = [];
-  var attCount = D.attendance.filter(function(a){return a.customer_id===cid&&a.status==='present';}).length;
+  var _attSrc = (window._idx && window._idx.attByCustomer && window._idx.attByCustomer[cid]) || D.attendance.filter(function(a){return a.customer_id===cid;});
+  var attCount = _attSrc.filter(function(a){return a.status==='present';}).length;
   var streak = getStreak(cid);
-  var renewals = (D.packHistory||[]).filter(function(h){return h.customer_id===cid;}).length;
+  var renewals = (window._idx && window._idx.packHistoryCount) ? (window._idx.packHistoryCount[cid] || 0) : (D.packHistory||[]).filter(function(h){return h.customer_id===cid;}).length;
 
   // Body composition milestones (need 2+ scans)
   if (recs.length >= 2) {
@@ -8635,16 +9072,27 @@ function renderAnalytics() {
   }
 
   // ── Read all slicers ──
-  var periodMonths = parseInt(document.getElementById('slicer-from')?.dataset?.customActive === '1' ? '-1' : (document.querySelector('.slicer-chip.active[data-slicer="period"]')?.dataset?.val || '3'));
-  var fromDate = document.getElementById('slicer-from')?.value || '';
-  var toDate   = document.getElementById('slicer-to')?.value   || '';
-  var packFilter   = document.getElementById('slicer-pack')?.value   || '';
-  var goalFilter   = document.getElementById('slicer-goal')?.value   || '';
-  var genderFilter = document.getElementById('slicer-gender')?.value || '';
-  var statusFilter = document.querySelector('.slicer-chip.active[data-slicer="status"]')?.dataset?.val || '';
-  var centerFilter = document.getElementById('slicer-center')?.value || '';
-  var revTypeFilter = document.getElementById('slicer-revenue-type')?.value || '';
-  var metricFilter = document.getElementById('slicer-metric')?.value || 'weight';
+  var elSlicerFrom = document.getElementById('slicer-from');
+  var elSlicerTo = document.getElementById('slicer-to');
+  var elSlicerPack = document.getElementById('slicer-pack');
+  var elSlicerGoal = document.getElementById('slicer-goal');
+  var elSlicerGender = document.getElementById('slicer-gender');
+  var elSlicerStatus = document.querySelector('.slicer-chip.active[data-slicer="status"]');
+  var elSlicerCenter = document.getElementById('slicer-center');
+  var elSlicerRev = document.getElementById('slicer-revenue-type');
+  var elSlicerMetric = document.getElementById('slicer-metric');
+  var elSlicerPeriod = document.querySelector('.slicer-chip.active[data-slicer="period"]');
+
+  var periodMonths = parseInt((elSlicerFrom && elSlicerFrom.dataset && elSlicerFrom.dataset.customActive === '1') ? '-1' : ((elSlicerPeriod && elSlicerPeriod.dataset && elSlicerPeriod.dataset.val) || '3'));
+  var fromDate = elSlicerFrom ? (elSlicerFrom.value || '') : '';
+  var toDate   = elSlicerTo   ? (elSlicerTo.value || '')   : '';
+  var packFilter   = elSlicerPack   ? (elSlicerPack.value || '')   : '';
+  var goalFilter   = elSlicerGoal   ? (elSlicerGoal.value || '')   : '';
+  var genderFilter = elSlicerGender ? (elSlicerGender.value || '') : '';
+  var statusFilter = (elSlicerStatus && elSlicerStatus.dataset) ? (elSlicerStatus.dataset.val || '') : '';
+  var centerFilter = elSlicerCenter ? (elSlicerCenter.value || '') : '';
+  var revTypeFilter = elSlicerRev ? (elSlicerRev.value || '') : '';
+  var metricFilter = elSlicerMetric ? (elSlicerMetric.value || 'weight') : 'weight';
 
   // ── Populate center dropdown cleanly while preserving value ──
   var cSel = document.getElementById('slicer-center');
@@ -8699,8 +9147,8 @@ function renderAnalytics() {
   if (genderFilter) tags.push('👤 '+genderFilter);
   if (statusFilter) tags.push('🟢 '+statusFilter);
   if (centerFilter) { var ct=D.centers.find(function(x){return x.id===centerFilter;}); tags.push('🏢 '+(ct?ct.name:centerFilter)); }
-  document.getElementById('slicer-summary').innerHTML =
-    '<strong>Showing:</strong> ' + filtCusts.length + ' customers &nbsp;|&nbsp; ' + tags.join(' &nbsp;·&nbsp; ');
+  var elSlicer = document.getElementById('slicer-summary');
+  if (elSlicer) elSlicer.innerHTML = '<strong>Showing:</strong> ' + filtCusts.length + ' customers &nbsp;|&nbsp; ' + tags.join(' &nbsp;·&nbsp; ');
 
   // ── KPIs ──
   var totalCusts   = filtCusts.length;
@@ -8710,21 +9158,27 @@ function renderAnalytics() {
   var totalExpense = filtFin.filter(function(f){return f.type==='expense';}).reduce(function(s,f){return s+Number(f.amount);},0);
   var stars = filtCusts.filter(function(c){return D.customers.filter(function(x){return x.referred_by_id===c.id;}).length>=2;}).length;
 
-  document.getElementById('analytics-kpis').innerHTML =
-    '<div class="stat"><div class="stat-l">Customers<span class="analytics-badge">'+totalCusts+'</span></div><div class="stat-v" style="color:'+(retentionRate>=70?'var(--success)':'var(--danger)')+'">'+retentionRate+'% retention</div></div>'+
-    '<div class="stat"><div class="stat-l">Revenue (period)</div><div class="stat-v" style="font-size:18px;color:var(--success)">₹'+totalIncome.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Expense (period)</div><div class="stat-v" style="font-size:18px;color:var(--danger)">₹'+totalExpense.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-    '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="font-size:18px;color:'+(totalIncome-totalExpense>=0?'var(--primary)':'var(--danger)')+'">₹'+(totalIncome-totalExpense).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
-    '<div class="stat"><div class="stat-l">⭐ Star Customers</div><div class="stat-v" style="color:#b07800">'+stars+'</div></div>';
+  var elKpis = document.getElementById('analytics-kpis');
+  if (elKpis) {
+    elKpis.innerHTML =
+      '<div class="stat"><div class="stat-l">Customers<span class="analytics-badge">'+totalCusts+'</span></div><div class="stat-v" style="color:'+(retentionRate>=70?'var(--success)':'var(--danger)')+'">'+retentionRate+'% retention</div></div>'+
+      '<div class="stat"><div class="stat-l">Revenue (period)</div><div class="stat-v" style="font-size:18px;color:var(--success)">₹'+totalIncome.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '<div class="stat"><div class="stat-l">Expense (period)</div><div class="stat-v" style="font-size:18px;color:var(--danger)">₹'+totalExpense.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '<div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="font-size:18px;color:'+(totalIncome-totalExpense>=0?'var(--primary)':'var(--danger)')+'">₹'+(totalIncome-totalExpense).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+'</div></div>'+
+      '<div class="stat"><div class="stat-l">⭐ Star Customers</div><div class="stat-v" style="color:#b07800">'+stars+'</div></div>';
+  }
 
   // ── Retention bars ──
   var inactive = filtCusts.filter(function(c){return isInactive(c.id);}).length;
   var expired  = filtCusts.length - active;
-  document.getElementById('analytics-retention').innerHTML =
-    '<div style="margin-bottom:8px;font-size:13px;color:var(--muted)">Based on '+totalCusts+' filtered customers</div>'+
-    mkRetRow('Active', active, totalCusts, 'var(--success)')+
-    mkRetRow('Inactive 7d+', inactive, totalCusts, 'var(--accent)')+
-    mkRetRow('Expired Pack', expired, totalCusts, 'var(--danger)');
+  var elRet = document.getElementById('analytics-retention');
+  if (elRet) {
+    elRet.innerHTML =
+      '<div style="margin-bottom:8px;font-size:13px;color:var(--muted)">Based on '+totalCusts+' filtered customers</div>'+
+      mkRetRow('Active', active, totalCusts, 'var(--success)')+
+      mkRetRow('Inactive 7d+', inactive, totalCusts, 'var(--accent)')+
+      mkRetRow('Expired Pack', expired, totalCusts, 'var(--danger)');
+  }
 
   // ── Revenue trend ──
   var numMonths = periodMonths > 0 ? Math.min(periodMonths, 12) : 12;
@@ -8928,14 +9382,16 @@ function renderAnalytics() {
     if(!c){ var co=D.coaches.find(function(x){return x.id===id;}); if(co) c=co; }
     return {name:c?c.name:id,count:refMap[id]};
   }).sort(function(a,b){return b.count-a.count;}).slice(0,8);
-  var refEl=document.getElementById('analytics-referrers');
-  if(!topRefs.length){ refEl.innerHTML='<div style="color:var(--muted);font-size:13px">No referrals in this filter.</div>'; }
-  else refEl.innerHTML=topRefs.map(function(r,i){
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--surface2)">'
-      +'<span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'  ')+'  <strong>'+r.name+'</strong></span>'
-      +'<span class="badge '+(r.count>=2?'ms-gold':'ms-green')+'" style="border-radius:12px">'+r.count+' referral'+(r.count>1?'s':'')+'</span>'
-      +'</div>';
-  }).join('');
+  var refEl = document.getElementById('analytics-referrers');
+  if (refEl) {
+    if (!topRefs.length) { refEl.innerHTML='<div style="color:var(--muted);font-size:13px">No referrals in this filter.</div>'; }
+    else refEl.innerHTML=topRefs.map(function(r,i){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--surface2)">'
+        +'<span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'  ')+'  <strong>'+r.name+'</strong></span>'
+        +'<span class="badge '+(r.count>=2?'ms-gold':'ms-green')+'" style="border-radius:12px">'+r.count+' referral'+(r.count>1?'s':'')+'</span>'
+        +'</div>';
+    }).join('');
+  }
 
   // ── Pack distribution (filtered) ──
   var packMap={};
@@ -10874,6 +11330,13 @@ async function saveRenewal(){
     await dbInsert('pack_history',histRow);
     // Update record in the right table
     await dbUpdate(isCoach?'coaches':'customers',cid,{pack_type:packType,pack_start_date:startDate,pack_price:price,pack_owner_id:null});
+    // Keep pack_end_date in sync (separate best-effort update — column may not exist on older schemas)
+    if(!isCoach){
+      try{
+        var _pkEnd=_packEndDate({pack_type:packType,pack_start_date:startDate});
+        if(_pkEnd) await dbUpdate('customers',cid,{pack_end_date:_pkEnd});
+      }catch(_peErr){}
+    }
 
     // ── Payment handling ──
     var finCategory = isCoach ? 'Coach pack payment' : 'Pack sale to customer';
@@ -12453,52 +12916,68 @@ function startAutoPing(){
 
 // ── RENDER CUSTOMERS ──
 function renderCustomers() {
-  var q = document.getElementById('customers-search').value.toLowerCase();
+  var cs = document.getElementById('customers-search');
+  var q = cs ? (cs.value || '').toLowerCase() : '';
   var _custs = filterByCenter(D.customers);
   var rows = _custs.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.contact||'').toLowerCase().includes(q); });
   var tb = document.getElementById('customers-body');
+  if (!tb) return;
+  var _countLbl = document.getElementById('cust-count-lbl');
+  if (_countLbl) _countLbl.textContent = 'Loaded: ' + (D.customers||[]).length + ' · Showing: ' + rows.length;
   var todayMMDD = new Date().toISOString().slice(5,10);
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">👤</div><p>No customers found.</p></div></td></tr>'; }
   else {
-    window._limCust = window._limCust || 50;
+    window._limCust = window._limCust || 200;
+    // Use pre-built indexes for O(1) per-row lookups (built by buildDataIndexes())
+    var _rIdx = window._idx || {};
+    var _rAttByCust   = _rIdx.attByCustomer  || {};
+    var _rBodyByCust  = _rIdx.bodyByCustomer  || {};
+    var _rRefCount    = _rIdx.refCountByCust  || {};
+    var _rMembers     = _rIdx.membersByOwner  || {};
+    var _rWalkinConv  = _rIdx.walkinConv      || {};
+    var _rCustById    = _rIdx.customerById    || {};
+    // Build coach lookup once (coaches array is small)
+    var _coachById = {};
+    D.coaches.forEach(function(co){ _coachById[co.id] = co; });
     tb.innerHTML = rows.slice(0, window._limCust).map(function(c){
+    try {
     var st = getDaysLeft(c);
     var streak = getStreak(c.id);
     var bdg = st.days > 3 ? 'bg' : (st.days > 0 ? 'by' : 'br');
-    var refs = D.customers.filter(function(x){return x.referred_by_id===c.id;}).length;
+    var refs = _rRefCount[c.id] || 0;
     var refBadge = refs>=2?'<span class="star-cust">⭐ '+refs+'</span>':(refs===1?'<span style="color:var(--muted);font-size:12px">1</span>':'<span style="color:var(--muted);font-size:12px">—</span>');
     var bdayFlag = (c.dob&&c.dob.slice(5,10)===todayMMDD)?' 🎂':'';
     var noDobBadge = !c.dob ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:var(--warning-light);color:var(--warning-text);display:inline-block;margin-left:4px" title="Add DOB so client can log in securely">⚠️ No DOB</span>' : '';
     var wasReferred = c.referred_by_id || c.external_referrer_name;
-    var custAttCount = D.attendance.filter(function(a){return a.customer_id===c.id;}).length;
+    var custAttCount = (_rAttByCust[c.id] || []).length;
     var freeDay = (wasReferred && custAttCount===0)?' <span class="badge by" style="font-size:9px" title="Free checkup, counselling &amp; shake">🆓 Free 1st Day</span>':'';
     var waRenew = (st.active&&st.days<=3&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px" onclick="sendRenewalWA(\''+c.id+'\')">💬 Renew</button> ':'';
     var waReeng = (isInactive(c.id)&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px;background:#8b5cf6" onclick="sendInactiveWA(\''+c.id+'\')">💬 Re-engage</button> ':'';
-    var bodyCount = D.body.filter(function(b){return b.customer_id===c.id;}).length;
+    var bodyCount = (_rBodyByCust[c.id] || []).length;
     var waWeekly = (bodyCount>=2&&c.contact)?'<button class="wa-btn" style="font-size:11px;padding:3px 6px;background:#0ea5e9" onclick="sendWeeklyProgressWA(\''+c.id+'\')">📊</button> ':'';
-    var isConvertedCoach = c.pack_owner_id && D.coaches.some(function(co){ 
-      return co.id === c.pack_owner_id && (
-        co.name && c.name && co.name.trim().toLowerCase() === c.name.trim().toLowerCase()
-      ); 
-    });
+    var isConvertedCoach = c.pack_owner_id && (function(){
+      var co = _coachById[c.pack_owner_id];
+      return co && co.name && c.name && co.name.trim().toLowerCase() === c.name.trim().toLowerCase();
+    })();
     var sharedBadge = '';
     if(isConvertedCoach) {
       sharedBadge = '<span class="badge" style="background:var(--warning-light);color:var(--warning-text);border:1px solid var(--border-accent);font-size:9px;display:block;margin-top:2px">⭐ Converted to Coach</span>';
     } else if(c.pack_owner_id) {
-      var po = D.customers.find(function(x){return x.id===c.pack_owner_id;})
-            || D.coaches.find(function(x){return x.id===c.pack_owner_id;});
+      var po = _rCustById[c.pack_owner_id] || _coachById[c.pack_owner_id];
       sharedBadge = '<span class="badge bb" style="font-size:9px;display:block;margin-top:2px">👥 On '+(po?po.name:'?')+'\'s pack</span>';
     }
-    var members = D.customers.filter(function(x){return x.pack_owner_id===c.id;});
+    var members = _rMembers[c.id] || [];
     var memberBadge = members.length ? '<span class="badge by" style="font-size:9px;display:block;margin-top:2px">👥 '+members.map(function(m){return m.name;}).join(', ')+'</span>' : '';
-    var enrollCoach = c.referred_by_id ? D.coaches.find(function(x){return x.id===c.referred_by_id;}) : null;
+    var enrollCoach = c.referred_by_id ? _coachById[c.referred_by_id] : null;
     var coachBadge = enrollCoach ? '<span class="badge" style="background:var(--info-light);color:var(--info-text);font-size:9px;display:block;margin-top:2px">👨‍🏫 '+enrollCoach.name+'</span>' : '';
     var risk = getChurnRisk(c.id);
     var riskBadge = risk.label ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;display:block;margin-top:2px;'+(risk.level==='critical'?'background:var(--danger-light);color:var(--text-danger)':'background:var(--warning-light);color:var(--warning-text)')+'" title="'+risk.reasons.join(', ')+'">'+risk.label+'</span>' : '';
     var msBadges = getMilestones(c.id).slice(-2).map(function(m){ return '<span class="milestone-badge ms-gold" style="font-size:9px;display:inline-block;margin-top:2px">'+m.icon+' '+m.label+'</span>'; }).join('');
     var issuesDisplay = c.issues ? '<div style="font-size:11px;color:var(--danger);margin-top:2px" title="Issues: '+c.issues+'">⚠️ Issues: '+c.issues+'</div>' : '';
+    var isShakePartyCust = !!_rWalkinConv[c.id];
+    var shakeBadge = isShakePartyCust ? '<span class="badge" style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;font-size:9px;display:inline-block;margin-left:4px">🎉 Shake Party</span>' : '';
     return '<tr>'
-      +'<td><strong>'+c.name+bdayFlag+'</strong>'+noDobBadge+freeDay+sharedBadge+memberBadge+coachBadge+riskBadge+issuesDisplay+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
+      +'<td><strong>'+c.name+bdayFlag+'</strong>'+noDobBadge+freeDay+shakeBadge+sharedBadge+memberBadge+coachBadge+riskBadge+issuesDisplay+(msBadges?'<div>'+msBadges+'</div>':'')+'</td>'
       +'<td>'+(c.contact||'—')+'</td>'
       +'<td>'+(c.pack_owner_id ? '↗ shared' : (c.pack_type||'—'))+'</td>'
       +'<td>'+(c.pack_owner_id ? '—' : (c.pack_start_date||'—'))+'</td>'
@@ -12511,19 +12990,33 @@ function renderCustomers() {
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#8b5cf6" onclick="openRenewForCustomer(\''+c.id+'\')" title="Renew">🔄</button> '
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#dc2626" onclick="openRefundModal(\''+c.id+'\')" title="Refund / Cancel Pack">↩</button> '
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#16a34a" onclick="generateDietPlan(\''+c.id+'\')" title="'+(c.diet_plan?'Regenerate Diet Plan':'Generate Diet Plan')+'">🥗'+(c.diet_plan?' ✓':'')+' Diet</button> '
-        +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#0891b2" onclick="viewMealCompliance(\''+c.id+'\',\''+c.name+'\')" title="Meal Compliance">📋 Compliance</button> ':'')
-        +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#7c3aed" onclick="viewDietHistory(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Diet Plan History">📜 History</button> ':'')
-        +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#f59e0b;border-color:#f59e0b" onclick="openNotesModal(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Notes &amp; Follow-ups">📝 Notes</button> '
+        +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#0891b2" onclick="viewMealCompliance(\''+c.id+'\',\''+(c.name||'')+'\')" title="Meal Compliance">📋 Compliance</button> ':'')
+        +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#7c3aed" onclick="viewDietHistory(\''+c.id+'\',\''+(c.name||'').replace(/'/g,"\\'")+'\')" title="Diet Plan History">📜 History</button> ':'')
+        +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#f59e0b;border-color:#f59e0b" onclick="openNotesModal(\''+c.id+'\',\''+(c.name||'').replace(/'/g,"\\'")+'\')" title="Notes &amp; Follow-ups">📝 Notes</button> '
         +'<button class="btn-e" onclick="editCustomer(\''+c.id+'\')">Edit</button>'
         +(isConvertedCoach ? '' : '<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:var(--warning-light);color:var(--warning-text);border-color:var(--border-accent)" title="Convert to Coach">⭐ Make Coach</button>')
         +'<button class="btn-d" onclick="delRecord(\'customers\',\''+c.id+'\',\'customers\')">Delete</button>'
       +'</div></td></tr>';
+    } catch(rowErr) { console.error('[PulseIQ] renderCustomers row error for customer', c && c.id, rowErr); return '<tr><td colspan="9" style="color:var(--danger);font-size:12px;padding:6px 12px">⚠️ Error rendering customer: '+(c&&(c.name||c.id)||'unknown')+'</td></tr>'; }
   }).join('');
     if(rows.length > window._limCust) { tb.innerHTML += '<tr><td colspan="9" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCust+=50;renderCustomers()">⬇️ Load More (' + (rows.length - window._limCust) + ' remaining)</button></td></tr>'; }
+  // DEBUG: report layout measurements
+  setTimeout(function(){
+    var tw = document.querySelector('.twrap');
+    var tc = document.querySelector('#sec-customers .tcard');
+    var tbl = tw ? tw.querySelector('table') : null;
+    console.log('[PulseIQ DEBUG] customers rendered:', rows.slice(0,window._limCust).length, '/ filtered:', rows.length, '/ D.customers:', (D.customers||[]).length);
+    console.log('[PulseIQ DEBUG] _limCust:', window._limCust);
+    console.log('[PulseIQ DEBUG] window size:', window.innerWidth + 'x' + window.innerHeight);
+    if(tw) console.log('[PulseIQ DEBUG] .twrap scrollW='+tw.scrollWidth+' clientW='+tw.clientWidth+' scrollH='+tw.scrollHeight+' clientH='+tw.clientHeight+' overflowX='+getComputedStyle(tw).overflowX+' overflowY='+getComputedStyle(tw).overflowY+' maxH='+getComputedStyle(tw).maxHeight);
+    if(tc) console.log('[PulseIQ DEBUG] .tcard clientW='+tc.clientWidth+' clientH='+tc.clientHeight+' overflow='+getComputedStyle(tc).overflow);
+    if(tbl) console.log('[PulseIQ DEBUG] table offsetW='+tbl.offsetWidth+' scrollW='+tbl.scrollWidth);
+  }, 300);
   }
   var active=_custs.filter(function(c){return getDaysLeft(c).active;}).length;
   var expiring=_custs.filter(function(c){var s=getDaysLeft(c);return s.active&&s.days<=3;}).length;
-  var stars=_custs.filter(function(c){return _custs.filter(function(x){return x.referred_by_id===c.id;}).length>=2;}).length;
+  var _starsRef = (window._idx && window._idx.refCountByCust) || {};
+  var stars=_custs.filter(function(c){return (_starsRef[c.id]||0)>=2;}).length;
   document.getElementById('customers-stats').innerHTML=
     '<div class="stat"><div class="stat-l">Total</div><div class="stat-v">'+_custs.length+'</div></div>'+
     '<div class="stat"><div class="stat-l">Active Packs</div><div class="stat-v">'+active+'</div></div>'+
@@ -12927,6 +13420,7 @@ async function loadWalkins() {
 function renderWalkins() {
   var q = ((document.getElementById('walkins-search')||{}).value||'').toLowerCase();
   var filterOutcome = (document.getElementById('walkins-filter-outcome')||{}).value||'';
+  var filterSource = (document.getElementById('walkins-filter-source')||{}).value||'';
   var filterDate = (document.getElementById('walkins-filter-date')||{}).value||'';
   
   var filterMonthEl = document.getElementById('walkins-filter-month');
@@ -12945,6 +13439,7 @@ function renderWalkins() {
 
   var rows = all.filter(function(w) {
     if(filterOutcome && w.outcome !== filterOutcome) return false;
+    if(filterSource && w.source !== filterSource) return false;
     if(filterDate && w.date !== filterDate) return false;
     if(filterMonth && w.date && !w.date.startsWith(filterMonth)) return false;
     return (w.name||'').toLowerCase().includes(q) || (w.phone||'').includes(q);
@@ -12964,6 +13459,7 @@ function renderWalkins() {
       }
     }
   }
+  si = document.getElementById('wi-stat-shakeparty'); if(si) si.textContent = rows.filter(function(w){return w.source==='shake_party';}).length;
   si = document.getElementById('wi-stat-checkup'); if(si) si.textContent = rows.filter(function(w){return w.outcome==='checkup';}).length;
   si = document.getElementById('wi-stat-trial'); if(si) si.textContent = rows.filter(function(w){return w.outcome==='trial';}).length;
   si = document.getElementById('wi-stat-sale'); if(si) si.textContent = rows.filter(function(w){return w.outcome==='product_sale';}).length;
@@ -12974,7 +13470,7 @@ function renderWalkins() {
     tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="ei">🚶</div><p>No walk-ins yet. Add your first visitor!</p></div></td></tr>';
     return;
   }
-  var SRC = {google:'🔍 Google',customer_referral:'👤 Customer',coach_referral:'👨‍🏫 Coach',owner:'🏢 Owner',other:'Other'};
+  var SRC = {google:'🔍 Google',customer_referral:'👤 Customer',coach_referral:'👨‍🏫 Coach',owner:'🏢 Owner',shake_party:'🎉 Shake Party',other:'Other'};
   var OUT = {checkup:'🔬 Checkup',trial:'📦 Trial Pack',product_sale:'🛒 Product Sale',other:'Other'};
   var OUT_COL = {checkup:'#1d4ed8',trial:'#b07800',product_sale:'#16a34a',other:'var(--muted)'};
   window._limWalk = window._limWalk || 50;
@@ -13021,7 +13517,7 @@ function exportWalkinsCSV() {
   
   if(!rows.length) { showToast('No walk-ins to export for this selection!', 'error'); return; }
   
-  var SRC = {google:'Google',customer_referral:'Customer',coach_referral:'Coach',owner:'Owner',other:'Other'};
+  var SRC = {google:'Google',customer_referral:'Customer',coach_referral:'Coach',owner:'Owner',shake_party:'Shake Party',other:'Other'};
   var OUT = {checkup:'Checkup',trial:'Trial Pack',product_sale:'Product Sale',other:'Other'};
 
   var headers = ['Date', 'Name', 'Phone', 'Source', 'Referred By', 'Outcome', 'Amount Received', 'Converted to Customer', 'Notes'];
@@ -13114,10 +13610,31 @@ function onWalkinSourceChange(){
   if (persons.length === 1) {
     sdSetValue('walkin-ref', persons[0].value);
   }
+  syncWalkinTrialAmount();
 }
 function onWalkinOutcomeChange(){
   var out=document.getElementById('walkin-outcome').value;
   document.getElementById('walkin-amount-wrap').style.display=(out==='trial'||out==='product_sale')?'block':'none';
+  syncWalkinTrialAmount();
+}
+
+function syncWalkinTrialAmount() {
+  var out = (document.getElementById('walkin-outcome')||{}).value;
+  var src = (document.getElementById('walkin-source')||{}).value;
+  var amtEl = document.getElementById('walkin-amount');
+  var prodEl = document.getElementById('walkin-product');
+  if (!amtEl) return;
+
+  if (out === 'trial') {
+    var curVal = (amtEl.value || '').toString().trim();
+    var targetAmt = (src === 'shake_party') ? '300' : '900';
+    if (!curVal || curVal === '0' || curVal === '900' || curVal === '300') {
+      amtEl.value = targetAmt;
+    }
+    if (prodEl && (!prodEl.value.trim() || prodEl.value === '3-Day Trial Pack' || prodEl.value === '3-Day Trial Pack (Shake Party Promo)')) {
+      prodEl.value = (src === 'shake_party') ? '3-Day Trial Pack (Shake Party Promo)' : '3-Day Trial Pack';
+    }
+  }
 }
 
 async function saveWalkin(){
@@ -13148,8 +13665,12 @@ async function saveWalkin(){
   };
   getCredentials(); if(!getActiveSbUrl()||!getActiveSbKey()){showToast('Supabase not configured','error');return;}
   var existingFinanceId = document.getElementById('walkin-finance-id') ? document.getElementById('walkin-finance-id').value : '';
-  var hasAmount = data.outcome === 'product_sale' && data.amount_received > 0;
-  var finDesc = 'Walk-in product sale — ' + name + (data.product_details ? ' (' + data.product_details + ')' : '');
+  var isShakePromo = data.source === 'shake_party';
+  var hasAmount = (data.outcome === 'product_sale' || (isShakePromo && data.outcome === 'trial')) && data.amount_received > 0;
+  var finCategory = isShakePromo ? 'Shake Party Promo' : 'Walk-in product sale';
+  var finDesc = isShakePromo 
+    ? 'Walk-in ' + (data.outcome === 'trial' ? '3-day trial' : 'sale') + ' — ' + name + ' (Shake Party Promo)'
+    : 'Walk-in product sale — ' + name + (data.product_details ? ' (' + data.product_details + ')' : '');
   try{
     if(id){
       // ── Edit mode ──
@@ -13165,7 +13686,7 @@ async function saveWalkin(){
         showToast('Walk-in updated (finance entry removed)','success');
       } else if(!existingFinanceId && hasAmount){
         // Amount newly added on edit — create finance record and link it
-        var newFin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:'Walk-in product sale',date:data.date,wellness_center_id:data.wellness_center_id||null});
+        var newFin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:finCategory,date:data.date,wellness_center_id:data.wellness_center_id||null});
         if(newFin && newFin[0] && newFin[0].id) await dbUpdate('walkins', id, {finance_id: newFin[0].id});
         showToast('Walk-in updated · ₹'+data.amount_received.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+' added to finance ✅','success');
       } else {
@@ -13175,7 +13696,7 @@ async function saveWalkin(){
       // ── New entry ──
       var savedWalkin = await dbInsert('walkins', data);
       if(hasAmount){
-        var fin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:'Walk-in product sale',date:data.date,wellness_center_id:data.wellness_center_id||null});
+        var fin = await dbInsert('finance',{type:'income',description:finDesc,amount:data.amount_received,category:finCategory,date:data.date,wellness_center_id:data.wellness_center_id||null});
         if(fin && fin[0] && fin[0].id && savedWalkin && savedWalkin[0] && savedWalkin[0].id){
           await dbUpdate('walkins', savedWalkin[0].id, {finance_id: fin[0].id});
         }

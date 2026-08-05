@@ -2105,32 +2105,33 @@ async function loadAll() {
       showTrialExpiredScreen();
     }
     
-    // Phase 3: Load remaining data (non-blocking background load)
+    // Phase 3: Load remaining data + body in parallel (non-blocking)
     Promise.all([
       loadCoupons(), loadPayments(), loadPackHistory(),
-      loadLeads(), loadWalkins(), loadFoods(), loadInventory(), loadRecurring()
+      loadLeads(), loadWalkins(), loadFoods(), loadInventory(), loadRecurring(),
+      loadBody()  // parallel with rest — no longer waits for phase 3 to finish first
     ]).then(function() {
-      return loadBody();
-    }).then(function() {
       _daysLeftCache = {}; // recalculate with full data
       try { buildDataIndexes(); } catch(idxErr){ console.error('buildDataIndexes Phase3 err:', idxErr); }
-      // Invalidate ALL tab caches — every tab visited before Phase 3 completed
-      // has stale/empty data. Next visit will trigger a fresh render with full data.
       try { window.invalidateTabCache(); } catch(e){}
-      // Re-render currently visible tabs directly (don't wait for user to re-click)
-      try { renderCustomers(); } catch(re){}
-      try { renderOverview(); } catch(re){}
-      if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
-      if(typeof renderCoupons==='function') try { renderCoupons(); } catch(e){}
-      if(typeof renderPayments==='function') try { renderPayments(); } catch(e){}
-      if(typeof renderLeadsStats==='function') try { renderLeadsStats(); } catch(e){}
-      if(typeof renderLeads==='function') try { renderLeads(); } catch(e){}
-      if(typeof renderAttendance==='function') try { renderAttendance(); } catch(e){}
-      if(typeof renderFoodStats==='function') try { renderFoodStats(); } catch(e){}
-      if(typeof renderFoods==='function') try { renderFoods(); } catch(e){}
-      updateCustSelects();
-      try { autoApplyRecurring(); } catch(re){ console.error('autoApplyRecurring crash:',re); }
-      try { loadFollowUps(); } catch(re){ console.error('loadFollowUps crash:',re); }
+      // Spread re-renders across two animation frames — avoids blocking the main thread
+      requestAnimationFrame(function() {
+        try { renderCustomers(); } catch(re){}
+        try { renderOverview(); } catch(re){}
+        requestAnimationFrame(function() {
+          if(typeof renderCurrentStock==='function') try { renderCurrentStock(); } catch(e){}
+          if(typeof renderCoupons==='function') try { renderCoupons(); } catch(e){}
+          if(typeof renderPayments==='function') try { renderPayments(); } catch(e){}
+          if(typeof renderLeadsStats==='function') try { renderLeadsStats(); } catch(e){}
+          if(typeof renderLeads==='function') try { renderLeads(); } catch(e){}
+          if(typeof renderAttendance==='function') try { renderAttendance(); } catch(e){}
+          if(typeof renderFoodStats==='function') try { renderFoodStats(); } catch(e){}
+          if(typeof renderFoods==='function') try { renderFoods(); } catch(e){}
+          updateCustSelects();
+          try { autoApplyRecurring(); } catch(re){ console.error('autoApplyRecurring crash:',re); }
+          try { loadFollowUps(); } catch(re){ console.error('loadFollowUps crash:',re); }
+        });
+      });
     }).catch(function(bgErr) {
       console.error('Background data loading failed:', bgErr);
     });
@@ -2614,6 +2615,7 @@ function goTo(name, el) {
   if (name==='leads')       execTabModule('leads', function(){ renderLeadsStats(); renderLeads(); updateLeadCenterSel(); });
   if (name==='guide')       execTabModule('guide', renderGuide);
   if (name==='finance')     execTabModule('finance', function(){ if (typeof renderFinance === 'function') renderFinance(); });
+  if (name==='recovery')    execTabModule('recovery', function(){ if (typeof renderRecoveryHub === 'function') renderRecoveryHub(); });
   if (name==='reports')     execTabModule('reports', function(){ if (typeof renderReportsView === 'function') renderReportsView(); });
   if (name==='expenses') {
     (async function() {
@@ -3037,6 +3039,228 @@ function isInactive(c) {
   if(atts.length) diff = Math.floor((new Date() - new Date(atts[0]))/(1000*60*60*24));
   else diff = Math.floor((new Date() - (c.join_date ? new Date(c.join_date) : new Date()))/(1000*60*60*24));
   return diff >= 7;
+}
+
+// ══════════════════════════════════════════════
+//  🔁 RECOVERY HUB — renewals, dues, absence
+// ══════════════════════════════════════════════
+function _packEndDate(c) {
+  if (!c || !c.pack_start_date || !c.pack_type) return null;
+  var dur = parsePack(c.pack_type);
+  if (dur >= 9999) return null; // Product User — never expires
+  var d = new Date(c.pack_start_date + 'T00:00:00');
+  if (isNaN(d)) return null;
+  d.setDate(d.getDate() + dur);
+  return d.toISOString().split('T')[0];
+}
+
+function waOpenMsg(contact, msg) {
+  var p = (contact || '').replace(/\D/g, '');
+  if (!p) { showToast('No phone number on file', 'error'); return; }
+  if (p.length === 10) p = COUNTRY_CODE + p;
+  window.open('https://api.whatsapp.com/send?phone=' + p + '&text=' + encodeURIComponent(msg), '_blank');
+}
+
+function getLapsedCustomers() {
+  var today = new Date().toISOString().split('T')[0];
+  return filterByCenter(D.customers || []).filter(function(c) {
+    if (c.pack_owner_id) return false;                 // shares someone else's pack
+    if (!c.pack_type || !c.pack_start_date) return false;
+    if (parsePack(c.pack_type) >= 9999) return false;  // product user
+    var st = getDaysLeft(c);
+    var end = _packEndDate(c);
+    return !st.active || (end && end < today);         // servings used up OR window passed
+  }).map(function(c) {
+    var st = getDaysLeft(c);
+    var end = _packEndDate(c);
+    var endedDays = end ? Math.floor((new Date() - new Date(end + 'T00:00:00')) / 864e5) : 0;
+    if (endedDays < 0) endedDays = 0; // servings exhausted before the date window closed
+    return { c: c, end: end, endedDays: endedDays, used: st.used, total: st.total };
+  }).sort(function(a, b) { return a.endedDays - b.endedDays; }); // freshest lapses first
+}
+
+function getDuesList() {
+  var today = new Date().toISOString().split('T')[0];
+  var byPerson = {};
+  (D.payments || []).forEach(function(p) {
+    var bal = Math.max(0, Number(p.total_amount || 0) - Number(p.amount_paid || 0));
+    if (bal <= 0) return;
+    var k = p.person_id || p.person_name || 'unknown';
+    if (!byPerson[k]) byPerson[k] = { personId: p.person_id, name: p.person_name || 'Unknown', bal: 0, earliestDue: null, descs: [] };
+    byPerson[k].bal += bal;
+    if (p.due_date && (!byPerson[k].earliestDue || p.due_date < byPerson[k].earliestDue)) byPerson[k].earliestDue = p.due_date;
+    if (p.description && byPerson[k].descs.indexOf(p.description) === -1) byPerson[k].descs.push(p.description);
+  });
+  return Object.keys(byPerson).map(function(k) {
+    var x = byPerson[k];
+    var person = (D.customers || []).find(function(c) { return c.id === x.personId; })
+              || (D.coaches   || []).find(function(c) { return c.id === x.personId; });
+    x.contact = person ? person.contact : null;
+    x.lang = (person && person.preferred_language) || WA_LANG || 'English';
+    x.overdue = !!(x.earliestDue && x.earliestDue < today);
+    return x;
+  }).sort(function(a, b) { return b.bal - a.bal; });
+}
+
+function getAbsenceList() {
+  var items = [];
+  filterByCenter(D.customers || []).forEach(function(c) {
+    var st = getDaysLeft(c);
+    if (!st.active || st.total >= 9999) return;
+    var atts = ((window._idx && window._idx.attByCustomer && window._idx.attByCustomer[c.id])
+      || (D.attendance || []).filter(function(a) { return a.customer_id === c.id; }))
+      .filter(function(a) { return a.status === 'present'; })
+      .map(function(a) { return a.date; }).sort().reverse();
+    var days = atts.length
+      ? Math.floor((new Date() - new Date(atts[0] + 'T00:00:00')) / 864e5)
+      : (c.join_date ? Math.floor((new Date() - new Date(c.join_date + 'T00:00:00')) / 864e5) : 0);
+    if (days >= 7) items.push({ c: c, days: days, left: st.days, last: atts[0] || null });
+  });
+  return items.sort(function(a, b) { return b.days - a.days; });
+}
+
+function _recoveryMsgRenewal(c, end) {
+  var first = (c.name || '').split(' ')[0];
+  var cn = getCenterName();
+  if ((c.preferred_language || WA_LANG) === 'Telugu') {
+    return 'హాయ్ ' + first + '! 🌿 మీ ' + (c.pack_type || '') + ' ప్యాక్ ' + (end ? end + 'న ' : '') + 'ముగిసింది. మీ వెల్‌నెస్ ప్రయాణాన్ని కొనసాగిద్దాం — ఈ వారంలో రెన్యూ చేసుకుంటారా? 💚 — ' + cn;
+  }
+  return 'Hi ' + first + '! 🌿 Your ' + (c.pack_type || 'wellness') + ' pack at ' + cn + (end ? ' ended on ' + end : ' has ended') + '. We\'d love to keep your progress going — shall I reserve your renewal this week? 💚 — ' + cn;
+}
+
+function _recoveryMsgDues(x) {
+  var cn = getCenterName();
+  if (x.lang === 'Telugu') {
+    return 'హాయ్ ' + x.name + ', ' + cn + ' నుండి చిన్న గుర్తింపు: మీ ' + (x.descs[0] || 'ప్యాక్') + ' కోసం ₹' + x.bal.toLocaleString('en-IN') + ' పెండింగ్‌లో ఉంది. మీ తదుపరి విజిట్‌లో లేదా UPI ద్వారా చెల్లించవచ్చు. ధన్యవాదాలు! 🙏 — ' + cn;
+  }
+  return 'Hi ' + x.name + ', a gentle reminder from ' + cn + ': ₹' + x.bal.toLocaleString('en-IN') + ' is pending for your ' + (x.descs[0] || 'pack') + (x.earliestDue ? ' (due ' + x.earliestDue + ')' : '') + '. You can clear it on your next visit or via UPI. Thank you! 🙏 — ' + cn;
+}
+
+function _recoveryMsgAbsence(item) {
+  var first = (item.c.name || '').split(' ')[0];
+  var cn = getCenterName();
+  if ((item.c.preferred_language || WA_LANG) === 'Telugu') {
+    return 'హాయ్ ' + first + '! ' + cn + 'లో మిమ్మల్ని మిస్ అవుతున్నాం — ' + item.days + ' రోజులైంది, మీ ప్యాక్‌లో ఇంకా ' + item.left + ' సెషన్లు ఉన్నాయి. ఈ వారం వచ్చి మళ్లీ మొదలుపెడదాం! 💪 — ' + cn;
+  }
+  return 'Hi ' + first + '! We\'ve missed you at ' + cn + ' — it\'s been ' + item.days + ' days and your pack still has ' + item.left + ' sessions left. Come in this week and let\'s restart! 💪 — ' + cn;
+}
+
+function waRecoveryRenewal(cid) {
+  var c = (D.customers || []).find(function(x) { return x.id === cid; });
+  if (!c) return;
+  waOpenMsg(c.contact, _recoveryMsgRenewal(c, _packEndDate(c)));
+}
+function waRecoveryDues(i) {
+  var x = (window._recoveryDues || [])[i];
+  if (!x) return;
+  waOpenMsg(x.contact, _recoveryMsgDues(x));
+}
+function waRecoveryAbsence(cid) {
+  var item = (window._recoveryAbsence || []).find(function(x) { return x.c.id === cid; });
+  if (!item) return;
+  waOpenMsg(item.c.contact, _recoveryMsgAbsence(item));
+}
+
+function _recoveryRow(left, mid, right) {
+  return '<div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--border);flex-wrap:wrap">'
+    + '<div style="flex:1.4;min-width:140px">' + left + '</div>'
+    + '<div style="flex:1;min-width:110px;font-size:12.5px;color:var(--muted)">' + mid + '</div>'
+    + '<div style="display:flex;gap:6px;align-items:center">' + right + '</div>'
+    + '</div>';
+}
+
+function renderRecoveryHub() {
+  var statsEl = document.getElementById('recovery-stats');
+  var renEl   = document.getElementById('recovery-renewals');
+  var duesEl  = document.getElementById('recovery-dues');
+  var absEl   = document.getElementById('recovery-inactive');
+  if (!statsEl || !renEl || !duesEl || !absEl) return;
+
+  var lapsed  = getLapsedCustomers();
+  var dues    = getDuesList();
+  var absence = getAbsenceList();
+  window._recoveryDues = dues;
+  window._recoveryAbsence = absence;
+
+  var lapsedValue = lapsed.reduce(function(s, x) { return s + (Number(x.c.pack_price) || 0); }, 0);
+  var duesTotal   = dues.reduce(function(s, x) { return s + x.bal; }, 0);
+
+  statsEl.innerHTML =
+    '<div class="stat"><div class="stat-ic">🔁</div><div class="stat-l">Lapsed Renewals</div><div class="stat-v">' + lapsed.length + '</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px">~₹' + lapsedValue.toLocaleString('en-IN') + ' recoverable</div></div>'
+    + '<div class="stat"><div class="stat-ic">💰</div><div class="stat-l">Outstanding Dues</div><div class="stat-v">₹' + duesTotal.toLocaleString('en-IN') + '</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px">' + dues.length + ' member' + (dues.length === 1 ? '' : 's') + ' owe money</div></div>'
+    + '<div class="stat"><div class="stat-ic">😴</div><div class="stat-l">Absent 7+ Days</div><div class="stat-v">' + absence.length + '</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px">on active packs — churn risk</div></div>';
+
+  // ── Renewal recovery list ──
+  if (!lapsed.length) {
+    renEl.innerHTML = '<div class="empty" style="padding:20px"><div class="ei">🎉</div><p>No lapsed packs — everyone is renewed!</p></div>';
+  } else {
+    renEl.innerHTML = lapsed.map(function(x) {
+      var badge = x.endedDays === 0 ? '<span class="badge br">ended today</span>'
+        : '<span class="badge ' + (x.endedDays <= 14 ? 'by' : 'br') + '">' + x.endedDays + 'd ago</span>';
+      return _recoveryRow(
+        '<strong>' + x.c.name + '</strong><div style="font-size:12px;color:var(--muted)">' + (x.c.pack_type || '') + (x.c.pack_price ? ' · ₹' + Number(x.c.pack_price).toLocaleString('en-IN') : '') + '</div>',
+        (x.end ? 'ended ' + x.end + ' ' : 'sessions used up ') + badge + '<div>' + x.used + '/' + x.total + ' sessions used</div>',
+        (x.c.contact ? '<button class="btn-p" style="font-size:12px;padding:6px 12px" onclick="waRecoveryRenewal(\'' + x.c.id + '\')">💬 Remind</button>' : '<span style="font-size:11.5px;color:var(--muted)">no phone</span>')
+        + '<button class="btn-c" style="font-size:12px;padding:6px 12px" onclick="openRenewForCustomer(\'' + x.c.id + '\')">🔄 Renew</button>'
+      );
+    }).join('');
+  }
+
+  // ── Dues tracker ──
+  if (!dues.length) {
+    duesEl.innerHTML = '<div class="empty" style="padding:20px"><div class="ei">✅</div><p>No outstanding balances — all dues cleared!</p></div>';
+  } else {
+    duesEl.innerHTML = dues.map(function(x, i) {
+      return _recoveryRow(
+        '<strong>' + x.name + '</strong><div style="font-size:12px;color:var(--muted)">' + (x.descs.join(', ') || '') + '</div>',
+        '<strong style="color:var(--text);font-size:14px">₹' + x.bal.toLocaleString('en-IN') + '</strong> '
+          + (x.overdue ? '<span class="badge br">overdue</span>' : (x.earliestDue ? '<span class="badge by">due ' + x.earliestDue + '</span>' : '')),
+        (x.contact ? '<button class="btn-p" style="font-size:12px;padding:6px 12px" onclick="waRecoveryDues(' + i + ')">💬 Nudge</button>' : '<span style="font-size:11.5px;color:var(--muted)">no phone</span>')
+      );
+    }).join('');
+  }
+
+  // ── Absence alerts ──
+  if (!absence.length) {
+    absEl.innerHTML = '<div class="empty" style="padding:20px"><div class="ei">💪</div><p>No absent members — everyone on an active pack visited this week!</p></div>';
+  } else {
+    absEl.innerHTML = absence.map(function(x) {
+      return _recoveryRow(
+        '<strong>' + x.c.name + '</strong><div style="font-size:12px;color:var(--muted)">' + (x.c.pack_type || '') + ' · ' + x.left + ' sessions left</div>',
+        '<span class="badge ' + (x.days >= 14 ? 'br' : 'by') + '">' + x.days + ' days absent</span>' + (x.last ? '<div>last visit ' + x.last + '</div>' : '<div>never visited</div>'),
+        (x.c.contact ? '<button class="btn-p" style="font-size:12px;padding:6px 12px" onclick="waRecoveryAbsence(\'' + x.c.id + '\')">💬 We miss you</button>' : '<span style="font-size:11.5px;color:var(--muted)">no phone</span>')
+      );
+    }).join('');
+  }
+}
+
+async function backfillPackEndDates() {
+  var targets = (D.customers || []).filter(function(c) {
+    var end = _packEndDate(c);
+    return end && c.pack_end_date !== end;
+  });
+  if (!targets.length) { showToast('All pack end dates are already up to date ✅'); return; }
+  if (!confirm('Auto-fill pack_end_date for ' + targets.length + ' customer(s)?\n\nComputed as pack start date + pack duration. Existing values are overwritten with the computed date.')) return;
+  var btn = document.getElementById('recovery-backfill-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Updating…'; }
+  var ok = 0, fail = 0;
+  for (var i = 0; i < targets.length; i++) {
+    try {
+      await dbUpdate('customers', targets[i].id, { pack_end_date: _packEndDate(targets[i]) });
+      ok++;
+    } catch (e) {
+      fail++;
+      if (/pack_end_date|column/i.test(e.message || '')) {
+        showToast('The customers table has no pack_end_date column yet — run the SQL migration shown in the Guide.', 'error');
+        break;
+      }
+    }
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '📅 Auto-fill pack end dates'; }
+  showToast('Pack end dates: ' + ok + ' updated' + (fail ? ', ' + fail + ' failed' : '') + ' ✅');
+  try { await loadCustomers(); } catch (e) {}
+  try { window.invalidateTabCache('recovery'); } catch (e) {}
+  renderRecoveryHub();
 }
 
 // ── CHURN RISK SCORING ──
@@ -11106,6 +11330,13 @@ async function saveRenewal(){
     await dbInsert('pack_history',histRow);
     // Update record in the right table
     await dbUpdate(isCoach?'coaches':'customers',cid,{pack_type:packType,pack_start_date:startDate,pack_price:price,pack_owner_id:null});
+    // Keep pack_end_date in sync (separate best-effort update — column may not exist on older schemas)
+    if(!isCoach){
+      try{
+        var _pkEnd=_packEndDate({pack_type:packType,pack_start_date:startDate});
+        if(_pkEnd) await dbUpdate('customers',cid,{pack_end_date:_pkEnd});
+      }catch(_peErr){}
+    }
 
     // ── Payment handling ──
     var finCategory = isCoach ? 'Coach pack payment' : 'Pack sale to customer';
@@ -12691,10 +12922,12 @@ function renderCustomers() {
   var rows = _custs.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.contact||'').toLowerCase().includes(q); });
   var tb = document.getElementById('customers-body');
   if (!tb) return;
+  var _countLbl = document.getElementById('cust-count-lbl');
+  if (_countLbl) _countLbl.textContent = 'Loaded: ' + (D.customers||[]).length + ' · Showing: ' + rows.length;
   var todayMMDD = new Date().toISOString().slice(5,10);
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">👤</div><p>No customers found.</p></div></td></tr>'; }
   else {
-    window._limCust = window._limCust || 50;
+    window._limCust = window._limCust || 200;
     // Use pre-built indexes for O(1) per-row lookups (built by buildDataIndexes())
     var _rIdx = window._idx || {};
     var _rAttByCust   = _rIdx.attByCustomer  || {};
@@ -12707,6 +12940,7 @@ function renderCustomers() {
     var _coachById = {};
     D.coaches.forEach(function(co){ _coachById[co.id] = co; });
     tb.innerHTML = rows.slice(0, window._limCust).map(function(c){
+    try {
     var st = getDaysLeft(c);
     var streak = getStreak(c.id);
     var bdg = st.days > 3 ? 'bg' : (st.days > 0 ? 'by' : 'br');
@@ -12756,15 +12990,28 @@ function renderCustomers() {
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#8b5cf6" onclick="openRenewForCustomer(\''+c.id+'\')" title="Renew">🔄</button> '
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#dc2626" onclick="openRefundModal(\''+c.id+'\')" title="Refund / Cancel Pack">↩</button> '
         +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#16a34a" onclick="generateDietPlan(\''+c.id+'\')" title="'+(c.diet_plan?'Regenerate Diet Plan':'Generate Diet Plan')+'">🥗'+(c.diet_plan?' ✓':'')+' Diet</button> '
-        +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#0891b2" onclick="viewMealCompliance(\''+c.id+'\',\''+c.name+'\')" title="Meal Compliance">📋 Compliance</button> ':'')
-        +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#7c3aed" onclick="viewDietHistory(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Diet Plan History">📜 History</button> ':'')
-        +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#f59e0b;border-color:#f59e0b" onclick="openNotesModal(\''+c.id+'\',\''+c.name.replace(/'/g,"\\'")+'\')" title="Notes &amp; Follow-ups">📝 Notes</button> '
+        +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#0891b2" onclick="viewMealCompliance(\''+c.id+'\',\''+(c.name||'')+'\')" title="Meal Compliance">📋 Compliance</button> ':'')
+        +(c.diet_plan?'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#7c3aed" onclick="viewDietHistory(\''+c.id+'\',\''+(c.name||'').replace(/'/g,"\\'")+'\')" title="Diet Plan History">📜 History</button> ':'')
+        +'<button class="btn-p" style="font-size:11px;padding:3px 6px;background:#f59e0b;border-color:#f59e0b" onclick="openNotesModal(\''+c.id+'\',\''+(c.name||'').replace(/'/g,"\\'")+'\')" title="Notes &amp; Follow-ups">📝 Notes</button> '
         +'<button class="btn-e" onclick="editCustomer(\''+c.id+'\')">Edit</button>'
         +(isConvertedCoach ? '' : '<button class="btn-e" onclick="convertToCoach(\''+c.id+'\')" style="background:var(--warning-light);color:var(--warning-text);border-color:var(--border-accent)" title="Convert to Coach">⭐ Make Coach</button>')
         +'<button class="btn-d" onclick="delRecord(\'customers\',\''+c.id+'\',\'customers\')">Delete</button>'
       +'</div></td></tr>';
+    } catch(rowErr) { console.error('[PulseIQ] renderCustomers row error for customer', c && c.id, rowErr); return '<tr><td colspan="9" style="color:var(--danger);font-size:12px;padding:6px 12px">⚠️ Error rendering customer: '+(c&&(c.name||c.id)||'unknown')+'</td></tr>'; }
   }).join('');
     if(rows.length > window._limCust) { tb.innerHTML += '<tr><td colspan="9" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limCust+=50;renderCustomers()">⬇️ Load More (' + (rows.length - window._limCust) + ' remaining)</button></td></tr>'; }
+  // DEBUG: report layout measurements
+  setTimeout(function(){
+    var tw = document.querySelector('.twrap');
+    var tc = document.querySelector('#sec-customers .tcard');
+    var tbl = tw ? tw.querySelector('table') : null;
+    console.log('[PulseIQ DEBUG] customers rendered:', rows.slice(0,window._limCust).length, '/ filtered:', rows.length, '/ D.customers:', (D.customers||[]).length);
+    console.log('[PulseIQ DEBUG] _limCust:', window._limCust);
+    console.log('[PulseIQ DEBUG] window size:', window.innerWidth + 'x' + window.innerHeight);
+    if(tw) console.log('[PulseIQ DEBUG] .twrap scrollW='+tw.scrollWidth+' clientW='+tw.clientWidth+' scrollH='+tw.scrollHeight+' clientH='+tw.clientHeight+' overflowX='+getComputedStyle(tw).overflowX+' overflowY='+getComputedStyle(tw).overflowY+' maxH='+getComputedStyle(tw).maxHeight);
+    if(tc) console.log('[PulseIQ DEBUG] .tcard clientW='+tc.clientWidth+' clientH='+tc.clientHeight+' overflow='+getComputedStyle(tc).overflow);
+    if(tbl) console.log('[PulseIQ DEBUG] table offsetW='+tbl.offsetWidth+' scrollW='+tbl.scrollWidth);
+  }, 300);
   }
   var active=_custs.filter(function(c){return getDaysLeft(c).active;}).length;
   var expiring=_custs.filter(function(c){var s=getDaysLeft(c);return s.active&&s.days<=3;}).length;

@@ -7,6 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="PulseZen Supervisor Dashboard - Manage wellness centers, track coach performance, consult customers, and monitor revenue dynamically with AI wellness scans.">
+<link rel="preload" href="app.min.js?v=2.2.2" as="script">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -279,7 +280,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .btn-p:active{transform:translateY(0)}
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
-.stat{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;padding:22px 24px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);transition:all .22s cubic-bezier(0.4, 0, 0.2, 1)}
+.stat{background:rgba(24, 24, 27, 0.75);border-radius:20px;padding:22px 24px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);transition:all .22s cubic-bezier(0.4, 0, 0.2, 1)}
 .stat:hover{transform:translateY(-2px);border-color:rgba(39, 174, 96, 0.35);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65)}
 .stat-l{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700}
 .stat-v{font-family:'Space Grotesk','Plus Jakarta Sans',sans-serif;font-size:clamp(20px, 2vw, 32px);word-break:break-word;font-weight:700;color:var(--primary);margin-top:6px;letter-spacing:-0.5px}
@@ -289,7 +290,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
 .ov-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px}
 @media(max-width:900px){.ov-grid,.ov-grid-3{grid-template-columns:1fr}}
-.ov-card{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);overflow:hidden;transition:border-color .2s}
+.ov-card{background:#181819;border-radius:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);overflow:hidden;transition:border-color .2s}
 .ov-card:hover{border-color:rgba(255, 255, 255, 0.18)}
 .ov-card-h{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255, 255, 255, 0.08);background:rgba(255, 255, 255, 0.02)}
 .ov-card-h h3{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px}
@@ -345,11 +346,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .pin-center-row:last-child{border-bottom:none}
 .pin-action{background:var(--success-light);border:1px solid var(--border-success);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--text);margin-top:10px;line-height:1.6}
 /* TABLE */
-.tcard{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);overflow:hidden}
+.tcard{background:#181819;border-radius:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);border:1px solid rgba(255, 255, 255, 0.1);overflow:clip}
 .ttoolbar{padding:14px 18px;border-bottom:1px solid rgba(255, 255, 255, 0.08);display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(255, 255, 255, 0.02)}
 .search{padding:11px 16px;border:1.5px solid rgba(255, 255, 255, 0.12);border-radius:12px;font-family:inherit;font-size:13.5px;flex:1;min-width:180px;color:var(--text);background:rgba(18, 18, 20, 0.85);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1)}
 .search:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(39, 174, 96, 0.2);background:rgba(24, 24, 27, 0.95)}
-.twrap{overflow-x:auto;max-height:550px}
+.twrap{overflow-x:auto;overflow-y:auto;max-height:max(400px,calc(100vh - 180px));scroll-behavior:smooth}
+.twrap table{width:auto;min-width:1500px;border-collapse:collapse}
+.twrap td{white-space:nowrap}
 table{width:100%;border-collapse:collapse}
 th{background:rgba(24, 24, 27, 0.95);position:sticky;top:0;z-index:10;padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#a1a1aa;font-weight:700;white-space:nowrap;border-bottom:1px solid rgba(255, 255, 255, 0.1)}
 td{padding:14px 16px;border-bottom:1px solid rgba(255, 255, 255, 0.06);font-size:13.5px;vertical-align:middle;transition:background .15s}
@@ -598,8 +601,9 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
     justify-content: center !important;
     box-sizing: border-box !important;
   }
-  .twrap{overflow-x:auto !important;-webkit-overflow-scrolling:touch !important;max-width:100% !important;border-radius:12px}
-  .twrap table{width:100% !important}
+  .twrap{overflow-x:auto !important;overflow-y:visible !important;max-height:none !important;-webkit-overflow-scrolling:touch !important;max-width:100% !important;border-radius:12px}
+  .twrap table{min-width:800px !important;width:auto !important}
+  .twrap td{white-space:nowrap !important}
   .slicer-bar-inner{flex-direction:column;align-items:stretch}
   .slicer-group{min-width:100% !important;width:100% !important}
   #sec-profile [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
@@ -699,7 +703,7 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 }
 
 /* ── SLICERS & REPORTS ── */
-.slicer-bar{background:rgba(24, 24, 27, 0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.12);border-radius:20px;padding:18px 22px;margin-bottom:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5)}
+.slicer-bar{background:#161618;border:1px solid rgba(255, 255, 255, 0.12);border-radius:20px;padding:18px 22px;margin-bottom:20px;box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5)}
 .slicer-bar-inner{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .slicer-group{display:flex;flex-direction:column;gap:6px;min-width:130px}
 .slicer-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-family:'Space Grotesk',sans-serif}
@@ -717,9 +721,9 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 .slicer-chip:active:not(.active){background:rgba(255, 255, 255, 0.18);transform:scale(0.98)}
 .slicer-reset{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(239, 68, 68, 0.3);background:rgba(239, 68, 68, 0.15);color:#ef4444;font-family:inherit;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);user-select:none;-webkit-tap-highlight-color:transparent}
 .slicer-reset:active{background:rgba(239, 68, 68, 0.35);transform:scale(0.98)}
-.report-card,.ws-report-card{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:16px;padding:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
+.report-card,.ws-report-card{background:#181819;border-radius:16px;padding:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
 .report-card:active,.ws-report-card:active,#sec-export .tcard:active{transform:scale(0.99)}
-#sec-export .tcard{background:rgba(24, 24, 27, 0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
+#sec-export .tcard{background:#181819;border-radius:20px;border:1px solid rgba(255, 255, 255, 0.1);box-shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)}
 #sec-export .tcard:hover{transform:translateY(-3px);border-color:rgba(39, 174, 96, 0.4);box-shadow:0 16px 36px -10px rgba(0, 0, 0, 0.65), 0 0 20px rgba(39, 174, 96, 0.15)}
 #sec-export .tcard[style*="dashed"]{background:linear-gradient(135deg, rgba(39, 174, 96, 0.08) 0%, rgba(24, 24, 27, 0.85) 100%);border:2px dashed rgba(39, 174, 96, 0.5) !important}
 :focus-visible{outline:none !important;border-color:#27AE60 !important;box-shadow:0 0 0 3px rgba(39, 174, 96, 0.3) !important}
@@ -982,7 +986,7 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
 .fhint-low{background:var(--low-bg);color:var(--low-text)}
 
 /* ── HEALTH SCORE GAUGE ── */
-.hs-card{background:linear-gradient(135deg, rgba(39, 174, 96, 0.14) 0%, rgba(24, 24, 27, 0.85) 60%, rgba(37, 99, 235, 0.1) 100%);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;padding:22px 24px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:22px;flex-wrap:wrap;box-shadow:0 12px 35px -10px rgba(0, 0, 0, 0.6);border:1px solid rgba(39, 174, 96, 0.35);transition:all .22s cubic-bezier(0.4, 0, 0.2, 1)}
+.hs-card{background:linear-gradient(135deg, rgba(39, 174, 96, 0.14) 0%, #161618 60%, rgba(37, 99, 235, 0.1) 100%);border-radius:20px;padding:22px 24px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:22px;flex-wrap:wrap;box-shadow:0 12px 35px -10px rgba(0, 0, 0, 0.6);border:1px solid rgba(39, 174, 96, 0.35);transition:all .22s cubic-bezier(0.4, 0, 0.2, 1)}
 .hs-card:hover{border-color:rgba(39, 174, 96, 0.55);box-shadow:0 18px 42px -10px rgba(0, 0, 0, 0.75)}
 .hs-gauge{flex-shrink:0}
 .hs-info{flex:1;min-width:160px}
@@ -1001,7 +1005,7 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
 .hs-grade-pip{padding:3px 10px;border-radius:12px;font-size:10.5px;font-weight:700}
 
 /* ── DIET PLAN ── */
-.diet-header{background:linear-gradient(135deg,rgba(39, 174, 96, 0.2) 0%,rgba(24, 24, 27, 0.9) 60%,rgba(37, 99, 235, 0.15) 100%);backdrop-filter:blur(16px);border-radius:20px;padding:22px 24px;margin-bottom:18px;color:#fff;border:1px solid rgba(39, 174, 96, 0.3)}
+.diet-header{background:linear-gradient(135deg,rgba(39, 174, 96, 0.2) 0%,#171719 60%,rgba(37, 99, 235, 0.15) 100%);border-radius:20px;padding:22px 24px;margin-bottom:18px;color:#fff;border:1px solid rgba(39, 174, 96, 0.3)}
 .diet-header h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px}
 .diet-header p{font-size:13px;color:var(--muted)}
 .diet-macros{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
@@ -1116,9 +1120,6 @@ h1, h2, h3, h4, h5, h6, .pt, .welcome-name, .mt, .sb-logo h1, .login-logo h1, .r
 .tcard, .stat, .report-card, .login-box, .modal {
   position: relative;
   overflow: hidden;
-  background: rgba(18, 26, 44, 0.65) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
   border: 1px solid rgba(255, 255, 255, 0.07) !important;
   border-radius: 16px !important;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1256,7 +1257,21 @@ input:focus, select:focus, textarea:focus {
   color: #475569 !important;
 }
 </style>
-<link rel="stylesheet" href="pulseiq-premium.css?v=4.0">
+<link rel="stylesheet" href="pulseiq-premium.css?v=4.7">
+<style>
+@media(max-width:768px){
+  .stat,.stat:first-child,.stats .stat,
+  .ov-card,.tcard,.report-card,.ws-report-card,
+  .hs-card,.diet-header,.login-card,
+  .sidebar,.overlay,.modal,#login-screen>div,
+  .mobile-quick-nav{
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important
+  }
+  .sidebar{background:#07070c!important;width:285px!important;max-width:85vw!important}
+  .modal,.tcard{background:#0a0a10!important}
+}
+</style>
 <script>
 window.showMobileDebugError = function(title, details) {
   try {
@@ -1316,115 +1331,102 @@ if ('caches' in window) {
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
 <script defer src="auth.core.min.js?v=1.8.4"></script>
-<script defer src="app.min.js?v=1.9.1"></script>
+<script defer src="app.min.js?v=2.2.3"></script>
+<script>
+window._showCustDbg = function() {
+  var sec = document.getElementById('sec-customers');
+  // If section is hidden, retry until visible
+  if (!sec || sec.offsetParent === null || sec.clientHeight === 0) {
+    setTimeout(window._showCustDbg, 800);
+    return;
+  }
+  var tw = sec.querySelector('.twrap');
+  var tc = sec.querySelector('.tcard');
+  var tbody = document.getElementById('customers-body');
+  var rows = tbody ? tbody.querySelectorAll('tr').length : 0;
+  var dcust = (window.D && window.D.customers) ? window.D.customers.length : '?';
+  var info = [
+    'rows in DOM: <b>' + rows + '</b>',
+    'D.customers: <b>' + dcust + '</b>',
+    '_limCust: <b>' + (window._limCust||'?') + '</b>',
+    'screen: <b>' + window.innerWidth + 'x' + window.innerHeight + '</b>',
+  ];
+  if (tw) {
+    var tws = getComputedStyle(tw);
+    info.push('twrap scrollH:<b>'+tw.scrollHeight+'</b> clientH:<b>'+tw.clientHeight+'</b>');
+    info.push('twrap scrollW:<b>'+tw.scrollWidth+'</b> clientW:<b>'+tw.clientWidth+'</b>');
+    info.push('maxH:<b>'+tws.maxHeight+'</b> overflowY:<b>'+tws.overflowY+'</b> overflowX:<b>'+tws.overflowX+'</b>');
+  }
+  if (tc) {
+    info.push('tcard clientH:<b>'+tc.clientHeight+'</b> overflow:<b>'+getComputedStyle(tc).overflow+'</b>');
+  }
+  var box = document.getElementById('_cdbg') || document.createElement('div');
+  box.id = '_cdbg';
+  box.style.cssText = 'position:fixed;top:60px;right:8px;z-index:99999;background:#0d1117;color:#39d353;font-size:11px;font-family:monospace;padding:10px 14px;border-radius:10px;border:1.5px solid #39d353;max-width:290px;line-height:1.8;box-shadow:0 4px 20px rgba(0,0,0,.9)';
+  box.innerHTML = '<b style="font-size:12px">🐛 Customers Debug</b><br>' + info.join('<br>') + '<br><button onclick="document.getElementById(\'_cdbg\').remove()" style="margin-top:6px;padding:2px 8px;border-radius:6px;border:1px solid #39d353;background:transparent;color:#39d353;cursor:pointer;font-size:11px">✕ close</button>';
+  document.body.appendChild(box);
+};
+
+// ── Performance Timing Debug ──
+window._perf = { marks: {}, t: function(k){ window._perf.marks[k] = performance.now(); }, report: function(){
+  var m = window._perf.marks, out = [], t0 = m.loadStart||0;
+  var keys = ['loadStart','authStart','authDone','cacheHit','p1Done','p1Start','p3Done'];
+  keys.forEach(function(k){ if(m[k]!==undefined) out.push(k+': <b>'+(t0?Math.round(m[k]-t0):'0')+'ms</b>'); });
+  if(m.goTo_start&&m.goTo_paint) out.push('last tab switch: <b>'+Math.round(m.goTo_paint-m.goTo_start)+'ms</b>');
+  var box = document.getElementById('_pdbg') || document.createElement('div');
+  box.id = '_pdbg';
+  box.style.cssText = 'position:fixed;bottom:20px;right:12px;z-index:99999;background:#0d1117;color:#f0db4f;font-size:11px;font-family:monospace;padding:10px 14px;border-radius:10px;border:1.5px solid #f0db4f;max-width:280px;line-height:1.8;box-shadow:0 4px 20px rgba(0,0,0,.9)';
+  box.innerHTML = '<b style="font-size:12px">⏱ Perf Timing</b><br>'+(out.length?out.join('<br>'):'waiting...')+'<br><button onclick="window._perf.report()" style="margin-top:4px;padding:2px 8px;border-radius:6px;border:1px solid #f0db4f;background:transparent;color:#f0db4f;cursor:pointer;font-size:11px">🔄 refresh</button> <button onclick="document.getElementById(\'_pdbg\').remove()" style="padding:2px 8px;border-radius:6px;border:1px solid #f0db4f;background:transparent;color:#f0db4f;cursor:pointer;font-size:11px">✕</button>';
+  document.body.appendChild(box);
+}};
+window._perf.t('loadStart');
+</script>
 <script defer src="mobile-debug.js?v=5.0"></script>
-<script defer src="shared/constants.js"></script>
-<script defer src="shared/date-utils.js"></script>
-<script defer src="shared/formatting.js"></script>
-<script defer src="shared/index.js"></script>
-<script defer src="security/role-engine.js"></script>
-<script defer src="security/permission-engine.js"></script>
-<script defer src="security/audit-helper.js"></script>
-<script defer src="security/session-manager.js"></script>
-<script defer src="security/auth-service.js"></script>
-<script defer src="security/index.js"></script>
-<script defer src="organisation/organisation-engine.js"></script>
-<script defer src="organisation/location-engine.js"></script>
-<script defer src="organisation/context-manager.js"></script>
-<script defer src="organisation/organisation-renderer.js"></script>
-<script defer src="organisation/index.js"></script>
-<script defer src="communication/template-engine.js"></script>
-<script defer src="communication/channel-manager.js"></script>
-<script defer src="communication/preference-manager.js"></script>
-<script defer src="communication/delivery-queue.js"></script>
-<script defer src="communication/notification-engine.js"></script>
-<script defer src="communication/communication-renderer.js"></script>
-<script defer src="communication/index.js"></script>
-<script defer src="reporting/report-engine.js"></script>
-<script defer src="reporting/template-engine.js"></script>
-<script defer src="reporting/export-engine.js"></script>
-<script defer src="reporting/scheduler.js"></script>
-<script defer src="reporting/report-renderer.js"></script>
-<script defer src="reporting/index.js"></script>
-<script defer src="monitoring/audit-engine.js"></script>
-<script defer src="monitoring/event-log.js"></script>
-<script defer src="monitoring/metrics-engine.js"></script>
-<script defer src="monitoring/health-monitor.js"></script>
-<script defer src="monitoring/diagnostics-engine.js"></script>
-<script defer src="monitoring/monitoring-renderer.js"></script>
-<script defer src="monitoring/index.js"></script>
-<script defer src="performance/cache-manager.js"></script>
-<script defer src="performance/lazy-loader.js"></script>
-<script defer src="performance/worker-manager.js"></script>
-<script defer src="performance/benchmark-engine.js"></script>
-<script defer src="performance/optimisation-engine.js"></script>
-<script defer src="performance/performance-renderer.js"></script>
-<script defer src="performance/index.js"></script>
-<script defer src="saas/plan-engine.js"></script>
-<script defer src="saas/tenant-engine.js"></script>
-<script defer src="saas/subscription-engine.js"></script>
-<script defer src="saas/billing-engine.js"></script>
-<script defer src="saas/usage-engine.js"></script>
-<script defer src="saas/licensing-engine.js"></script>
-<script defer src="saas/saas-renderer.js"></script>
-<script defer src="saas/index.js"></script>
-<script defer src="bi/metrics-engine.js"></script>
-<script defer src="bi/insight-engine.js"></script>
-<script defer src="bi/recommendation-engine.js"></script>
-<script defer src="bi/nlg-engine.js"></script>
-<script defer src="bi/index.js"></script>
-<script defer src="action-center/priority-engine.js"></script>
-<script defer src="action-center/action-engine.js"></script>
-<script defer src="action-center/task-renderer.js"></script>
-<script defer src="action-center/index.js"></script>
-<script defer src="customer-risk/scoring-engine.js"></script>
-<script defer src="customer-risk/risk-engine.js"></script>
-<script defer src="customer-risk/risk-renderer.js"></script>
-<script defer src="customer-risk/index.js"></script>
-<script defer src="coach-analytics/metrics-engine.js"></script>
-<script defer src="coach-analytics/scoring-engine.js"></script>
-<script defer src="coach-analytics/analytics-renderer.js"></script>
-<script defer src="coach-analytics/index.js"></script>
-<script defer src="customer-followup/template-engine.js"></script>
-<script defer src="customer-followup/followup-engine.js"></script>
-<script defer src="customer-followup/queue-renderer.js"></script>
-<script defer src="customer-followup/index.js"></script>
-<script defer src="goal-tracking/target-engine.js"></script>
-<script defer src="goal-tracking/progress-engine.js"></script>
-<script defer src="goal-tracking/dashboard-renderer.js"></script>
-<script defer src="goal-tracking/index.js"></script>
-<script defer src="forecasting/confidence-engine.js"></script>
-<script defer src="forecasting/trend-engine.js"></script>
-<script defer src="forecasting/forecast-engine.js"></script>
-<script defer src="forecasting/dashboard-renderer.js"></script>
-<script defer src="forecasting/index.js"></script>
-<script defer src="executive-dashboard/overview-engine.js"></script>
-<script defer src="executive-dashboard/widget-engine.js"></script>
-<script defer src="executive-dashboard/dashboard-renderer.js"></script>
-<script defer src="executive-dashboard/index.js"></script>
-<script defer src="payments/gateway-adapter.js"></script>
-<script defer src="payments/payment-engine.js"></script>
-<script defer src="payments/invoice-engine.js"></script>
-<script defer src="payments/refund-engine.js"></script>
-<script defer src="payments/reconciliation-engine.js"></script>
-<script defer src="payments/payment-renderer.js"></script>
-<script defer src="payments/index.js"></script>
-<script defer src="resilience/backup-engine.js"></script>
-<script defer src="resilience/restore-engine.js"></script>
-<script defer src="resilience/snapshot-engine.js"></script>
-<script defer src="resilience/recovery-engine.js"></script>
-<script defer src="resilience/continuity-engine.js"></script>
-<script defer src="resilience/resilience-renderer.js"></script>
-<script defer src="resilience/index.js"></script>
-<script defer src="release/validation-engine.js"></script>
-<script defer src="release/regression-engine.js"></script>
-<script defer src="release/security-review.js"></script>
-<script defer src="release/compatibility-engine.js"></script>
-<script defer src="release/release-checklist.js"></script>
-<script defer src="release/documentation-engine.js"></script>
-<script defer src="release/release-renderer.js"></script>
-<script defer src="release/index.js"></script>
 <script defer src="pulseiq-premium.js?v=3.5"></script>
+<script>
+// Lazy-load secondary engine modules (Action Centre, Risk, Forecasting, Payments, …)
+// AFTER window.onload. These ~105 files were previously <script defer> tags, which
+// blocked window.onload — and bootDashboard (data fetch) only starts on onload.
+// They only power sections behind navigation clicks, so loading them ~0.4s after
+// boot is invisible to the user but makes first data paint dramatically faster.
+(function(){
+  var MODS = [
+    'shared/constants.js','shared/date-utils.js','shared/formatting.js','shared/index.js',
+    'security/role-engine.js','security/permission-engine.js','security/audit-helper.js','security/session-manager.js','security/auth-service.js','security/index.js',
+    'organisation/organisation-engine.js','organisation/location-engine.js','organisation/context-manager.js','organisation/organisation-renderer.js','organisation/index.js',
+    'communication/template-engine.js','communication/channel-manager.js','communication/preference-manager.js','communication/delivery-queue.js','communication/notification-engine.js','communication/communication-renderer.js','communication/index.js',
+    'reporting/report-engine.js','reporting/template-engine.js','reporting/export-engine.js','reporting/scheduler.js','reporting/report-renderer.js','reporting/index.js',
+    'monitoring/audit-engine.js','monitoring/event-log.js','monitoring/metrics-engine.js','monitoring/health-monitor.js','monitoring/diagnostics-engine.js','monitoring/monitoring-renderer.js','monitoring/index.js',
+    'performance/cache-manager.js','performance/lazy-loader.js','performance/worker-manager.js','performance/benchmark-engine.js','performance/optimisation-engine.js','performance/performance-renderer.js','performance/index.js',
+    'saas/plan-engine.js','saas/tenant-engine.js','saas/subscription-engine.js','saas/billing-engine.js','saas/usage-engine.js','saas/licensing-engine.js','saas/saas-renderer.js','saas/index.js',
+    'bi/metrics-engine.js','bi/insight-engine.js','bi/recommendation-engine.js','bi/nlg-engine.js','bi/index.js',
+    'action-center/priority-engine.js','action-center/action-engine.js','action-center/task-renderer.js','action-center/index.js',
+    'customer-risk/scoring-engine.js','customer-risk/risk-engine.js','customer-risk/risk-renderer.js','customer-risk/index.js',
+    'coach-analytics/metrics-engine.js','coach-analytics/scoring-engine.js','coach-analytics/analytics-renderer.js','coach-analytics/index.js',
+    'customer-followup/template-engine.js','customer-followup/followup-engine.js','customer-followup/queue-renderer.js','customer-followup/index.js',
+    'goal-tracking/target-engine.js','goal-tracking/progress-engine.js','goal-tracking/dashboard-renderer.js','goal-tracking/index.js',
+    'forecasting/confidence-engine.js','forecasting/trend-engine.js','forecasting/forecast-engine.js','forecasting/dashboard-renderer.js','forecasting/index.js',
+    'executive-dashboard/overview-engine.js','executive-dashboard/widget-engine.js','executive-dashboard/dashboard-renderer.js','executive-dashboard/index.js',
+    'payments/gateway-adapter.js','payments/payment-engine.js','payments/invoice-engine.js','payments/refund-engine.js','payments/reconciliation-engine.js','payments/payment-renderer.js','payments/index.js',
+    'resilience/backup-engine.js','resilience/restore-engine.js','resilience/snapshot-engine.js','resilience/recovery-engine.js','resilience/continuity-engine.js','resilience/resilience-renderer.js','resilience/index.js',
+    'release/validation-engine.js','release/regression-engine.js','release/security-review.js','release/compatibility-engine.js','release/release-checklist.js','release/documentation-engine.js','release/release-renderer.js','release/index.js'
+  ];
+  var started = false;
+  function loadMods(){
+    if (started) return; started = true;
+    MODS.forEach(function(src){
+      var s = document.createElement('script');
+      s.src = src;
+      s.async = false; // preserve execution order (modules wrap window.goTo in sequence)
+      s.onerror = function(){ console.warn('module failed to load:', src); };
+      document.head.appendChild(s);
+    });
+  }
+  // Wait for onload (bootDashboard start) + a beat so the first data fetches go out first
+  if (document.readyState === 'complete') setTimeout(loadMods, 400);
+  else window.addEventListener('load', function(){ setTimeout(loadMods, 400); });
+})();
+</script>
 </head>
 <body>
 
@@ -1638,6 +1640,7 @@ if ('caches' in window) {
       </div>
       <div class="nav-lbl" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
       <div id="g-ops">
+        <button class="nav-item" onclick="goTo('recovery',this)" style="border:1.5px solid #25D366;color:#25D366;margin-bottom:4px"><span class="ic">🔁</span><span>Recovery Hub</span></button>
         <button class="nav-item" onclick="goTo('actioncenter',this)" style="border:1.5px solid #27AE60;color:#27AE60;margin-bottom:4px"><span class="ic">⚡</span><span>Action Centre</span></button>
         <button class="nav-item" onclick="goTo('customerfollowup',this)" style="border:1.5px solid #25D366;color:#25D366;margin-bottom:4px"><span class="ic">📲</span><span>Follow-up Queue</span></button>
         <button class="nav-item" onclick="goTo('goaltracking',this)" style="border:1.5px solid #f59e0b;color:#f59e0b;margin-bottom:4px"><span class="ic">🎯</span><span>Goal Tracking</span></button>
@@ -1690,6 +1693,7 @@ if ('caches' in window) {
       <button class="mq-item" onclick="goTo('finance',this)">💰 Finance</button>
       <button class="mq-item" onclick="goTo('analytics',this)">📈 Analytics</button>
       <button class="mq-item" onclick="goTo('coaches',this)">👨‍🏫 Coaches</button>
+      <button class="mq-item" onclick="goTo('recovery',this)">🔁 Recovery</button>
       <button class="mq-item" onclick="goTo('actioncenter',this)">⚡ Action Centre</button>
       <button class="mq-item" onclick="goTo('customerrisk',this)">🎯 Risk</button>
       <button class="mq-item" onclick="goTo('expenses',this)">🧾 Expenses</button>
@@ -2018,7 +2022,7 @@ if ('caches' in window) {
       </div>
       <div class="stats" id="customers-stats"><div class="stat"><div class="stat-l">Total</div><div class="stat-v">1</div></div><div class="stat"><div class="stat-l">Active Packs</div><div class="stat-v">1</div></div><div class="stat"><div class="stat-l">Expired</div><div class="stat-v">0</div></div></div>
       <div class="tcard">
-        <div class="ttoolbar" style="justify-content:space-between"><input class="search" id="customers-search" placeholder="🔍 Search customers..." oninput="renderCustomers()" style="flex:1"><button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportCustomersCSV()">⬇️ CSV</button></div>
+        <div class="ttoolbar" style="justify-content:space-between"><input class="search" id="customers-search" placeholder="🔍 Search customers..." oninput="renderCustomers()" style="flex:1"><span id="cust-count-lbl" style="font-size:12px;color:var(--muted);white-space:nowrap;padding:0 8px"></span><button class="btn-c" style="font-size:12px;white-space:nowrap" onclick="exportCustomersCSV()">⬇️ CSV</button></div>
         <div class="twrap"><table>
           <thead><tr><th>Name</th><th>Contact</th><th>Pack</th><th>Start</th><th>Days Left</th><th>Streak</th><th>Refs ⭐</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="customers-body"></tbody>
@@ -2725,6 +2729,32 @@ if ('caches' in window) {
         <div id="biz-leaderboard"></div>
       </div>
       <div id="biz-content"></div>
+    </div>
+    <!-- RECOVERY HUB -->
+    <div class="sec" id="sec-recovery">
+      <div class="ph">
+        <div>
+          <div class="pt">🔁 Recovery Hub</div>
+          <div class="ps">Win back lapsed renewals, collect dues, and re-engage absent members — one tap per WhatsApp reminder</div>
+        </div>
+        <button class="btn-c" id="recovery-backfill-btn" onclick="backfillPackEndDates()">📅 Auto-fill pack end dates</button>
+      </div>
+      <div id="recovery-stats" class="stats" style="margin-bottom:20px"></div>
+      <div class="tcard" style="margin-bottom:16px;padding:18px">
+        <div style="font-weight:700;font-size:14px">🔁 Renewal Recovery</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Members whose pack ended without a renewal. 💬 sends a ready-made WhatsApp message; 🔄 opens the renew form.</div>
+        <div id="recovery-renewals"></div>
+      </div>
+      <div class="tcard" style="margin-bottom:16px;padding:18px">
+        <div style="font-weight:700;font-size:14px">💰 Dues Tracker</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Outstanding balances, biggest first. Nudge weekly until cleared.</div>
+        <div id="recovery-dues"></div>
+      </div>
+      <div class="tcard" style="margin-bottom:16px;padding:18px">
+        <div style="font-weight:700;font-size:14px">😴 Absence Alerts</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Members with an active pack but no visit for 7+ days — reach out before the pack quietly lapses.</div>
+        <div id="recovery-inactive"></div>
+      </div>
     </div>
     <!-- ACTION CENTRE -->
     <div class="sec" id="sec-actioncenter">

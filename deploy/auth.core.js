@@ -338,7 +338,7 @@ async function loadAndStartDashboard() {
   }
 
   try {
-    document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
+    document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-loading').style.display = 'flex';
   } catch(e) {
     console.error('DOM toggle failed:', e.message);
@@ -352,6 +352,7 @@ async function loadAndStartDashboard() {
       if (ls && getComputedStyle(ls).display === 'none') {
         var appEl = document.getElementById('app');
         if (!appEl || (appEl.style.display !== 'block' && appEl.style.display !== 'grid')) {
+          ls.style.removeProperty('display');
           ls.style.display = 'flex';
           showLoginErr('Startup took too long. Check your connection and <button onclick="loadAndStartDashboard()" style="background:#27AE60;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-weight:700;cursor:pointer;margin-left:6px">Retry 🔄</button>');
         }
@@ -370,14 +371,14 @@ async function loadAndStartDashboard() {
 
     if (typeof window.bootDashboard !== 'function') {
       try {
-        await loadScript('app.min.js?v=1.7.1', 30000);
+        await loadScript('app.min.js?v=1.7.9', 30000);
       } catch (scriptErr) {
         console.warn('app.min.js failed, trying app.js fallback:', scriptErr.message);
       }
     }
     if (typeof window.bootDashboard !== 'function') {
       try {
-        await loadScript('app.js?v=1.7.1', 30000);
+        await loadScript('app.js?v=1.7.9', 30000);
       } catch (fallbackErr) {
         console.warn('app.js fallback also failed:', fallbackErr.message);
       }
@@ -392,7 +393,11 @@ async function loadAndStartDashboard() {
     clearTimeout(splashTimer);
     console.error('loadAndStartDashboard failed:', err);
     var al = document.getElementById('app-loading'); if (al) al.style.display = 'none';
-    var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'flex';
+    var ls = document.getElementById('login-screen');
+    if (ls) {
+      ls.style.removeProperty('display');
+      ls.style.display = 'flex';
+    }
     var errMsg = err && err.message ? err.message : 'Unknown error';
     showLoginErr('Failed to load application (' + errMsg + '). <button onclick="loadAndStartDashboard()" style="margin-left:8px;background:#27AE60;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-weight:700;cursor:pointer">Retry 🔄</button>');
     throw err;
@@ -438,7 +443,11 @@ window.onload = async function() {
 
     if (!deviceTrusted) {
       var al = document.getElementById('app-loading'); if (al) al.style.display = 'none';
-      var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'flex';
+      var ls = document.getElementById('login-screen');
+      if (ls) {
+        ls.style.removeProperty('display');
+        ls.style.display = 'flex';
+      }
       return;
     }
 
@@ -451,6 +460,10 @@ window.onload = async function() {
   } catch (e) {
     console.error('Startup error:', e);
     var al = document.getElementById('app-loading'); if (al) al.style.display = 'none';
-    var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'flex';
+    var ls = document.getElementById('login-screen');
+    if (ls) {
+      ls.style.removeProperty('display');
+      ls.style.display = 'flex';
+    }
   }
 };
