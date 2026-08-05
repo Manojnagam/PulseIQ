@@ -160,6 +160,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg);backg
 .nav-item:hover{background:rgba(255,255,255,.08);color:#fff;transform:translateX(2px)}
 .nav-item.active{background:rgba(255,255,255,.15);color:#fff;font-weight:700;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1)}
 .nav-item .ic{font-size:16px;width:20px;text-align:center}
+.nav-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.35);padding:10px 10px 3px;font-weight:700;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between}
+.nav-lbl:hover{color:rgba(255,255,255,.6)}
+.nav-arrow{font-size:10px;transition:transform .2s;display:inline-block}
+.nav-lbl.collapsed .nav-arrow{transform:rotate(-90deg)}
 .sb-bottom{padding:12px;border-top:1px solid rgba(255,255,255,.08)}
 .sb-icon-btn{width:100%;padding:9px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer;transition:all .2s}
 .sb-icon-btn:hover{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.2)}
@@ -917,16 +921,27 @@ input:focus, select:focus, textarea:focus {
       </div>
     </div>
     <nav class="sb-nav">
+      <!-- DAILY -->
       <button class="nav-item active" onclick="goTo('overview',this)"><span class="ic">🏠</span>Overview</button>
       <button class="nav-item" onclick="goTo('attendance',this)"><span class="ic">📅</span>My Attendance</button>
       <button class="nav-item" onclick="goTo('progress',this)"><span class="ic">⚖️</span>My Progress</button>
       <button class="nav-item" onclick="goTo('pack',this)"><span class="ic">📦</span>My Pack</button>
       <button class="nav-item" onclick="goTo('coach',this)"><span class="ic">👨‍🏫</span>My Coach</button>
-      <button class="nav-item" onclick="goTo('report',this)"><span class="ic">📊</span>Monthly Report</button>
-      <button class="nav-item" onclick="goTo('diet',this)"><span class="ic">🥗</span>My Diet Plan</button>
-      <button class="nav-item" onclick="goTo('foodlog',this)"><span class="ic">🍽️</span>Food Log</button>
-      <button class="nav-item" onclick="goTo('referral',this)"><span class="ic">🎟️</span>My Referrals</button>
-      <button class="nav-item" id="nav-centerwall" onclick="goTo('centerwall',this)"><span class="ic">🏛️</span>Center Wall</button>
+
+      <!-- MY HEALTH -->
+      <div class="nav-lbl collapsed" style="margin-top:8px" onclick="toggleNavGroup('client-g-health')"><span>My Health</span><span class="nav-arrow">▾</span></div>
+      <div id="client-g-health" style="display:none">
+        <button class="nav-item" onclick="goTo('diet',this)"><span class="ic">🥗</span>My Diet Plan</button>
+        <button class="nav-item" onclick="goTo('foodlog',this)"><span class="ic">🍽️</span>Food Log</button>
+        <button class="nav-item" onclick="goTo('report',this)"><span class="ic">📊</span>Monthly Report</button>
+      </div>
+
+      <!-- COMMUNITY -->
+      <div class="nav-lbl collapsed" style="margin-top:4px" onclick="toggleNavGroup('client-g-community')"><span>Community</span><span class="nav-arrow">▾</span></div>
+      <div id="client-g-community" style="display:none">
+        <button class="nav-item" onclick="goTo('referral',this)"><span class="ic">🎟️</span>My Referrals</button>
+        <button class="nav-item" id="nav-centerwall" onclick="goTo('centerwall',this)"><span class="ic">🏛️</span>Center Wall</button>
+      </div>
     </nav>
     <div class="sb-bottom">
       <div style="display:flex;gap:6px">
@@ -1376,6 +1391,13 @@ function toast(msg, type) {
 }
 
 // ── SIDEBAR ──
+function toggleNavGroup(id) {
+  var grp = document.getElementById(id);
+  var lbl = grp.previousElementSibling;
+  var isCollapsed = grp.style.display === 'none';
+  grp.style.display = isCollapsed ? '' : 'none';
+  lbl.classList.toggle('collapsed', !isCollapsed);
+}
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sb-overlay').classList.toggle('open');
