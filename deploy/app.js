@@ -2105,11 +2105,12 @@ async function loadAll() {
       showTrialExpiredScreen();
     }
     
-    // Phase 3: Load remaining data + body in parallel (non-blocking)
+    // Phase 3: Load remaining data (non-blocking).
+    // loadBody() must wait for loadWalkins() — _custIdsFilter() reads D.walkins to build the body_composition query filter.
     Promise.all([
       loadCoupons(), loadPayments(), loadPackHistory(),
-      loadLeads(), loadWalkins(), loadFoods(), loadInventory(), loadRecurring(),
-      loadBody()  // parallel with rest — no longer waits for phase 3 to finish first
+      loadLeads(), loadFoods(), loadInventory(), loadRecurring(),
+      loadWalkins().then(function() { return loadBody(); })
     ]).then(function() {
       _daysLeftCache = {}; // recalculate with full data
       try { buildDataIndexes(); } catch(idxErr){ console.error('buildDataIndexes Phase3 err:', idxErr); }
