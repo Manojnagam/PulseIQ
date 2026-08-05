@@ -1609,57 +1609,70 @@ window._perf.t('loadStart');
       <div class="sb-greeting-name" id="sb-greeting-name">Supervisor</div>
     </div>
     <div class="sb-nav">
-      <div class="nav-lbl" onclick="toggleNavGroup('g-mgmt')"><span data-t="nav_management">Management</span><span class="nav-arrow">▾</span></div>
-      <div id="g-mgmt">
-        <button class="nav-item active" onclick="goTo(&#39;overview&#39;,this)"><span class="ic">🏠</span><span data-t="nav_overview">Overview</span></button>
-        <button class="nav-item nav-supervisor-only" onclick="goTo('executivedashboard',this)" style="border:1.5px solid #38bdf8;color:#38bdf8;margin-bottom:4px"><span class="ic">👑</span><span>Executive Command</span></button>
-        <button class="nav-item nav-supervisor-only" onclick="goTo(&#39;centers&#39;,this)"><span class="ic">🏢</span><span data-t="nav_centers">Wellness Centers</span></button>
-        <button class="nav-item" onclick="goTo(&#39;coaches&#39;,this)"><span class="ic">👨‍🏫</span><span data-t="nav_coaches">Coaches</span></button>
-        <button id="nav-customers" class="nav-item" onclick="goTo(&#39;customers&#39;,this)"><span class="ic">👤</span><span data-t="nav_customers">Customers</span></button>
-        <button class="nav-item" onclick="goTo(&#39;leads&#39;,this)"><span class="ic">📞</span><span data-t="nav_leads">Leads</span></button>
-        <button class="nav-item" onclick="goTo(&#39;walkins&#39;,this)"><span class="ic">🚶</span><span>Walk-ins</span></button>
-        <button class="nav-item" onclick="goTo(&#39;attendance&#39;,this)"><span class="ic">📅</span><span data-t="nav_attendance">Attendance</span></button>
-        <button class="nav-item" onclick="goTo(&#39;body&#39;,this)"><span class="ic">⚖️</span><span data-t="nav_body">Body Composition</span></button>
-        <button class="nav-item" onclick="goTo(&#39;contests&#39;,this)"><span class="ic">🏆</span><span>Contests</span></button>
-        <button class="nav-item" onclick="goTo(&#39;finance&#39;,this)"><span class="ic">💰</span><span data-t="nav_finance">Finance</span></button>
+
+      <!-- ── DAILY (always visible, no collapse) ── -->
+      <button class="nav-item active" onclick="goTo('overview',this)"><span class="ic">🏠</span><span data-t="nav_overview">Overview</span></button>
+      <button id="nav-customers" class="nav-item" onclick="goTo('customers',this)"><span class="ic">👥</span><span data-t="nav_customers">Customers</span></button>
+      <button class="nav-item" onclick="goTo('attendance',this)"><span class="ic">📅</span><span data-t="nav_attendance">Attendance</span></button>
+      <button class="nav-item" onclick="goTo('body',this)"><span class="ic">⚖️</span><span data-t="nav_body">Body Scan</span></button>
+      <button class="nav-item" onclick="goTo('finance',this)"><span class="ic">💰</span><span data-t="nav_finance">Finance</span></button>
+
+      <!-- ── TODAY'S ACTIONS (collapsed by default) ── -->
+      <div class="nav-lbl collapsed" style="margin-top:8px" onclick="toggleNavGroup('g-actions')"><span>Today's Actions</span><span class="nav-arrow">▾</span></div>
+      <div id="g-actions" style="display:none">
+        <button class="nav-item" onclick="goTo('recovery',this)" style="color:#25D366"><span class="ic">🔁</span><span>Renewals &amp; Dues</span></button>
+        <button class="nav-item" onclick="goTo('actioncenter',this)" style="color:#27AE60"><span class="ic">⚡</span><span>Action Centre</span></button>
+        <button class="nav-item" onclick="goTo('customerfollowup',this)" style="color:#25D366"><span class="ic">📲</span><span>Follow-up Queue</span></button>
+        <button class="nav-item" onclick="goTo('leads',this)"><span class="ic">📞</span><span data-t="nav_leads">Leads</span></button>
+        <button class="nav-item" onclick="goTo('walkins',this)"><span class="ic">🚶</span><span>Walk-ins</span></button>
+        <button class="nav-item" onclick="goTo('notifications',this)"><span class="ic">🔔</span><span data-t="nav_notifications">Alerts</span></button>
       </div>
-      <button class="nav-item" onclick="goTo('agents',this)" style="border:1.5px solid #7c3aed;color:#7c3aed;margin-bottom:4px"><span class="ic">🤖</span><span>AI Agents</span></button>
-      <div class="nav-lbl" style="margin-top:6px" onclick="toggleNavGroup('g-portals')"><span>Portals</span><span class="nav-arrow">▾</span></div>
-      <div id="g-portals">
-        <a class="nav-item" id="nav-coach-portal-link" href="coach.html" target="_blank" rel="noopener" style="text-decoration:none" onclick="updateCoachPortalNavLink()"><span class="ic">👨‍🏫</span><span>Coach Portal ↗</span></a>
-        <a class="nav-item" id="nav-client-portal-link" href="https://client.pulsezen.in/" target="_blank" rel="noopener" style="text-decoration:none" onclick="updateClientPortalNavLink()"><span class="ic">👤</span><span>Client Portal ↗</span></a>
-      </div>
-      <div class="nav-lbl" style="margin-top:6px" onclick="toggleNavGroup('g-analytics')"><span>Analytics & Reports</span><span class="nav-arrow">▾</span></div>
-      <div id="g-analytics">
+
+      <!-- ── INSIGHTS (collapsed by default) ── -->
+      <div class="nav-lbl collapsed" style="margin-top:4px" onclick="toggleNavGroup('g-insights')"><span>Insights</span><span class="nav-arrow">▾</span></div>
+      <div id="g-insights" style="display:none">
+        <button class="nav-item" onclick="goTo('agents',this)" style="color:#a78bfa"><span class="ic">🤖</span><span>AI Agents</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('executivedashboard',this)" style="color:#38bdf8"><span class="ic">👑</span><span>Executive Command</span></button>
+        <button class="nav-item" onclick="goTo('customerrisk',this)" style="color:#ef4444"><span class="ic">🎯</span><span>Customer Risk</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('coachanalytics',this)" style="color:#38bdf8"><span class="ic">📊</span><span>Coach Analytics</span></button>
         <button class="nav-item" onclick="goTo('analytics',this)"><span class="ic">📈</span><span data-t="nav_analytics">Analytics</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('bizanalyst',this)"><span class="ic">📊</span><span data-t="nav_bizanalyst">Biz Analyst</span></button>
-        <button class="nav-item" onclick="goTo('customerrisk',this)" style="border:1.5px solid #ef4444;color:#ef4444;margin-bottom:4px"><span class="ic">🎯</span><span>Customer Risk</span></button>
-        <button class="nav-item nav-supervisor-only" onclick="goTo('coachanalytics',this)" style="border:1.5px solid #38bdf8;color:#38bdf8;margin-bottom:4px"><span class="ic">📊</span><span>Coach Analytics</span></button>
-        <button class="nav-item nav-supervisor-only" onclick="goTo('forecasting',this)" style="border:1.5px solid #a78bfa;color:#a78bfa;margin-bottom:4px"><span class="ic">📈</span><span>Forecasting</span></button>
-        <button class="nav-item" onclick="goTo('notifications',this)"><span class="ic">🔔</span><span data-t="nav_notifications">Notifications</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('forecasting',this)" style="color:#a78bfa"><span class="ic">🔮</span><span>Forecasting</span></button>
+        <button class="nav-item" onclick="goTo('goaltracking',this)" style="color:#f59e0b"><span class="ic">🎯</span><span>Goal Tracking</span></button>
       </div>
-      <div class="nav-lbl" style="margin-top:6px" onclick="toggleNavGroup('g-ops')"><span>Operations</span><span class="nav-arrow">▾</span></div>
-      <div id="g-ops">
-        <button class="nav-item" onclick="goTo('recovery',this)" style="border:1.5px solid #25D366;color:#25D366;margin-bottom:4px"><span class="ic">🔁</span><span>Recovery Hub</span></button>
-        <button class="nav-item" onclick="goTo('actioncenter',this)" style="border:1.5px solid #27AE60;color:#27AE60;margin-bottom:4px"><span class="ic">⚡</span><span>Action Centre</span></button>
-        <button class="nav-item" onclick="goTo('customerfollowup',this)" style="border:1.5px solid #25D366;color:#25D366;margin-bottom:4px"><span class="ic">📲</span><span>Follow-up Queue</span></button>
-        <button class="nav-item" onclick="goTo('goaltracking',this)" style="border:1.5px solid #f59e0b;color:#f59e0b;margin-bottom:4px"><span class="ic">🎯</span><span>Goal Tracking</span></button>
-        <button class="nav-item" onclick="goTo('foods',this)"><span class="ic">🥗</span><span>Food Database</span></button>
-        <button class="nav-item" onclick="goTo('coupons',this)"><span class="ic">🎟️</span><span data-t="nav_coupons">Coupons</span></button>
+
+      <!-- ── MANAGE (collapsed by default) ── -->
+      <div class="nav-lbl collapsed" style="margin-top:4px" onclick="toggleNavGroup('g-manage')"><span>Manage</span><span class="nav-arrow">▾</span></div>
+      <div id="g-manage" style="display:none">
+        <button class="nav-item" onclick="goTo('coaches',this)"><span class="ic">👨‍🏫</span><span data-t="nav_coaches">Coaches</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('centers',this)"><span class="ic">🏢</span><span data-t="nav_centers">Wellness Centers</span></button>
         <button class="nav-item" onclick="goTo('payments',this)"><span class="ic">💳</span><span data-t="nav_payments">Payments</span></button>
-        <button class="nav-item" onclick="goTo('expenses',this)"><span class="ic">🧾</span><span data-t="nav_expenses">Expense Tracker</span></button>
+        <button class="nav-item" onclick="goTo('expenses',this)"><span class="ic">🧾</span><span data-t="nav_expenses">Expenses</span></button>
+        <button class="nav-item" onclick="goTo('coupons',this)"><span class="ic">🎟️</span><span data-t="nav_coupons">Coupons</span></button>
+        <button class="nav-item" onclick="goTo('contests',this)"><span class="ic">🏆</span><span>Contests</span></button>
+        <button class="nav-item" onclick="goTo('foods',this)"><span class="ic">🥗</span><span>Food Database</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('pintracker',this)"><span class="ic">🏅</span><span data-t="nav_pintracker">Pin Tracker</span></button>
-        <button class="nav-item" onclick="goTo('goals',this)"><span class="ic">🎯</span><span data-t="nav_goals">Goal Setting</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('orgtree',this)"><span class="ic">🌳</span><span data-t="nav_orgtree">Org Tree</span></button>
         <button class="nav-item nav-supervisor-only" onclick="goTo('planmgmt',this)"><span class="ic">💎</span><span>Plan Management</span></button>
       </div>
-      <div class="nav-lbl" style="margin-top:6px" onclick="toggleNavGroup('g-setup')"><span data-t="nav_setup">Setup</span><span class="nav-arrow">▾</span></div>
-      <div id="g-setup">
-        <button class="nav-item" onclick="goTo('guide',this)"><span class="ic">📖</span><span data-t="nav_guide">How to Use</span></button>
-        <button class="nav-item nav-supervisor-only" onclick="goTo('profile',this)"><span class="ic">👤</span><span data-t="nav_profile">My Profile</span></button>
-        <button class="nav-item nav-supervisor-only" onclick="goTo(&#39;sql&#39;,this)"><span class="ic">🛠️</span><span data-t="nav_sql">SQL Setup Guide</span></button>
-        <button class="nav-item nav-supervisor-only" onclick="goTo('export',this)"><span class="ic">📦</span><span>Data Export</span></button>
+
+      <!-- ── PORTALS (collapsed by default) ── -->
+      <div class="nav-lbl collapsed" style="margin-top:4px" onclick="toggleNavGroup('g-portals')"><span>Portals</span><span class="nav-arrow">▾</span></div>
+      <div id="g-portals" style="display:none">
+        <a class="nav-item" id="nav-coach-portal-link" href="coach.html" target="_blank" rel="noopener" style="text-decoration:none" onclick="updateCoachPortalNavLink()"><span class="ic">👨‍🏫</span><span>Coach Portal ↗</span></a>
+        <a class="nav-item" id="nav-client-portal-link" href="https://client.pulsezen.in/" target="_blank" rel="noopener" style="text-decoration:none" onclick="updateClientPortalNavLink()"><span class="ic">👤</span><span>Client Portal ↗</span></a>
       </div>
+
+      <!-- ── SETUP (collapsed by default) ── -->
+      <div class="nav-lbl collapsed" style="margin-top:4px" onclick="toggleNavGroup('g-setup')"><span data-t="nav_setup">Setup</span><span class="nav-arrow">▾</span></div>
+      <div id="g-setup" style="display:none">
+        <button class="nav-item" onclick="goTo('goals',this)"><span class="ic">🎯</span><span data-t="nav_goals">Goal Setting</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('profile',this)"><span class="ic">👤</span><span data-t="nav_profile">My Profile</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('export',this)"><span class="ic">📦</span><span>Data Export</span></button>
+        <button class="nav-item nav-supervisor-only" onclick="goTo('sql',this)"><span class="ic">🛠️</span><span data-t="nav_sql">SQL Guide</span></button>
+        <button class="nav-item" onclick="goTo('guide',this)"><span class="ic">📖</span><span data-t="nav_guide">How to Use</span></button>
+      </div>
+
     </div>
     <div class="sb-center-switch">
       <label for="center-switcher" data-t="lbl_active_center">Active Center</label>
