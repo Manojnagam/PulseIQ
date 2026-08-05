@@ -13572,9 +13572,10 @@ function openWalkinModal(id) {
       document.getElementById('walkin-age').value=w.age||'';
       document.getElementById('walkin-gender').value=w.gender||'';
       document.getElementById('walkin-height').value=w.height||'';
-      if(w.referred_by_id){ document.getElementById('walkin-referred-by-id').value=w.referred_by_id; }
-      if(w.referred_by_name){ document.getElementById('sd-walkin-ref-input').value=w.referred_by_name; }
       onWalkinSourceChange(); onWalkinOutcomeChange();
+      // Restore saved referred_by after onWalkinSourceChange clears the dropdown
+      if(w.referred_by_id){ sdSetValue('walkin-ref', w.referred_by_id); }
+      else if(w.referred_by_name){ document.getElementById('sd-walkin-ref-input').value=w.referred_by_name; }
     }
   }
   openModal('walkin');
