@@ -674,6 +674,17 @@
   </div>
 </section>
 
+<!-- SERVICES (dynamic, shown only if center has services data) -->
+<section style="background:var(--surface);display:none" id="services-section" class="lazy-section">
+  <div class="container">
+    <div class="section-header center fade-in">
+      <span class="section-tag">What We Offer</span>
+      <h2 class="section-title">Our Services</h2>
+    </div>
+    <div class="conditions-pills fade-in" id="services-pills"></div>
+  </div>
+</section>
+
 <!-- TESTIMONIALS -->
 <section style="background:var(--surface)" id="testimonials" class="lazy-section">
   <div class="container">
@@ -735,7 +746,7 @@
           <div class="location-item-icon">🕐</div>
           <div>
             <div class="location-item-label">Center Timings</div>
-            <div class="location-item-val">
+            <div class="location-item-val" id="loc-hours">
               Mon – Sat: 7:00 AM – 8:00 PM<br>
               Sunday: 8:00 AM – 1:00 PM
             </div>
@@ -864,6 +875,20 @@
       }
       el('map-frame').src = 'https://maps.google.com/maps?q=' + mapsQ + '&output=embed';
 
+      // Dynamic opening hours (fallback to hardcoded default if null)
+      if (c.opening_hours) {
+        el('loc-hours').innerHTML = c.opening_hours.replace(/,\s*/g, '<br>');
+      }
+
+      // Dynamic services pills
+      if (c.services) {
+        var pills = c.services.split(',').map(function(s) {
+          return '<span class="condition-pill">' + s.trim() + '</span>';
+        }).join('');
+        el('services-pills').innerHTML = pills;
+        el('services-section').style.display = 'block';
+      }
+
       // WA buttons
       setWA(['nav-wa','mob-wa','hero-wa','cta-wa','float-wa'], waLink);
 
@@ -895,7 +920,7 @@
           "url": window.location.href,
           "image": "https://pulsezen.in/images/logo.png",
           "priceRange": "$$",
-          "openingHoursSpecification": [
+          "openingHoursSpecification": c.opening_hours ? [] : [
             {
               "@type": "OpeningHoursSpecification",
               "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
