@@ -38,8 +38,8 @@ This plan outlines the architecture, completed milestones, verification package,
 
 ## 📋 Task Centre Phase 1: Operational Task Execution Engine (`IN PROGRESS`)
 
-- [x] **Milestone 1 — Database Foundation & Additive Schema Setup**: Created `tasks` and `task_history` tables, performance indexes (`idx_tasks_*`), check constraints, and RLS policies in `supabase/task_centre_phase1_migration.sql`, `pulsezen-centers-schema.sql`, and `supabase_migration.sql`. 🛑 *Awaiting Audit Gate 1 Approval*.
-- [ ] **Milestone 2 — Data Access Service Layer**: `task-center/task-service.js` helper methods.
+- [x] **Milestone 1 — Database Foundation & Additive Schema Setup**: Created `tasks` and `task_history` tables, performance indexes (`idx_tasks_*`), check constraints, and RLS policies in `supabase/task_centre_phase1_migration.sql`, `pulsezen-centers-schema.sql`, and `supabase_migration.sql`. ✅ *Gate 1 Approved*.
+- [x] **Milestone 2 — Data Access Service Layer**: Implemented `task-center/task-service.js` with task CRUD operations, strict 7-state lifecycle validation, and automatic `task_history` audit logging. 🛑 *Awaiting Audit Gate 2 Approval*.
 - [ ] **Milestone 3 — Security & RBAC Guard Integration**: 4 new permission keys in `role-engine.js`.
 - [ ] **Milestone 4 — Task Centre UI View & Control Feed**: `#sec-taskcenter` DOM section & feed renderer.
 - [ ] **Milestone 5 — SPA Navigation & Cross-Module Entity Linking**: Sidebar nav & customer profile modal tabs.

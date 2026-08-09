@@ -1,7 +1,7 @@
 # 📊 PulseIQ — Project Status & Task Centre Phase 1 Engineering
 
-**Current Milestone**: Task Centre Phase 1 — Milestone 1: Database Foundation & Schema Setup  
-**Status**: `MILESTONE 1 IMPLEMENTED & READY FOR AUDIT GATE 1` 🛑  
+**Current Milestone**: Task Centre Phase 1 — Milestone 2: Data Access Service Layer  
+**Status**: `MILESTONE 2 IMPLEMENTED & READY FOR AUDIT GATE 2` 🛑  
 **Live Production URL**: [`https://app.pulsezen.in`](https://app.pulsezen.in)  
 **Tech Stack**: Vanilla JS (ES6+), Modern Modular Architecture, Cyber-Neon Glassmorphism CSS, Supabase Auth, PostgreSQL RLS, Vercel Serverless.
 
@@ -11,8 +11,8 @@
 
 | Milestone | Target Deliverables | Status | Files Touched | Audit Gate |
 | :--- | :--- | :---: | :--- | :---: |
-| **Milestone 1** | Additive DB Schema (`tasks`, `task_history`, indexes, RLS) | `COMPLETED` ✅ | `supabase/task_centre_phase1_migration.sql`, `pulsezen-centers-schema.sql`, `supabase_migration.sql` | 🛑 Gate 1 Pending Audit |
-| **Milestone 2** | Data Access & API Layer (`task-service.js`) | `PENDING` ⏳ | None | Pending Gate 1 |
+| **Milestone 1** | Additive DB Schema (`tasks`, `task_history`, indexes, RLS) | `COMPLETED` ✅ | `supabase/task_centre_phase1_migration.sql`, `pulsezen-centers-schema.sql`, `supabase_migration.sql` | ✅ Gate 1 Approved |
+| **Milestone 2** | Data Access & API Layer (`task-service.js`) | `COMPLETED` ✅ | `task-center/task-service.js` | 🛑 Gate 2 Pending Audit |
 | **Milestone 3** | Security & RBAC Guard Integration | `PENDING` ⏳ | None | Pending Gate 2 |
 | **Milestone 4** | Task Centre UI View (`#sec-taskcenter`) | `PENDING` ⏳ | None | Pending Gate 3 |
 | **Milestone 5** | SPA Navigation & Entity Profile Links | `PENDING` ⏳ | None | Pending Gate 4 |
