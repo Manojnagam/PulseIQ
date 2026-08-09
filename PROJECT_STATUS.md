@@ -1,9 +1,22 @@
-# 📊 PulseIQ — Project Status & Phase 2 Architecture Consolidation
+# 📊 PulseIQ — Project Status & Task Centre Phase 1 Engineering
 
-**Current Milestone**: Phase 2 Architecture Consolidation & Production Readiness  
-**Status**: `COMPLETED, VERIFIED & DEPLOYED` ✅  
+**Current Milestone**: Task Centre Phase 1 — Milestone 1: Database Foundation & Schema Setup  
+**Status**: `MILESTONE 1 IMPLEMENTED & READY FOR AUDIT GATE 1` 🛑  
 **Live Production URL**: [`https://app.pulsezen.in`](https://app.pulsezen.in)  
 **Tech Stack**: Vanilla JS (ES6+), Modern Modular Architecture, Cyber-Neon Glassmorphism CSS, Supabase Auth, PostgreSQL RLS, Vercel Serverless.
+
+---
+
+## 📋 Task Centre Phase 1 Progress Summary
+
+| Milestone | Target Deliverables | Status | Files Touched | Audit Gate |
+| :--- | :--- | :---: | :--- | :---: |
+| **Milestone 1** | Additive DB Schema (`tasks`, `task_history`, indexes, RLS) | `COMPLETED` ✅ | `supabase/task_centre_phase1_migration.sql`, `pulsezen-centers-schema.sql`, `supabase_migration.sql` | 🛑 Gate 1 Pending Audit |
+| **Milestone 2** | Data Access & API Layer (`task-service.js`) | `PENDING` ⏳ | None | Pending Gate 1 |
+| **Milestone 3** | Security & RBAC Guard Integration | `PENDING` ⏳ | None | Pending Gate 2 |
+| **Milestone 4** | Task Centre UI View (`#sec-taskcenter`) | `PENDING` ⏳ | None | Pending Gate 3 |
+| **Milestone 5** | SPA Navigation & Entity Profile Links | `PENDING` ⏳ | None | Pending Gate 4 |
+| **Milestone 6** | Executive Dashboard & Analytics Telemetry | `PENDING` ⏳ | None | Pending Gate 5 |
 
 ---
 

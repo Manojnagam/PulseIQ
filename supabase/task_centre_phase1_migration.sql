@@ -1,43 +1,10 @@
--- Supabase Migration Script
--- Run this in your Supabase SQL Editor:
+-- ==========================================
+-- TASK CENTRE PHASE 1 — ADDITIVE DB SCHEMA
+-- Migration: Milestone 1 Database Foundation
+-- Production Safe: 100% Additive, Zero Impact on Existing Tables
+-- ==========================================
 
--- 1. Add water and mood columns to the attendance table
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS water_logged numeric DEFAULT 0;
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS mood text;
-
--- 2. Add photo history column to the customers table
-ALTER TABLE customers ADD COLUMN IF NOT EXISTS photo_history text;
-
--- 3. Create client interactions table for cheers/sparks
-CREATE TABLE IF NOT EXISTS client_interactions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  customer_id uuid REFERENCES customers(id) ON DELETE CASCADE,
-  sender_type text, -- 'coach' or 'client'
-  type text, -- 'nudge', 'wave', 'spark', 'cheer'
-  message text,
-  is_read boolean DEFAULT false,
-  created_at timestamptz DEFAULT now()
-);
-
--- 4. Enable RLS and add public access policies
-ALTER TABLE client_interactions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "anon_all" ON client_interactions FOR ALL TO anon USING (true) WITH CHECK (true);
-
--- 5. Create recurring expenses table
-CREATE TABLE IF NOT EXISTS recurring_expenses (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  amount numeric NOT NULL,
-  day_of_month integer NOT NULL,
-  category text,
-  wellness_center_id text,
-  created_at timestamptz DEFAULT now()
-);
-
-ALTER TABLE recurring_expenses ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "anon_all_recurring" ON recurring_expenses FOR ALL TO anon USING (true) WITH CHECK (true);
-
--- 6. Task Centre Phase 1 — Additive DB Schema Migration (Milestone 1)
+-- 1. TASKS MASTER TABLE
 CREATE TABLE IF NOT EXISTS tasks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   wellness_center_id uuid NOT NULL REFERENCES wellness_centers(id) ON DELETE CASCADE,
@@ -53,11 +20,14 @@ CREATE TABLE IF NOT EXISTS tasks (
   completed_at timestamptz,
   closed_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
+
+  -- Constraints
   CONSTRAINT chk_tasks_priority CHECK (priority IN ('HIGH', 'MEDIUM', 'LOW')),
   CONSTRAINT chk_tasks_status CHECK (status IN ('Pending', 'Assigned', 'In Progress', 'Completed', 'Verified', 'Closed', 'Cancelled')),
   CONSTRAINT chk_tasks_category CHECK (category IN ('General', 'Attendance', 'Membership', 'Risk', 'Payment', 'Inventory', 'Onboarding', 'FollowUp'))
 );
 
+-- 2. TASK AUDIT HISTORY TABLE
 CREATE TABLE IF NOT EXISTS task_history (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   task_id uuid NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
@@ -68,15 +38,16 @@ CREATE TABLE IF NOT EXISTS task_history (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_tasks_center_status ON tasks (wellness_center_id, status);
 CREATE INDEX IF NOT EXISTS idx_tasks_assigned_coach ON tasks (assigned_to_coach_id, status);
 CREATE INDEX IF NOT EXISTS idx_tasks_customer ON tasks (related_customer_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks (due_date) WHERE status NOT IN ('Closed', 'Cancelled');
 CREATE INDEX IF NOT EXISTS idx_task_history_task_id ON task_history (task_id, created_at DESC);
 
+-- Row Level Security (RLS) & Policies
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE task_history ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "anon_all_tasks" ON tasks FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all_task_history" ON task_history FOR ALL TO anon USING (true) WITH CHECK (true);
-

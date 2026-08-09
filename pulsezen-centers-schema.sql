@@ -337,3 +337,58 @@ alter table wellness_centers add column if not exists plan_type text default 'fr
 alter table wellness_centers add column if not exists network_id text;
 alter table wellness_centers add column if not exists distributor_id text;
 
+-- ==========================================
+-- TASK CENTRE PHASE 1 — ADDITIVE DB SCHEMA
+-- Migration: Milestone 1 Database Foundation
+-- Production Safe: 100% Additive, Zero Impact on Existing Tables
+-- ==========================================
+
+-- 1. TASKS MASTER TABLE
+create table if not exists tasks (
+  id uuid primary key default gen_random_uuid(),
+  wellness_center_id uuid not null references wellness_centers(id) on delete cascade,
+  title text not null check (char_length(trim(title)) >= 3),
+  description text,
+  category text not null default 'General',
+  priority text not null default 'MEDIUM',
+  status text not null default 'Pending',
+  assigned_to_coach_id uuid references coaches(id) on delete set null,
+  related_customer_id uuid references customers(id) on delete set null,
+  created_by_user_id text not null default 'system',
+  due_date timestamptz,
+  completed_at timestamptz,
+  closed_at timestamptz,
+  created_at timestamptz not null default now(),
+
+  -- Constraints
+  constraint chk_tasks_priority check (priority in ('HIGH', 'MEDIUM', 'LOW')),
+  constraint chk_tasks_status check (status in ('Pending', 'Assigned', 'In Progress', 'Completed', 'Verified', 'Closed', 'Cancelled')),
+  constraint chk_tasks_category check (category in ('General', 'Attendance', 'Membership', 'Risk', 'Payment', 'Inventory', 'Onboarding', 'FollowUp'))
+);
+
+-- 2. TASK AUDIT HISTORY TABLE
+create table if not exists task_history (
+  id uuid primary key default gen_random_uuid(),
+  task_id uuid not null references tasks(id) on delete cascade,
+  previous_status text,
+  new_status text not null,
+  changed_by_coach_id uuid references coaches(id) on delete set null,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
+-- Performance Indexes
+create index if not exists idx_tasks_center_status on tasks (wellness_center_id, status);
+create index if not exists idx_tasks_assigned_coach on tasks (assigned_to_coach_id, status);
+create index if not exists idx_tasks_customer on tasks (related_customer_id);
+create index if not exists idx_tasks_due_date on tasks (due_date) where status not in ('Closed', 'Cancelled');
+create index if not exists idx_task_history_task_id on task_history (task_id, created_at desc);
+
+-- Row Level Security (RLS) & Policies
+alter table tasks enable row level security;
+alter table task_history enable row level security;
+
+create policy "anon_all_tasks" on tasks for all using (true) with check (true);
+create policy "anon_all_task_history" on task_history for all using (true) with check (true);
+
+
