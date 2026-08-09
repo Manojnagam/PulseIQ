@@ -53,6 +53,13 @@
 
   function canAccessSection(sectionName) {
     const user = currentUser();
+    if (sectionName === 'taskcenter') {
+      const allowed = hasPermission('tasks:read');
+      if (!allowed && window.PulseIQ_AuditHelper) {
+        window.PulseIQ_AuditHelper.logEvent('PERMISSION_DENIED', { section: sectionName, requiredRole: user.roleId }, user);
+      }
+      return allowed;
+    }
     if (window.PulseIQ_PermissionEngine) {
       const allowed = window.PulseIQ_PermissionEngine.canAccessSection(user.roleId, sectionName);
       if (!allowed && window.PulseIQ_AuditHelper) {
@@ -61,6 +68,22 @@
       return allowed;
     }
     return true;
+  }
+
+  function canCreateTask() {
+    return hasPermission('tasks:create');
+  }
+
+  function canAssignTask() {
+    return hasPermission('tasks:assign');
+  }
+
+  function canManageTask() {
+    return hasPermission('tasks:manage');
+  }
+
+  function canReadTasks() {
+    return hasPermission('tasks:read');
   }
 
   // Intercept section navigation safely for route protection
@@ -88,7 +111,11 @@
     currentUser: currentUser,
     hasPermission: hasPermission,
     canAccessSection: canAccessSection,
-    version: '3.1.0'
+    canCreateTask: canCreateTask,
+    canAssignTask: canAssignTask,
+    canManageTask: canManageTask,
+    canReadTasks: canReadTasks,
+    version: '3.1.1'
   };
 
 })(typeof window !== 'undefined' ? window : global);

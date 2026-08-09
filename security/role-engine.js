@@ -32,7 +32,8 @@
         'action_center:read', 'action_center:execute', 'customer_risk:read',
         'coach_analytics:read', 'followup_queue:read', 'followup_queue:execute',
         'goal_tracking:read', 'goal_tracking:write', 'forecasting:read',
-        'executive_dashboard:read', 'settings:manage', 'users:manage'
+        'executive_dashboard:read', 'settings:manage', 'users:manage',
+        'tasks:read', 'tasks:create', 'tasks:assign', 'tasks:manage'
       ]
     },
     centre_manager: {
@@ -45,7 +46,8 @@
         'reports:read', 'bi:read', 'action_center:read', 'action_center:execute',
         'customer_risk:read', 'coach_analytics:read', 'followup_queue:read',
         'followup_queue:execute', 'goal_tracking:read', 'forecasting:read',
-        'executive_dashboard:read'
+        'executive_dashboard:read',
+        'tasks:read', 'tasks:create', 'tasks:assign', 'tasks:manage'
       ]
     },
     coach: {
@@ -55,7 +57,8 @@
       permissions: [
         'dashboard:read', 'customers:read', 'customers:write',
         'reports:read', 'customer_risk:read', 'followup_queue:read',
-        'followup_queue:execute'
+        'followup_queue:execute',
+        'tasks:read'
       ]
     },
     receptionist: {
@@ -64,7 +67,8 @@
       level: 30,
       permissions: [
         'dashboard:read', 'customers:read', 'finance:write',
-        'action_center:read'
+        'action_center:read',
+        'tasks:read'
       ]
     },
     viewer: {
@@ -72,7 +76,8 @@
       name: 'Viewer',
       level: 10,
       permissions: [
-        'dashboard:read', 'customers:read', 'reports:read'
+        'dashboard:read', 'customers:read', 'reports:read',
+        'tasks:read'
       ]
     }
   };
