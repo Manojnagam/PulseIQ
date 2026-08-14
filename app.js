@@ -2508,6 +2508,7 @@ function isSupervisor() {
 }
 
 function goTo(name, el) {
+  console.log('TRACE-18: base goTo() entered with name =', name);
   if (isTrialExpired() && name !== 'profile' && name !== 'guide') {
     showToast('Your 14-day trial has ended. Please subscribe to continue.', 'error');
     showTrialExpiredScreen();
@@ -7099,6 +7100,10 @@ function renderBody() {
     }
     var isWalkinScan = b.customer_id && (b.customer_id.startsWith('walkin__') || (D.walkins||[]).some(function(w){ return w.id === b.customer_id; }));
     var walkinTag = isWalkinScan ? ' <span class="badge" style="background:#f3e8ff;color:#6b21a8;font-size:9px;margin-left:4px" title="Recorded as Walk-in">🚶 Walk-in</span>' : '';
+    var _bcpDisabled = !b.weight || !b.height;
+    var _bcpBtn = _bcpDisabled
+      ? '<button class="wa-btn" style="font-size:11px;padding:3px 7px;margin-right:3px;opacity:.45;cursor:not-allowed" title="Height and weight required to generate report" disabled>📊 WA</button>'
+      : '<button class="wa-btn" style="font-size:11px;padding:3px 7px;margin-right:3px" onclick="generateBodyCompPoster(\''+b.id+'\')">📊 Send Report on WhatsApp</button>';
     return '<tr'+rowStyle+'>'
       +'<td>'+b.date+(isMostRecent ? ' <span class="badge bg" style="font-size:9px">Latest</span>' : '')+walkinTag+'</td>'
       +'<td>'+(cw||'—')+getArr(cw,pw,revWeight)+'</td>'
@@ -7112,6 +7117,7 @@ function renderBody() {
       +'<td><div class="acts">'+aiBtns
         +'<button class="btn-p" style="font-size:11px;padding:3px 5px;margin-right:3px;background:#f9c74f;color:#333" onclick="sendMilestoneWA(\''+b.customer_id+'\')">🏆</button>'
         +'<button class="btn-p" style="font-size:11px;padding:3px 5px;margin-right:3px" onclick="askBodyAI(\''+b.customer_id+'\',\''+b.id+'\')">✨</button>'
+        +_bcpBtn
         +'<button class="btn-e" onclick="editBody(\''+b.id+'\')">Edit</button>'
         +'<button class="btn-d" onclick="delRecord(\'body_composition\',\''+b.id+'\',\'body\')">Del</button>'
       +'</div></td>'
@@ -8763,7 +8769,8 @@ async function saveCoach() {
     notes:document.getElementById('coach-notes').value.trim(),
     dob:document.getElementById('coach-dob').value||null,
     gender:document.getElementById('coach-gender').value||null,
-    goal:document.getElementById('coach-goal').value||null
+    goal:document.getElementById('coach-goal').value||null,
+    customer_id:(document.getElementById('coach-linked-customer')||{}).value||null
   };
   var pinEl = document.getElementById('coach-pin');
   if (pinEl && pinEl.value) payload.herbalife_pin = pinEl.value;
@@ -8815,6 +8822,13 @@ async function saveCoach() {
   }
   catch(e) { showToast('Error: '+e.message,'error'); }
 }
+function populateCoachLinkedCustomerSelect(selectedId) {
+  var sel = document.getElementById('coach-linked-customer');
+  if (!sel) return;
+  var custs = (D.customers || []).slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
+  sel.innerHTML = '<option value="">— None —</option>' +
+    custs.map(function(c){ return '<option value="'+c.id+'"'+(c.id===selectedId?' selected':'')+'>'+c.name+(c.phone?' ('+c.phone+')':'')+'</option>'; }).join('');
+}
 function editCoach(id) {
   var c = D.coaches.find(function(x){return x.id===id;});
   document.getElementById('coach-id').value=c.id;
@@ -8837,6 +8851,7 @@ function editCoach(id) {
   if(document.getElementById('coach-goal')) document.getElementById('coach-goal').value=c.goal||'Weight Loss';
   var roleEl = document.getElementById('coach-role');
   if(roleEl) { roleEl.value = (!c.pack_type && !c.pack_start_date) ? 'owner' : 'coach'; onCoachRoleChange(); }
+  populateCoachLinkedCustomerSelect(c.customer_id||'');
   document.getElementById('coach-pay-section').style.display='none'; // hide payment section on edit
   document.getElementById('coach-modal-title').textContent='Edit Coach'; openModal('coach');
 }
@@ -9036,6 +9051,346 @@ function sendMilestoneWA(cid) {
   var phone = (c.contact||'').replace(/\D/g,'');
   if (phone.length===10) phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?'+(phone?'phone='+phone+'&':'')+'text='+encodeURIComponent(msg),'_blank');
+}
+
+// ── BODY COMPOSITION WHATSAPP POSTER ─────────────────────────────────────────
+// Gender picker — async dialog; resolves 'male', 'female', or '' (skipped).
+// Read-only: writes nothing to Supabase.
+function _bcpPickGender() {
+  return new Promise(function(resolve) {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center';
+    ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 32px;max-width:340px;width:90%;text-align:center;font-family:inherit;box-shadow:0 20px 60px rgba(0,0,0,.3)">'
+      + '<div style="font-size:18px;font-weight:700;color:#0f2318;margin-bottom:8px">Select gender for this report</div>'
+      + '<div style="font-size:13px;color:#6b7280;margin-bottom:22px">Needed to calculate fat &amp; muscle targets</div>'
+      + '<div style="display:flex;gap:14px;justify-content:center">'
+      + '<button id="_bcp_m" style="flex:1;padding:12px;background:#10b981;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">&#9794; Male</button>'
+      + '<button id="_bcp_f" style="flex:1;padding:12px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">&#9792; Female</button>'
+      + '</div>'
+      + '<div style="margin-top:14px"><button id="_bcp_s" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit">Skip (fewer metrics on poster)</button></div>'
+      + '</div>';
+    document.body.appendChild(ov);
+    function _bcpDone(v) { document.body.removeChild(ov); resolve(v); }
+    document.getElementById('_bcp_m').onclick = function() { _bcpDone('male'); };
+    document.getElementById('_bcp_f').onclick = function() { _bcpDone('female'); };
+    document.getElementById('_bcp_s').onclick = function() { _bcpDone(''); };
+  });
+}
+
+// Fallback share: download PNG + open wa.me + show toast.
+function _bcpFallbackShare(blob, phone, text) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'body-composition.png'; a.click();
+  setTimeout(function() { URL.revokeObjectURL(url); }, 30000);
+  var waUrl = (phone && /^\d{10,15}$/.test(phone))
+    ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text) : '';
+  showToast('PNG downloaded — ' + (waUrl ? 'opening WhatsApp...' : 'attach the image to WhatsApp manually'), 'success');
+  if (waUrl) setTimeout(function() { window.open(waUrl, '_blank'); }, 600);
+}
+
+// Main poster generator — called from renderBody() row button.
+// Reads body_composition by its own PK (bodyId). No Supabase writes of any kind.
+async function generateBodyCompPoster(bodyId) {
+  // ── 1. Find record by its own PK ──────────────────────────────────────────
+  var b = (D.body || []).find(function(x) { return x.id === bodyId; });
+  if (!b) { showToast('Record not found', 'error'); return; }
+
+  var weight = parseFloat(b.weight) || 0;
+  var height = parseFloat(b.height) || 0;
+  if (!weight || !height) {
+    showToast('Height and weight required to generate report', 'error');
+    return;
+  }
+
+  // ── 2. Resolve person by uuid — direct lookup, no name/phone matching ─────
+  var person = D.customers.find(function(c) { return c.id === b.customer_id; })
+    || (D.walkins || []).find(function(w) { return w.id === b.customer_id; });
+
+  // ── 3. Phone — same normalisation as sendMilestoneWA ─────────────────────
+  // customers use .contact; walkins use .phone
+  var rawPhone = person ? (person.contact || person.phone || '') : '';
+  var phone = rawPhone.replace(/\D/g, '');
+  if (phone.length === 10) phone = COUNTRY_CODE + phone;
+
+  // ── 4. Gender — resolve, normalise, prompt if unknown ────────────────────
+  var rawGender = (person ? (person.gender || '') : '').trim().toLowerCase();
+  if (rawGender === 'm') rawGender = 'male';
+  if (rawGender === 'f') rawGender = 'female';
+  var gender = (rawGender === 'male' || rawGender === 'female') ? rawGender : '';
+  if (!gender) gender = await _bcpPickGender(); // await inside user-activation handler
+
+  var isMale      = gender === 'male';
+  var isFemale    = gender === 'female';
+  var genderKnown = isMale || isFemale;
+
+  // ── 5. Metric calculations ────────────────────────────────────────────────
+  var h_m  = height / 100;
+  var h_m2 = h_m * h_m; // guarded: height was confirmed > 0
+
+  // Weight ideal range (BMI band)
+  var idealWtLo = parseFloat((18.5 * h_m2).toFixed(1));
+  var idealWtHi = parseFloat((24.9 * h_m2).toFixed(1));
+  var wtGap = 0;
+  if (weight < idealWtLo) wtGap = parseFloat((weight - idealWtLo).toFixed(1));
+  else if (weight > idealWtHi) wtGap = parseFloat((weight - idealWtHi).toFixed(1));
+
+  // Body fat — derivation matches app.js:7071 (toFixed(2))
+  var fatPct      = parseFloat(b.fat_percentage) || 0;
+  var fatKg       = fatPct ? parseFloat((weight * fatPct / 100).toFixed(2)) : 0;
+  var leanKg      = weight - fatKg;
+  var targetBf    = genderKnown ? (isMale ? 0.20 : 0.28) : null;
+  var fatToLoseKg = null, idealFatKg = null;
+  if (targetBf !== null && fatKg > 0) {
+    var _denom = 1 - targetBf; // targetBf is 0.20 or 0.28 — divide-by-zero impossible
+    var targetWt  = parseFloat((leanKg / _denom).toFixed(1));
+    fatToLoseKg   = parseFloat((weight - targetWt).toFixed(1));
+    idealFatKg    = parseFloat((targetWt * targetBf).toFixed(1));
+  }
+
+  // Muscle — uses muscle_percentage, never muscle_mass (legacy dead column)
+  var musclePct = parseFloat(b.muscle_percentage) || 0;
+  var muscleKg  = musclePct ? parseFloat((weight * musclePct / 100).toFixed(2)) : 0;
+  var musLoP    = genderKnown ? (isMale ? 33 : 24) : null;
+  var musHiP    = genderKnown ? (isMale ? 39 : 30) : null;
+  var musLoKg   = musLoP !== null ? parseFloat((weight * musLoP / 100).toFixed(1)) : null;
+  var musHiKg   = musHiP !== null ? parseFloat((weight * musHiP / 100).toFixed(1)) : null;
+  var musGap    = null;
+  if (muscleKg && musLoKg !== null && musHiKg !== null) {
+    if      (muscleKg < musLoKg) musGap = parseFloat((muscleKg - musLoKg).toFixed(1));
+    else if (muscleKg > musHiKg) musGap = parseFloat((muscleKg - musHiKg).toFixed(1));
+    else                          musGap = 0;
+  }
+
+  // Visceral fat (rating, NOT kg)
+  var vfRating = (b.visceral_fat !== null && b.visceral_fat !== undefined && b.visceral_fat !== '')
+    ? parseFloat(b.visceral_fat) : null;
+
+  // BMI — prefer stored; compute from height/weight if absent
+  var bmiVal = b.bmi ? parseFloat(b.bmi) : parseFloat((weight / h_m2).toFixed(1));
+
+  // Body age vs actual age
+  var bodyAge   = (b.body_age  !== null && b.body_age  !== '') ? parseInt(b.body_age)  : null;
+  var actualAge = (b.age       !== null && b.age       !== '') ? parseInt(b.age)        : null;
+
+  // BMR
+  var bmr = b.bmr ? parseFloat(b.bmr) : null;
+
+  // Subcutaneous fat % (display only — no ideal per spec)
+  var subfatPct = (b.subcutaneous_fat_percentage !== null && b.subcutaneous_fat_percentage !== undefined && b.subcutaneous_fat_percentage !== '')
+    ? parseFloat(b.subcutaneous_fat_percentage) : null;
+
+  // ── 6. Build Canvas (hardcoded light palette — always white, never dark) ──
+  var CW = 1080, CH = 1350;
+  var canvas = document.createElement('canvas');
+  canvas.width = CW; canvas.height = CH;
+  var ctx = canvas.getContext('2d');
+
+  var CP  = '#10b981'; // primary teal
+  var CPD = '#059669'; // primary-mid darker teal
+  var CT  = '#0f2318'; // near-black text
+  var CMU = '#6b7280'; // muted grey
+  var CGR = '#10b981'; // good/in-range indicator
+  var CAM = '#f59e0b'; // amber/out-of-range indicator
+  var CLT = '#f0fdf4'; // light green tint background
+  var CBD = '#d1fae5'; // border green
+
+  // White background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, CW, CH);
+
+  // Header gradient band (teal → darker teal)
+  var hdrGrad = ctx.createLinearGradient(0, 0, CW, 200);
+  hdrGrad.addColorStop(0, CP);
+  hdrGrad.addColorStop(1, CPD);
+  ctx.fillStyle = hdrGrad;
+  ctx.fillRect(0, 0, CW, 200);
+
+  // Header: center name
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 38px sans-serif';
+  var _cn = getCenterName();
+  ctx.fillText(_cn, CW / 2, 88);
+  // Header: report title
+  ctx.font = '26px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fillText('Body Composition Report', CW / 2, 138);
+  // Decorative separator
+  ctx.fillStyle = 'rgba(255,255,255,0.32)';
+  ctx.fillRect(CW / 2 - 150, 154, 300, 2);
+
+  // Sub-header: customer name + scan date
+  ctx.fillStyle = CLT;
+  ctx.fillRect(0, 200, CW, 95);
+  var custName = b.customer_name || (person ? person.name : '') || 'Customer';
+  ctx.fillStyle = CT;
+  ctx.font = 'bold 30px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(custName, CW / 2, 242);
+  ctx.fillStyle = CMU;
+  ctx.font = '20px sans-serif';
+  ctx.fillText('Scan Date: ' + (b.date || ''), CW / 2, 275);
+
+  // Table header row
+  ctx.fillStyle = CBD;
+  ctx.fillRect(0, 295, CW, 48);
+  ctx.font = 'bold 17px sans-serif';
+  ctx.fillStyle = CPD;
+  ctx.textAlign = 'left';  ctx.fillText('METRIC',     50,  295 + 33);
+  ctx.textAlign = 'center';ctx.fillText('YOUR VALUE', 480, 295 + 33);
+  ctx.textAlign = 'center';ctx.fillText('IDEAL',      745, 295 + 33);
+  ctx.textAlign = 'right'; ctx.fillText('STATUS',    1040, 295 + 33);
+
+  // Metric rows
+  var rowY      = 343;
+  var footerY   = 1200; // footer band starts here — rows must not cross it
+  var normalRH  = 80;
+  var headlineRH = 108; // body fat headline row
+
+  function _bcpSep() {
+    ctx.strokeStyle = CBD; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(40, rowY); ctx.lineTo(CW - 40, rowY); ctx.stroke();
+  }
+
+  function _bcpRow(label, yourStr, idealStr, statusStr, statusColor, rh, isHL) {
+    if (rowY + rh > footerY) return; // overflow guard
+    _bcpSep();
+    var midY = rowY + rh / 2 + 9;
+    ctx.fillStyle = CT;
+    ctx.textAlign = 'left';
+    ctx.font = isHL ? 'bold 22px sans-serif' : 'bold 19px sans-serif';
+    ctx.fillText(label, 50, midY);
+    ctx.fillStyle = CT;
+    ctx.textAlign = 'center';
+    ctx.font = isHL ? 'bold 24px sans-serif' : '20px sans-serif';
+    ctx.fillText(yourStr, 480, midY);
+    ctx.fillStyle = CMU;
+    ctx.textAlign = 'center';
+    ctx.font = isHL ? '20px sans-serif' : '18px sans-serif';
+    ctx.fillText(idealStr || '\u2014', 745, midY);
+    if (statusStr) {
+      ctx.fillStyle = statusColor || CMU;
+      ctx.textAlign = 'right';
+      ctx.font = isHL ? 'bold 20px sans-serif' : 'bold 17px sans-serif';
+      ctx.fillText(statusStr, 1040, midY);
+    }
+    rowY += rh;
+  }
+
+  // Row: Weight
+  if (h_m2 > 0) {
+    var _wtS = wtGap === 0 ? '\u2713 Ideal' : (wtGap > 0 ? '+' + wtGap + ' kg' : wtGap + ' kg');
+    _bcpRow('Weight', weight + ' kg', idealWtLo + ' \u2013 ' + idealWtHi + ' kg', _wtS, wtGap === 0 ? CGR : CAM, normalRH, false);
+  }
+
+  // Row: Body Fat (headline — largest, most prominent)
+  if (fatKg > 0) {
+    var _fbnd   = genderKnown ? (isMale ? '10\u201320%' : '18\u201328%') : '';
+    var _fidStr = idealFatKg !== null ? 'up to ' + idealFatKg + ' kg' + (_fbnd ? ' (' + _fbnd + ')' : '') : (_fbnd || '\u2014');
+    var _fstat  = null, _fscol = CGR;
+    if (fatToLoseKg !== null) {
+      if (fatToLoseKg <= 0) { _fstat = '\u2713 In range'; _fscol = CGR; }
+      else                  { _fstat = fatToLoseKg + ' kg to lose'; _fscol = CAM; }
+    }
+    _bcpRow('\u2605 Body Fat', fatKg + ' kg (' + (b.fat_percentage || '') + '%)', _fidStr, _fstat, _fscol, headlineRH, true);
+  }
+
+  // Row: Muscle mass
+  if (muscleKg > 0 && genderKnown && musLoKg !== null) {
+    var _msS = musGap === 0 ? '\u2713 In range' : (musGap > 0 ? '+' + musGap + ' kg' : musGap + ' kg');
+    _bcpRow('Muscle Mass',
+      muscleKg + ' kg (' + musclePct + '%)',
+      musLoKg + ' \u2013 ' + musHiKg + ' kg (' + musLoP + '\u2013' + musHiP + '%)',
+      _msS, musGap === 0 ? CGR : CAM, normalRH, false);
+  }
+
+  // Row: Visceral fat (rating — never kg)
+  if (vfRating !== null) {
+    var _vfS = vfRating <= 9 ? '\u2713 In range' : 'High \u26a0';
+    _bcpRow('Visceral Fat', 'Rating: ' + vfRating, 'Ideal: 1 \u2013 9', _vfS, vfRating <= 9 ? CGR : CAM, normalRH, false);
+  }
+
+  // Row: BMI
+  if (bmiVal) {
+    var _bmiOk = bmiVal >= 18.5 && bmiVal <= 24.9;
+    var _bmiS  = _bmiOk ? '\u2713 Normal' : (bmiVal < 18.5 ? 'Underweight' : bmiVal <= 29.9 ? 'Overweight' : 'Obese');
+    _bcpRow('BMI', bmiVal.toFixed(1), '18.5 \u2013 24.9', _bmiS, _bmiOk ? CGR : CAM, normalRH, false);
+  }
+
+  // Row: Body age vs actual age
+  if (bodyAge !== null && actualAge !== null) {
+    var _baOk = bodyAge <= actualAge;
+    var _baS  = _baOk ? '\u2713 Younger!' : '+' + (bodyAge - actualAge) + ' yrs older';
+    _bcpRow('Body Age', bodyAge + ' yrs', 'Actual: ' + actualAge + ' yrs', _baS, _baOk ? CGR : CAM, normalRH, false);
+  }
+
+  // Row: BMR — informational only, no ideal
+  if (bmr) {
+    _bcpRow('BMR (rest)', Math.round(bmr) + ' kcal/day', 'Info only', null, null, normalRH, false);
+  }
+
+  // Row: Subcutaneous fat — display only, no ideal (per spec)
+  if (subfatPct !== null) {
+    _bcpRow('Subcutaneous Fat', subfatPct + '%', '\u2014', null, null, normalRH, false);
+  }
+
+  // Final row separator
+  if (rowY < footerY) { _bcpSep(); }
+
+  // ── Footer band ──────────────────────────────────────────────────────────
+  // Teal accent line at top of footer
+  var ftGrad = ctx.createLinearGradient(0, footerY, CW, footerY);
+  ftGrad.addColorStop(0, CP); ftGrad.addColorStop(1, CPD);
+  ctx.fillStyle = ftGrad;
+  ctx.fillRect(0, footerY, CW, 4);
+
+  ctx.fillStyle = CLT;
+  ctx.fillRect(0, footerY + 4, CW, CH - footerY - 4);
+
+  // Center contact line
+  var _ac = ACTIVE_CENTER
+    ? (D.centers || []).find(function(c) { return c.id === ACTIVE_CENTER; })
+    : ((D.centers || [])[0]);
+  var _cc = _ac ? (_ac.contact || '') : '';
+
+  ctx.fillStyle = CPD;
+  ctx.font = 'bold 20px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(_cc ? _cn + '  |  ' + _cc : _cn, CW / 2, footerY + 48);
+
+  // Disclaimer (verbatim)
+  ctx.fillStyle = CMU;
+  ctx.font = '16px sans-serif';
+  ctx.fillText('Reference ranges are general fitness guidelines, not a medical diagnosis.', CW / 2, footerY + 82);
+  ctx.fillText('Consult a doctor for health decisions.', CW / 2, footerY + 106);
+
+  // ── 7. Export PNG blob ───────────────────────────────────────────────────
+  var blob = await new Promise(function(resolve) {
+    canvas.toBlob(function(bl) { resolve(bl); }, 'image/png');
+  });
+
+  // Short summary for share text / wa.me message
+  var _sname = (custName || '').split(' ')[0];
+  var shortText = 'Body Composition Report \u2014 ' + _sname + ' (' + (b.date || '') + ').'
+    + (weight ? ' Weight: ' + weight + 'kg.' : '')
+    + (fatKg  ? ' Body Fat: ' + fatKg + 'kg' + (fatToLoseKg !== null && fatToLoseKg > 0 ? ' (' + fatToLoseKg + 'kg to lose)' : '') + '.' : '')
+    + (bmiVal ? ' BMI: ' + bmiVal.toFixed(1) + '.' : '')
+    + ' \u2014 ' + _cn;
+
+  var file = new File([blob], 'body-composition.png', { type: 'image/png' });
+
+  // ── 8. Share ─────────────────────────────────────────────────────────────
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Body Composition Report', text: shortText });
+    } else {
+      _bcpFallbackShare(blob, phone, shortText);
+    }
+  } catch (err) {
+    if (err && err.name === 'AbortError') return; // user dismissed share sheet — silent
+    _bcpFallbackShare(blob, phone, shortText);
+  }
 }
 
 // ── P4: Birthday on Overview ──

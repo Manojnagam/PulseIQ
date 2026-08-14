@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="PulseZen Supervisor Dashboard - Manage wellness centers, track coach performance, consult customers, and monitor revenue dynamically with AI wellness scans.">
-<link rel="preload" href="app.min.js?v=2.2.3" as="script">
+<link rel="preload" href="app.min.js?v=2.2.4" as="script">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1331,7 +1331,7 @@ if ('caches' in window) {
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
 <script defer src="auth.core.min.js?v=1.8.4"></script>
-<script defer src="app.min.js?v=2.2.3"></script>
+<script defer src="app.min.js?v=2.2.4"></script>
 <script>
 window._showCustDbg = function() {
   var sec = document.getElementById('sec-customers');
@@ -1628,6 +1628,12 @@ window._perf.t('loadStart');
         <button class="nav-item" onclick="goTo('notifications',this)"><span class="ic">🔔</span><span data-t="nav_notifications">Alerts</span></button>
       </div>
 
+      <!-- ── OPERATIONAL INTELLIGENCE (collapsed by default) ── -->
+      <div class="nav-lbl collapsed" style="margin-top:4px" onclick="toggleNavGroup('g-ops-intel')"><span>Operational Intelligence</span><span class="nav-arrow">▾</span></div>
+      <div id="g-ops-intel" style="display:none">
+        <button id="nav-taskcenter" class="nav-item" onclick="goTo('taskcenter',this)" style="color:#27AE60"><span class="ic">📋</span><span>Task Centre</span></button>
+      </div>
+
       <!-- ── INSIGHTS (collapsed by default) ── -->
       <div class="nav-lbl collapsed" style="margin-top:4px" onclick="toggleNavGroup('g-insights')"><span>Insights</span><span class="nav-arrow">▾</span></div>
       <div id="g-insights" style="display:none">
@@ -1806,7 +1812,7 @@ window._perf.t('loadStart');
     <div class="sec" id="sec-coaches">
       <div class="ph">
         <div><div class="pt" data-t="pt_coaches">Coaches</div><div class="ps" data-t="ps_coaches">Manage your coaching staff</div></div>
-        <button class="btn-p" onclick="openModal(&#39;coach&#39;)">+ Add Coach</button>
+        <button class="btn-p" onclick="populateCoachLinkedCustomerSelect();openModal('coach')">+ Add Coach</button>
       </div>
       <div class="stats" id="coaches-stats"><div class="stat"><div class="stat-l">Total Coaches</div><div class="stat-v">1</div></div><div class="stat"><div class="stat-l">Active</div><div class="stat-v">1</div></div></div>
       <div class="tcard">
@@ -1856,6 +1862,31 @@ window._perf.t('loadStart');
           </div>
         </div>
         <div id="commission-content"><div class="empty" style="padding:20px">Loading...</div></div>
+      </div>
+
+      <!-- Coach Assigned Tasks Overview -->
+      <div class="tcard" style="margin-top:16px">
+        <div class="ttoolbar" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px">📋 Coach Assigned Tasks Overview</div>
+          <button class="btn-c" onclick="if(window.PulseIQ_TaskCenter)window.PulseIQ_TaskCenter.renderCoachTasksOverview()" style="font-size:12px">🔄 Refresh Overview</button>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Coach / Owner</th>
+                <th style="text-align:center">Open Tasks</th>
+                <th style="text-align:center">In Progress</th>
+                <th style="text-align:center">Completed</th>
+                <th style="text-align:center">Overdue</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="coach-tasks-overview-body">
+              <tr><td colspan="6"><div class="empty" style="padding:15px;text-align:center">Click Refresh Overview to view coach task summary...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     <!-- INVENTORY REMOVED — see inventory/index.html -->
@@ -2042,11 +2073,30 @@ window._perf.t('loadStart');
         </table></div>
       </div>
       <div id="pack-history-section" style="margin-top:16px;display:none">
-        <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:12px">🎁 Customer Journey</div>
-        <div id="pack-loyalty-banner"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-          <div class="tcard" style="padding:18px"><div style="font-weight:700;font-size:13px;margin-bottom:12px;color:var(--primary)">📦 Pack Timeline</div><div id="pack-timeline-list"><div style="color:var(--muted);font-size:13px">Select a customer above.</div></div></div>
-          <div class="tcard" style="padding:18px"><div style="font-weight:700;font-size:13px;margin-bottom:12px;color:var(--primary)">📊 Journey Stats</div><div id="pack-journey-stats"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="font-family:'DM Serif Display',serif;font-size:16px">🎁 Customer Profile &amp; Linked Details</div>
+          <div class="tabs" style="margin-bottom:0">
+            <button class="tab-btn active" id="cust-tab-journey" onclick="switchCustProfileTab('journey')">📦 Journey &amp; Packs</button>
+            <button class="tab-btn" id="cust-tab-tasks" onclick="switchCustProfileTab('tasks')">📋 Linked Tasks (<span id="cust-tasks-count-badge">0</span>)</button>
+          </div>
+        </div>
+        <div id="cust-sec-journey">
+          <div id="pack-loyalty-banner"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div class="tcard" style="padding:18px"><div style="font-weight:700;font-size:13px;margin-bottom:12px;color:var(--primary)">📦 Pack Timeline</div><div id="pack-timeline-list"><div style="color:var(--muted);font-size:13px">Select a customer above.</div></div></div>
+            <div class="tcard" style="padding:18px"><div style="font-weight:700;font-size:13px;margin-bottom:12px;color:var(--primary)">📊 Journey Stats</div><div id="pack-journey-stats"></div></div>
+          </div>
+        </div>
+        <div id="cust-sec-tasks" style="display:none">
+          <div class="tcard" style="padding:18px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:700;font-size:14px;color:var(--primary)">📋 Tasks Linked to Customer</div>
+              <button class="btn-c" onclick="if(window.PulseIQ_TaskCenter)window.PulseIQ_TaskCenter.loadCustomerLinkedTasks()" style="font-size:11px">🔄 Refresh</button>
+            </div>
+            <div id="cust-linked-tasks-container">
+              <div style="color:var(--muted);font-size:13px;padding:15px;text-align:center">Click 'Linked Tasks' tab to load tasks.</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -3976,6 +4026,12 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <div class="fg"><label for="coach-role">Role</label><select id="coach-role" onchange="onCoachRoleChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="coach">Coach (has pack with you)</option><option value="owner">Center Owner (no pack with you)</option></select></div>
         <div class="fg"><label for="coach-notes">Notes</label><input type="text" id="coach-notes" placeholder="Optional notes..."></div>
       </div>
+      <div class="fg" style="margin-top:4px">
+        <label for="coach-linked-customer">🔗 Linked Customer Account <span style="font-weight:400;color:var(--muted)">(if this coach was a customer — merges their body records)</span></label>
+        <select id="coach-linked-customer" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px">
+          <option value="">— None —</option>
+        </select>
+      </div>
       <div style="border-top:1px solid var(--border);margin:14px 0;padding-top:14px" id="coach-pack-section">
         <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">📦 Coach Pack <span style="font-weight:400;color:var(--muted)">(skip if Center Owner)</span></div>
         <div class="fg" style="margin-bottom:10px"><label for="coach-pack-owner">Shares Pack With</label><select id="coach-pack-owner" onchange="onCoachPackOwnerChange()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"><option value="">— Own Pack (not shared) —</option></select></div>
@@ -5508,6 +5564,351 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 </div>
 
 
+
+<!-- ── TASK CENTRE PHASE 1 MILESTONE 4 ── -->
+
+<!-- TASK CENTRE DOM SECTION -->
+<div class="sec" id="sec-taskcenter">
+  <div class="ph">
+    <div>
+      <div class="pt">Task Centre</div>
+      <div class="ps">Operational Task Management &amp; Control Feed</div>
+    </div>
+    <button class="btn-p" id="tc-create-btn" onclick="openModal('create-task')" style="display:none">+ Create Task</button>
+  </div>
+
+  <!-- Manager View Metric Cards -->
+  <div class="stats" id="tc-manager-stats" style="margin-bottom:18px"></div>
+
+  <!-- Control Feed & Filters Bar -->
+  <div class="tcard" style="margin-bottom:18px">
+    <div class="ttoolbar" style="flex-wrap:wrap;gap:10px;align-items:center">
+      <input class="search" id="tc-filter-search" placeholder="🔍 Search tasks..." oninput="PulseIQ_TaskCenter.onFilterChange('search', this.value)" style="flex:2;min-width:180px">
+      
+      <select id="tc-filter-priority" onchange="PulseIQ_TaskCenter.onFilterChange('priority', this.value)" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)">
+        <option value="">All Priorities</option>
+        <option value="HIGH">🔴 High</option>
+        <option value="MEDIUM">🟡 Medium</option>
+        <option value="LOW">🟢 Low</option>
+      </select>
+
+      <select id="tc-filter-status" onchange="PulseIQ_TaskCenter.onFilterChange('status', this.value)" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)">
+        <option value="">All Statuses</option>
+        <option value="Pending">Pending</option>
+        <option value="Assigned">Assigned</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Completed">Completed</option>
+        <option value="Verified">Verified</option>
+        <option value="Closed">Closed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+
+      <span id="tc-filter-coach-group">
+        <select id="tc-filter-coach" onchange="PulseIQ_TaskCenter.onFilterChange('coach', this.value)" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)">
+          <option value="">All Coaches</option>
+        </select>
+      </span>
+
+      <select id="tc-filter-category" onchange="PulseIQ_TaskCenter.onFilterChange('category', this.value)" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)">
+        <option value="">All Categories</option>
+        <option value="General">General</option>
+        <option value="Attendance">Attendance</option>
+        <option value="Membership">Membership</option>
+        <option value="Risk">Risk</option>
+        <option value="Payment">Payment</option>
+        <option value="Inventory">Inventory</option>
+        <option value="Onboarding">Onboarding</option>
+        <option value="FollowUp">FollowUp</option>
+      </select>
+
+      <button class="btn-c" onclick="PulseIQ_TaskCenter.resetFilters()" style="padding:8px 14px;font-size:12px">Reset</button>
+    </div>
+  </div>
+
+  <!-- Task Feed Table -->
+  <div class="tcard">
+    <div class="twrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Task Details</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th id="tc-th-assignee">Assignee</th>
+            <th>Due Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tc-feed-body">
+          <tr><td colspan="7"><div class="empty" style="padding:30px;text-align:center">Loading Task Centre...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE TASK MODAL -->
+<div class="overlay" id="modal-create-task">
+  <div class="modal" style="max-width:550px;width:100%;border-top:4px solid #27AE60">
+    <div class="mh">
+      <div class="mt">📋 Create Operational Task</div>
+      <button class="mc" onclick="closeModal('create-task')">✕</button>
+    </div>
+    <form onsubmit="PulseIQ_TaskCenter.submitCreateTask(event)">
+      <div class="mb" style="display:flex;flex-direction:column;gap:14px;text-align:left">
+        <div class="fg">
+          <label>Task Title *</label>
+          <input type="text" id="tc-create-title" placeholder="e.g. Follow up on expiring membership" required style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13.5px">
+        </div>
+        <div class="fg">
+          <label>Description</label>
+          <textarea id="tc-create-desc" placeholder="Task details, instructions, or notes..." rows="3" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;resize:vertical"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="fg">
+            <label>Category</label>
+            <select id="tc-create-category" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)">
+              <option value="General">General</option>
+              <option value="Attendance">Attendance</option>
+              <option value="Membership">Membership</option>
+              <option value="Risk">Risk</option>
+              <option value="Payment">Payment</option>
+              <option value="Inventory">Inventory</option>
+              <option value="Onboarding">Onboarding</option>
+              <option value="FollowUp">FollowUp</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Priority</label>
+            <select id="tc-create-priority" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)">
+              <option value="MEDIUM">🟡 Medium</option>
+              <option value="HIGH">🔴 High</option>
+              <option value="LOW">🟢 Low</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="fg">
+            <label>Assign to Coach</label>
+            <select id="tc-modal-coach" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)">
+              <option value="">-- Unassigned --</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Related Customer</label>
+            <select id="tc-modal-customer" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)">
+              <option value="">-- None --</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Due Date</label>
+          <input type="date" id="tc-create-date" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px">
+        </div>
+      </div>
+      <div class="mf" style="display:flex;gap:10px;justify-content:flex-end;padding:16px;border-top:1px solid var(--border)">
+        <button type="button" class="btn-c" onclick="closeModal('create-task')">Cancel</button>
+        <button type="submit" class="btn-p" style="background:linear-gradient(135deg,#27AE60,#219653);border-color:#27AE60;color:#fff;font-weight:700">💾 Create Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TASK HISTORY MODAL -->
+<div class="overlay" id="modal-task-history">
+  <div class="modal" style="max-width:500px;width:100%;border-top:4px solid #38bdf8">
+    <div class="mh">
+      <div class="mt">📜 Task Audit History</div>
+      <button class="mc" onclick="closeModal('task-history')">✕</button>
+    </div>
+    <div class="mb" id="tc-history-modal-body" style="padding:16px;max-height:60vh;overflow-y:auto">
+      <!-- Audit history timeline -->
+    </div>
+    <div class="mf" style="display:flex;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--border)">
+      <button class="btn-c" onclick="closeModal('task-history')">Close</button>
+    </div>
+  </div>
+</div>
+
 </template>
+
+<!-- LAZY LOADER & SIDEBAR ENTRY INJECTION SCRIPT -->
+<script>
+(function() {
+  'use strict';
+
+  function injectTaskCenterSidebar() {
+    var nav = document.querySelector('.sb-nav');
+    if (!nav || document.getElementById('nav-taskcenter')) return;
+
+    var opsGroup = document.getElementById('g-ops-intel');
+    if (!opsGroup) {
+      var lbl = document.createElement('div');
+      lbl.className = 'nav-lbl collapsed';
+      lbl.style.marginTop = '4px';
+      lbl.setAttribute('onclick', "toggleNavGroup('g-ops-intel')");
+      lbl.innerHTML = '<span>Operational Intelligence</span><span class="nav-arrow">▾</span>';
+
+      opsGroup = document.createElement('div');
+      opsGroup.id = 'g-ops-intel';
+      opsGroup.style.display = 'none';
+
+      var actionsGrp = document.getElementById('g-actions');
+      if (actionsGrp && actionsGrp.nextSibling) {
+        nav.insertBefore(lbl, actionsGrp.nextSibling);
+        nav.insertBefore(opsGroup, lbl.nextSibling);
+      } else {
+        nav.appendChild(lbl);
+        nav.appendChild(opsGroup);
+      }
+    }
+
+    var btn = document.createElement('button');
+    btn.id = 'nav-taskcenter';
+    btn.className = 'nav-item';
+    btn.setAttribute('onclick', "goTo('taskcenter',this)");
+    btn.style.color = '#27AE60';
+    btn.innerHTML = '<span class="ic">📋</span><span>Task Centre</span>';
+    opsGroup.appendChild(btn);
+  }
+
+  var tcLoaded = false;
+  var tcLoading = false;
+  var tcCallbacks = [];
+
+  function loadTaskCenterModule(cb) {
+    console.log('TRACE-23: First line of loadTaskCenterModule()');
+    console.log('[TC-LOG 2] loadTaskCenterModule() entered. tcLoaded=', tcLoaded, 'tcLoading=', tcLoading);
+    if (tcLoaded) { if (cb) cb(); return; }
+    if (cb) tcCallbacks.push(cb);
+    if (tcLoading) return;
+    tcLoading = true;
+
+    console.log('TRACE-24: Before document.createElement script for task-service.js');
+    var s0 = document.createElement('script');
+    console.log('TRACE-25: After document.createElement script for task-service.js');
+    s0.src = 'task-center/task-service.js';
+    s0.onload = function() {
+      console.log('TRACE-29: s0 task-service.js onload callback');
+      console.log('[TC-LOG 3-OK] task-service.js loaded in DOM');
+      console.log('TRACE-30: Before document.createElement script for task-renderer.js');
+      var s1 = document.createElement('script');
+      console.log('TRACE-31: After document.createElement script for task-renderer.js');
+      s1.src = 'task-center/task-renderer.js';
+      s1.onload = function() {
+        console.log('TRACE-35: s1 task-renderer.js onload callback');
+        console.log('[TC-LOG 4-OK] task-renderer.js loaded in DOM');
+        console.log('TRACE-36: Before document.createElement script for task-center/index.js');
+        var s2 = document.createElement('script');
+        console.log('TRACE-37: After document.createElement script for task-center/index.js');
+        s2.src = 'task-center/index.js';
+        s2.onload = function() {
+          console.log('TRACE-41: s2 task-center/index.js onload callback');
+          console.log('[TC-LOG 5-OK] task-center/index.js loaded in DOM');
+          tcLoaded = true;
+          tcLoading = false;
+          while (tcCallbacks.length > 0) {
+            var fn = tcCallbacks.shift();
+            if (typeof fn === 'function') fn();
+          }
+        };
+        s2.onerror = function() { console.error('[PulseIQ] Failed to load task-center/index.js'); tcLoading = false; };
+        console.log('TRACE-38: Before document.head.appendChild(s2)');
+        document.head.appendChild(s2);
+        console.log('TRACE-39: After document.head.appendChild(s2)');
+      };
+      s1.onerror = function() { console.error('[PulseIQ] Failed to load task-center/task-renderer.js'); tcLoading = false; };
+      console.log('TRACE-32: Before document.head.appendChild(s1)');
+      document.head.appendChild(s1);
+      console.log('TRACE-33: After document.head.appendChild(s1)');
+    };
+    s0.onerror = function() { console.error('[PulseIQ] Failed to load task-center/task-service.js'); tcLoading = false; };
+    console.log('TRACE-26: Before document.head.appendChild(s0)');
+    document.head.appendChild(s0);
+    console.log('TRACE-27: After document.head.appendChild(s0)');
+  }
+  window.loadTaskCenterModule = loadTaskCenterModule;
+
+  // Milestone 5: Customer Profile Tab Switcher
+  function switchCustProfileTab(tab) {
+    var journeySec = document.getElementById('cust-sec-journey');
+    var tasksSec = document.getElementById('cust-sec-tasks');
+    var journeyTab = document.getElementById('cust-tab-journey');
+    var tasksTab = document.getElementById('cust-tab-tasks');
+
+    if (tab === 'tasks') {
+      if (journeySec) journeySec.style.display = 'none';
+      if (tasksSec) tasksSec.style.display = 'block';
+      if (journeyTab) journeyTab.classList.remove('active');
+      if (tasksTab) tasksTab.classList.add('active');
+
+      if (typeof loadTaskCenterModule === 'function') {
+        loadTaskCenterModule(function() {
+          if (window.PulseIQ_TaskCenter && typeof window.PulseIQ_TaskCenter.loadCustomerLinkedTasks === 'function') {
+            window.PulseIQ_TaskCenter.loadCustomerLinkedTasks();
+          }
+        });
+      }
+    } else {
+      if (journeySec) journeySec.style.display = 'block';
+      if (tasksSec) tasksSec.style.display = 'none';
+      if (journeyTab) journeyTab.classList.add('active');
+      if (tasksTab) tasksTab.classList.remove('active');
+    }
+  }
+  window.switchCustProfileTab = switchCustProfileTab;
+
+  // Intercept window.goTo for lazy initialization
+  if (typeof window !== 'undefined') {
+    var origGoTo = window.goTo;
+    window.goTo = function(sec, el) {
+      console.log('TRACE-16: Task Centre interceptor entered with sec =', sec);
+      console.log('[TC-LOG 1] goTo() executed with sec =', sec);
+      var res;
+      if (typeof origGoTo === 'function') {
+        console.log('TRACE-17: Before calling base origGoTo');
+        res = origGoTo(sec, el);
+        console.log('TRACE-19: After base origGoTo completed');
+      }
+      console.log('TRACE-20: Checking if sec === taskcenter');
+      if (sec === 'taskcenter') {
+        console.log('TRACE-21: Matched sec === taskcenter');
+        if (!tcLoaded) {
+          console.log('TRACE-22: Before calling loadTaskCenterModule()');
+          loadTaskCenterModule(function() {
+            if (window.PulseIQ_TaskCenter && typeof window.PulseIQ_TaskCenter.init === 'function') {
+              window.PulseIQ_TaskCenter.init();
+            }
+          });
+        } else if (window.PulseIQ_TaskCenter && typeof window.PulseIQ_TaskCenter.onNavigateTo === 'function') {
+          window.PulseIQ_TaskCenter.onNavigateTo();
+        }
+      } else if (sec === 'coaches') {
+        loadTaskCenterModule(function() {
+          if (window.PulseIQ_TaskCenter && typeof window.PulseIQ_TaskCenter.renderCoachTasksOverview === 'function') {
+            window.PulseIQ_TaskCenter.renderCoachTasksOverview();
+          }
+        });
+      } else if (sec === 'executivedashboard') {
+        loadTaskCenterModule(function() {
+          if (window.PulseIQ_ExecutiveDashboard && typeof window.PulseIQ_ExecutiveDashboard.refreshDashboard === 'function') {
+            window.PulseIQ_ExecutiveDashboard.refreshDashboard(window.D);
+          }
+        });
+      } else if (tcLoaded && window.PulseIQ_TaskCenter && typeof window.PulseIQ_TaskCenter.onNavigateAway === 'function') {
+        window.PulseIQ_TaskCenter.onNavigateAway(sec);
+      }
+      return res;
+    };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectTaskCenterSidebar);
+  } else {
+    injectTaskCenterSidebar();
+  }
+})();
+</script>
 
 </body></html>
