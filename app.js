@@ -9166,10 +9166,6 @@ async function generateBodyCompPoster(bodyId) {
   // BMR
   var bmr = b.bmr ? parseFloat(b.bmr) : null;
 
-  // Subcutaneous fat % (display only — no ideal per spec)
-  var subfatPct = (b.subcutaneous_fat_percentage !== null && b.subcutaneous_fat_percentage !== undefined && b.subcutaneous_fat_percentage !== '')
-    ? parseFloat(b.subcutaneous_fat_percentage) : null;
-
   // ── 6. Build Canvas (hardcoded light palette — always white, never dark) ──
   var CW = 1080, CH = 1350;
   var canvas = document.createElement('canvas');
@@ -9297,8 +9293,10 @@ async function generateBodyCompPoster(bodyId) {
 
   // Row: Visceral fat (rating — never kg)
   if (vfRating !== null) {
+    var _vfDisp = Math.round(vfRating * 10) / 10;
+    var _vfStr  = (_vfDisp === Math.floor(_vfDisp)) ? String(Math.floor(_vfDisp)) : String(_vfDisp);
     var _vfS = vfRating <= 9 ? '\u2713 In range' : 'High \u26a0';
-    _bcpRow('Visceral Fat', 'Rating: ' + vfRating, 'Ideal: 1 \u2013 9', _vfS, vfRating <= 9 ? CGR : CAM, normalRH, false);
+    _bcpRow('Visceral Fat', 'Rating: ' + _vfStr, 'Ideal: 1 \u2013 9', _vfS, vfRating <= 9 ? CGR : CAM, normalRH, false);
   }
 
   // Row: BMI
@@ -9310,9 +9308,11 @@ async function generateBodyCompPoster(bodyId) {
 
   // Row: Body age vs actual age
   if (bodyAge !== null && actualAge !== null) {
-    var _baOk = bodyAge <= actualAge;
-    var _baS  = _baOk ? '\u2713 Younger!' : '+' + (bodyAge - actualAge) + ' yrs older';
-    _bcpRow('Body Age', bodyAge + ' yrs', 'Actual: ' + actualAge + ' yrs', _baS, _baOk ? CGR : CAM, normalRH, false);
+    var _baS, _baSCol;
+    if (bodyAge < actualAge)        { _baS = '\u2713 ' + (actualAge - bodyAge) + ' yrs younger'; _baSCol = CGR; }
+    else if (bodyAge === actualAge) { _baS = '\u2713 On track';                                   _baSCol = CGR; }
+    else                            { _baS = '+' + (bodyAge - actualAge) + ' yrs older';          _baSCol = CAM; }
+    _bcpRow('Body Age', bodyAge + ' yrs', 'Actual: ' + actualAge + ' yrs', _baS, _baSCol, normalRH, false);
   }
 
   // Row: BMR — informational only, no ideal
@@ -9320,13 +9320,75 @@ async function generateBodyCompPoster(bodyId) {
     _bcpRow('BMR (rest)', Math.round(bmr) + ' kcal/day', 'Info only', null, null, normalRH, false);
   }
 
-  // Row: Subcutaneous fat — display only, no ideal (per spec)
-  if (subfatPct !== null) {
-    _bcpRow('Subcutaneous Fat', subfatPct + '%', '\u2014', null, null, normalRH, false);
-  }
-
   // Final row separator
   if (rowY < footerY) { _bcpSep(); }
+
+  // ── Takeaway panel ───────────────────────────────────────────────────────
+  function _bcpWrapText(wCtx, text, x, y, maxWidth, lineHeight) {
+    var words = text.split(' ');
+    var line = '';
+    for (var _wi = 0; _wi < words.length; _wi++) {
+      var testLine = line + (line ? ' ' : '') + words[_wi];
+      if (wCtx.measureText(testLine).width > maxWidth && line) {
+        wCtx.fillText(line, x, y);
+        line = words[_wi];
+        y += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    if (line) { wCtx.fillText(line, x, y); y += lineHeight; }
+    return y;
+  }
+
+  var _tkY = rowY + 30;
+  if (footerY - _tkY >= 120) {
+    var _tkLines = [];
+    if (fatToLoseKg !== null && fatToLoseKg > 0)
+      _tkLines.push('Reduce body fat through strength training and a calorie deficit.');
+    if (vfRating !== null && vfRating > 9)
+      _tkLines.push('Lower visceral fat by cutting processed food and increasing daily steps.');
+    if (musGap !== null && musGap < 0)
+      _tkLines.push('Build muscle mass with resistance training 3\u00d7 per week.');
+    if (bmiVal && bmiVal > 24.9)
+      _tkLines.push('Work towards a healthy BMI with gradual, sustainable weight reduction.');
+    if (bmiVal && bmiVal < 18.5)
+      _tkLines.push('Increase caloric intake with nutritious, protein-rich meals.');
+    if (bodyAge !== null && actualAge !== null && bodyAge > actualAge)
+      _tkLines.push('Prioritise sleep and stress management to help reduce body age.');
+    _tkLines.push('Book a follow-up consultation with your coach to track progress.');
+
+    var _tkPad = 40, _tkW = CW - 2 * _tkPad;
+    var _tkH   = Math.min(footerY - _tkY - 20, 260);
+    ctx.fillStyle = CLT;
+    if (ctx.roundRect) {
+      ctx.beginPath(); ctx.roundRect(_tkPad, _tkY, _tkW, _tkH, 14); ctx.fill();
+    } else {
+      ctx.fillRect(_tkPad, _tkY, _tkW, _tkH);
+    }
+    ctx.strokeStyle = CBD; ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(_tkPad, _tkY, _tkW, _tkH, 14);
+    } else {
+      ctx.rect(_tkPad, _tkY, _tkW, _tkH);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = CPD;
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Key Takeaways', _tkPad + 28, _tkY + 38);
+
+    ctx.fillStyle = CT;
+    ctx.font = '18px sans-serif';
+    var _tkTxtY = _tkY + 68;
+    var _tkMaxW = _tkW - 56;
+    for (var _tki = 0; _tki < _tkLines.length; _tki++) {
+      if (_tkTxtY + 22 > _tkY + _tkH - 14) break;
+      _tkTxtY = _bcpWrapText(ctx, '\u2022 ' + _tkLines[_tki], _tkPad + 28, _tkTxtY, _tkMaxW, 26);
+    }
+  }
 
   // ── Footer band ──────────────────────────────────────────────────────────
   // Teal accent line at top of footer
