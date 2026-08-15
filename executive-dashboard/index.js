@@ -41,7 +41,9 @@
   if (typeof window !== 'undefined') {
     const origGoTo = window.goTo;
     window.goTo = function(sec, el) {
+      console.log('TRACE-02: executive-dashboard goTo wrapper start');
       if (typeof origGoTo === 'function') {
+        console.log('TRACE-03: executive-dashboard calling origGoTo');
         origGoTo(sec, el);
       }
       if (sec === 'executivedashboard') {

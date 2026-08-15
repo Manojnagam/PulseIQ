@@ -1,16 +1,17 @@
 /**
  * PulseIQ Phase 2.4 — Coach Performance Analytics
  * Scoring & Ranking Engine
+ * Milestone 6 Extended Telemetry Implementation
  * 
  * TRANSPARENT COACH PERFORMANCE SCORING MODEL (0 - 100 Points).
- * 1. Retention Rate: 0-30 pts
- * 2. Revenue Performance: 0-20 pts
- * 3. Attendance Compliance: 0-15 pts
- * 4. Body Scan Completion: 0-15 pts
- * 5. Customer Progress: 0-10 pts
- * 6. Renewals & Growth: 0-10 pts
+ * Updated Weighting Formula (Milestone 6):
+ * 1. Attendance Compliance (0-25 pts) — 25% weight
+ * 2. Body Scan Completion (0-20 pts) — 20% weight
+ * 3. Renewals & Growth (0-20 pts) — 20% weight
+ * 4. Task Completion Rate (0-20 pts) — 20% weight
+ * 5. Task SLA Compliance Rate (0-15 pts) — 15% weight
  * 
- * DETERMINISTIC BADGING & RANKINGS. ZERO SUBJECTIVITY.
+ * Total Max Score = 100 Points. ZERO AI HALLUCINATION. ZERO SUBJECTIVITY.
  */
 
 (function(window) {
@@ -19,42 +20,63 @@
   function evaluateCoachScoresAndRankings(coachMetricsList) {
     if (!coachMetricsList || coachMetricsList.length === 0) return [];
 
-    const maxRevenue = Math.max(...coachMetricsList.map(c => c.revenueGenerated), 1);
-    const maxRenewals = Math.max(...coachMetricsList.map(c => c.renewalCount), 1);
+    const maxRenewals = Math.max(...coachMetricsList.map(c => c.renewalCount || 0), 1);
+
+    // Get all tasks for task metrics derivation if needed
+    const allTasks = (window.PulseIQ_TaskRenderer && window.PulseIQ_TaskRenderer.state && window.PulseIQ_TaskRenderer.state.tasks) || [];
 
     const scoredCoaches = coachMetricsList.map(c => {
-      // 1. Retention Rate (0-30 pts)
-      const retentionPts = Math.round(c.retentionRatePct * 0.30);
+      // 1. Attendance Compliance (0-25 pts) — 25%
+      const attendancePts = Math.round((c.attendanceCompliancePct || 0) * 0.25);
 
-      // 2. Revenue Performance (0-20 pts)
-      const revenuePts = Math.round((c.revenueGenerated / maxRevenue) * 20);
+      // 2. Body Scan Completion (0-20 pts) — 20%
+      const scanPts = Math.round((c.scanCompletionPct || 0) * 0.20);
 
-      // 3. Attendance Compliance (0-15 pts)
-      const attendancePts = Math.round(c.attendanceCompliancePct * 0.15);
+      // 3. Renewals & Growth (0-20 pts) — 20%
+      const renewalRatePct = c.renewalRatePct !== undefined
+        ? c.renewalRatePct
+        : (maxRenewals > 0 ? Math.round(((c.renewalCount || 0) / maxRenewals) * 100) : 100);
+      const renewalPts = Math.round(renewalRatePct * 0.20);
 
-      // 4. Body Scan Completion (0-15 pts)
-      const scanPts = Math.round(c.scanCompletionPct * 0.15);
+      // 4. Task Completion % (0-20 pts) — 20%
+      let taskCompPct = typeof c.taskCompletionPct === 'number' ? c.taskCompletionPct : 100;
+      let taskSlaPct = typeof c.taskSlaCompliancePct === 'number' ? c.taskSlaCompliancePct : 100;
 
-      // 5. Customer Progress (0-10 pts)
-      const progressRatio = c.totalCustomers > 0 ? c.progressCount / c.totalCustomers : 0;
-      const progressPts = Math.round(progressRatio * 10);
+      // Derive task metrics if not pre-populated
+      if (c.taskCompletionPct === undefined) {
+        const coachTasks = allTasks.filter(t => t.assigned_to_coach_id === c.coachId || String(t.assigned_to_coach_id) === String(c.coachId));
+        if (coachTasks.length > 0) {
+          const completed = coachTasks.filter(t => ['Completed', 'Verified', 'Closed'].includes(t.status));
+          taskCompPct = Math.round((completed.length / coachTasks.length) * 100);
 
-      // 6. Renewals & Growth (0-10 pts)
-      const renewalPts = Math.round((c.renewalCount / maxRenewals) * 10);
+          if (completed.length > 0) {
+            const onTime = completed.filter(t => !t.due_date || (t.completed_at && new Date(t.completed_at) <= new Date(t.due_date)) || (t.updated_at && new Date(t.updated_at) <= new Date(t.due_date)));
+            taskSlaPct = Math.round((onTime.length / completed.length) * 100);
+          } else {
+            taskSlaPct = 100;
+          }
+        }
+      }
 
-      const totalScore = Math.min(100, retentionPts + revenuePts + attendancePts + scanPts + progressPts + renewalPts);
+      const taskCompPts = Math.round(taskCompPct * 0.20);
+
+      // 5. Task SLA Compliance % (0-15 pts) — 15%
+      const taskSlaPts = Math.round(taskSlaPct * 0.15);
+
+      const totalScore = Math.min(100, attendancePts + scanPts + renewalPts + taskCompPts + taskSlaPts);
 
       const breakdown = [
-        { factor: 'Retention Rate', pts: retentionPts, max: 30, detail: `${c.retentionRatePct}% Retention` },
-        { factor: 'Revenue Generated', pts: revenuePts, max: 20, detail: `₹${c.revenueGenerated.toLocaleString('en-IN')}` },
-        { factor: 'Attendance Compliance', pts: attendancePts, max: 15, detail: `${c.attendanceCompliancePct}% Compliance` },
-        { factor: 'Body Scan Completion', pts: scanPts, max: 15, detail: `${c.scanCompletionPct}% Scanned` },
-        { factor: 'Customer Progress', pts: progressPts, max: 10, detail: `${c.progressCount} Members Progressed` },
-        { factor: 'Renewals & Growth', pts: renewalPts, max: 10, detail: `${c.renewalCount} Pack Renewals` }
+        { factor: 'Attendance Compliance', pts: attendancePts, max: 25, detail: `${c.attendanceCompliancePct || 0}% Compliance` },
+        { factor: 'Body Scan Completion', pts: scanPts, max: 20, detail: `${c.scanCompletionPct || 0}% Scanned` },
+        { factor: 'Renewals & Growth', pts: renewalPts, max: 20, detail: `${c.renewalCount || 0} Pack Renewals` },
+        { factor: 'Task Completion Rate', pts: taskCompPts, max: 20, detail: `${taskCompPct}% Tasks Completed` },
+        { factor: 'Task SLA Compliance', pts: taskSlaPts, max: 15, detail: `${taskSlaPct}% On-Time` }
       ];
 
       return {
         ...c,
+        taskCompletionPct: taskCompPct,
+        taskSlaCompliancePct: taskSlaPct,
         coachScore: totalScore,
         scoreBreakdown: breakdown,
         badges: []
@@ -68,16 +90,18 @@
     if (scoredCoaches.length > 0) {
       scoredCoaches[0].badges.push('Top Coach 🏆');
 
-      const maxRet = Math.max(...scoredCoaches.map(c => c.retentionRatePct));
-      const maxRev = Math.max(...scoredCoaches.map(c => c.revenueGenerated));
-      const maxAtt = Math.max(...scoredCoaches.map(c => c.attendanceCompliancePct));
-      const maxRen = Math.max(...scoredCoaches.map(c => c.renewalCount));
+      const maxRet = Math.max(...scoredCoaches.map(c => c.retentionRatePct || 0));
+      const maxRev = Math.max(...scoredCoaches.map(c => c.revenueGenerated || 0));
+      const maxAtt = Math.max(...scoredCoaches.map(c => c.attendanceCompliancePct || 0));
+      const maxRen = Math.max(...scoredCoaches.map(c => c.renewalCount || 0));
+      const maxSla = Math.max(...scoredCoaches.map(c => c.taskSlaCompliancePct || 0));
 
       scoredCoaches.forEach(c => {
         if (c.retentionRatePct === maxRet && maxRet > 0) c.badges.push('Highest Retention 🥇');
         if (c.revenueGenerated === maxRev && maxRev > 0) c.badges.push('Highest Revenue 💰');
         if (c.attendanceCompliancePct === maxAtt && maxAtt > 0) c.badges.push('Highest Attendance 📅');
         if (c.renewalCount === maxRen && maxRen > 0) c.badges.push('Highest Renewals 🔄');
+        if (c.taskSlaCompliancePct === maxSla && maxSla > 0) c.badges.push('Task Master 🎯');
       });
     }
 

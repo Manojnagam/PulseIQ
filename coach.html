@@ -558,7 +558,7 @@ tbody tr:hover td{background:var(--hover-active-bg)!important;transition:backgro
 
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
-  #sidebar{transform:translateX(-100%);transition:transform .3s}
+  #sidebar{width:210px !important;transform:translateX(-100%);transition:transform .3s}
   #sidebar.open{transform:translateX(0)}
   #sb-overlay.open{display:block}
   #main{margin-left:0;padding:16px;padding-top:56px;transition:padding .3s}
@@ -2772,7 +2772,7 @@ async function loadAll() {
       dbGet('leads', 'id', 'coach_id=eq.' + COACH_ID),
       dbGet('lead_followups', 'called_at'),
       dbGet('wellness_centers', 'name'),
-      req('coaches?id=eq.' + COACH_ID + '&select=id,name,herbalife_pin,dob,gender,goal,contact,email,join_date,notes,coach_pin'),
+      req('coaches?id=eq.' + COACH_ID + '&select=id,name,herbalife_pin,dob,gender,goal,contact,email,join_date,notes,coach_pin,customer_id'),
       dbGet('walkins', 'date', CENTER_UUID ? 'wellness_center_id=eq.' + CENTER_UUID : '')
     ]);
     D.customers       = Array.isArray(custs)    ? custs    : [];
@@ -4187,11 +4187,11 @@ function sendHealthScoreWA(name, phone, score, grade, bmi, fatPct, vfKg, weight,
   window.open('https://api.whatsapp.com/send?' + (ph ? 'phone=' + COUNTRY_CODE + ph + '&' : '') + 'text=' + encodeURIComponent(msg), '_blank');
 }
 
-function openBodyModal(id) {
+async function openBodyModal(id) {
   document.getElementById('body-rec-id').value = id || '';
   var today = todayStr();
   var fields = ['body-weight','body-fat','body-muscle','body-bmi','body-visceral','body-notes','body-height','body-age-field','body-subfat','body-bmr','body-age'];
-  
+
   // Prep customer selection
   var cust = findPersonForBody(_bodySelCustId);
   var bodyCustEl = document.getElementById('body-customer');
@@ -4223,42 +4223,55 @@ function openBodyModal(id) {
     var heightVal = '';
     var ageVal = '';
 
-    // 1. Check latest record in body composition
+    // 1. Check latest record from local cache
     var lastRec;
     if (_bodySelCustId === COACH_ID) {
       lastRec = D_MY_BODY[0];
     } else {
       lastRec = (D.body || []).filter(function(b){ return b.customer_id === _bodySelCustId; }).sort(function(a,b){ return new Date(b.date) - new Date(a.date); })[0];
     }
+
+    // 2. If not in local cache (>1000 records or first visit), fetch directly
+    if (!lastRec && _bodySelCustId) {
+      try {
+        var tbl = (_bodySelCustId === COACH_ID) ? 'coach_body_composition?coach_id=eq.' + COACH_ID : 'body_composition?customer_id=eq.' + _bodySelCustId;
+        var fresh = await req(tbl + '&order=date.desc&limit=1');
+        if (Array.isArray(fresh) && fresh[0]) lastRec = fresh[0];
+      } catch(e) {}
+    }
+
     if (lastRec) {
       if (lastRec.height) heightVal = lastRec.height;
       if (lastRec.age)    ageVal = lastRec.age;
     }
 
-    // 2. Fallback to customer/coach profile height/age/dob
+    // 3. Fallback to customer/coach profile height/age/dob
     if (!heightVal || !ageVal) {
-      var person = findPersonForBody(_bodySelCustId);
-      if (person) {
-        if (!heightVal && person.height) heightVal = person.height;
-        if (!ageVal) {
-          if (person.age) {
-            ageVal = person.age;
-          } else if (person.dob) {
-            ageVal = Math.floor((new Date() - new Date(person.dob)) / (365.25 * 24 * 3600 * 1000));
+      if (_bodySelCustId === COACH_ID && D.coachProfile) {
+        // Coach's own measurements — use coach profile
+        if (!heightVal && D.coachProfile.height) heightVal = D.coachProfile.height;
+        if (!ageVal && D.coachProfile.dob) ageVal = Math.floor((new Date() - new Date(D.coachProfile.dob)) / (365.25 * 24 * 3600 * 1000));
+      } else {
+        var person = findPersonForBody(_bodySelCustId);
+        if (person) {
+          if (!heightVal && person.height) heightVal = person.height;
+          if (!ageVal) {
+            if (person.age)       ageVal = person.age;
+            else if (person.dob)  ageVal = Math.floor((new Date() - new Date(person.dob)) / (365.25 * 24 * 3600 * 1000));
           }
         }
       }
     }
 
     if (heightVal) document.getElementById('body-height').value = heightVal;
-    if (ageVal)    document.getElementById('body-age-field').value = ageVal;
+    if (ageVal)    document.getElementById('body-age-field').value = Math.round(ageVal);
   }
   // Reset manual BMI flag so auto-calc works fresh
   document.getElementById('body-bmi').dataset.manual = '';
-  
+
   // Trigger calculation so previews/displays update immediately
   coachCalcBody();
-  
+
   openModal('body');
 }
 
@@ -5478,6 +5491,7 @@ var _myWeightChart = null;
 var _bodyCompChart = null;
 
 async function loadMyBodyStats() {
+  var linkedCustId = D.coachProfile && D.coachProfile.customer_id;
   try {
     var rows = await dbGet('coach_body_composition', 'date', 'coach_id=eq.' + COACH_ID);
     D_MY_BODY = Array.isArray(rows) ? rows : [];
@@ -5496,6 +5510,23 @@ async function loadMyBodyStats() {
     } else {
       D_MY_BODY = [];
     }
+  }
+  // If this coach was previously a customer, also merge their customer body records
+  if (linkedCustId) {
+    try {
+      var custRows = await dbGet('body_composition', 'date', 'customer_id=eq.' + linkedCustId);
+      if (Array.isArray(custRows) && custRows.length) {
+        // Avoid date duplicates — coach's own records take priority
+        var existingDates = {};
+        D_MY_BODY.forEach(function(r){ existingDates[r.date] = true; });
+        var merged = custRows
+          .filter(function(r){ return !existingDates[r.date]; })
+          .map(function(r){ return Object.assign({}, r, { coach_id: COACH_ID, _from_customer: true }); });
+        D_MY_BODY = D_MY_BODY.concat(merged);
+        // Re-sort descending by date
+        D_MY_BODY.sort(function(a,b){ return b.date < a.date ? -1 : b.date > a.date ? 1 : 0; });
+      }
+    } catch(e2) { /* customer body records not critical */ }
   }
   renderMyProfileDetails();
   renderMyBodyIdeals();

@@ -136,7 +136,9 @@
   if (typeof window !== 'undefined') {
     const origGoTo = window.goTo;
     window.goTo = function(sec, el) {
+      console.log('TRACE-08: customer-followup goTo wrapper start');
       if (typeof origGoTo === 'function') {
+        console.log('TRACE-09: customer-followup calling origGoTo');
         origGoTo(sec, el);
       }
       if (sec === 'customerfollowup') {

@@ -60,7 +60,9 @@
   if (typeof window !== 'undefined') {
     const origGoTo = window.goTo;
     window.goTo = function(sec, el) {
+      console.log('TRACE-10: coach-analytics goTo wrapper start');
       if (typeof origGoTo === 'function') {
+        console.log('TRACE-11: coach-analytics calling origGoTo');
         origGoTo(sec, el);
       }
       if (sec === 'coachanalytics') {

@@ -36,14 +36,14 @@ This plan outlines the architecture, completed milestones, verification package,
 
 ---
 
-## 📋 Task Centre Phase 1: Operational Task Execution Engine (`IN PROGRESS`)
+## 📋 Task Centre Phase 1: Operational Task Execution Engine (`RELEASE CANDIDATE 1 (RC1) — NOT PRODUCTION RELEASED`) 🛑
 
 - [x] **Milestone 1 — Database Foundation & Additive Schema Setup**: Created `tasks` and `task_history` tables, performance indexes (`idx_tasks_*`), check constraints, and RLS policies in `supabase/task_centre_phase1_migration.sql`, `pulsezen-centers-schema.sql`, and `supabase_migration.sql`. ✅ *Gate 1 Approved*.
 - [x] **Milestone 2 — Data Access Service Layer**: Implemented `task-center/task-service.js` with task CRUD operations, strict 7-state lifecycle validation, and automatic `task_history` audit logging. ✅ *Gate 2 Approved*.
-- [x] **Milestone 3 — Security & RBAC Guard Integration**: Integrated 4 task permission keys (`tasks:read`, `tasks:create`, `tasks:assign`, `tasks:manage`) across all 6 system roles in `security/role-engine.js` and added section routing guards in `security/auth-service.js`. 🛑 *Awaiting Audit Gate 3 Approval*.
-- [ ] **Milestone 4 — Task Centre UI View & Control Feed**: `#sec-taskcenter` DOM section & feed renderer.
-- [ ] **Milestone 5 — SPA Navigation & Cross-Module Entity Linking**: Sidebar nav & customer profile modal tabs.
-- [ ] **Milestone 6 — Executive Dashboard & Coach Analytics Telemetry**: Task SLA scoring integration.
+- [x] **Milestone 3 — Security & RBAC Guard Integration**: Integrated 4 task permission keys (`tasks:read`, `tasks:create`, `tasks:assign`, `tasks:manage`) across all 6 system roles in `security/role-engine.js` and added section routing guards in `security/auth-service.js`. ✅ *Gate 3 Approved*.
+- [x] **Milestone 4 — Task Centre UI View & Control Feed**: Created `task-center/index.js`, `task-center/task-renderer.js`, appended `#sec-taskcenter`, `#modal-create-task`, `#modal-task-history`, sidebar entry under `Operational Intelligence`, and lazy-loader to `index.html`. ✅ *Gate 4 Approved*.
+- [x] **Milestone 5 — SPA Navigation & Cross-Module Entity Linking**: Integrated SPA navigation under Operational Intelligence, extended Customer Profile with lazy-loaded "Linked Tasks" tab, and extended Coach Profile with "Assigned Tasks Overview" and quick filtering. ✅ *Gate 5 Approved*.
+- [x] **Milestone 6 — Executive Dashboard & Coach Analytics Telemetry**: Updated Coach Analytics scoring formula with Task Completion (20%) & Task SLA Compliance (15%), and added Open Tasks, Overdue Tasks, and Task SLA Compliance widgets to Executive Dashboard. ✅ *RC1 Packaged & Validated*.
 
 ---
 
