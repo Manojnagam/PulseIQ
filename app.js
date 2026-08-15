@@ -9071,14 +9071,36 @@ function _bcpPickGender() {
 
 // Fallback share: download PNG + open wa.me + show toast.
 function _bcpFallbackShare(blob, phone, text) {
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url; a.download = 'body-composition.png'; a.click();
-  setTimeout(function() { URL.revokeObjectURL(url); }, 30000);
+  var imgUrl = URL.createObjectURL(blob);
   var waUrl = (phone && /^\d{10,15}$/.test(phone))
-    ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text) : '';
-  showToast('PNG downloaded — ' + (waUrl ? 'opening WhatsApp...' : 'attach the image to WhatsApp manually'), 'success');
-  if (waUrl) setTimeout(function() { window.open(waUrl, '_blank'); }, 600);
+    ? 'https://wa.me/' + phone : '';
+
+  // Remove any existing poster modal
+  var old = document.getElementById('_bcp_share_modal');
+  if (old) old.remove();
+
+  var modal = document.createElement('div');
+  modal.id = '_bcp_share_modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;text-align:center">'
+    + '<div style="font-size:16px;font-weight:700;margin-bottom:12px">📊 Body Composition Report Ready</div>'
+    + '<img src="'+imgUrl+'" style="width:100%;border-radius:10px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.15)">'
+    + '<div style="font-size:13px;color:#555;margin-bottom:16px;line-height:1.6">'
+    + (waUrl
+        ? '1️⃣ Save the image below<br>2️⃣ Open WhatsApp chat and attach it'
+        : 'Save the image and send it via WhatsApp')
+    + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:10px">'
+    + '<a id="_bcp_dl" download="body-composition.png" href="'+imgUrl+'" style="display:block;background:#10b981;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">⬇️ Save Image</a>'
+    + (waUrl ? '<a href="'+waUrl+'" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">💬 Open WhatsApp Chat</a>' : '')
+    + '<button onclick="document.getElementById(\'_bcp_share_modal\').remove()" style="background:#f1f5f9;border:none;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;color:#555">Close</button>'
+    + '</div></div>';
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) { modal.remove(); URL.revokeObjectURL(imgUrl); }
+  });
 }
 
 // Main poster generator — called from renderBody() row button.
