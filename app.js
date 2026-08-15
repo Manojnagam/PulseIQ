@@ -9071,33 +9071,64 @@ function _bcpPickGender() {
 
 // Fallback share: download PNG + open wa.me + show toast.
 function _bcpFallbackShare(blob, phone, text) {
-  var imgUrl = URL.createObjectURL(blob);
-  var waUrl = (phone && /^\d{10,15}$/.test(phone))
-    ? 'https://wa.me/' + phone : '';
+  var waUrl = (phone && /^\d{10,15}$/.test(phone)) ? 'https://wa.me/' + phone : '';
 
   // Remove any existing poster modal
   var old = document.getElementById('_bcp_share_modal');
   if (old) old.remove();
 
+  var imgUrl = URL.createObjectURL(blob);
+
+  // Build modal with PDF download + WhatsApp chat button
   var modal = document.createElement('div');
   modal.id = '_bcp_share_modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
   modal.innerHTML =
     '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;text-align:center">'
-    + '<div style="font-size:16px;font-weight:700;margin-bottom:12px">📊 Body Composition Report Ready</div>'
+    + '<div style="font-size:16px;font-weight:700;margin-bottom:12px">📊 Body Composition Report</div>'
     + '<img src="'+imgUrl+'" style="width:100%;border-radius:10px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.15)">'
     + '<div style="font-size:13px;color:#555;margin-bottom:16px;line-height:1.6">'
-    + (waUrl
-        ? '1️⃣ Save the image below<br>2️⃣ Open WhatsApp chat and attach it'
-        : 'Save the image and send it via WhatsApp')
+    + (waUrl ? '1️⃣ Save PDF below &nbsp;2️⃣ Open WhatsApp and attach it' : 'Save the PDF to share via WhatsApp')
     + '</div>'
     + '<div style="display:flex;flex-direction:column;gap:10px">'
-    + '<a id="_bcp_dl" download="body-composition.png" href="'+imgUrl+'" style="display:block;background:#10b981;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">⬇️ Save Image</a>'
+    + '<button id="_bcp_pdf_btn" style="background:#10b981;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save as PDF</button>'
     + (waUrl ? '<a href="'+waUrl+'" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">💬 Open WhatsApp Chat</a>' : '')
-    + '<button onclick="document.getElementById(\'_bcp_share_modal\').remove()" style="background:#f1f5f9;border:none;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;color:#555">Close</button>'
+    + '<button onclick="var m=document.getElementById(\'_bcp_share_modal\');if(m)m.remove();" style="background:#f1f5f9;border:none;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;color:#555">Close</button>'
     + '</div></div>';
 
   document.body.appendChild(modal);
+
+  // PDF generation on button click
+  document.getElementById('_bcp_pdf_btn').addEventListener('click', function() {
+    var btn = this;
+    btn.textContent = 'Generating PDF…';
+    btn.disabled = true;
+    var img = new Image();
+    img.onload = function() {
+      try {
+        var jspdf = window.jspdf || window.jsPDF;
+        var JsPDF = jspdf ? (jspdf.jsPDF || jspdf) : null;
+        if (!JsPDF) { alert('PDF library not loaded yet. Please try again in a moment.'); btn.textContent = '⬇️ Save as PDF'; btn.disabled = false; return; }
+        // Portrait A4: 210 × 297 mm. Poster is 1080×1350px (4:5).
+        // Fit to page width with margin
+        var pageW = 210, margin = 10;
+        var printW = pageW - margin * 2;
+        var printH = printW * (img.naturalHeight / img.naturalWidth);
+        var doc = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        doc.addImage(img, 'PNG', margin, margin, printW, printH);
+        doc.save('body-composition.pdf');
+        btn.textContent = '✅ PDF Saved!';
+      } catch(e) {
+        console.error('PDF generation failed:', e);
+        // Fallback: download as PNG
+        var a = document.createElement('a');
+        a.href = imgUrl; a.download = 'body-composition.png'; a.click();
+        btn.textContent = '⬇️ Save as PDF'; btn.disabled = false;
+      }
+    };
+    img.src = imgUrl;
+  });
+
   modal.addEventListener('click', function(e) {
     if (e.target === modal) { modal.remove(); URL.revokeObjectURL(imgUrl); }
   });
