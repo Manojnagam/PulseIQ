@@ -9437,15 +9437,21 @@ async function generateBodyCompPoster(bodyId) {
   var file = new File([blob], 'body-composition.png', { type: 'image/png' });
 
   // ── 8. Share ─────────────────────────────────────────────────────────────
-  try {
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'Body Composition Report', text: shortText });
-    } else {
+  // When we have a phone number, always use direct wa.me link so it opens the
+  // specific contact's WhatsApp chat instead of the generic system share sheet.
+  if (phone) {
+    _bcpFallbackShare(blob, phone, shortText);
+  } else {
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Body Composition Report', text: shortText });
+      } else {
+        _bcpFallbackShare(blob, phone, shortText);
+      }
+    } catch (err) {
+      if (err && err.name === 'AbortError') return; // user dismissed share sheet — silent
       _bcpFallbackShare(blob, phone, shortText);
     }
-  } catch (err) {
-    if (err && err.name === 'AbortError') return; // user dismissed share sheet — silent
-    _bcpFallbackShare(blob, phone, shortText);
   }
 }
 

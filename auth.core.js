@@ -378,7 +378,7 @@ async function loadAndStartDashboard() {
 
     if (typeof window.bootDashboard !== 'function') {
       try {
-        await loadScript('app.min.js?v=2.2.6', 30000);
+        await loadScript('app.min.js?v=2.2.7', 30000);
       } catch (scriptErr) {
         console.warn('app.min.js failed, trying app.js fallback:', scriptErr.message);
       }
