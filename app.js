@@ -7099,7 +7099,9 @@ function renderBody() {
     }
     var isWalkinScan = b.customer_id && (b.customer_id.startsWith('walkin__') || (D.walkins||[]).some(function(w){ return w.id === b.customer_id; }));
     var walkinTag = isWalkinScan ? ' <span class="badge" style="background:#f3e8ff;color:#6b21a8;font-size:9px;margin-left:4px" title="Recorded as Walk-in">🚶 Walk-in</span>' : '';
-    var _bcpDisabled = !b.weight || !b.height;
+    var _walkinRec = isWalkinScan ? (D.walkins||[]).find(function(w){ return w.id === b.customer_id; }) : null;
+    var _effectiveHeight = b.height || (_walkinRec && _walkinRec.height);
+    var _bcpDisabled = !b.weight || !_effectiveHeight;
     var _bcpBtn = _bcpDisabled
       ? '<button class="wa-btn" style="font-size:11px;padding:3px 7px;margin-right:3px;opacity:.45;cursor:not-allowed" title="Height and weight required to generate report" disabled>📊 WA</button>'
       : '<button class="wa-btn" style="font-size:11px;padding:3px 7px;margin-right:3px" onclick="generateBodyCompPoster(\''+b.id+'\')">📊 Send Report on WhatsApp</button>';
@@ -9087,15 +9089,17 @@ async function generateBodyCompPoster(bodyId) {
   if (!b) { showToast('Record not found', 'error'); return; }
 
   var weight = parseFloat(b.weight) || 0;
-  var height = parseFloat(b.height) || 0;
-  if (!weight || !height) {
-    showToast('Height and weight required to generate report', 'error');
-    return;
-  }
 
   // ── 2. Resolve person by uuid — direct lookup, no name/phone matching ─────
   var person = D.customers.find(function(c) { return c.id === b.customer_id; })
     || (D.walkins || []).find(function(w) { return w.id === b.customer_id; });
+
+  // Fall back to walkin's height when body comp record has no height stored
+  var height = parseFloat(b.height) || parseFloat((person && person.height) || 0) || 0;
+  if (!weight || !height) {
+    showToast('Height and weight required to generate report', 'error');
+    return;
+  }
 
   // ── 3. Phone — same normalisation as sendMilestoneWA ─────────────────────
   // customers use .contact; walkins use .phone
