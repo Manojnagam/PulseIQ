@@ -6,7 +6,7 @@
     "node": ">=18"
   },
   "devDependencies": {
-    "puppeteer-core": "^25.4.0",
+    "puppeteer-core": "^25.5.0",
     "terser": "^5.48.0"
   }
 }

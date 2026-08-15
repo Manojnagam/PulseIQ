@@ -69,7 +69,9 @@
   if (typeof window !== 'undefined') {
     const origGoTo = window.goTo;
     window.goTo = function(sec, el) {
+      console.log('TRACE-06: goal-tracking goTo wrapper start');
       if (typeof origGoTo === 'function') {
+        console.log('TRACE-07: goal-tracking calling origGoTo');
         origGoTo(sec, el);
       }
       if (sec === 'goaltracking') {

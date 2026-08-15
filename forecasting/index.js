@@ -53,7 +53,9 @@
   if (typeof window !== 'undefined') {
     const origGoTo = window.goTo;
     window.goTo = function(sec, el) {
+      console.log('TRACE-04: forecasting goTo wrapper start');
       if (typeof origGoTo === 'function') {
+        console.log('TRACE-05: forecasting calling origGoTo');
         origGoTo(sec, el);
       }
       if (sec === 'forecasting') {

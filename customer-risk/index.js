@@ -90,7 +90,9 @@
   if (typeof window !== 'undefined') {
     const origGoTo = window.goTo;
     window.goTo = function(sec, el) {
+      console.log('TRACE-12: customer-risk goTo wrapper start');
       if (typeof origGoTo === 'function') {
+        console.log('TRACE-13: customer-risk calling origGoTo');
         origGoTo(sec, el);
       }
       if (sec === 'customerrisk') {

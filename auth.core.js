@@ -24,13 +24,20 @@ window.safeStorage = window.safeStorage || (function() {
 
 function loadScript(src, timeoutMs) {
   return new Promise(function(resolve, reject) {
-    var existing = document.querySelector('script[src="' + src + '"]');
+    var baseName = src.split('?')[0];
+    var existing = document.querySelector('script[src*="' + baseName + '"]');
     if (existing) {
-      if (existing.getAttribute('data-loaded') === 'true') {
+      if (existing.getAttribute('data-loaded') === 'true' || typeof window.bootDashboard === 'function') {
         resolve();
         return;
       }
-      existing.remove();
+      var origOnLoad = existing.onload;
+      existing.onload = function() {
+        if (typeof origOnLoad === 'function') origOnLoad();
+        existing.setAttribute('data-loaded', 'true');
+        resolve();
+      };
+      return;
     }
     var s = document.createElement('script');
     s.src = src;
@@ -371,14 +378,14 @@ async function loadAndStartDashboard() {
 
     if (typeof window.bootDashboard !== 'function') {
       try {
-        await loadScript('app.min.js?v=1.7.9', 30000);
+        await loadScript('app.min.js?v=2.2.9', 30000);
       } catch (scriptErr) {
         console.warn('app.min.js failed, trying app.js fallback:', scriptErr.message);
       }
     }
     if (typeof window.bootDashboard !== 'function') {
       try {
-        await loadScript('app.js?v=1.7.9', 30000);
+        await loadScript('app.js?v=2.2.6', 30000);
       } catch (fallbackErr) {
         console.warn('app.js fallback also failed:', fallbackErr.message);
       }

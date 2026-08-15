@@ -11,6 +11,8 @@
 
 (function(window) {
   'use strict';
+  console.log('TRACE-28: First executable line of task-service.js');
+  console.log('[TC-LOG 3] task-service.js executing...');
 
   // ── CONSTANTS & ENUMS ──
   const ALLOWED_PRIORITIES = ['HIGH', 'MEDIUM', 'LOW'];
