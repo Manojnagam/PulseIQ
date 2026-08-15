@@ -9069,17 +9069,56 @@ function _bcpPickGender() {
   });
 }
 
-// Fallback share: download PNG + open wa.me + show toast.
-function _bcpFallbackShare(blob, phone, text) {
-  var waUrl = (phone && /^\d{10,15}$/.test(phone)) ? 'https://wa.me/' + phone : '';
+// Composes the warm branded WhatsApp message that wraps the body comp poster.
+// No health numbers, no emoji, no medical claims — the poster image carries the data.
+function _bcpComposeMsg(sname, cn, cc) {
+  var greeting = sname ? 'Hi ' + sname + ',' : 'Hi,';
+  var lines = [
+    greeting,
+    '',
+    'Thank you for visiting ' + cn + ' today. Your body composition report is attached.',
+    '',
+    'Our coaches can help you turn these numbers into a simple, practical plan. Reply here or drop in anytime to book a free consultation.',
+    '',
+    cn
+  ];
+  if (cc) lines.push(cc);
+  return lines.join('\n');
+}
 
-  // Remove any existing poster modal
+// Shows the poster in a preview modal.
+// When navigator.share({files}) is available (Android Chrome): single "Send on WhatsApp"
+//   button opens the share sheet with the image and message already attached — staff
+//   picks the contact, one tap done.
+// When not available (desktop / iOS Safari): two-button fallback — send the prefilled
+//   WhatsApp message first, then save the image to attach as a follow-up.
+function _bcpFallbackShare(blob, phone, text, pngFile) {
+  var waUrl = (phone && /^\d{10,15}$/.test(phone))
+    ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text)
+    : '';
+
   var old = document.getElementById('_bcp_share_modal');
   if (old) old.remove();
 
   var imgUrl = URL.createObjectURL(blob);
 
-  // Build modal with PDF download + WhatsApp chat button
+  // Decide layout at modal-open time. canShare check does NOT require user activation.
+  var canNativeShare = !!(navigator.canShare && navigator.canShare({ files: [pngFile] }));
+
+  var btns;
+  if (canNativeShare) {
+    // Single button — share sheet delivers image + message together.
+    btns = '<button id="_bcp_wa_btn" style="background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:15px;border:none;cursor:pointer">📤 Send on WhatsApp</button>';
+  } else {
+    // Two-step fallback: message first (so WhatsApp doesn't discard it when image is attached),
+    // image second. Helper text explains the order.
+    btns = (waUrl
+      ? '<a href="' + waUrl + '" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none">💬 Open WhatsApp & Send Message</a>'
+      : '')
+      + '<button id="_bcp_save_btn" style="background:#0ea5e9;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save Image</button>'
+      + (waUrl ? '<div style="font-size:12px;color:#6b7280;margin-top:2px">Send the message first, then attach the saved image.</div>' : '');
+  }
+
   var modal = document.createElement('div');
   modal.id = '_bcp_share_modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
@@ -9087,51 +9126,44 @@ function _bcpFallbackShare(blob, phone, text) {
     '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;text-align:center">'
     + '<div style="font-size:16px;font-weight:700;margin-bottom:12px">📊 Body Composition Report</div>'
     + '<img src="'+imgUrl+'" style="width:100%;border-radius:10px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.15)">'
-    + '<div style="font-size:13px;color:#555;margin-bottom:16px;line-height:1.6">'
-    + (waUrl ? '1️⃣ Save PDF below &nbsp;2️⃣ Open WhatsApp and attach it' : 'Save the PDF to share via WhatsApp')
-    + '</div>'
     + '<div style="display:flex;flex-direction:column;gap:10px">'
-    + '<button id="_bcp_pdf_btn" style="background:#10b981;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save as PDF</button>'
-    + (waUrl ? '<a href="'+waUrl+'" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">💬 Open WhatsApp Chat</a>' : '')
+    + btns
     + '<button onclick="var m=document.getElementById(\'_bcp_share_modal\');if(m)m.remove();" style="background:#f1f5f9;border:none;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;color:#555">Close</button>'
     + '</div></div>';
 
   document.body.appendChild(modal);
 
-  // PDF generation on button click
-  document.getElementById('_bcp_pdf_btn').addEventListener('click', function() {
-    var btn = this;
-    btn.textContent = 'Generating PDF…';
-    btn.disabled = true;
-    var img = new Image();
-    img.onload = function() {
-      try {
-        var jspdf = window.jspdf || window.jsPDF;
-        var JsPDF = jspdf ? (jspdf.jsPDF || jspdf) : null;
-        if (!JsPDF) { alert('PDF library not loaded yet. Please try again in a moment.'); btn.textContent = '⬇️ Save as PDF'; btn.disabled = false; return; }
-        // Portrait A4: 210 × 297 mm. Poster is 1080×1350px (4:5).
-        // Fit to page width with margin
-        var pageW = 210, margin = 10;
-        var printW = pageW - margin * 2;
-        var printH = printW * (img.naturalHeight / img.naturalWidth);
-        var doc = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        doc.addImage(img, 'PNG', margin, margin, printW, printH);
-        doc.save('body-composition.pdf');
-        btn.textContent = '✅ PDF Saved!';
-      } catch(e) {
-        console.error('PDF generation failed:', e);
-        // Fallback: download as PNG
+  if (canNativeShare) {
+    // Click handler has fresh user activation — navigator.share() is called with no
+    // awaits before it, so transient activation is never lost.
+    document.getElementById('_bcp_wa_btn').addEventListener('click', function() {
+      navigator.share({ files: [pngFile], text: text }).catch(function(err) {
+        if (err && err.name === 'AbortError') return; // user dismissed sheet — silent
+        _bcpDownload(imgUrl, waUrl); // share API error — fall back to download + wa.me
+      });
+    });
+  } else {
+    var saveBtn = document.getElementById('_bcp_save_btn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function() {
         var a = document.createElement('a');
         a.href = imgUrl; a.download = 'body-composition.png'; a.click();
-        btn.textContent = '⬇️ Save as PDF'; btn.disabled = false;
-      }
-    };
-    img.src = imgUrl;
-  });
+      });
+    }
+  }
 
   modal.addEventListener('click', function(e) {
     if (e.target === modal) { modal.remove(); URL.revokeObjectURL(imgUrl); }
   });
+}
+
+// Last-resort fallback: download the PNG and open the prefilled wa.me link.
+// waUrl already carries ?text=... so the chat opens with the message ready to send.
+function _bcpDownload(imgUrl, waUrl) {
+  var a = document.createElement('a');
+  a.href = imgUrl; a.download = 'body-composition.png'; a.click();
+  if (waUrl) { setTimeout(function() { window.open(waUrl, '_blank'); }, 600); }
+  if (typeof showToast === 'function') { showToast('Image saved — open WhatsApp and attach it', 'info'); }
 }
 
 // Main poster generator — called from renderBody() row button.
@@ -9479,33 +9511,16 @@ async function generateBodyCompPoster(bodyId) {
     canvas.toBlob(function(bl) { resolve(bl); }, 'image/png');
   });
 
-  // Short summary for share text / wa.me message
+  // Compose the branded WhatsApp message (no health numbers — poster carries the data).
   var _sname = (custName || '').split(' ')[0];
-  var shortText = 'Body Composition Report \u2014 ' + _sname + ' (' + (b.date || '') + ').'
-    + (weight ? ' Weight: ' + weight + 'kg.' : '')
-    + (fatKg  ? ' Body Fat: ' + fatKg + 'kg' + (fatToLoseKg !== null && fatToLoseKg > 0 ? ' (' + fatToLoseKg + 'kg to lose)' : '') + '.' : '')
-    + (bmiVal ? ' BMI: ' + bmiVal.toFixed(1) + '.' : '')
-    + ' \u2014 ' + _cn;
+  var waMsg = _bcpComposeMsg(_sname, _cn, _cc);
 
   var file = new File([blob], 'body-composition.png', { type: 'image/png' });
 
-  // ── 8. Share ─────────────────────────────────────────────────────────────
-  // When we have a phone number, always use direct wa.me link so it opens the
-  // specific contact's WhatsApp chat instead of the generic system share sheet.
-  if (phone) {
-    _bcpFallbackShare(blob, phone, shortText);
-  } else {
-    try {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Body Composition Report', text: shortText });
-      } else {
-        _bcpFallbackShare(blob, phone, shortText);
-      }
-    } catch (err) {
-      if (err && err.name === 'AbortError') return; // user dismissed share sheet — silent
-      _bcpFallbackShare(blob, phone, shortText);
-    }
-  }
+  // ── 8. Show preview modal — blob is already generated before this call,
+  //       so the "Send on WhatsApp" click handler can call navigator.share()
+  //       immediately with fresh user activation and no awaits in between.
+  _bcpFallbackShare(blob, phone, waMsg, file);
 }
 
 // ── P4: Birthday on Overview ──
