@@ -90,7 +90,6 @@
   if (typeof window !== 'undefined') {
     const origGoTo = window.goTo;
     window.goTo = function(sec, el) {
-      console.log('TRACE-14: security/auth-service goTo wrapper start');
       if (!canAccessSection(sec)) {
         console.warn(`[PulseIQ Security] Access Denied to section '${sec}' for role '${currentUser().roleId}'`);
         if (typeof window.showToast === 'function') {
@@ -101,7 +100,6 @@
         return false;
       }
       if (typeof origGoTo === 'function') {
-        console.log('TRACE-15: security/auth-service calling origGoTo');
         return origGoTo(sec, el);
       }
     };

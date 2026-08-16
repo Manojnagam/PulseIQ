@@ -8460,10 +8460,10 @@ function svSetBodyHint(id, hint) {
 }
 function svBmiHint(v) {
   if (!v) return null;
-  if (v < 18.5) return {cls:'low',  icon:'⬇️', label:'Underweight'};
+  if (v < 18.5) return {cls:'low',  icon:'⬇️', label:'Below range'};
   if (v < 25)   return {cls:'good', icon:'✅', label:'Normal'};
-  if (v < 30)   return {cls:'warn', icon:'⚠️', label:'Overweight'};
-  return              {cls:'bad',  icon:'🔴', label:'Obese'};
+  if (v < 30)   return {cls:'warn', icon:'⚠️', label:'Above range'};
+  return              {cls:'bad',  icon:'🔴', label:'Above range'};
 }
 function svFatHint(v) {
   if (!v) return null;
@@ -8564,7 +8564,7 @@ function svBuildHealthScoreCard(bmi, fatPct, vfKg, date, opts) {
             :               {t:'Critical',bg:'rgba(254,226,226,.3)',c:'#fca5a5'};
   var bmiV = parseFloat(bmi)||0;
   var fatV = parseFloat(fatPct)||0;
-  var bmiLbl = bmiV ? (bmiV < 18.5 ? '⬇️ Underweight' : bmiV <= 24.9 ? '✅ Normal' : bmiV <= 29.9 ? '⚠️ Overweight' : '🔴 Obese') : '—';
+  var bmiLbl = bmiV ? (bmiV < 18.5 ? '⬇️ Below range' : bmiV <= 24.9 ? '✅ Normal' : bmiV <= 29.9 ? '⚠️ Above range' : '🔴 Above range') : '—';
   var fatLbl = fatV ? (fatV >= fatIdealLo && fatV <= fatIdealHi ? '✅ Ideal' : fatV <= fatIdealHi + 6 ? '⚠️ High' : '🔴 Very High') : '—';
   var vfLbl  = vfKg > 0 ? (vfKg <= 2 ? '✅ Low' : vfKg <= 4 ? '⚠️ Moderate' : '🔴 High') : '—';
   var musLbl = muscleKg > 0
@@ -8621,7 +8621,7 @@ function sendHealthScoreWA(name, phone, score, grade, bmi, fatPct, vfKg, weight,
     + emoji + ' *Health Score: ' + score + '/100 — ' + grade + '*\n\n'
     + '📊 *Your Numbers:*\n'
     + (weight  ? '⚖️ Weight: ' + weight + ' kg\n' : '')
-    + (bmi     ? '📏 BMI: ' + bmi + (bmi < 18.5 ? ' (Underweight)' : bmi <= 24.9 ? ' (Normal ✅)' : bmi <= 29.9 ? ' (Overweight ⚠️)' : ' (Obese 🔴)') + '\n' : '')
+    + (bmi     ? '📏 BMI: ' + bmi + (bmi < 18.5 ? ' (Below range)' : bmi <= 24.9 ? ' (Normal ✅)' : bmi <= 29.9 ? ' (Above range ⚠️)' : ' (Above range 🔴)') + '\n' : '')
     + (fatPct  ? '🔥 Body Fat: ' + fatPct + '%' + (fatPct <= 26 ? ' ✅' : ' ⚠️') + '\n' : '')
     + (musclePct ? '💪 Muscle: ' + musclePct + '%\n' : '')
     + (vfKg > 0 ? '🫀 Visceral Fat: ' + vfKg + ' kg' + (vfKg <= 2 ? ' ✅' : ' ⚠️') + '\n' : '')
@@ -9069,17 +9069,60 @@ function _bcpPickGender() {
   });
 }
 
-// Fallback share: download PNG + open wa.me + show toast.
-function _bcpFallbackShare(blob, phone, text) {
-  var waUrl = (phone && /^\d{10,15}$/.test(phone)) ? 'https://wa.me/' + phone : '';
+// Composes the warm branded WhatsApp message that wraps the body comp poster.
+// No health numbers, no emoji, no medical claims — the poster image carries the data.
+function _bcpComposeMsg(sname, cn, cc) {
+  var greeting = sname ? 'Hi ' + sname + ',' : 'Hi,';
+  var lines = [
+    greeting,
+    '',
+    'Thank you for visiting ' + cn + ' today. Your body composition report is attached.',
+    '',
+    'Our coaches can help you turn these numbers into a simple, practical plan. Reply here or drop in anytime to book a free consultation.',
+    '',
+    cn
+  ];
+  if (cc) lines.push(cc);
+  return lines.join('\n');
+}
 
-  // Remove any existing poster modal
+// Shows the poster in a preview modal with share buttons chosen by whether a phone
+// number is known — not by browser capability.
+//
+// Phone known (walk-in or customer):
+//   wa.me path — "Open WhatsApp & Send Message" opens the unsaved number's chat
+//   directly with the message prefilled. navigator.share is NOT used; its contact
+//   picker only shows saved contacts, which excludes camp walk-ins.
+//   "Save Image" button lets staff attach the PNG as a follow-up.
+//
+// No phone (anonymous scan):
+//   navigator.share({files}) if available — staff picks any contact from the sheet.
+//   Download-only fallback if the browser doesn't support file sharing.
+function _bcpFallbackShare(blob, phone, text, pngFile) {
+  var waUrl = (phone && /^\d{10,15}$/.test(phone))
+    ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text)
+    : '';
+
   var old = document.getElementById('_bcp_share_modal');
   if (old) old.remove();
 
   var imgUrl = URL.createObjectURL(blob);
 
-  // Build modal with PDF download + WhatsApp chat button
+  var btns;
+  if (waUrl) {
+    // Phone known: wa.me only — navigator.share is never reached in this branch.
+    btns =
+      '<a href="' + waUrl + '" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none">💬 Open WhatsApp & Send Message</a>'
+      + '<button id="_bcp_save_btn" style="background:#0ea5e9;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save Image</button>'
+      + '<div style="font-size:12px;color:#6b7280;margin-top:2px">Send the message first, then attach the saved image.</div>';
+  } else if (navigator.canShare && navigator.canShare({ files: [pngFile] })) {
+    // No phone, share API available: single button, share sheet opens with image attached.
+    btns = '<button id="_bcp_wa_btn" style="background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:15px;border:none;cursor:pointer">📤 Send on WhatsApp</button>';
+  } else {
+    // No phone, no share API: download only.
+    btns = '<button id="_bcp_save_btn" style="background:#0ea5e9;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save Image</button>';
+  }
+
   var modal = document.createElement('div');
   modal.id = '_bcp_share_modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
@@ -9087,47 +9130,34 @@ function _bcpFallbackShare(blob, phone, text) {
     '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;text-align:center">'
     + '<div style="font-size:16px;font-weight:700;margin-bottom:12px">📊 Body Composition Report</div>'
     + '<img src="'+imgUrl+'" style="width:100%;border-radius:10px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.15)">'
-    + '<div style="font-size:13px;color:#555;margin-bottom:16px;line-height:1.6">'
-    + (waUrl ? '1️⃣ Save PDF below &nbsp;2️⃣ Open WhatsApp and attach it' : 'Save the PDF to share via WhatsApp')
-    + '</div>'
     + '<div style="display:flex;flex-direction:column;gap:10px">'
-    + '<button id="_bcp_pdf_btn" style="background:#10b981;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save as PDF</button>'
-    + (waUrl ? '<a href="'+waUrl+'" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">💬 Open WhatsApp Chat</a>' : '')
+    + btns
     + '<button onclick="var m=document.getElementById(\'_bcp_share_modal\');if(m)m.remove();" style="background:#f1f5f9;border:none;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;color:#555">Close</button>'
     + '</div></div>';
 
   document.body.appendChild(modal);
 
-  // PDF generation on button click
-  document.getElementById('_bcp_pdf_btn').addEventListener('click', function() {
-    var btn = this;
-    btn.textContent = 'Generating PDF…';
-    btn.disabled = true;
-    var img = new Image();
-    img.onload = function() {
-      try {
-        var jspdf = window.jspdf || window.jsPDF;
-        var JsPDF = jspdf ? (jspdf.jsPDF || jspdf) : null;
-        if (!JsPDF) { alert('PDF library not loaded yet. Please try again in a moment.'); btn.textContent = '⬇️ Save as PDF'; btn.disabled = false; return; }
-        // Portrait A4: 210 × 297 mm. Poster is 1080×1350px (4:5).
-        // Fit to page width with margin
-        var pageW = 210, margin = 10;
-        var printW = pageW - margin * 2;
-        var printH = printW * (img.naturalHeight / img.naturalWidth);
-        var doc = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        doc.addImage(img, 'PNG', margin, margin, printW, printH);
-        doc.save('body-composition.pdf');
-        btn.textContent = '✅ PDF Saved!';
-      } catch(e) {
-        console.error('PDF generation failed:', e);
-        // Fallback: download as PNG
+  // Wire the navigator.share button (only rendered when waUrl is empty).
+  var waBtn = document.getElementById('_bcp_wa_btn');
+  if (waBtn) {
+    // Click has fresh user activation; navigator.share() called with no awaits before it.
+    waBtn.addEventListener('click', function() {
+      navigator.share({ files: [pngFile], text: text }).catch(function(err) {
+        if (err && err.name === 'AbortError') return; // dismissed — silent
         var a = document.createElement('a');
         a.href = imgUrl; a.download = 'body-composition.png'; a.click();
-        btn.textContent = '⬇️ Save as PDF'; btn.disabled = false;
-      }
-    };
-    img.src = imgUrl;
-  });
+      });
+    });
+  }
+
+  // Wire the save button (rendered in the wa.me path and the download-only path).
+  var saveBtn = document.getElementById('_bcp_save_btn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      var a = document.createElement('a');
+      a.href = imgUrl; a.download = 'body-composition.png'; a.click();
+    });
+  }
 
   modal.addEventListener('click', function(e) {
     if (e.target === modal) { modal.remove(); URL.revokeObjectURL(imgUrl); }
@@ -9359,7 +9389,7 @@ async function generateBodyCompPoster(bodyId) {
   // Row: BMI
   if (bmiVal) {
     var _bmiOk = bmiVal >= 18.5 && bmiVal <= 24.9;
-    var _bmiS  = _bmiOk ? '\u2713 Normal' : (bmiVal < 18.5 ? 'Underweight' : bmiVal <= 29.9 ? 'Overweight' : 'Obese');
+    var _bmiS  = bmiVal < 18.5 ? 'Below range' : (_bmiOk ? '\u2713 Normal' : 'Above range');
     _bcpRow('BMI', bmiVal.toFixed(1), '18.5 \u2013 24.9', _bmiS, _bmiOk ? CGR : CAM, normalRH, false);
   }
 
@@ -9402,17 +9432,19 @@ async function generateBodyCompPoster(bodyId) {
   if (footerY - _tkY >= 120) {
     var _tkLines = [];
     if (fatToLoseKg !== null && fatToLoseKg > 0)
-      _tkLines.push('Reduce body fat through strength training and a calorie deficit.');
+      _tkLines.push('Body fat is ' + fatToLoseKg + ' kg above the healthy range for your height.');
     if (vfRating !== null && vfRating > 9)
-      _tkLines.push('Lower visceral fat by cutting processed food and increasing daily steps.');
+      _tkLines.push('Visceral fat is above the healthy range of 1-9.');
     if (musGap !== null && musGap < 0)
-      _tkLines.push('Build muscle mass with resistance training 3\u00d7 per week.');
+      _tkLines.push('Muscle mass is ' + Math.abs(musGap) + ' kg below the healthy range.');
     if (bmiVal && bmiVal > 24.9)
-      _tkLines.push('Work towards a healthy BMI with gradual, sustainable weight reduction.');
+      _tkLines.push('BMI is above the healthy range of 18.5-24.9.');
     if (bmiVal && bmiVal < 18.5)
-      _tkLines.push('Increase caloric intake with nutritious, protein-rich meals.');
+      _tkLines.push('BMI is below the healthy range of 18.5-24.9.');
     if (bodyAge !== null && actualAge !== null && bodyAge > actualAge)
-      _tkLines.push('Prioritise sleep and stress management to help reduce body age.');
+      _tkLines.push('Body age is ' + (bodyAge - actualAge) + ' years above your actual age.');
+    if (_tkLines.length === 0)
+      _tkLines.push('All measured values are within the healthy range. Keep up your current routine.');
     _tkLines.push('Book a follow-up consultation with your coach to track progress.');
 
     var _tkPad = 40, _tkW = CW - 2 * _tkPad;
@@ -9479,33 +9511,16 @@ async function generateBodyCompPoster(bodyId) {
     canvas.toBlob(function(bl) { resolve(bl); }, 'image/png');
   });
 
-  // Short summary for share text / wa.me message
+  // Compose the branded WhatsApp message (no health numbers — poster carries the data).
   var _sname = (custName || '').split(' ')[0];
-  var shortText = 'Body Composition Report \u2014 ' + _sname + ' (' + (b.date || '') + ').'
-    + (weight ? ' Weight: ' + weight + 'kg.' : '')
-    + (fatKg  ? ' Body Fat: ' + fatKg + 'kg' + (fatToLoseKg !== null && fatToLoseKg > 0 ? ' (' + fatToLoseKg + 'kg to lose)' : '') + '.' : '')
-    + (bmiVal ? ' BMI: ' + bmiVal.toFixed(1) + '.' : '')
-    + ' \u2014 ' + _cn;
+  var waMsg = _bcpComposeMsg(_sname, _cn, _cc);
 
   var file = new File([blob], 'body-composition.png', { type: 'image/png' });
 
-  // ── 8. Share ─────────────────────────────────────────────────────────────
-  // When we have a phone number, always use direct wa.me link so it opens the
-  // specific contact's WhatsApp chat instead of the generic system share sheet.
-  if (phone) {
-    _bcpFallbackShare(blob, phone, shortText);
-  } else {
-    try {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Body Composition Report', text: shortText });
-      } else {
-        _bcpFallbackShare(blob, phone, shortText);
-      }
-    } catch (err) {
-      if (err && err.name === 'AbortError') return; // user dismissed share sheet — silent
-      _bcpFallbackShare(blob, phone, shortText);
-    }
-  }
+  // ── 8. Show preview modal — blob is already generated before this call,
+  //       so the "Send on WhatsApp" click handler can call navigator.share()
+  //       immediately with fresh user activation and no awaits in between.
+  _bcpFallbackShare(blob, phone, waMsg, file);
 }
 
 // ── P4: Birthday on Overview ──
