@@ -8460,10 +8460,10 @@ function svSetBodyHint(id, hint) {
 }
 function svBmiHint(v) {
   if (!v) return null;
-  if (v < 18.5) return {cls:'low',  icon:'⬇️', label:'Underweight'};
+  if (v < 18.5) return {cls:'low',  icon:'⬇️', label:'Below range'};
   if (v < 25)   return {cls:'good', icon:'✅', label:'Normal'};
-  if (v < 30)   return {cls:'warn', icon:'⚠️', label:'Overweight'};
-  return              {cls:'bad',  icon:'🔴', label:'Obese'};
+  if (v < 30)   return {cls:'warn', icon:'⚠️', label:'Above range'};
+  return              {cls:'bad',  icon:'🔴', label:'Above range'};
 }
 function svFatHint(v) {
   if (!v) return null;
@@ -8564,7 +8564,7 @@ function svBuildHealthScoreCard(bmi, fatPct, vfKg, date, opts) {
             :               {t:'Critical',bg:'rgba(254,226,226,.3)',c:'#fca5a5'};
   var bmiV = parseFloat(bmi)||0;
   var fatV = parseFloat(fatPct)||0;
-  var bmiLbl = bmiV ? (bmiV < 18.5 ? '⬇️ Underweight' : bmiV <= 24.9 ? '✅ Normal' : bmiV <= 29.9 ? '⚠️ Overweight' : '🔴 Obese') : '—';
+  var bmiLbl = bmiV ? (bmiV < 18.5 ? '⬇️ Below range' : bmiV <= 24.9 ? '✅ Normal' : bmiV <= 29.9 ? '⚠️ Above range' : '🔴 Above range') : '—';
   var fatLbl = fatV ? (fatV >= fatIdealLo && fatV <= fatIdealHi ? '✅ Ideal' : fatV <= fatIdealHi + 6 ? '⚠️ High' : '🔴 Very High') : '—';
   var vfLbl  = vfKg > 0 ? (vfKg <= 2 ? '✅ Low' : vfKg <= 4 ? '⚠️ Moderate' : '🔴 High') : '—';
   var musLbl = muscleKg > 0
@@ -8621,7 +8621,7 @@ function sendHealthScoreWA(name, phone, score, grade, bmi, fatPct, vfKg, weight,
     + emoji + ' *Health Score: ' + score + '/100 — ' + grade + '*\n\n'
     + '📊 *Your Numbers:*\n'
     + (weight  ? '⚖️ Weight: ' + weight + ' kg\n' : '')
-    + (bmi     ? '📏 BMI: ' + bmi + (bmi < 18.5 ? ' (Underweight)' : bmi <= 24.9 ? ' (Normal ✅)' : bmi <= 29.9 ? ' (Overweight ⚠️)' : ' (Obese 🔴)') + '\n' : '')
+    + (bmi     ? '📏 BMI: ' + bmi + (bmi < 18.5 ? ' (Below range)' : bmi <= 24.9 ? ' (Normal ✅)' : bmi <= 29.9 ? ' (Above range ⚠️)' : ' (Above range 🔴)') + '\n' : '')
     + (fatPct  ? '🔥 Body Fat: ' + fatPct + '%' + (fatPct <= 26 ? ' ✅' : ' ⚠️') + '\n' : '')
     + (musclePct ? '💪 Muscle: ' + musclePct + '%\n' : '')
     + (vfKg > 0 ? '🫀 Visceral Fat: ' + vfKg + ' kg' + (vfKg <= 2 ? ' ✅' : ' ⚠️') + '\n' : '')
@@ -9086,12 +9086,18 @@ function _bcpComposeMsg(sname, cn, cc) {
   return lines.join('\n');
 }
 
-// Shows the poster in a preview modal.
-// When navigator.share({files}) is available (Android Chrome): single "Send on WhatsApp"
-//   button opens the share sheet with the image and message already attached — staff
-//   picks the contact, one tap done.
-// When not available (desktop / iOS Safari): two-button fallback — send the prefilled
-//   WhatsApp message first, then save the image to attach as a follow-up.
+// Shows the poster in a preview modal with share buttons chosen by whether a phone
+// number is known — not by browser capability.
+//
+// Phone known (walk-in or customer):
+//   wa.me path — "Open WhatsApp & Send Message" opens the unsaved number's chat
+//   directly with the message prefilled. navigator.share is NOT used; its contact
+//   picker only shows saved contacts, which excludes camp walk-ins.
+//   "Save Image" button lets staff attach the PNG as a follow-up.
+//
+// No phone (anonymous scan):
+//   navigator.share({files}) if available — staff picks any contact from the sheet.
+//   Download-only fallback if the browser doesn't support file sharing.
 function _bcpFallbackShare(blob, phone, text, pngFile) {
   var waUrl = (phone && /^\d{10,15}$/.test(phone))
     ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text)
@@ -9102,21 +9108,19 @@ function _bcpFallbackShare(blob, phone, text, pngFile) {
 
   var imgUrl = URL.createObjectURL(blob);
 
-  // Decide layout at modal-open time. canShare check does NOT require user activation.
-  var canNativeShare = !!(navigator.canShare && navigator.canShare({ files: [pngFile] }));
-
   var btns;
-  if (canNativeShare) {
-    // Single button — share sheet delivers image + message together.
+  if (waUrl) {
+    // Phone known: wa.me only — navigator.share is never reached in this branch.
+    btns =
+      '<a href="' + waUrl + '" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none">💬 Open WhatsApp & Send Message</a>'
+      + '<button id="_bcp_save_btn" style="background:#0ea5e9;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save Image</button>'
+      + '<div style="font-size:12px;color:#6b7280;margin-top:2px">Send the message first, then attach the saved image.</div>';
+  } else if (navigator.canShare && navigator.canShare({ files: [pngFile] })) {
+    // No phone, share API available: single button, share sheet opens with image attached.
     btns = '<button id="_bcp_wa_btn" style="background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:15px;border:none;cursor:pointer">📤 Send on WhatsApp</button>';
   } else {
-    // Two-step fallback: message first (so WhatsApp doesn't discard it when image is attached),
-    // image second. Helper text explains the order.
-    btns = (waUrl
-      ? '<a href="' + waUrl + '" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none">💬 Open WhatsApp & Send Message</a>'
-      : '')
-      + '<button id="_bcp_save_btn" style="background:#0ea5e9;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save Image</button>'
-      + (waUrl ? '<div style="font-size:12px;color:#6b7280;margin-top:2px">Send the message first, then attach the saved image.</div>' : '');
+    // No phone, no share API: download only.
+    btns = '<button id="_bcp_save_btn" style="background:#0ea5e9;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save Image</button>';
   }
 
   var modal = document.createElement('div');
@@ -9133,37 +9137,31 @@ function _bcpFallbackShare(blob, phone, text, pngFile) {
 
   document.body.appendChild(modal);
 
-  if (canNativeShare) {
-    // Click handler has fresh user activation — navigator.share() is called with no
-    // awaits before it, so transient activation is never lost.
-    document.getElementById('_bcp_wa_btn').addEventListener('click', function() {
+  // Wire the navigator.share button (only rendered when waUrl is empty).
+  var waBtn = document.getElementById('_bcp_wa_btn');
+  if (waBtn) {
+    // Click has fresh user activation; navigator.share() called with no awaits before it.
+    waBtn.addEventListener('click', function() {
       navigator.share({ files: [pngFile], text: text }).catch(function(err) {
-        if (err && err.name === 'AbortError') return; // user dismissed sheet — silent
-        _bcpDownload(imgUrl, waUrl); // share API error — fall back to download + wa.me
-      });
-    });
-  } else {
-    var saveBtn = document.getElementById('_bcp_save_btn');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', function() {
+        if (err && err.name === 'AbortError') return; // dismissed — silent
         var a = document.createElement('a');
         a.href = imgUrl; a.download = 'body-composition.png'; a.click();
       });
-    }
+    });
+  }
+
+  // Wire the save button (rendered in the wa.me path and the download-only path).
+  var saveBtn = document.getElementById('_bcp_save_btn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      var a = document.createElement('a');
+      a.href = imgUrl; a.download = 'body-composition.png'; a.click();
+    });
   }
 
   modal.addEventListener('click', function(e) {
     if (e.target === modal) { modal.remove(); URL.revokeObjectURL(imgUrl); }
   });
-}
-
-// Last-resort fallback: download the PNG and open the prefilled wa.me link.
-// waUrl already carries ?text=... so the chat opens with the message ready to send.
-function _bcpDownload(imgUrl, waUrl) {
-  var a = document.createElement('a');
-  a.href = imgUrl; a.download = 'body-composition.png'; a.click();
-  if (waUrl) { setTimeout(function() { window.open(waUrl, '_blank'); }, 600); }
-  if (typeof showToast === 'function') { showToast('Image saved — open WhatsApp and attach it', 'info'); }
 }
 
 // Main poster generator — called from renderBody() row button.
@@ -9391,7 +9389,7 @@ async function generateBodyCompPoster(bodyId) {
   // Row: BMI
   if (bmiVal) {
     var _bmiOk = bmiVal >= 18.5 && bmiVal <= 24.9;
-    var _bmiS  = _bmiOk ? '\u2713 Normal' : (bmiVal < 18.5 ? 'Underweight' : bmiVal <= 29.9 ? 'Overweight' : 'Obese');
+    var _bmiS  = bmiVal < 18.5 ? 'Below range' : (_bmiOk ? '\u2713 Normal' : 'Above range');
     _bcpRow('BMI', bmiVal.toFixed(1), '18.5 \u2013 24.9', _bmiS, _bmiOk ? CGR : CAM, normalRH, false);
   }
 
@@ -9434,17 +9432,19 @@ async function generateBodyCompPoster(bodyId) {
   if (footerY - _tkY >= 120) {
     var _tkLines = [];
     if (fatToLoseKg !== null && fatToLoseKg > 0)
-      _tkLines.push('Reduce body fat through strength training and a calorie deficit.');
+      _tkLines.push('Body fat is ' + fatToLoseKg + ' kg above the healthy range for your height.');
     if (vfRating !== null && vfRating > 9)
-      _tkLines.push('Lower visceral fat by cutting processed food and increasing daily steps.');
+      _tkLines.push('Visceral fat is above the healthy range of 1-9.');
     if (musGap !== null && musGap < 0)
-      _tkLines.push('Build muscle mass with resistance training 3\u00d7 per week.');
+      _tkLines.push('Muscle mass is ' + Math.abs(musGap) + ' kg below the healthy range.');
     if (bmiVal && bmiVal > 24.9)
-      _tkLines.push('Work towards a healthy BMI with gradual, sustainable weight reduction.');
+      _tkLines.push('BMI is above the healthy range of 18.5-24.9.');
     if (bmiVal && bmiVal < 18.5)
-      _tkLines.push('Increase caloric intake with nutritious, protein-rich meals.');
+      _tkLines.push('BMI is below the healthy range of 18.5-24.9.');
     if (bodyAge !== null && actualAge !== null && bodyAge > actualAge)
-      _tkLines.push('Prioritise sleep and stress management to help reduce body age.');
+      _tkLines.push('Body age is ' + (bodyAge - actualAge) + ' years above your actual age.');
+    if (_tkLines.length === 0)
+      _tkLines.push('All measured values are within the healthy range. Keep up your current routine.');
     _tkLines.push('Book a follow-up consultation with your coach to track progress.');
 
     var _tkPad = 40, _tkW = CW - 2 * _tkPad;
