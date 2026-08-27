@@ -391,4 +391,11 @@ alter table task_history enable row level security;
 create policy "anon_all_tasks" on tasks for all using (true) with check (true);
 create policy "anon_all_task_history" on task_history for all using (true) with check (true);
 
+-- ==========================================
+-- HERBALIFE PURCHASES CGST/SGST SPLIT
+-- ==========================================
+ALTER TABLE herbalife_purchases ADD COLUMN IF NOT EXISTS cgst_amount numeric DEFAULT 0;
+ALTER TABLE herbalife_purchases ADD COLUMN IF NOT EXISTS sgst_amount numeric DEFAULT 0;
+
+
 

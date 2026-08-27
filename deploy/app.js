@@ -5379,11 +5379,13 @@ function resetInvIn() {
   document.getElementById('inv-in-id').value='';
   document.getElementById('inv-in-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('inv-in-notes').value='';
-  ['hl-invoice-no','hl-retail','hl-subtotal','hl-igst','hl-vp','hl-grand'].forEach(function(id){
+  ['hl-invoice-no','hl-retail','hl-subtotal','hl-cgst','hl-sgst','hl-vp','hl-grand'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   var hld = document.getElementById('hl-order-date');
   if (hld) hld.value = new Date().toISOString().split('T')[0];
+  var banner = document.getElementById('hl-profit-banner');
+  if (banner) banner.style.display = 'none';
   document.getElementById('inv-batch-rows').innerHTML='';
   batchRowCount=0;
   document.getElementById('inv-in-title').textContent='➕ Add Stock In';
@@ -5396,6 +5398,8 @@ async function editStockIn(id) {
   document.getElementById('inv-in-id').value=r.id;
   document.getElementById('inv-in-date').value=r.date;
   document.getElementById('inv-in-notes').value=r.notes||'';
+  var banner = document.getElementById('hl-profit-banner');
+  if (banner) banner.style.display = 'none';
   document.getElementById('inv-batch-rows').innerHTML=''; batchRowCount=0;
   addBatchRow(r.product_id, r.product_name||r.product_id, r.unit||'');
   var rid='brow-'+batchRowCount;
@@ -5412,12 +5416,21 @@ async function delStockIn(id) {
 
 // ── HERBALIFE INVOICE HELPERS ──
 function calcHlGrand() {
-  var sub = parseFloat(document.getElementById('hl-subtotal')?.value) || 0;
-  var igst = parseFloat(document.getElementById('hl-igst')?.value) || 0;
+  var g = function(id){ var el = document.getElementById(id); return (el && parseFloat(el.value)) || 0; };
+  var sub = g('hl-subtotal'), cgst = g('hl-cgst'), sgst = g('hl-sgst'), retail = g('hl-retail');
   var grandEl = document.getElementById('hl-grand');
-  if (grandEl) {
-    var total = sub + igst;
-    grandEl.value = total > 0 ? total.toFixed(2) : '';
+  var total = sub + cgst + sgst;
+  if (grandEl) { grandEl.value = total > 0 ? total.toFixed(2) : ''; }
+  var banner = document.getElementById('hl-profit-banner');
+  if (banner) {
+    var savings = retail - total;
+    if (retail > 0 && total > 0 && savings > 0) {
+      var pct = ((savings / retail) * 100).toFixed(1);
+      banner.style.display = 'block';
+      banner.innerHTML = '💰 <b>You save ₹' + savings.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) + '</b> on this order — Retail ₹' + retail.toLocaleString('en-IN') + ' vs Cost ₹' + total.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' <span style="opacity:.8">(' + pct + '% below MRP)</span>';
+    } else {
+      banner.style.display = 'none';
+    }
   }
 }
 
@@ -5429,10 +5442,12 @@ async function saveHerbalifeInvoice() {
   var orderDate = (document.getElementById('hl-order-date')?.value) || new Date().toISOString().split('T')[0];
   var retailTotal = parseFloat(document.getElementById('hl-retail')?.value) || 0;
   var paidSubtotal = parseFloat(document.getElementById('hl-subtotal')?.value) || 0;
-  var igstAmount = parseFloat(document.getElementById('hl-igst')?.value) || 0;
+  var cgstAmount = parseFloat(document.getElementById('hl-cgst')?.value) || 0;
+  var sgstAmount = parseFloat(document.getElementById('hl-sgst')?.value) || 0;
+  var igstAmount = cgstAmount + sgstAmount;
   var volumePoints = parseFloat(document.getElementById('hl-vp')?.value) || 0;
   var grandTotalInput = parseFloat(document.getElementById('hl-grand')?.value);
-  var grandTotal = !isNaN(grandTotalInput) && grandTotalInput > 0 ? grandTotalInput : (paidSubtotal + igstAmount);
+  var grandTotal = !isNaN(grandTotalInput) && grandTotalInput > 0 ? grandTotalInput : (paidSubtotal + cgstAmount + sgstAmount);
   var centerId = ACTIVE_CENTER || null;
 
   var purchasePayload = {
@@ -5440,6 +5455,8 @@ async function saveHerbalifeInvoice() {
     order_date: orderDate,
     retail_total: retailTotal,
     paid_subtotal: paidSubtotal,
+    cgst_amount: cgstAmount,
+    sgst_amount: sgstAmount,
     igst_amount: igstAmount,
     delivery_charges: 0,
     grand_total: grandTotal,
