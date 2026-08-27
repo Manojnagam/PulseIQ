@@ -5357,6 +5357,13 @@ async function saveStockIn() {
   });
   if (hasError) return;
   try {
+    var hlPurchase = null;
+    if (!editId) {
+      hlPurchase = await saveHerbalifeInvoice();
+    }
+    if (hlPurchase && hlPurchase.id) {
+      payloads.forEach(function(p){ p.purchase_id = hlPurchase.id; });
+    }
     if (editId) {
       // Single edit mode
       var pid2 = payloads[0] ? payloads[0].product_id : null;
@@ -5372,6 +5379,11 @@ function resetInvIn() {
   document.getElementById('inv-in-id').value='';
   document.getElementById('inv-in-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('inv-in-notes').value='';
+  ['hl-invoice-no','hl-retail','hl-subtotal','hl-igst','hl-vp','hl-grand'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var hld = document.getElementById('hl-order-date');
+  if (hld) hld.value = new Date().toISOString().split('T')[0];
   document.getElementById('inv-batch-rows').innerHTML='';
   batchRowCount=0;
   document.getElementById('inv-in-title').textContent='➕ Add Stock In';
@@ -5396,6 +5408,62 @@ async function editStockIn(id) {
 async function delStockIn(id) {
   if (!confirm('Delete this Stock In record?')) return;
   try { await dbDelete('inventory_stock_in',id); showToast('Deleted!'); await loadInventory(); } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
+// ── HERBALIFE INVOICE HELPERS ──
+function calcHlGrand() {
+  var sub = parseFloat(document.getElementById('hl-subtotal')?.value) || 0;
+  var igst = parseFloat(document.getElementById('hl-igst')?.value) || 0;
+  var grandEl = document.getElementById('hl-grand');
+  if (grandEl) {
+    var total = sub + igst;
+    grandEl.value = total > 0 ? total.toFixed(2) : '';
+  }
+}
+
+async function saveHerbalifeInvoice() {
+  var invEl = document.getElementById('hl-invoice-no');
+  var invNo = invEl ? invEl.value.trim() : '';
+  if (!invNo) return null;
+
+  var orderDate = (document.getElementById('hl-order-date')?.value) || new Date().toISOString().split('T')[0];
+  var retailTotal = parseFloat(document.getElementById('hl-retail')?.value) || 0;
+  var paidSubtotal = parseFloat(document.getElementById('hl-subtotal')?.value) || 0;
+  var igstAmount = parseFloat(document.getElementById('hl-igst')?.value) || 0;
+  var volumePoints = parseFloat(document.getElementById('hl-vp')?.value) || 0;
+  var grandTotalInput = parseFloat(document.getElementById('hl-grand')?.value);
+  var grandTotal = !isNaN(grandTotalInput) && grandTotalInput > 0 ? grandTotalInput : (paidSubtotal + igstAmount);
+  var centerId = ACTIVE_CENTER || null;
+
+  var purchasePayload = {
+    invoice_no: invNo,
+    order_date: orderDate,
+    retail_total: retailTotal,
+    paid_subtotal: paidSubtotal,
+    igst_amount: igstAmount,
+    delivery_charges: 0,
+    grand_total: grandTotal,
+    volume_points: volumePoints,
+    wellness_center_id: centerId
+  };
+
+  var insertedPurchase = await dbInsert('herbalife_purchases', purchasePayload);
+  var purchaseRow = Array.isArray(insertedPurchase) ? insertedPurchase[0] : insertedPurchase;
+
+  if (grandTotal > 0) {
+    var expenseDesc = 'Herbalife Order #' + invNo + (volumePoints > 0 ? ' (' + volumePoints + ' VP)' : '');
+    await dbInsert('finance', {
+      type: 'expense',
+      category: 'Herbalife Purchase',
+      amount: grandTotal,
+      description: expenseDesc,
+      date: orderDate,
+      wellness_center_id: centerId
+    });
+    try { await loadFinance(); } catch(fErr) { console.error('loadFinance refresh failed', fErr); }
+  }
+
+  return purchaseRow;
 }
 
 // ── P3a: WhatsApp Reorder List ──
@@ -7673,6 +7741,117 @@ function renderFinance() {
       plBody.innerHTML = html;
     }
   } else if (plCard) { plCard.style.display = 'none'; }
+  try { loadPackProfit(); } catch(e) { console.error('loadPackProfit failed', e); }
+}
+
+// ── PACK PROFITABILITY & HERBALIFE COST SETTINGS ──
+async function loadPackProfit() {
+  var gridEl = document.getElementById('pp-cards');
+  var badgeEl = document.getElementById('pp-daily-cost');
+  if (!gridEl) return;
+  try {
+    var rows = await req('GET', 'view_pack_profit', null, '?order=pack_days.asc');
+    if (!rows || !rows.length) {
+      gridEl.innerHTML = '<div style="color:var(--muted);font-size:12px;grid-column:1/-1;text-align:center;padding:12px">No pack profit data available</div>';
+      return;
+    }
+    var dailyCost = rows[0] ? Number(rows[0].daily_product_cost || 0) : 0;
+    if (badgeEl) {
+      badgeEl.textContent = 'Daily Shake Cost: ₹' + dailyCost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    gridEl.innerHTML = rows.map(function(p) {
+      var name = p.pack_type || (p.pack_days + ' Days');
+      var price = Number(p.pack_price || 0);
+      var cost = Number(p.total_product_cost || 0);
+      var profit = Number(p.gross_profit || 0);
+      var margin = Number(p.profit_margin_pct || 0);
+      return '<div style="background:#131722;border:1px solid #242b3d;border-radius:10px;padding:14px;display:flex;flex-direction:column;justify-content:space-between">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">' +
+          '<span style="font-weight:700;font-size:13.5px;color:#f8fafc">' + name + '</span>' +
+          '<span style="font-size:11px;font-weight:700;color:#38bdf8;background:rgba(56,189,248,0.12);padding:2px 7px;border-radius:8px">' + (p.pack_days || 0) + 'd</span>' +
+        '</div>' +
+        '<div style="margin-bottom:8px">' +
+          '<div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Gross Profit</div>' +
+          '<div style="font-size:22px;font-weight:700;color:#4ade80;line-height:1.2">₹' + profit.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2}) + '</div>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#94a3b8;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">' +
+          '<span>₹' + price.toLocaleString('en-IN') + ' − ₹' + cost.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2}) + '</span>' +
+          '<span style="font-weight:700;color:' + (margin >= 0 ? '#4ade80' : '#f87171') + '">' + margin.toFixed(1) + '% margin</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch (err) {
+    console.error('loadPackProfit error:', err);
+    if (gridEl) gridEl.innerHTML = '<div style="color:var(--danger);font-size:12px;grid-column:1/-1;text-align:center;padding:12px">Failed to load pack profitability</div>';
+  }
+}
+
+async function openCostSettings() {
+  openModal('cost-settings');
+  var tb = document.getElementById('cost-settings-body');
+  if (!tb) return;
+  tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">Loading settings...</td></tr>';
+  try {
+    var rows = await req('GET', 'product_cost_settings', null, '?order=product_key.asc');
+    var list = rows || [];
+    if (!list.length) {
+      tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">No product cost settings found.</td></tr>';
+      return;
+    }
+    tb.innerHTML = list.map(function(r) {
+      return '<tr data-key="' + r.product_key + '" style="border-bottom:1px solid var(--border)">' +
+        '<td style="padding:8px 6px;font-weight:600">' + (r.product_name || r.product_key) + '<br><span style="font-size:10px;color:var(--muted)">' + r.product_key + '</span></td>' +
+        '<td style="padding:8px 6px;text-align:right"><input type="number" step="0.01" class="cs-cpu" value="' + (r.cost_per_unit != null ? r.cost_per_unit : '') + '" style="width:90px;padding:6px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:12px;background:var(--surface);color:var(--text)"></td>' +
+        '<td style="padding:8px 6px;text-align:right"><input type="number" step="0.01" class="cs-spu" value="' + (r.servings_per_unit != null ? r.servings_per_unit : '') + '" style="width:75px;padding:6px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:12px;background:var(--surface);color:var(--text)"></td>' +
+        '<td style="padding:8px 6px;text-align:right"><input type="number" step="0.01" class="cs-sps" value="' + (r.scoops_per_shake != null ? r.scoops_per_shake : '') + '" style="width:65px;padding:6px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:12px;background:var(--surface);color:var(--text)"></td>' +
+        '<td style="padding:8px 6px;text-align:center"><input type="checkbox" class="cs-act" ' + (r.is_active_recipe ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer"></td>' +
+      '</tr>';
+    }).join('');
+  } catch (err) {
+    console.error('openCostSettings error:', err);
+    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--danger)">Error loading settings: ' + err.message + '</td></tr>';
+  }
+}
+
+async function saveCostSettings() {
+  var tb = document.getElementById('cost-settings-body');
+  if (!tb) return;
+  var trs = tb.querySelectorAll('tr[data-key]');
+  if (!trs.length) return;
+  var updates = [];
+  trs.forEach(function(tr) {
+    var key = tr.getAttribute('data-key');
+    var cpu = tr.querySelector('.cs-cpu').value;
+    var spu = tr.querySelector('.cs-spu').value;
+    var sps = tr.querySelector('.cs-sps').value;
+    var act = tr.querySelector('.cs-act').checked;
+    updates.push({
+      product_key: key,
+      cost_per_unit: cpu === '' ? null : Number(cpu),
+      servings_per_unit: spu === '' ? null : Number(spu),
+      scoops_per_shake: sps === '' ? null : Number(sps),
+      is_active_recipe: !!act,
+      updated_at: new Date().toISOString()
+    });
+  });
+
+  try {
+    await Promise.all(updates.map(function(u) {
+      return req('PATCH', 'product_cost_settings', {
+        cost_per_unit: u.cost_per_unit,
+        servings_per_unit: u.servings_per_unit,
+        scoops_per_shake: u.scoops_per_shake,
+        is_active_recipe: u.is_active_recipe,
+        updated_at: u.updated_at
+      }, '?product_key=eq.' + encodeURIComponent(u.product_key));
+    }));
+    closeModal('cost-settings');
+    await loadPackProfit();
+    showToast('✅ Product costs updated — pack profits recalculated!');
+  } catch (err) {
+    console.error('saveCostSettings error:', err);
+    showToast('Error updating costs: ' + err.message, 'error');
+  }
 }
 
 // ── SAVE CENTERS ──

@@ -5357,6 +5357,13 @@ async function saveStockIn() {
   });
   if (hasError) return;
   try {
+    var hlPurchase = null;
+    if (!editId) {
+      hlPurchase = await saveHerbalifeInvoice();
+    }
+    if (hlPurchase && hlPurchase.id) {
+      payloads.forEach(function(p){ p.purchase_id = hlPurchase.id; });
+    }
     if (editId) {
       // Single edit mode
       var pid2 = payloads[0] ? payloads[0].product_id : null;
@@ -5372,6 +5379,11 @@ function resetInvIn() {
   document.getElementById('inv-in-id').value='';
   document.getElementById('inv-in-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('inv-in-notes').value='';
+  ['hl-invoice-no','hl-retail','hl-subtotal','hl-igst','hl-vp','hl-grand'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var hld = document.getElementById('hl-order-date');
+  if (hld) hld.value = new Date().toISOString().split('T')[0];
   document.getElementById('inv-batch-rows').innerHTML='';
   batchRowCount=0;
   document.getElementById('inv-in-title').textContent='➕ Add Stock In';
@@ -5396,6 +5408,62 @@ async function editStockIn(id) {
 async function delStockIn(id) {
   if (!confirm('Delete this Stock In record?')) return;
   try { await dbDelete('inventory_stock_in',id); showToast('Deleted!'); await loadInventory(); } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
+// ── HERBALIFE INVOICE HELPERS ──
+function calcHlGrand() {
+  var sub = parseFloat(document.getElementById('hl-subtotal')?.value) || 0;
+  var igst = parseFloat(document.getElementById('hl-igst')?.value) || 0;
+  var grandEl = document.getElementById('hl-grand');
+  if (grandEl) {
+    var total = sub + igst;
+    grandEl.value = total > 0 ? total.toFixed(2) : '';
+  }
+}
+
+async function saveHerbalifeInvoice() {
+  var invEl = document.getElementById('hl-invoice-no');
+  var invNo = invEl ? invEl.value.trim() : '';
+  if (!invNo) return null;
+
+  var orderDate = (document.getElementById('hl-order-date')?.value) || new Date().toISOString().split('T')[0];
+  var retailTotal = parseFloat(document.getElementById('hl-retail')?.value) || 0;
+  var paidSubtotal = parseFloat(document.getElementById('hl-subtotal')?.value) || 0;
+  var igstAmount = parseFloat(document.getElementById('hl-igst')?.value) || 0;
+  var volumePoints = parseFloat(document.getElementById('hl-vp')?.value) || 0;
+  var grandTotalInput = parseFloat(document.getElementById('hl-grand')?.value);
+  var grandTotal = !isNaN(grandTotalInput) && grandTotalInput > 0 ? grandTotalInput : (paidSubtotal + igstAmount);
+  var centerId = ACTIVE_CENTER || null;
+
+  var purchasePayload = {
+    invoice_no: invNo,
+    order_date: orderDate,
+    retail_total: retailTotal,
+    paid_subtotal: paidSubtotal,
+    igst_amount: igstAmount,
+    delivery_charges: 0,
+    grand_total: grandTotal,
+    volume_points: volumePoints,
+    wellness_center_id: centerId
+  };
+
+  var insertedPurchase = await dbInsert('herbalife_purchases', purchasePayload);
+  var purchaseRow = Array.isArray(insertedPurchase) ? insertedPurchase[0] : insertedPurchase;
+
+  if (grandTotal > 0) {
+    var expenseDesc = 'Herbalife Order #' + invNo + (volumePoints > 0 ? ' (' + volumePoints + ' VP)' : '');
+    await dbInsert('finance', {
+      type: 'expense',
+      category: 'Herbalife Purchase',
+      amount: grandTotal,
+      description: expenseDesc,
+      date: orderDate,
+      wellness_center_id: centerId
+    });
+    try { await loadFinance(); } catch(fErr) { console.error('loadFinance refresh failed', fErr); }
+  }
+
+  return purchaseRow;
 }
 
 // ── P3a: WhatsApp Reorder List ──
@@ -7099,6 +7167,12 @@ function renderBody() {
     }
     var isWalkinScan = b.customer_id && (b.customer_id.startsWith('walkin__') || (D.walkins||[]).some(function(w){ return w.id === b.customer_id; }));
     var walkinTag = isWalkinScan ? ' <span class="badge" style="background:#f3e8ff;color:#6b21a8;font-size:9px;margin-left:4px" title="Recorded as Walk-in">🚶 Walk-in</span>' : '';
+    var _walkinRec = isWalkinScan ? (D.walkins||[]).find(function(w){ return w.id === b.customer_id; }) : null;
+    var _effectiveHeight = b.height || (_walkinRec && _walkinRec.height);
+    var _bcpDisabled = !b.weight || !_effectiveHeight;
+    var _bcpBtn = _bcpDisabled
+      ? '<button class="wa-btn" style="font-size:11px;padding:3px 7px;margin-right:3px;opacity:.45;cursor:not-allowed" title="Height and weight required to generate report" disabled>📊 WA</button>'
+      : '<button class="wa-btn" style="font-size:11px;padding:3px 7px;margin-right:3px" onclick="generateBodyCompPoster(\''+b.id+'\')">📊 Send Report on WhatsApp</button>';
     return '<tr'+rowStyle+'>'
       +'<td>'+b.date+(isMostRecent ? ' <span class="badge bg" style="font-size:9px">Latest</span>' : '')+walkinTag+'</td>'
       +'<td>'+(cw||'—')+getArr(cw,pw,revWeight)+'</td>'
@@ -7112,6 +7186,7 @@ function renderBody() {
       +'<td><div class="acts">'+aiBtns
         +'<button class="btn-p" style="font-size:11px;padding:3px 5px;margin-right:3px;background:#f9c74f;color:#333" onclick="sendMilestoneWA(\''+b.customer_id+'\')">🏆</button>'
         +'<button class="btn-p" style="font-size:11px;padding:3px 5px;margin-right:3px" onclick="askBodyAI(\''+b.customer_id+'\',\''+b.id+'\')">✨</button>'
+        +_bcpBtn
         +'<button class="btn-e" onclick="editBody(\''+b.id+'\')">Edit</button>'
         +'<button class="btn-d" onclick="delRecord(\'body_composition\',\''+b.id+'\',\'body\')">Del</button>'
       +'</div></td>'
@@ -7666,6 +7741,117 @@ function renderFinance() {
       plBody.innerHTML = html;
     }
   } else if (plCard) { plCard.style.display = 'none'; }
+  try { loadPackProfit(); } catch(e) { console.error('loadPackProfit failed', e); }
+}
+
+// ── PACK PROFITABILITY & HERBALIFE COST SETTINGS ──
+async function loadPackProfit() {
+  var gridEl = document.getElementById('pp-cards');
+  var badgeEl = document.getElementById('pp-daily-cost');
+  if (!gridEl) return;
+  try {
+    var rows = await req('GET', 'view_pack_profit', null, '?order=pack_days.asc');
+    if (!rows || !rows.length) {
+      gridEl.innerHTML = '<div style="color:var(--muted);font-size:12px;grid-column:1/-1;text-align:center;padding:12px">No pack profit data available</div>';
+      return;
+    }
+    var dailyCost = rows[0] ? Number(rows[0].daily_product_cost || 0) : 0;
+    if (badgeEl) {
+      badgeEl.textContent = 'Daily Shake Cost: ₹' + dailyCost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    gridEl.innerHTML = rows.map(function(p) {
+      var name = p.pack_type || (p.pack_days + ' Days');
+      var price = Number(p.pack_price || 0);
+      var cost = Number(p.total_product_cost || 0);
+      var profit = Number(p.gross_profit || 0);
+      var margin = Number(p.profit_margin_pct || 0);
+      return '<div style="background:#131722;border:1px solid #242b3d;border-radius:10px;padding:14px;display:flex;flex-direction:column;justify-content:space-between">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">' +
+          '<span style="font-weight:700;font-size:13.5px;color:#f8fafc">' + name + '</span>' +
+          '<span style="font-size:11px;font-weight:700;color:#38bdf8;background:rgba(56,189,248,0.12);padding:2px 7px;border-radius:8px">' + (p.pack_days || 0) + 'd</span>' +
+        '</div>' +
+        '<div style="margin-bottom:8px">' +
+          '<div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Gross Profit</div>' +
+          '<div style="font-size:22px;font-weight:700;color:#4ade80;line-height:1.2">₹' + profit.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2}) + '</div>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#94a3b8;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">' +
+          '<span>₹' + price.toLocaleString('en-IN') + ' − ₹' + cost.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2}) + '</span>' +
+          '<span style="font-weight:700;color:' + (margin >= 0 ? '#4ade80' : '#f87171') + '">' + margin.toFixed(1) + '% margin</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch (err) {
+    console.error('loadPackProfit error:', err);
+    if (gridEl) gridEl.innerHTML = '<div style="color:var(--danger);font-size:12px;grid-column:1/-1;text-align:center;padding:12px">Failed to load pack profitability</div>';
+  }
+}
+
+async function openCostSettings() {
+  openModal('cost-settings');
+  var tb = document.getElementById('cost-settings-body');
+  if (!tb) return;
+  tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">Loading settings...</td></tr>';
+  try {
+    var rows = await req('GET', 'product_cost_settings', null, '?order=product_key.asc');
+    var list = rows || [];
+    if (!list.length) {
+      tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">No product cost settings found.</td></tr>';
+      return;
+    }
+    tb.innerHTML = list.map(function(r) {
+      return '<tr data-key="' + r.product_key + '" style="border-bottom:1px solid var(--border)">' +
+        '<td style="padding:8px 6px;font-weight:600">' + (r.product_name || r.product_key) + '<br><span style="font-size:10px;color:var(--muted)">' + r.product_key + '</span></td>' +
+        '<td style="padding:8px 6px;text-align:right"><input type="number" step="0.01" class="cs-cpu" value="' + (r.cost_per_unit != null ? r.cost_per_unit : '') + '" style="width:90px;padding:6px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:12px;background:var(--surface);color:var(--text)"></td>' +
+        '<td style="padding:8px 6px;text-align:right"><input type="number" step="0.01" class="cs-spu" value="' + (r.servings_per_unit != null ? r.servings_per_unit : '') + '" style="width:75px;padding:6px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:12px;background:var(--surface);color:var(--text)"></td>' +
+        '<td style="padding:8px 6px;text-align:right"><input type="number" step="0.01" class="cs-sps" value="' + (r.scoops_per_shake != null ? r.scoops_per_shake : '') + '" style="width:65px;padding:6px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:12px;background:var(--surface);color:var(--text)"></td>' +
+        '<td style="padding:8px 6px;text-align:center"><input type="checkbox" class="cs-act" ' + (r.is_active_recipe ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer"></td>' +
+      '</tr>';
+    }).join('');
+  } catch (err) {
+    console.error('openCostSettings error:', err);
+    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--danger)">Error loading settings: ' + err.message + '</td></tr>';
+  }
+}
+
+async function saveCostSettings() {
+  var tb = document.getElementById('cost-settings-body');
+  if (!tb) return;
+  var trs = tb.querySelectorAll('tr[data-key]');
+  if (!trs.length) return;
+  var updates = [];
+  trs.forEach(function(tr) {
+    var key = tr.getAttribute('data-key');
+    var cpu = tr.querySelector('.cs-cpu').value;
+    var spu = tr.querySelector('.cs-spu').value;
+    var sps = tr.querySelector('.cs-sps').value;
+    var act = tr.querySelector('.cs-act').checked;
+    updates.push({
+      product_key: key,
+      cost_per_unit: cpu === '' ? null : Number(cpu),
+      servings_per_unit: spu === '' ? null : Number(spu),
+      scoops_per_shake: sps === '' ? null : Number(sps),
+      is_active_recipe: !!act,
+      updated_at: new Date().toISOString()
+    });
+  });
+
+  try {
+    await Promise.all(updates.map(function(u) {
+      return req('PATCH', 'product_cost_settings', {
+        cost_per_unit: u.cost_per_unit,
+        servings_per_unit: u.servings_per_unit,
+        scoops_per_shake: u.scoops_per_shake,
+        is_active_recipe: u.is_active_recipe,
+        updated_at: u.updated_at
+      }, '?product_key=eq.' + encodeURIComponent(u.product_key));
+    }));
+    closeModal('cost-settings');
+    await loadPackProfit();
+    showToast('✅ Product costs updated — pack profits recalculated!');
+  } catch (err) {
+    console.error('saveCostSettings error:', err);
+    showToast('Error updating costs: ' + err.message, 'error');
+  }
 }
 
 // ── SAVE CENTERS ──
@@ -8453,10 +8639,10 @@ function svSetBodyHint(id, hint) {
 }
 function svBmiHint(v) {
   if (!v) return null;
-  if (v < 18.5) return {cls:'low',  icon:'⬇️', label:'Underweight'};
+  if (v < 18.5) return {cls:'low',  icon:'⬇️', label:'Below range'};
   if (v < 25)   return {cls:'good', icon:'✅', label:'Normal'};
-  if (v < 30)   return {cls:'warn', icon:'⚠️', label:'Overweight'};
-  return              {cls:'bad',  icon:'🔴', label:'Obese'};
+  if (v < 30)   return {cls:'warn', icon:'⚠️', label:'Above range'};
+  return              {cls:'bad',  icon:'🔴', label:'Above range'};
 }
 function svFatHint(v) {
   if (!v) return null;
@@ -8557,7 +8743,7 @@ function svBuildHealthScoreCard(bmi, fatPct, vfKg, date, opts) {
             :               {t:'Critical',bg:'rgba(254,226,226,.3)',c:'#fca5a5'};
   var bmiV = parseFloat(bmi)||0;
   var fatV = parseFloat(fatPct)||0;
-  var bmiLbl = bmiV ? (bmiV < 18.5 ? '⬇️ Underweight' : bmiV <= 24.9 ? '✅ Normal' : bmiV <= 29.9 ? '⚠️ Overweight' : '🔴 Obese') : '—';
+  var bmiLbl = bmiV ? (bmiV < 18.5 ? '⬇️ Below range' : bmiV <= 24.9 ? '✅ Normal' : bmiV <= 29.9 ? '⚠️ Above range' : '🔴 Above range') : '—';
   var fatLbl = fatV ? (fatV >= fatIdealLo && fatV <= fatIdealHi ? '✅ Ideal' : fatV <= fatIdealHi + 6 ? '⚠️ High' : '🔴 Very High') : '—';
   var vfLbl  = vfKg > 0 ? (vfKg <= 2 ? '✅ Low' : vfKg <= 4 ? '⚠️ Moderate' : '🔴 High') : '—';
   var musLbl = muscleKg > 0
@@ -8614,7 +8800,7 @@ function sendHealthScoreWA(name, phone, score, grade, bmi, fatPct, vfKg, weight,
     + emoji + ' *Health Score: ' + score + '/100 — ' + grade + '*\n\n'
     + '📊 *Your Numbers:*\n'
     + (weight  ? '⚖️ Weight: ' + weight + ' kg\n' : '')
-    + (bmi     ? '📏 BMI: ' + bmi + (bmi < 18.5 ? ' (Underweight)' : bmi <= 24.9 ? ' (Normal ✅)' : bmi <= 29.9 ? ' (Overweight ⚠️)' : ' (Obese 🔴)') + '\n' : '')
+    + (bmi     ? '📏 BMI: ' + bmi + (bmi < 18.5 ? ' (Below range)' : bmi <= 24.9 ? ' (Normal ✅)' : bmi <= 29.9 ? ' (Above range ⚠️)' : ' (Above range 🔴)') + '\n' : '')
     + (fatPct  ? '🔥 Body Fat: ' + fatPct + '%' + (fatPct <= 26 ? ' ✅' : ' ⚠️') + '\n' : '')
     + (musclePct ? '💪 Muscle: ' + musclePct + '%\n' : '')
     + (vfKg > 0 ? '🫀 Visceral Fat: ' + vfKg + ' kg' + (vfKg <= 2 ? ' ✅' : ' ⚠️') + '\n' : '')
@@ -9036,6 +9222,484 @@ function sendMilestoneWA(cid) {
   var phone = (c.contact||'').replace(/\D/g,'');
   if (phone.length===10) phone=COUNTRY_CODE+phone;
   window.open('https://api.whatsapp.com/send?'+(phone?'phone='+phone+'&':'')+'text='+encodeURIComponent(msg),'_blank');
+}
+
+// ── BODY COMPOSITION WHATSAPP POSTER ─────────────────────────────────────────
+// Gender picker — async dialog; resolves 'male', 'female', or '' (skipped).
+// Read-only: writes nothing to Supabase.
+function _bcpPickGender() {
+  return new Promise(function(resolve) {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center';
+    ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 32px;max-width:340px;width:90%;text-align:center;font-family:inherit;box-shadow:0 20px 60px rgba(0,0,0,.3)">'
+      + '<div style="font-size:18px;font-weight:700;color:#0f2318;margin-bottom:8px">Select gender for this report</div>'
+      + '<div style="font-size:13px;color:#6b7280;margin-bottom:22px">Needed to calculate fat &amp; muscle targets</div>'
+      + '<div style="display:flex;gap:14px;justify-content:center">'
+      + '<button id="_bcp_m" style="flex:1;padding:12px;background:#10b981;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">&#9794; Male</button>'
+      + '<button id="_bcp_f" style="flex:1;padding:12px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">&#9792; Female</button>'
+      + '</div>'
+      + '<div style="margin-top:14px"><button id="_bcp_s" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit">Skip (fewer metrics on poster)</button></div>'
+      + '</div>';
+    document.body.appendChild(ov);
+    function _bcpDone(v) { document.body.removeChild(ov); resolve(v); }
+    document.getElementById('_bcp_m').onclick = function() { _bcpDone('male'); };
+    document.getElementById('_bcp_f').onclick = function() { _bcpDone('female'); };
+    document.getElementById('_bcp_s').onclick = function() { _bcpDone(''); };
+  });
+}
+
+// Composes the warm branded WhatsApp message that wraps the body comp poster.
+// No health numbers, no emoji, no medical claims — the poster image carries the data.
+function _bcpComposeMsg(sname, cn, cc) {
+  var greeting = sname ? 'Hi ' + sname + ',' : 'Hi,';
+  var lines = [
+    greeting,
+    '',
+    'Thank you for visiting ' + cn + ' today. Your body composition report is attached.',
+    '',
+    'Our coaches can help you turn these numbers into a simple, practical plan. Reply here or drop in anytime to book a free consultation.',
+    '',
+    cn
+  ];
+  if (cc) lines.push(cc);
+  return lines.join('\n');
+}
+
+// Shows the poster in a preview modal with share buttons chosen by whether a phone
+// number is known — not by browser capability.
+//
+// Phone known (walk-in or customer):
+//   wa.me path — "Open WhatsApp & Send Message" opens the unsaved number's chat
+//   directly with the message prefilled. navigator.share is NOT used; its contact
+//   picker only shows saved contacts, which excludes camp walk-ins.
+//   "Save Image" button lets staff attach the PNG as a follow-up.
+//
+// No phone (anonymous scan):
+//   navigator.share({files}) if available — staff picks any contact from the sheet.
+//   Download-only fallback if the browser doesn't support file sharing.
+function _bcpFallbackShare(blob, phone, text, pngFile) {
+  var waUrl = (phone && /^\d{10,15}$/.test(phone))
+    ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text)
+    : '';
+
+  var old = document.getElementById('_bcp_share_modal');
+  if (old) old.remove();
+
+  var imgUrl = URL.createObjectURL(blob);
+
+  var btns;
+  if (waUrl) {
+    // Phone known: wa.me only — navigator.share is never reached in this branch.
+    btns =
+      '<a href="' + waUrl + '" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none">💬 Open WhatsApp & Send Message</a>'
+      + '<button id="_bcp_save_btn" style="background:#0ea5e9;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save Image</button>'
+      + '<div style="font-size:12px;color:#6b7280;margin-top:2px">Send the message first, then attach the saved image.</div>';
+  } else if (navigator.canShare && navigator.canShare({ files: [pngFile] })) {
+    // No phone, share API available: single button, share sheet opens with image attached.
+    btns = '<button id="_bcp_wa_btn" style="background:#25D366;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:15px;border:none;cursor:pointer">📤 Send on WhatsApp</button>';
+  } else {
+    // No phone, no share API: download only.
+    btns = '<button id="_bcp_save_btn" style="background:#0ea5e9;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer">⬇️ Save Image</button>';
+  }
+
+  var modal = document.createElement('div');
+  modal.id = '_bcp_share_modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;text-align:center">'
+    + '<div style="font-size:16px;font-weight:700;margin-bottom:12px">📊 Body Composition Report</div>'
+    + '<img src="'+imgUrl+'" style="width:100%;border-radius:10px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.15)">'
+    + '<div style="display:flex;flex-direction:column;gap:10px">'
+    + btns
+    + '<button onclick="var m=document.getElementById(\'_bcp_share_modal\');if(m)m.remove();" style="background:#f1f5f9;border:none;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;color:#555">Close</button>'
+    + '</div></div>';
+
+  document.body.appendChild(modal);
+
+  // Wire the navigator.share button (only rendered when waUrl is empty).
+  var waBtn = document.getElementById('_bcp_wa_btn');
+  if (waBtn) {
+    // Click has fresh user activation; navigator.share() called with no awaits before it.
+    waBtn.addEventListener('click', function() {
+      navigator.share({ files: [pngFile], text: text }).catch(function(err) {
+        if (err && err.name === 'AbortError') return; // dismissed — silent
+        var a = document.createElement('a');
+        a.href = imgUrl; a.download = 'body-composition.png'; a.click();
+      });
+    });
+  }
+
+  // Wire the save button (rendered in the wa.me path and the download-only path).
+  var saveBtn = document.getElementById('_bcp_save_btn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      var a = document.createElement('a');
+      a.href = imgUrl; a.download = 'body-composition.png'; a.click();
+    });
+  }
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) { modal.remove(); URL.revokeObjectURL(imgUrl); }
+  });
+}
+
+// Main poster generator — called from renderBody() row button.
+// Reads body_composition by its own PK (bodyId). No Supabase writes of any kind.
+async function generateBodyCompPoster(bodyId) {
+  // ── 1. Find record by its own PK ──────────────────────────────────────────
+  var b = (D.body || []).find(function(x) { return x.id === bodyId; });
+  if (!b) { showToast('Record not found', 'error'); return; }
+
+  var weight = parseFloat(b.weight) || 0;
+
+  // ── 2. Resolve person by uuid — direct lookup, no name/phone matching ─────
+  var person = D.customers.find(function(c) { return c.id === b.customer_id; })
+    || (D.walkins || []).find(function(w) { return w.id === b.customer_id; });
+
+  // Fall back to walkin's height when body comp record has no height stored
+  var height = parseFloat(b.height) || parseFloat((person && person.height) || 0) || 0;
+  if (!weight || !height) {
+    showToast('Height and weight required to generate report', 'error');
+    return;
+  }
+
+  // ── 3. Phone — same normalisation as sendMilestoneWA ─────────────────────
+  // customers use .contact; walkins use .phone
+  var rawPhone = person ? (person.contact || person.phone || '') : '';
+  var phone = rawPhone.replace(/\D/g, '');
+  if (phone.length === 10) phone = COUNTRY_CODE + phone;
+
+  // ── 4. Gender — resolve, normalise, prompt if unknown ────────────────────
+  var rawGender = (person ? (person.gender || '') : '').trim().toLowerCase();
+  if (rawGender === 'm') rawGender = 'male';
+  if (rawGender === 'f') rawGender = 'female';
+  var gender = (rawGender === 'male' || rawGender === 'female') ? rawGender : '';
+  if (!gender) gender = await _bcpPickGender(); // await inside user-activation handler
+
+  var isMale      = gender === 'male';
+  var isFemale    = gender === 'female';
+  var genderKnown = isMale || isFemale;
+
+  // ── 5. Metric calculations ────────────────────────────────────────────────
+  var h_m  = height / 100;
+  var h_m2 = h_m * h_m; // guarded: height was confirmed > 0
+
+  // Weight ideal range (BMI band)
+  var idealWtLo = parseFloat((18.5 * h_m2).toFixed(1));
+  var idealWtHi = parseFloat((24.9 * h_m2).toFixed(1));
+  var wtGap = 0;
+  if (weight < idealWtLo) wtGap = parseFloat((weight - idealWtLo).toFixed(1));
+  else if (weight > idealWtHi) wtGap = parseFloat((weight - idealWtHi).toFixed(1));
+
+  // Body fat — derivation matches app.js:7071 (toFixed(2))
+  var fatPct      = parseFloat(b.fat_percentage) || 0;
+  var fatKg       = fatPct ? parseFloat((weight * fatPct / 100).toFixed(2)) : 0;
+  var leanKg      = weight - fatKg;
+  var targetBf    = genderKnown ? (isMale ? 0.20 : 0.28) : null;
+  var fatToLoseKg = null, idealFatKg = null;
+  if (targetBf !== null && fatKg > 0) {
+    var _denom = 1 - targetBf; // targetBf is 0.20 or 0.28 — divide-by-zero impossible
+    var targetWt  = parseFloat((leanKg / _denom).toFixed(1));
+    fatToLoseKg   = parseFloat((weight - targetWt).toFixed(1));
+    idealFatKg    = parseFloat((targetWt * targetBf).toFixed(1));
+  }
+
+  // Muscle — uses muscle_percentage, never muscle_mass (legacy dead column)
+  var musclePct = parseFloat(b.muscle_percentage) || 0;
+  var muscleKg  = musclePct ? parseFloat((weight * musclePct / 100).toFixed(2)) : 0;
+  var musLoP    = genderKnown ? (isMale ? 33 : 24) : null;
+  var musHiP    = genderKnown ? (isMale ? 39 : 30) : null;
+  var musLoKg   = musLoP !== null ? parseFloat((weight * musLoP / 100).toFixed(1)) : null;
+  var musHiKg   = musHiP !== null ? parseFloat((weight * musHiP / 100).toFixed(1)) : null;
+  var musGap    = null;
+  if (muscleKg && musLoKg !== null && musHiKg !== null) {
+    if      (muscleKg < musLoKg) musGap = parseFloat((muscleKg - musLoKg).toFixed(1));
+    else if (muscleKg > musHiKg) musGap = parseFloat((muscleKg - musHiKg).toFixed(1));
+    else                          musGap = 0;
+  }
+
+  // Visceral fat (rating, NOT kg)
+  var vfRating = (b.visceral_fat !== null && b.visceral_fat !== undefined && b.visceral_fat !== '')
+    ? parseFloat(b.visceral_fat) : null;
+
+  // BMI — prefer stored; compute from height/weight if absent
+  var bmiVal = b.bmi ? parseFloat(b.bmi) : parseFloat((weight / h_m2).toFixed(1));
+
+  // Body age vs actual age
+  var bodyAge   = (b.body_age  !== null && b.body_age  !== '') ? parseInt(b.body_age)  : null;
+  var actualAge = (b.age       !== null && b.age       !== '') ? parseInt(b.age)        : null;
+
+  // BMR
+  var bmr = b.bmr ? parseFloat(b.bmr) : null;
+
+  // ── 6. Build Canvas (hardcoded light palette — always white, never dark) ──
+  var CW = 1080, CH = 1350;
+  var canvas = document.createElement('canvas');
+  canvas.width = CW; canvas.height = CH;
+  var ctx = canvas.getContext('2d');
+
+  var CP  = '#10b981'; // primary teal
+  var CPD = '#059669'; // primary-mid darker teal
+  var CT  = '#0f2318'; // near-black text
+  var CMU = '#6b7280'; // muted grey
+  var CGR = '#10b981'; // good/in-range indicator
+  var CAM = '#f59e0b'; // amber/out-of-range indicator
+  var CLT = '#f0fdf4'; // light green tint background
+  var CBD = '#d1fae5'; // border green
+
+  // White background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, CW, CH);
+
+  // Header gradient band (teal → darker teal)
+  var hdrGrad = ctx.createLinearGradient(0, 0, CW, 200);
+  hdrGrad.addColorStop(0, CP);
+  hdrGrad.addColorStop(1, CPD);
+  ctx.fillStyle = hdrGrad;
+  ctx.fillRect(0, 0, CW, 200);
+
+  // Header: center name
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 38px sans-serif';
+  var _cn = getCenterName();
+  ctx.fillText(_cn, CW / 2, 88);
+  // Header: report title
+  ctx.font = '26px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fillText('Body Composition Report', CW / 2, 138);
+  // Decorative separator
+  ctx.fillStyle = 'rgba(255,255,255,0.32)';
+  ctx.fillRect(CW / 2 - 150, 154, 300, 2);
+
+  // Sub-header: customer name + scan date
+  ctx.fillStyle = CLT;
+  ctx.fillRect(0, 200, CW, 95);
+  var custName = b.customer_name || (person ? person.name : '') || 'Customer';
+  ctx.fillStyle = CT;
+  ctx.font = 'bold 30px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(custName, CW / 2, 242);
+  ctx.fillStyle = CMU;
+  ctx.font = '20px sans-serif';
+  ctx.fillText('Scan Date: ' + (b.date || ''), CW / 2, 275);
+
+  // Table header row
+  ctx.fillStyle = CBD;
+  ctx.fillRect(0, 295, CW, 48);
+  ctx.font = 'bold 17px sans-serif';
+  ctx.fillStyle = CPD;
+  ctx.textAlign = 'left';  ctx.fillText('METRIC',     50,  295 + 33);
+  ctx.textAlign = 'center';ctx.fillText('YOUR VALUE', 480, 295 + 33);
+  ctx.textAlign = 'center';ctx.fillText('IDEAL',      745, 295 + 33);
+  ctx.textAlign = 'right'; ctx.fillText('STATUS',    1040, 295 + 33);
+
+  // Metric rows
+  var rowY      = 343;
+  var footerY   = 1200; // footer band starts here — rows must not cross it
+  var normalRH  = 80;
+  var headlineRH = 108; // body fat headline row
+
+  function _bcpSep() {
+    ctx.strokeStyle = CBD; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(40, rowY); ctx.lineTo(CW - 40, rowY); ctx.stroke();
+  }
+
+  function _bcpRow(label, yourStr, idealStr, statusStr, statusColor, rh, isHL) {
+    if (rowY + rh > footerY) return; // overflow guard
+    _bcpSep();
+    var midY = rowY + rh / 2 + 9;
+    ctx.fillStyle = CT;
+    ctx.textAlign = 'left';
+    ctx.font = isHL ? 'bold 22px sans-serif' : 'bold 19px sans-serif';
+    ctx.fillText(label, 50, midY);
+    ctx.fillStyle = CT;
+    ctx.textAlign = 'center';
+    ctx.font = isHL ? 'bold 24px sans-serif' : '20px sans-serif';
+    ctx.fillText(yourStr, 480, midY);
+    ctx.fillStyle = CMU;
+    ctx.textAlign = 'center';
+    ctx.font = isHL ? '20px sans-serif' : '18px sans-serif';
+    ctx.fillText(idealStr || '\u2014', 745, midY);
+    if (statusStr) {
+      ctx.fillStyle = statusColor || CMU;
+      ctx.textAlign = 'right';
+      ctx.font = isHL ? 'bold 20px sans-serif' : 'bold 17px sans-serif';
+      ctx.fillText(statusStr, 1040, midY);
+    }
+    rowY += rh;
+  }
+
+  // Row: Weight
+  if (h_m2 > 0) {
+    var _wtS = wtGap === 0 ? '\u2713 Ideal' : (wtGap > 0 ? '+' + wtGap + ' kg' : wtGap + ' kg');
+    _bcpRow('Weight', weight + ' kg', idealWtLo + ' \u2013 ' + idealWtHi + ' kg', _wtS, wtGap === 0 ? CGR : CAM, normalRH, false);
+  }
+
+  // Row: Body Fat (headline — largest, most prominent)
+  if (fatKg > 0) {
+    var _fbnd   = genderKnown ? (isMale ? '10\u201320%' : '18\u201328%') : '';
+    var _fidStr = idealFatKg !== null ? 'up to ' + idealFatKg + ' kg' + (_fbnd ? ' (' + _fbnd + ')' : '') : (_fbnd || '\u2014');
+    var _fstat  = null, _fscol = CGR;
+    if (fatToLoseKg !== null) {
+      if (fatToLoseKg <= 0) { _fstat = '\u2713 In range'; _fscol = CGR; }
+      else                  { _fstat = fatToLoseKg + ' kg to lose'; _fscol = CAM; }
+    }
+    _bcpRow('\u2605 Body Fat', fatKg + ' kg (' + (b.fat_percentage || '') + '%)', _fidStr, _fstat, _fscol, headlineRH, true);
+  }
+
+  // Row: Muscle mass
+  if (muscleKg > 0 && genderKnown && musLoKg !== null) {
+    var _msS = musGap === 0 ? '\u2713 In range' : (musGap > 0 ? '+' + musGap + ' kg' : musGap + ' kg');
+    _bcpRow('Muscle Mass',
+      muscleKg + ' kg (' + musclePct + '%)',
+      musLoKg + ' \u2013 ' + musHiKg + ' kg (' + musLoP + '\u2013' + musHiP + '%)',
+      _msS, musGap === 0 ? CGR : CAM, normalRH, false);
+  }
+
+  // Row: Visceral fat (rating — never kg)
+  if (vfRating !== null) {
+    var _vfDisp = Math.round(vfRating * 10) / 10;
+    var _vfStr  = (_vfDisp === Math.floor(_vfDisp)) ? String(Math.floor(_vfDisp)) : String(_vfDisp);
+    var _vfS = vfRating <= 9 ? '\u2713 In range' : 'High \u26a0';
+    _bcpRow('Visceral Fat', 'Rating: ' + _vfStr, 'Ideal: 1 \u2013 9', _vfS, vfRating <= 9 ? CGR : CAM, normalRH, false);
+  }
+
+  // Row: BMI
+  if (bmiVal) {
+    var _bmiOk = bmiVal >= 18.5 && bmiVal <= 24.9;
+    var _bmiS  = bmiVal < 18.5 ? 'Below range' : (_bmiOk ? '\u2713 Normal' : 'Above range');
+    _bcpRow('BMI', bmiVal.toFixed(1), '18.5 \u2013 24.9', _bmiS, _bmiOk ? CGR : CAM, normalRH, false);
+  }
+
+  // Row: Body age vs actual age
+  if (bodyAge !== null && actualAge !== null) {
+    var _baS, _baSCol;
+    if (bodyAge < actualAge)        { _baS = '\u2713 ' + (actualAge - bodyAge) + ' yrs younger'; _baSCol = CGR; }
+    else if (bodyAge === actualAge) { _baS = '\u2713 On track';                                   _baSCol = CGR; }
+    else                            { _baS = '+' + (bodyAge - actualAge) + ' yrs older';          _baSCol = CAM; }
+    _bcpRow('Body Age', bodyAge + ' yrs', 'Actual: ' + actualAge + ' yrs', _baS, _baSCol, normalRH, false);
+  }
+
+  // Row: BMR — informational only, no ideal
+  if (bmr) {
+    _bcpRow('BMR (rest)', Math.round(bmr) + ' kcal/day', 'Info only', null, null, normalRH, false);
+  }
+
+  // Final row separator
+  if (rowY < footerY) { _bcpSep(); }
+
+  // ── Takeaway panel ───────────────────────────────────────────────────────
+  function _bcpWrapText(wCtx, text, x, y, maxWidth, lineHeight) {
+    var words = text.split(' ');
+    var line = '';
+    for (var _wi = 0; _wi < words.length; _wi++) {
+      var testLine = line + (line ? ' ' : '') + words[_wi];
+      if (wCtx.measureText(testLine).width > maxWidth && line) {
+        wCtx.fillText(line, x, y);
+        line = words[_wi];
+        y += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    if (line) { wCtx.fillText(line, x, y); y += lineHeight; }
+    return y;
+  }
+
+  var _tkY = rowY + 30;
+  if (footerY - _tkY >= 120) {
+    var _tkLines = [];
+    if (fatToLoseKg !== null && fatToLoseKg > 0)
+      _tkLines.push('Body fat is ' + fatToLoseKg + ' kg above the healthy range for your height.');
+    if (vfRating !== null && vfRating > 9)
+      _tkLines.push('Visceral fat is above the healthy range of 1-9.');
+    if (musGap !== null && musGap < 0)
+      _tkLines.push('Muscle mass is ' + Math.abs(musGap) + ' kg below the healthy range.');
+    if (bmiVal && bmiVal > 24.9)
+      _tkLines.push('BMI is above the healthy range of 18.5-24.9.');
+    if (bmiVal && bmiVal < 18.5)
+      _tkLines.push('BMI is below the healthy range of 18.5-24.9.');
+    if (bodyAge !== null && actualAge !== null && bodyAge > actualAge)
+      _tkLines.push('Body age is ' + (bodyAge - actualAge) + ' years above your actual age.');
+    if (_tkLines.length === 0)
+      _tkLines.push('All measured values are within the healthy range. Keep up your current routine.');
+    _tkLines.push('Book a follow-up consultation with your coach to track progress.');
+
+    var _tkPad = 40, _tkW = CW - 2 * _tkPad;
+    var _tkH   = Math.min(footerY - _tkY - 20, 260);
+    ctx.fillStyle = CLT;
+    if (ctx.roundRect) {
+      ctx.beginPath(); ctx.roundRect(_tkPad, _tkY, _tkW, _tkH, 14); ctx.fill();
+    } else {
+      ctx.fillRect(_tkPad, _tkY, _tkW, _tkH);
+    }
+    ctx.strokeStyle = CBD; ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(_tkPad, _tkY, _tkW, _tkH, 14);
+    } else {
+      ctx.rect(_tkPad, _tkY, _tkW, _tkH);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = CPD;
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Key Takeaways', _tkPad + 28, _tkY + 38);
+
+    ctx.fillStyle = CT;
+    ctx.font = '18px sans-serif';
+    var _tkTxtY = _tkY + 68;
+    var _tkMaxW = _tkW - 56;
+    for (var _tki = 0; _tki < _tkLines.length; _tki++) {
+      if (_tkTxtY + 22 > _tkY + _tkH - 14) break;
+      _tkTxtY = _bcpWrapText(ctx, '\u2022 ' + _tkLines[_tki], _tkPad + 28, _tkTxtY, _tkMaxW, 26);
+    }
+  }
+
+  // ── Footer band ──────────────────────────────────────────────────────────
+  // Teal accent line at top of footer
+  var ftGrad = ctx.createLinearGradient(0, footerY, CW, footerY);
+  ftGrad.addColorStop(0, CP); ftGrad.addColorStop(1, CPD);
+  ctx.fillStyle = ftGrad;
+  ctx.fillRect(0, footerY, CW, 4);
+
+  ctx.fillStyle = CLT;
+  ctx.fillRect(0, footerY + 4, CW, CH - footerY - 4);
+
+  // Center contact line
+  var _ac = ACTIVE_CENTER
+    ? (D.centers || []).find(function(c) { return c.id === ACTIVE_CENTER; })
+    : ((D.centers || [])[0]);
+  var _cc = _ac ? (_ac.contact || '') : '';
+
+  ctx.fillStyle = CPD;
+  ctx.font = 'bold 20px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(_cc ? _cn + '  |  ' + _cc : _cn, CW / 2, footerY + 48);
+
+  // Disclaimer (verbatim per spec)
+  ctx.fillStyle = CMU;
+  ctx.font = '16px sans-serif';
+  ctx.fillText('Reference ranges are general fitness guidelines, not a medical diagnosis.', CW / 2, footerY + 82);
+  ctx.fillText('Consult a doctor for health decisions.', CW / 2, footerY + 106);
+
+  // ── 7. Export PNG blob ───────────────────────────────────────────────────
+  var blob = await new Promise(function(resolve) {
+    canvas.toBlob(function(bl) { resolve(bl); }, 'image/png');
+  });
+
+  // Compose the branded WhatsApp message (no health numbers — poster carries the data).
+  var _sname = (custName || '').split(' ')[0];
+  var waMsg = _bcpComposeMsg(_sname, _cn, _cc);
+
+  var file = new File([blob], 'body-composition.png', { type: 'image/png' });
+
+  // ── 8. Show preview modal — blob is already generated before this call,
+  //       so the "Send on WhatsApp" click handler can call navigator.share()
+  //       immediately with fresh user activation and no awaits in between.
+  _bcpFallbackShare(blob, phone, waMsg, file);
 }
 
 // ── P4: Birthday on Overview ──

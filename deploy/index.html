@@ -1896,6 +1896,25 @@ window._perf.t('loadStart');
             <div style="font-family:&#39;DM Serif Display&#39;,serif;font-size:17px" id="inv-in-title">➕ Add Stock In</div>
             <button class="btn-p" onclick="addBatchRow()" style="font-size:12px;padding:6px 13px">+ Add Row</button>
           </div>
+          <!-- Herbalife Invoice Details (Optional) -->
+          <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+            <div style="font-weight:700;font-size:13px;color:var(--primary);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+              <span>🧾 Herbalife Purchase Invoice</span>
+              <span style="font-size:11px;color:var(--muted);font-weight:normal">(Optional — links inventory &amp; auto-records expense)</span>
+            </div>
+            <div class="fr" style="margin-bottom:10px">
+              <div class="fg"><label for="hl-invoice-no">Invoice / Order #</label><input type="text" id="hl-invoice-no" placeholder="e.g. 10459823" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+              <div class="fg"><label for="hl-order-date">Order Date</label><input type="date" id="hl-order-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+              <div class="fg"><label for="hl-vp">Volume Points (VP)</label><input type="number" step="0.01" id="hl-vp" placeholder="0.00" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+            </div>
+            <div class="fr" style="margin-bottom:0">
+              <div class="fg"><label for="hl-retail">Retail Total (₹)</label><input type="number" step="0.01" id="hl-retail" placeholder="0.00" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+              <div class="fg"><label for="hl-subtotal">Paid Subtotal (₹)</label><input type="number" step="0.01" id="hl-subtotal" placeholder="0.00" oninput="calcHlGrand()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+              <div class="fg"><label for="hl-igst">IGST / Tax (₹)</label><input type="number" step="0.01" id="hl-igst" placeholder="0.00" oninput="calcHlGrand()" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
+              <div class="fg"><label for="hl-grand">Grand Total (₹)</label><input type="number" step="0.01" id="hl-grand" placeholder="0.00" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;font-weight:700"></div>
+            </div>
+          </div>
+
           <!-- Shared date for all rows -->
           <div class="fr" style="margin-bottom:12px">
             <div class="fg"><label>Date for all entries *</label><input type="date" id="inv-in-date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>
@@ -2487,6 +2506,20 @@ window._perf.t('loadStart');
         <div class="stat"><div class="stat-l">Net Profit</div><div class="stat-v" style="color:var(--primary)">₹0</div></div>
         <div class="stat"><div class="stat-l">Profit Margin</div><div class="stat-v" id="fin-margin" style="color:var(--primary)">—</div></div>
       </div>
+      <!-- Pack Profitability Card -->
+      <div class="tcard" style="background:#1a1f2e;border:1px solid #2a3040;border-radius:12px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-weight:700;font-size:14px;color:#fff">📦 Pack Profitability</span>
+            <span id="pp-daily-cost" style="font-size:12px;background:rgba(74,222,128,0.12);color:#4ade80;border:1px solid rgba(74,222,128,0.25);padding:3px 9px;border-radius:12px;font-weight:600">Daily Shake Cost: ₹0.00</span>
+          </div>
+          <button class="btn-s" onclick="openCostSettings()" style="font-size:12px;padding:5px 10px;background:#242b3d;color:#e2e8f0;border:1px solid #3b4256;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px">⚙️ Edit Product Costs</button>
+        </div>
+        <div id="pp-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
+          <div style="color:var(--muted);font-size:12px;grid-column:1/-1;text-align:center;padding:12px">Loading pack profitability...</div>
+        </div>
+      </div>
+
       <!-- P&L breakdown cards -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px" id="fin-breakdown">
         <div class="tcard" style="padding:16px">
@@ -5507,6 +5540,40 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
   </div>
 </div>
 
+<!-- Product Cost Settings Modal -->
+<div class="overlay" id="modal-cost-settings">
+  <div class="modal" style="max-width:720px;width:95%">
+    <div class="mh">
+      <div class="mt">⚙️ Product Cost &amp; Recipe Settings</div>
+      <button class="mc" onclick="closeModal('cost-settings')">✕</button>
+    </div>
+    <div class="mb">
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.5">
+        Configure purchase costs and serving quantities for Herbalife products. Changes immediately update the daily shake cost and pack profit calculations.
+      </p>
+      <div class="twrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);color:var(--muted);text-align:left">
+              <th style="padding:8px 6px">Product</th>
+              <th style="padding:8px 6px;text-align:right">Cost / Unit (₹)</th>
+              <th style="padding:8px 6px;text-align:right">Servings / Unit</th>
+              <th style="padding:8px 6px;text-align:right">Scoops / Shake</th>
+              <th style="padding:8px 6px;text-align:center">In Recipe</th>
+            </tr>
+          </thead>
+          <tbody id="cost-settings-body">
+            <tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">Loading settings...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mf">
+        <button class="btn-c" onclick="closeModal('cost-settings')">Cancel</button>
+        <button class="btn-p" onclick="saveCostSettings()">💾 Save Settings</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </template>
 
