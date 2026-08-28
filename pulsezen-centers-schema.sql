@@ -437,6 +437,72 @@ DROP POLICY IF EXISTS "allow all" ON inventory_stock_in;
 DROP POLICY IF EXISTS "anon_all_inventory_stock_in" ON inventory_stock_in;
 CREATE POLICY "allow all" ON inventory_stock_in FOR ALL USING (true) WITH CHECK (true);
 
+-- ==========================================
+-- 🥛 UMS PACK PROFIT TRACKING SCHEMA (v2.3.7)
+-- ==========================================
+
+-- 1. PACK COST CONFIGURATION (per-scoop product costs)
+CREATE TABLE IF NOT EXISTS pack_cost_config (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_key text UNIQUE NOT NULL,
+  label text,
+  cost_per_scoop numeric NOT NULL DEFAULT 0,
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE pack_cost_config ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow all" ON pack_cost_config;
+DROP POLICY IF EXISTS "anon_all_pack_cost_config" ON pack_cost_config;
+CREATE POLICY "allow all" ON pack_cost_config FOR ALL USING (true) WITH CHECK (true);
+
+-- Seed 4 product scoop costs (f1 19.70, ppp 20.52, shakemate 12.65, afresh 11.05)
+INSERT INTO pack_cost_config (product_key, label, cost_per_scoop)
+VALUES
+  ('f1', 'Formula 1', 19.70),
+  ('ppp', 'Personalized Protein Powder', 20.52),
+  ('shakemate', 'ShakeMate', 12.65),
+  ('afresh', 'Afresh', 11.05)
+ON CONFLICT (product_key) DO UPDATE
+SET cost_per_scoop = EXCLUDED.cost_per_scoop, label = EXCLUDED.label, updated_at = now();
+
+-- 2. PACK DEFINITIONS (pack catalogue & days)
+CREATE TABLE IF NOT EXISTS pack_definitions (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  pack_name text NOT NULL,
+  days int NOT NULL,
+  ums_price numeric NOT NULL DEFAULT 0,
+  active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE pack_definitions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow all" ON pack_definitions;
+DROP POLICY IF EXISTS "anon_all_pack_definitions" ON pack_definitions;
+CREATE POLICY "allow all" ON pack_definitions FOR ALL USING (true) WITH CHECK (true);
+
+-- Seed 4 standard packs
+INSERT INTO pack_definitions (pack_name, days, ums_price, active)
+SELECT '3-Day Trial', 3, 900, true
+WHERE NOT EXISTS (SELECT 1 FROM pack_definitions WHERE pack_name = '3-Day Trial');
+
+INSERT INTO pack_definitions (pack_name, days, ums_price, active)
+SELECT '26-Day', 26, 5600, true
+WHERE NOT EXISTS (SELECT 1 FROM pack_definitions WHERE pack_name = '26-Day');
+
+INSERT INTO pack_definitions (pack_name, days, ums_price, active)
+SELECT '30-Day', 30, 6969, true
+WHERE NOT EXISTS (SELECT 1 FROM pack_definitions WHERE pack_name = '30-Day');
+
+INSERT INTO pack_definitions (pack_name, days, ums_price, active)
+SELECT '90-Day', 90, 15000, true
+WHERE NOT EXISTS (SELECT 1 FROM pack_definitions WHERE pack_name = '90-Day');
+
+-- 3. LINK PACK_ID TO CUSTOMERS, FINANCE & PAYMENTS
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS pack_id uuid REFERENCES pack_definitions(id);
+ALTER TABLE finance ADD COLUMN IF NOT EXISTS pack_id uuid REFERENCES pack_definitions(id);
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS pack_id uuid REFERENCES pack_definitions(id);
+
+
 
 
 
