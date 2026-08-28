@@ -2618,6 +2618,7 @@ function goTo(name, el) {
   if (name==='finance')     execTabModule('finance', function(){ if (typeof renderFinance === 'function') renderFinance(); });
   if (name==='recovery')    execTabModule('recovery', function(){ if (typeof renderRecoveryHub === 'function') renderRecoveryHub(); });
   if (name==='reports')     execTabModule('reports', function(){ if (typeof renderReportsView === 'function') renderReportsView(); });
+  if (name==='inventory')   execTabModule('inventory', function(){ if (typeof loadInventory === 'function') loadInventory(); });
   if (name==='expenses') {
     (async function() {
       if (!window._loadedTabs.expenses || window._tabDirty.expenses) {
@@ -5482,6 +5483,14 @@ async function saveHerbalifeInvoice() {
 
   return purchaseRow;
 }
+
+function openHerbalifeInvoice() {
+  var navEl = document.querySelector('.sb-nav [onclick*="inventory"]');
+  goTo('inventory', navEl);
+  var inTab = document.getElementById('inv-tab-in');
+  if (inTab) switchInvTab('in', inTab);
+}
+window.openHerbalifeInvoice = openHerbalifeInvoice;
 
 // ── P3a: WhatsApp Reorder List ──
 // ── BROADCAST ──
