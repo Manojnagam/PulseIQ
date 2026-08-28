@@ -187,7 +187,7 @@ var T = {
     nav_management:'Management', nav_business:'Business', nav_setup:'Setup',
     // nav items
     nav_overview:'Overview', nav_centers:'Wellness Centers', nav_coaches:'Coaches',
-    nav_coach_portal:'Coach Portal \u2197', nav_inventory:'Inventory', nav_customers:'Customers',
+    nav_coach_portal:'Coach Portal \u2197', nav_inventory:'Herbalife Purchases', nav_customers:'Customers',
     nav_leads:'Leads', nav_attendance:'Attendance', nav_body:'Body Composition',
     nav_finance:'Finance', nav_analytics:'Analytics', nav_coupons:'Coupons',
     nav_payments:'Payments', nav_announcements:'Announcements', nav_checklists:'Daily Checklist',
@@ -203,7 +203,7 @@ var T = {
     nav_management:'నిర్వహణ', nav_business:'వ్యాపారం', nav_setup:'సెటప్',
     // nav items
     nav_overview:'అవలోకనం', nav_centers:'వెల్నెస్ సెంటర్లు', nav_coaches:'కోచ్‌లు',
-    nav_coach_portal:'కోచ్ పోర్టల్ \u2197', nav_inventory:'ఇన్వెంటరీ', nav_customers:'కస్టమర్లు',
+    nav_coach_portal:'కోచ్ పోర్టల్ \u2197', nav_inventory:'హెర్బాలైఫ్ కొనుగోళ్లు', nav_customers:'కస్టమర్లు',
     nav_leads:'లీడ్స్', nav_attendance:'హాజరు', nav_body:'శరీర కొలతలు',
     nav_finance:'ఆర్థికం', nav_analytics:'విశ్లేషణలు', nav_coupons:'కూపన్లు',
     nav_payments:'చెల్లింపులు', nav_announcements:'ప్రకటనలు', nav_checklists:'రోజువారీ చెక్‌లిస్ట్',
@@ -338,7 +338,7 @@ var T = {
     nav_management:'Management', nav_business:'Business', nav_setup:'Setup',
     // nav items
     nav_overview:'Overview', nav_centers:'Wellness Centers', nav_coaches:'Coaches',
-    nav_coach_portal:'Coach Portal \u2197', nav_inventory:'Inventory', nav_customers:'Customers',
+    nav_coach_portal:'Coach Portal \u2197', nav_inventory:'Herbalife Purchases', nav_customers:'Customers',
     nav_leads:'Leads', nav_attendance:'Attendance', nav_body:'Body Composition',
     nav_finance:'Finance', nav_analytics:'Analytics', nav_coupons:'Coupons',
     nav_payments:'Payments', nav_orgtree:'Org Tree', nav_pintracker:'Pin Tracker',
@@ -353,7 +353,7 @@ var T = {
     pt_overview:'Overview Dashboard', ps_overview:'Your wellness center at a glance',
     pt_centers:'Wellness Centers', ps_centers:'Manage all centers in your network',
     pt_coaches:'Coaches', ps_coaches:'Manage your coaching staff',
-    pt_inventory:'Inventory', ps_inventory:'Track nutrition products, stock movements and daily usage',
+    pt_inventory:'Herbalife Purchases & Inventory', ps_inventory:'Track stock movements, Herbalife purchase invoices (CGST/SGST), and daily usage',
     pt_customers:'Customers', ps_customers:'Track all customers and their packs',
     pt_leads:'Leads', ps_leads:'Track potential customers and follow-ups',
     pt_attendance:'Attendance', ps_attendance:'Track customer visit history',
@@ -394,7 +394,7 @@ var T = {
     nav_management:'మేనేజ్‌మెంట్', nav_business:'వ్యాపారం', nav_setup:'సెటప్',
     // nav items
     nav_overview:'ఓవర్‌వ్యూ', nav_centers:'వెల్నెస్ సెంటర్లు', nav_coaches:'కోచ్‌లు',
-    nav_coach_portal:'కోచ్ పోర్టల్ \u2197', nav_inventory:'ఇన్వెంటరీ', nav_customers:'కస్టమర్లు',
+    nav_coach_portal:'కోచ్ పోర్టల్ \u2197', nav_inventory:'హెర్బాలైఫ్ కొనుగోళ్లు', nav_customers:'కస్టమర్లు',
     nav_leads:'లీడ్స్', nav_attendance:'హాజరు', nav_body:'శరీర కూర్పు',
     nav_finance:'ఆర్థికం', nav_analytics:'విశ్లేషణలు', nav_coupons:'కూపన్లు',
     nav_payments:'చెల్లింపులు', nav_orgtree:'సంస్థ చెట్టు', nav_pintracker:'పిన్ ట్రాకర్',
@@ -409,7 +409,7 @@ var T = {
     pt_overview:'ఓవర్‌వ్యూ డ్యాష్‌బోర్డ్', ps_overview:'మీ వెల్నెస్ సెంటర్ ఒక్కసారి చూద్దాం',
     pt_centers:'వెల్నెస్ సెంటర్లు', ps_centers:'మీ నెట్‌వర్క్‌లోని అన్ని సెంటర్లను నిర్వహించండి',
     pt_coaches:'కోచ్‌లు', ps_coaches:'మీ కోచింగ్ స్టాఫ్‌ను నిర్వహించండి',
-    pt_inventory:'ఇన్వెంటరీ', ps_inventory:'హెర్బాలైఫ్ ఉత్పత్తులు, స్టాక్ మరియు రోజువారీ వాడకం',
+    pt_inventory:'హెర్బాలైఫ్ కొనుగోళ్లు & ఇన్వెంటరీ', ps_inventory:'స్టాక్ కదలికలు, హెర్బాలైఫ్ కొనుగోలు ఇన్‌వాయిస్‌లు (CGST/SGST) మరియు రోజువారీ వినియోగాన్ని ట్రాక్ చేయండి',
     pt_customers:'కస్టమర్లు', ps_customers:'అన్ని కస్టమర్లు మరియు వారి ప్యాక్‌లను ట్రాక్ చేయండి',
     pt_leads:'లీడ్స్', ps_leads:'సంభావ్య కస్టమర్లు మరియు ఫాలో-అప్‌లను ట్రాక్ చేయండి',
     pt_attendance:'హాజరు', ps_attendance:'కస్టమర్ సందర్శన చరిత్రను ట్రాక్ చేయండి',
@@ -5549,6 +5549,10 @@ async function saveHerbalifeInvoice() {
 }
 
 function openHerbalifeInvoice() {
+  var grp = document.getElementById('g-manage');
+  if (grp && grp.style.display === 'none' && typeof toggleNavGroup === 'function') {
+    toggleNavGroup('g-manage');
+  }
   var navEl = document.querySelector('.sb-nav [onclick*="inventory"]');
   goTo('inventory', navEl);
   var inTab = document.getElementById('inv-tab-in');
