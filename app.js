@@ -5438,7 +5438,6 @@ function calcHlGrand() {
 async function saveHerbalifeInvoice() {
   var invEl = document.getElementById('hl-invoice-no');
   var invNo = invEl ? invEl.value.trim() : '';
-  if (!invNo) return null;
 
   var orderDate = (document.getElementById('hl-order-date')?.value) || new Date().toISOString().split('T')[0];
   var retailTotal = parseFloat(document.getElementById('hl-retail')?.value) || 0;
@@ -5448,6 +5447,13 @@ async function saveHerbalifeInvoice() {
   var igstAmount = cgstAmount + sgstAmount;
   var volumePoints = parseFloat(document.getElementById('hl-vp')?.value) || 0;
   var grandTotalInput = parseFloat(document.getElementById('hl-grand')?.value);
+  var hasInvoiceFields = paidSubtotal > 0 || retailTotal > 0 || cgstAmount > 0 || sgstAmount > 0 || volumePoints > 0 || (!isNaN(grandTotalInput) && grandTotalInput > 0);
+
+  if (!invNo && hasInvoiceFields) {
+    showToast('Please enter an Invoice / Order # for the Herbalife purchase', 'error');
+    throw new Error('Invoice / Order # is required');
+  }
+  if (!invNo) return null;
   var grandTotal = !isNaN(grandTotalInput) && grandTotalInput > 0 ? grandTotalInput : (paidSubtotal + cgstAmount + sgstAmount);
   var centerId = ACTIVE_CENTER || null;
 
