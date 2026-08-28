@@ -5343,38 +5343,96 @@ async function saveStockIn() {
   var date = document.getElementById('inv-in-date').value;
   var notes = document.getElementById('inv-in-notes').value.trim()||null;
   if (!date) { showToast('Please select a date','error'); return; }
+
+  // Check invoice fields
+  var invEl = document.getElementById('hl-invoice-no');
+  var invNo = invEl ? invEl.value.trim() : '';
+  var paidSubtotal = parseFloat(document.getElementById('hl-subtotal')?.value) || 0;
+  var retailTotal = parseFloat(document.getElementById('hl-retail')?.value) || 0;
+  var cgstAmount = parseFloat(document.getElementById('hl-cgst')?.value) || 0;
+  var sgstAmount = parseFloat(document.getElementById('hl-sgst')?.value) || 0;
+  var volumePoints = parseFloat(document.getElementById('hl-vp')?.value) || 0;
+  var grandTotalInput = parseFloat(document.getElementById('hl-grand')?.value);
+  var hasInvoiceFields = paidSubtotal > 0 || retailTotal > 0 || cgstAmount > 0 || sgstAmount > 0 || volumePoints > 0 || (!isNaN(grandTotalInput) && grandTotalInput > 0);
+
+  // Guard: if invoice data entered but no invoice number
+  if (!invNo && hasInvoiceFields) {
+    showToast('Please enter an Invoice / Order # for the Herbalife purchase', 'error');
+    return;
+  }
+
   // Collect all batch rows
   var rows = document.getElementById('inv-batch-rows').children;
-  if (!editId && rows.length === 0) { showToast('Add at least one product row','error'); return; }
   var payloads = [];
-  var hasError = false;
+  var hasRowErrors = false;
+
   Array.from(rows).forEach(function(row){
     var rid = row.id;
-    var pid = document.getElementById(rid+'-pid').value;
-    var pname = document.getElementById(rid+'-search').value.trim();
-    var qty = document.getElementById(rid+'-qty').value;
-    if (!pid || !qty) { showToast('Fill product and quantity for all rows','error'); hasError=true; return; }
-    payloads.push({ product_id:pid, product_name:pname, quantity:Number(qty), unit:document.getElementById(rid+'-unit').value.trim()||null, date:date, notes:notes, cost_price:document.getElementById(rid+'-cost').value||null, expiry_date:document.getElementById(rid+'-expiry').value||null });
+    var pid = document.getElementById(rid+'-pid')?.value;
+    var pname = document.getElementById(rid+'-search')?.value.trim();
+    var qty = document.getElementById(rid+'-qty')?.value;
+    // Skip completely empty row if invoice is being saved or multiple rows exist
+    if (!pid && !qty && !pname) return;
+    if (!pid || !qty) {
+      showToast('Fill product and quantity for all entered rows', 'error');
+      hasRowErrors = true;
+      return;
+    }
+    payloads.push({
+      product_id: pid,
+      product_name: pname,
+      quantity: Number(qty),
+      unit: document.getElementById(rid+'-unit')?.value.trim() || null,
+      date: date,
+      notes: notes,
+      cost_price: document.getElementById(rid+'-cost')?.value || null,
+      expiry_date: document.getElementById(rid+'-expiry')?.value || null
+    });
   });
-  if (hasError) return;
+
+  if (hasRowErrors) return;
+
+  // If neither invoice nor product rows provided
+  if (!editId && !invNo && payloads.length === 0) {
+    showToast('Please fill in invoice details or add at least one product row', 'error');
+    return;
+  }
+
   try {
     var hlPurchase = null;
-    if (!editId) {
+    if (!editId && invNo) {
       hlPurchase = await saveHerbalifeInvoice();
     }
-    if (hlPurchase && hlPurchase.id) {
+    if (hlPurchase && hlPurchase.id && payloads.length > 0) {
       payloads.forEach(function(p){ p.purchase_id = hlPurchase.id; });
     }
     if (editId) {
       // Single edit mode
       var pid2 = payloads[0] ? payloads[0].product_id : null;
       if (pid2) await dbUpdate('inventory_stock_in', editId, payloads[0]);
-    } else {
-      await Promise.all(payloads.map(function(p){ return dbInsert('inventory_stock_in', p); }));
+    } else if (payloads.length > 0) {
+      try {
+        await Promise.all(payloads.map(function(p){ return dbInsert('inventory_stock_in', p); }));
+      } catch (insertErr) {
+        // Fallback: If purchase_id column doesn't exist yet on inventory_stock_in
+        if (String(insertErr.message).indexOf('purchase_id') !== -1) {
+          console.warn('inventory_stock_in missing purchase_id column, retrying without it...');
+          payloads.forEach(function(p){ delete p.purchase_id; });
+          await Promise.all(payloads.map(function(p){ return dbInsert('inventory_stock_in', p); }));
+        } else {
+          throw insertErr;
+        }
+      }
     }
-    showToast(editId ? 'Stock In updated!' : payloads.length+' item(s) added!');
-    resetInvIn(); await loadInventory();
-  } catch(e) { showToast('Error: '+e.message,'error'); }
+
+    var successMsg = editId ? 'Stock In updated!' : (hlPurchase && payloads.length > 0 ? 'Herbalife purchase & ' + payloads.length + ' item(s) saved!' : (hlPurchase ? 'Herbalife purchase invoice saved!' : payloads.length + ' item(s) added!'));
+    showToast(successMsg, 'success');
+    resetInvIn();
+    await loadInventory();
+  } catch(e) {
+    console.error('saveStockIn failed:', e);
+    showToast('Error: ' + (e.message || String(e)), 'error');
+  }
 }
 function resetInvIn() {
   document.getElementById('inv-in-id').value='';

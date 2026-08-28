@@ -392,10 +392,51 @@ create policy "anon_all_tasks" on tasks for all using (true) with check (true);
 create policy "anon_all_task_history" on task_history for all using (true) with check (true);
 
 -- ==========================================
--- HERBALIFE PURCHASES CGST/SGST SPLIT
+-- 🧾 HERBALIFE PURCHASES TABLE & RLS POLICIES
 -- ==========================================
+CREATE TABLE IF NOT EXISTS herbalife_purchases (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  invoice_no text NOT NULL,
+  order_date date DEFAULT current_date,
+  retail_total numeric DEFAULT 0,
+  paid_subtotal numeric DEFAULT 0,
+  cgst_amount numeric DEFAULT 0,
+  sgst_amount numeric DEFAULT 0,
+  igst_amount numeric DEFAULT 0,
+  delivery_charges numeric DEFAULT 0,
+  grand_total numeric DEFAULT 0,
+  volume_points numeric DEFAULT 0,
+  wellness_center_id uuid REFERENCES wellness_centers(id),
+  created_at timestamptz DEFAULT now()
+);
+
+-- Ensure CGST/SGST/IGST columns exist if table was already created
 ALTER TABLE herbalife_purchases ADD COLUMN IF NOT EXISTS cgst_amount numeric DEFAULT 0;
 ALTER TABLE herbalife_purchases ADD COLUMN IF NOT EXISTS sgst_amount numeric DEFAULT 0;
+ALTER TABLE herbalife_purchases ADD COLUMN IF NOT EXISTS igst_amount numeric DEFAULT 0;
+ALTER TABLE herbalife_purchases ADD COLUMN IF NOT EXISTS wellness_center_id uuid REFERENCES wellness_centers(id);
+
+-- Add purchase_id reference to inventory_stock_in
+ALTER TABLE inventory_stock_in ADD COLUMN IF NOT EXISTS purchase_id uuid REFERENCES herbalife_purchases(id);
+
+-- Enable RLS and create permissive policies
+ALTER TABLE herbalife_purchases ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow all" ON herbalife_purchases;
+DROP POLICY IF EXISTS "anon_all_herbalife_purchases" ON herbalife_purchases;
+CREATE POLICY "allow all" ON herbalife_purchases FOR ALL USING (true) WITH CHECK (true);
+
+-- Ensure finance table has permissive RLS for INSERT
+ALTER TABLE finance ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow all" ON finance;
+DROP POLICY IF EXISTS "anon_all_finance" ON finance;
+CREATE POLICY "allow all" ON finance FOR ALL USING (true) WITH CHECK (true);
+
+-- Ensure inventory_stock_in has permissive RLS for INSERT
+ALTER TABLE inventory_stock_in ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow all" ON inventory_stock_in;
+DROP POLICY IF EXISTS "anon_all_inventory_stock_in" ON inventory_stock_in;
+CREATE POLICY "allow all" ON inventory_stock_in FOR ALL USING (true) WITH CHECK (true);
+
 
 
 
