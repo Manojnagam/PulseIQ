@@ -8320,7 +8320,7 @@ function renderUmsProfit() {
     });
   });
 
-  // Populate Month Filter
+  // Populate Month Filter dynamically
   var monthSel = document.getElementById('ums-month-filter');
   var allMonths = [];
   rows.forEach(function(r) {
@@ -8330,26 +8330,62 @@ function renderUmsProfit() {
 
   if (monthSel) {
     var curVal = monthSel.value;
-    var opts = '<option value="">All Months</option>' + allMonths.map(function(ym) {
-      return '<option value="' + ym + '">' + formatMonthYear(ym) + '</option>';
-    }).join('');
-    monthSel.innerHTML = opts;
-    if (curVal && allMonths.indexOf(curVal) !== -1) monthSel.value = curVal;
-    _umsSelectedMonth = monthSel.value;
+    var monthsSignature = allMonths.join('|');
+    if (monthSel.getAttribute('data-months-sig') !== monthsSignature) {
+      var opts = '<option value="">📅 All Months</option>' + allMonths.map(function(ym) {
+        return '<option value="' + ym + '">' + formatMonthYear(ym) + ' (' + ym + ')</option>';
+      }).join('');
+      monthSel.innerHTML = opts;
+      monthSel.setAttribute('data-months-sig', monthsSignature);
+      if (curVal && allMonths.indexOf(curVal) !== -1) monthSel.value = curVal;
+    }
+  }
+
+  // Populate Pack Filter dynamically from live pack_definitions
+  var packSel = document.getElementById('ums-pack-filter');
+  if (packSel) {
+    var curPack = packSel.value;
+    var distinctPacks = [];
+    var seenPackNames = {};
+    packDefs.forEach(function(p) {
+      var pName = p.pack_name || (p.days + ' Days');
+      if (!seenPackNames[pName]) {
+        seenPackNames[pName] = true;
+        distinctPacks.push({
+          id: p.id || pName,
+          name: pName,
+          days: p.days,
+          price: p.ums_price
+        });
+      }
+    });
+
+    var packsSignature = distinctPacks.map(function(p) { return p.id + ':' + p.name; }).join('|');
+    if (packSel.getAttribute('data-packs-sig') !== packsSignature) {
+      var packOpts = '<option value="">📦 All Packs</option>' + distinctPacks.map(function(p) {
+        var priceStr = p.price ? ' · ₹' + Number(p.price).toLocaleString('en-IN') : '';
+        return '<option value="' + (p.id || p.name) + '">' + p.name + ' (' + p.days + 'd' + priceStr + ')</option>';
+      }).join('') + '<option value="__custom__">⚠️ Custom / Non-standard Packs</option>';
+      packSel.innerHTML = packOpts;
+      packSel.setAttribute('data-packs-sig', packsSignature);
+      if (curPack) packSel.value = curPack;
+    }
   }
 
   // Filter rows
   var q = (document.getElementById('ums-search') ? document.getElementById('ums-search').value : '').trim().toLowerCase();
-  var packFilter = document.getElementById('ums-pack-filter') ? document.getElementById('ums-pack-filter').value : '';
-  var monthFilter = monthSel ? monthSel.value : _umsSelectedMonth;
+  var packFilter = packSel ? packSel.value : '';
+  var monthFilter = monthSel ? monthSel.value : '';
 
   var filtered = rows.filter(function(r) {
     if (q && !(r.customerName.toLowerCase().includes(q) || r.packName.toLowerCase().includes(q))) return false;
     if (monthFilter && r.month !== monthFilter) return false;
     if (packFilter) {
-      if (packFilter === 'other') {
-        if ([3, 26, 30, 90].indexOf(r.days) !== -1) return false;
-      } else if (Number(packFilter) !== r.days) return false;
+      if (packFilter === '__custom__') {
+        if (!r.hasCustomPrice) return false;
+      } else {
+        if (r.packId !== packFilter && r.packName !== packFilter) return false;
+      }
     }
     return true;
   });
@@ -8462,6 +8498,16 @@ function sortUms(col) {
     }
   });
 
+  renderUmsProfit();
+}
+
+function resetUmsFilters() {
+  var s = document.getElementById('ums-search');
+  var m = document.getElementById('ums-month-filter');
+  var p = document.getElementById('ums-pack-filter');
+  if (s) s.value = '';
+  if (m) m.value = '';
+  if (p) p.value = '';
   renderUmsProfit();
 }
 

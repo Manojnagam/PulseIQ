@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="PulseZen Supervisor Dashboard - Manage wellness centers, track coach performance, consult customers, and monitor revenue dynamically with AI wellness scans.">
-<link rel="preload" href="app.min.js?v=2.3.8" as="script">
+<link rel="preload" href="app.min.js?v=2.3.9" as="script">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1331,7 +1331,7 @@ if ('caches' in window) {
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
 <script defer src="auth.core.min.js?v=1.9.1"></script>
-<script defer src="app.min.js?v=2.3.8"></script>
+<script defer src="app.min.js?v=2.3.9"></script>
 <script>
 window._showCustDbg = function() {
   var sec = document.getElementById('sec-customers');
@@ -2576,20 +2576,16 @@ window._perf.t('loadStart');
         </div>
 
         <!-- Filter Toolbar -->
-        <div class="ttoolbar" style="justify-content:space-between;gap:8px;padding:10px 20px">
-          <div style="display:flex;gap:8px;flex:1;min-width:260px;flex-wrap:wrap">
-            <input class="search" id="ums-search" placeholder="🔍 Search customer or pack..." oninput="renderUmsProfit()" style="flex:1;min-width:180px">
-            <select id="ums-month-filter" onchange="renderUmsProfit()" style="padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-size:12.5px;cursor:pointer">
-              <option value="">All Months</option>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 20px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);flex-wrap:wrap">
+          <div style="display:flex;gap:10px;flex:1;min-width:280px;flex-wrap:wrap;align-items:center">
+            <input class="search" id="ums-search" placeholder="🔍 Search customer or pack..." oninput="renderUmsProfit()" style="flex:1;min-width:180px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:12.5px">
+            <select id="ums-month-filter" onchange="renderUmsProfit()" style="padding:8px 14px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer;min-width:150px">
+              <option value="">📅 All Months</option>
             </select>
-            <select id="ums-pack-filter" onchange="renderUmsProfit()" style="padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-size:12.5px;cursor:pointer">
-              <option value="">All Packs</option>
-              <option value="3">3-Day Trial</option>
-              <option value="26">26-Day Pack</option>
-              <option value="30">30-Day Pack</option>
-              <option value="90">90-Day Star UMS</option>
-              <option value="other">Custom / Other</option>
+            <select id="ums-pack-filter" onchange="renderUmsProfit()" style="padding:8px 14px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer;min-width:160px">
+              <option value="">📦 All Packs</option>
             </select>
+            <button class="btn-c" onclick="resetUmsFilters()" style="font-size:12px;padding:7px 12px;white-space:nowrap;cursor:pointer" title="Reset all filters">✕ Reset</button>
           </div>
         </div>
 
