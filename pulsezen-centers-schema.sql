@@ -490,7 +490,7 @@ SELECT '26-Day', 26, 5600, true
 WHERE NOT EXISTS (SELECT 1 FROM pack_definitions WHERE pack_name = '26-Day');
 
 INSERT INTO pack_definitions (pack_name, days, ums_price, active)
-SELECT '30-Day', 30, 6969, true
+SELECT '30-Day', 30, 6500, true
 WHERE NOT EXISTS (SELECT 1 FROM pack_definitions WHERE pack_name = '30-Day');
 
 INSERT INTO pack_definitions (pack_name, days, ums_price, active)

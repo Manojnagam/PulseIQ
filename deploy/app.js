@@ -7953,7 +7953,7 @@ var DEFAULT_PACK_SCOOPS = [
 var DEFAULT_PACK_DEFS = [
   { id: 'trial-3', pack_name: '3-Day Trial', days: 3, ums_price: 900, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
   { id: 'standard-26', pack_name: '26-Day', days: 26, ums_price: 5600, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
-  { id: 'premium-30', pack_name: '30-Day', days: 30, ums_price: 6969, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
+  { id: 'premium-30', pack_name: '30-Day', days: 30, ums_price: 6500, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
   { id: 'premium-30-gain', pack_name: 'Premium 30-Day', days: 30, ums_price: 5600, active: true, recipe: { f1: 2, ppp: 1, shakemate: 1, dinoshake: 1, afresh: 1 } },
   { id: 'premium-30-plus', pack_name: 'Premium 30-Day Plus', days: 30, ums_price: 7000, active: true, recipe: { f1: 2, ppp: 1, shakemate: 1, dinoshake: 1, afresh: 1 } },
   { id: 'hot-drink-30', pack_name: 'Hot Drink 30-Day', days: 30, ums_price: 1000, active: true, recipe: { afresh: 1 } },
