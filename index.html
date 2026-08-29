@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="PulseZen Supervisor Dashboard - Manage wellness centers, track coach performance, consult customers, and monitor revenue dynamically with AI wellness scans.">
-<link rel="preload" href="app.min.js?v=2.3.9" as="script">
+<link rel="preload" href="app.min.js?v=2.3.10" as="script">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -495,6 +495,12 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
 }
 
 @media(max-width:1024px){
+  .sidebar{width:285px !important;max-width:85vw !important;transform:translateX(-100%) !important;z-index:1000 !important;-webkit-overflow-scrolling:touch !important}
+  .sidebar.open{transform:translateX(0) !important}
+  .sb-overlay{z-index:999 !important}
+  .sb-overlay.open{display:block !important}
+  .main{margin-left:0 !important;padding:64px 16px 24px !important;width:100% !important;box-sizing:border-box !important}
+  .menu-btn{display:block !important;z-index:1001 !important}
   .stats {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 14px !important;
@@ -507,6 +513,9 @@ pre.sqlbox{background:#1a2e1f;color:#a8d8b4;padding:22px;border-radius:12px;font
     grid-template-columns: 1fr 1fr !important;
     gap: 16px !important;
   }
+  .twrap{overflow-x:auto !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;max-width:100% !important;border-radius:12px}
+  .twrap table{min-width:780px !important}
+  #ums-summary-kpis{grid-template-columns:repeat(auto-fit,minmax(130px,1fr)) !important;gap:8px !important;padding:10px 14px !important}
 }
 
 /* P0 Mobile Fix: <= 768px (covering all mobile DPR/resolutions) = 1 Column 100% Full Width Stacking */
@@ -1331,7 +1340,7 @@ if ('caches' in window) {
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
 <script defer src="auth.core.min.js?v=1.9.1"></script>
-<script defer src="app.min.js?v=2.3.9"></script>
+<script defer src="app.min.js?v=2.3.10"></script>
 <script>
 window._showCustDbg = function() {
   var sec = document.getElementById('sec-customers');
@@ -2578,7 +2587,7 @@ window._perf.t('loadStart');
         <!-- Filter Toolbar -->
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 20px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);flex-wrap:wrap">
           <div style="display:flex;gap:10px;flex:1;min-width:280px;flex-wrap:wrap;align-items:center">
-            <input class="search" id="ums-search" placeholder="🔍 Search customer or pack..." oninput="renderUmsProfit()" style="flex:1;min-width:180px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:12.5px">
+            <input class="search" id="ums-search" placeholder="🔍 Search customer or pack..." oninput="debouncedRenderUmsProfit()" style="flex:1;min-width:180px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:12.5px">
             <select id="ums-month-filter" onchange="renderUmsProfit()" style="padding:8px 14px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer;min-width:150px">
               <option value="">📅 All Months</option>
             </select>

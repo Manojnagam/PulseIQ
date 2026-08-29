@@ -996,7 +996,7 @@ function getOrgCenterIds(rootId) {
 }
 
 function switchActiveCenter(centerId) {
-  if (window.innerWidth <= 768) {
+  if (window.innerWidth <= 1024) {
     var sb = document.getElementById('sidebar');
     if (sb && sb.classList.contains('open')) {
       if (typeof toggleSidebar === 'function') toggleSidebar();
@@ -2570,6 +2570,7 @@ function goTo(name, el) {
   window._tabPerfMetrics = window._tabPerfMetrics || {};
 
   window.invalidateTabCache = function(tabName) {
+    _umsComputedDataCache = null;
     if (tabName) {
       delete window._loadedTabs[tabName];
       window._domCache = null;
@@ -2607,7 +2608,7 @@ function goTo(name, el) {
   var targetMq = document.querySelector('.mq-item[onclick*="' + name + '"]');
   if (targetMq) targetMq.classList.add('active');
 
-  if (window.innerWidth <= 768) {
+  if (window.innerWidth <= 1024) {
     var sb = document.getElementById('sidebar');
     var sbo = document.getElementById('sb-overlay');
     if (sb) sb.classList.remove('open');
@@ -8148,36 +8149,48 @@ async function loadPackProfit() {
   }).join('');
 }
 
-function renderUmsProfit() {
-  var tb = document.getElementById('ums-profit-body');
-  var tf = document.getElementById('ums-profit-foot');
-  if (!tb) return;
+function debounce(fn, wait) {
+  var timeout;
+  return function() {
+    var context = this, args = arguments;
+    clearTimeout(timeout);
+    timeout = setTimeout(function() {
+      fn.apply(context, args);
+    }, wait || 250);
+  };
+}
 
+var _umsComputedDataCache = null;
+
+function getUmsCalculatedRows() {
   var activeCenter = ACTIVE_CENTER || '';
+  var custs = D.customers || [];
+  var fin = D.finance || [];
+  var pay = D.payments || [];
   var packDefs = getPackDefinitions();
+  var costs = PACK_COSTS || [];
+
+  // Fast cache signature
+  var sig = activeCenter + '|' + custs.length + '|' + fin.length + '|' + pay.length + '|' + packDefs.length + '|' + costs.length;
+  if (_umsComputedDataCache && _umsComputedDataCache.sig === sig) {
+    return _umsComputedDataCache.rows;
+  }
 
   // 1. Gather linked customers (exclude Walk-ins, Product Users, Custom, unlinked)
   var UNLINKED_PACK_TYPES = ['walk-in', 'walk-in product', 'product user', 'custom'];
-  var targetCustomers = (D.customers || []).filter(function(c) {
+  var targetCustomers = custs.filter(function(c) {
     if (activeCenter && c.wellness_center_id !== activeCenter && c.center_id !== activeCenter) return false;
-
-    // If pack_id is set, customer is linked!
     if (c.pack_id) return true;
-
-    // If no pack_id, check pack_type
     var pt = (c.pack_type || '').trim().toLowerCase();
     if (!pt || UNLINKED_PACK_TYPES.indexOf(pt) !== -1) return false;
-
-    // Check if matches a known pack definition
-    var match = packDefs.some(function(p) {
+    return packDefs.some(function(p) {
       return p.pack_name.toLowerCase() === pt || p.days === parsePack(pt);
     });
-    return match;
   });
 
   // Group finance income rows by customer_id
   var finByCust = {};
-  (D.finance || []).forEach(function(f) {
+  fin.forEach(function(f) {
     if (f.type === 'income' && (f.category === 'Pack sale to customer' || f.category === 'Coach pack payment' || (f.description && f.description.toLowerCase().includes('pack')))) {
       var cid = f.customer_id;
       if (cid) {
@@ -8189,7 +8202,7 @@ function renderUmsProfit() {
 
   // Group payments by person_id
   var paymentsByPerson = {};
-  (D.payments || []).forEach(function(p) {
+  pay.forEach(function(p) {
     if (p.person_id) {
       paymentsByPerson[p.person_id] = paymentsByPerson[p.person_id] || [];
       paymentsByPerson[p.person_id].push(p);
@@ -8199,7 +8212,6 @@ function renderUmsProfit() {
   var rows = [];
 
   targetCustomers.forEach(function(c) {
-    // Determine pack definition
     var matchingDef = null;
     if (c.pack_id) {
       matchingDef = packDefs.find(function(p) { return p.id === c.pack_id; });
@@ -8212,7 +8224,7 @@ function renderUmsProfit() {
         if (d > 0) matchingDef = packDefs.find(function(p) { return p.days === d; });
       }
     }
-    if (!matchingDef) return; // Skip if no pack definition found
+    if (!matchingDef) return;
 
     var defPrice = Number(matchingDef.ums_price) || 5600;
     var custPrice = (c.pack_price != null && Number(c.pack_price) > 0) ? Number(c.pack_price) : null;
@@ -8222,16 +8234,12 @@ function renderUmsProfit() {
     var packName = matchingDef.pack_name || (packDays + ' Days');
     var dailyCost = getDailyShakeCost(matchingDef);
 
-    // Collect payment events { date: 'YYYY-MM-DD', amount: Number }
     var rawTxns = [];
-
-    // 1. Check finance rows for this customer
     var custFin = finByCust[c.id] || [];
     if (!custFin.length) {
-      // Try description match if customer_id was null
-      var cNameLow = (c.name || '').toLowerCase();
-      (D.finance || []).forEach(function(f) {
-        if (f.type === 'income' && f.category === 'Pack sale to customer' && f.description && f.description.toLowerCase().includes(cNameLow)) {
+      var cNameLow = (c.name || '').toLowerCase().trim();
+      fin.forEach(function(f) {
+        if (f.type === 'income' && (f.category === 'Pack sale to customer' || f.category === 'Coach pack payment') && f.description && f.description.toLowerCase().includes(cNameLow)) {
           custFin.push(f);
         }
       });
@@ -8248,10 +8256,8 @@ function renderUmsProfit() {
         }
       });
     } else if (paymentsByPerson[c.id] && paymentsByPerson[c.id].length > 0) {
-      // 2. Check payments rows
       paymentsByPerson[c.id].forEach(function(p) {
         var notes = p.notes || '';
-        // Check if notes has date-stamped installments e.g. "2026-07-15: ₹3000; 2026-08-01: ₹2600"
         var instRegex = /(\d{4}-\d{2}-\d{2}):\s*₹?([\d,.]+)/g;
         var match;
         var foundInst = false;
@@ -8269,12 +8275,10 @@ function renderUmsProfit() {
         }
       });
     } else {
-      // 3. Fallback to customer join / start date and pack price
       var defaultDate = c.pack_start_date || c.join_date || c.created_at || '2026-08-01';
       rawTxns.push({ date: defaultDate, amount: effectivePrice });
     }
 
-    // Group rawTxns by month (YYYY-MM)
     var monthlySums = {};
     rawTxns.forEach(function(t) {
       var dStr = String(t.date || '').trim();
@@ -8319,6 +8323,18 @@ function renderUmsProfit() {
       });
     });
   });
+
+  _umsComputedDataCache = { sig: sig, rows: rows };
+  return rows;
+}
+
+function renderUmsProfit() {
+  var tb = document.getElementById('ums-profit-body');
+  var tf = document.getElementById('ums-profit-foot');
+  if (!tb) return;
+
+  var packDefs = getPackDefinitions();
+  var rows = getUmsCalculatedRows();
 
   // Populate Month Filter dynamically
   var monthSel = document.getElementById('ums-month-filter');
@@ -8482,6 +8498,9 @@ function renderUmsProfit() {
   }
 }
 
+var debouncedRenderUmsProfit = debounce(renderUmsProfit, 250);
+var debouncedRenderFinance = debounce(renderFinance, 250);
+
 function sortUms(col) {
   if (_umsSort.col === col) {
     _umsSort.dir = _umsSort.dir === 'asc' ? 'desc' : 'asc';
@@ -8562,6 +8581,7 @@ function exportUmsProfitCSV() {
 
 async function recalculatePackProfit() {
   showToast('🔄 Recalculating pack profitability & UMS stats...');
+  _umsComputedDataCache = null;
   await loadPackProfitConfig();
   await loadPackProfit();
   renderUmsProfit();
@@ -8758,6 +8778,7 @@ async function saveCostSettings() {
     }));
 
     // Refresh memory and UI
+    _umsComputedDataCache = null;
     await loadPackProfitConfig();
     closeModal('cost-settings');
     await loadPackProfit();
