@@ -8509,6 +8509,8 @@ function renderUmsProfit() {
 
 var debouncedRenderUmsProfit = debounce(renderUmsProfit, 250);
 var debouncedRenderFinance = debounce(renderFinance, 250);
+window.debouncedRenderUmsProfit = debouncedRenderUmsProfit;
+window.debouncedRenderFinance = debouncedRenderFinance;
 
 function sortUms(col) {
   if (_umsSort.col === col) {
