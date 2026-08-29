@@ -2714,6 +2714,43 @@ function toggleNavGroup(id) {
   lbl.classList.toggle('collapsed', !isCollapsed);
 }
 
+function parseDobToAge(dob) {
+  if (!dob) return null;
+  var dobStr = String(dob).trim();
+  if (!dobStr) return null;
+  var dobDate = null;
+  if (dobStr.includes('-')) {
+    var parts = dobStr.split('-');
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      dobDate = new Date(dobStr);
+    } else if (parts[2] && parts[2].length === 4) {
+      // DD-MM-YYYY
+      dobDate = new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
+    } else {
+      dobDate = new Date(dobStr);
+    }
+  } else if (dobStr.includes('/')) {
+    var parts = dobStr.split('/');
+    if (parts[2] && parts[2].length === 4) {
+      // DD/MM/YYYY
+      dobDate = new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
+    } else if (parts[0].length === 4) {
+      // YYYY/MM/DD
+      dobDate = new Date(parts[0] + '-' + parts[1] + '-' + parts[2]);
+    }
+  } else {
+    dobDate = new Date(dobStr);
+  }
+  if (dobDate && !isNaN(dobDate.getTime())) {
+    var calcAge = Math.floor((new Date() - dobDate) / (365.25 * 24 * 3600 * 1000));
+    if (!isNaN(calcAge) && calcAge > 0 && calcAge < 120) {
+      return calcAge;
+    }
+  }
+  return null;
+}
+
 function autofillBodyHeightAge(custId) {
   var el_h = document.getElementById('body-height');
   var el_a = document.getElementById('body-age-field');
@@ -2724,97 +2761,127 @@ function autofillBodyHeightAge(custId) {
     el_a.value = '';
     el_h.placeholder = '170';
     el_a.placeholder = '30';
+    calcBody();
     return;
   }
 
-  // 1. Supervisor (Myself)
+  // 1. Supervisor / Center Owner (Myself)
   if (custId === '__sv__') {
     var op = JSON.parse(safeStorage.getItem('ownerProfile')||'{}');
+    var p = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
     var svId = op.sv_body_id;
-    var lastRec = svId ? (D.body||[]).filter(function(b){return b.customer_id===svId;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0] : null;
-    if (lastRec) {
-      if (lastRec.height) el_h.value = lastRec.height;
-      if (lastRec.age)    el_a.value = lastRec.age;
-    } else {
-      var p = JSON.parse(safeStorage.getItem('sv_profile')||'{}');
-      if (op.height || p.height) el_h.value = op.height || p.height;
-      if (op.age || p.age)       el_a.value = op.age || p.age;
+    var svName = (op.name || p.name || '').trim().toLowerCase();
+
+    // Check all body composition scans for supervisor (sorted newest first)
+    var svScans = (D.body||[]).filter(function(b){
+      if (svId && b.customer_id === svId) return true;
+      if (b.customer_id === '__sv__') return true;
+      if (svName && b.customer_name && b.customer_name.trim().toLowerCase() === svName) return true;
+      return false;
+    }).sort(function(a,b){
+      var da = a.date ? new Date(a.date).getTime() : 0;
+      var db = b.date ? new Date(b.date).getTime() : 0;
+      return db - da;
+    });
+
+    var svHeight = '';
+    var svAge = '';
+    for (var i = 0; i < svScans.length; i++) {
+      if (!svHeight && svScans[i].height && parseFloat(svScans[i].height) > 0) svHeight = svScans[i].height;
+      if (!svAge && svScans[i].age && parseInt(svScans[i].age) > 0) svAge = svScans[i].age;
+      if (svHeight && svAge) break;
     }
+
+    if (!svHeight) svHeight = op.height || p.height || '';
+    if (!svAge) svAge = op.age || p.age || '';
+
+    el_h.value = svHeight || '';
+    el_a.value = svAge || '';
+    el_h.placeholder = svHeight ? String(svHeight) : '170';
+    el_a.placeholder = svAge ? String(svAge) : '30';
+    calcBody();
     return;
   }
 
-  // 2. Resolve walkin vs customer/coach
-  var isWalkin = custId.startsWith('walkin__');
+  // 2. Resolve walkin vs customer / coach
+  var isWalkin = String(custId).startsWith('walkin__');
   var resolvedId = isWalkin ? custId.slice(8) : custId;
   var linkedIds = typeof getLinkedBodyCustomerIds === 'function' ? getLinkedBodyCustomerIds(custId) : [resolvedId, 'walkin__' + resolvedId];
 
-  // Find latest record in body composition across all linked IDs (including converted walk-in scans)
-  var lastRec = (D.body||[]).filter(function(b){ return linkedIds.indexOf(b.customer_id) !== -1; }).sort(function(a,b){ return new Date(b.date) - new Date(a.date); })[0];
-  
+  // Search ALL historical body composition scans for this customer (sorted newest first)
+  var allScans = (D.body||[]).filter(function(b){
+    return linkedIds.indexOf(b.customer_id) !== -1 || linkedIds.indexOf('walkin__' + b.customer_id) !== -1;
+  }).sort(function(a,b){
+    var da = a.date ? new Date(a.date).getTime() : 0;
+    var db = b.date ? new Date(b.date).getTime() : 0;
+    return db - da;
+  });
+
   var heightVal = '';
   var ageVal = '';
 
-  if (lastRec) {
-    if (lastRec.height) heightVal = lastRec.height;
-    if (lastRec.age)    ageVal = lastRec.age;
+  // 3. Scan historical records for the latest recorded non-empty height and age
+  for (var i = 0; i < allScans.length; i++) {
+    var sc = allScans[i];
+    if (!heightVal && sc.height && parseFloat(sc.height) > 0) {
+      heightVal = sc.height;
+    }
+    if (!ageVal && sc.age && parseInt(sc.age) > 0) {
+      ageVal = sc.age;
+    }
+    if (heightVal && ageVal) break;
   }
 
-  // If latest scan record doesn't have height or age, fallback to profile info
-  if (!heightVal || !ageVal) {
-    var person = null;
-    if (isWalkin) {
-      person = (D.walkins||[]).find(function(w){return w.id === resolvedId;});
-    } else {
-      person = (D.customers||[]).find(function(c){return c.id === resolvedId;})
-            || (D.coaches||[]).find(function(c){return c.id === resolvedId;});
-    }
+  // 4. Fallback to Customer / Coach profile
+  var person = null;
+  if (isWalkin) {
+    person = (D.walkins||[]).find(function(w){return w.id === resolvedId;});
+  } else {
+    person = (D.customers||[]).find(function(c){return c.id === resolvedId;})
+          || (D.coaches||[]).find(function(c){return c.id === resolvedId;});
+  }
 
-    if (person) {
-      if (!heightVal && person.height) heightVal = person.height;
-      if (!ageVal) {
-        if (person.age) {
-          ageVal = person.age;
-        } else if (person.dob) {
-          var dobStr = String(person.dob).trim();
-          var dobDate = null;
-          if (dobStr.includes('-')) {
-            var parts = dobStr.split('-');
-            if (parts[0].length === 4) {
-              // YYYY-MM-DD
-              dobDate = new Date(dobStr);
-            } else if (parts[2] && parts[2].length === 4) {
-              // DD-MM-YYYY
-              dobDate = new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
-            } else {
-              dobDate = new Date(dobStr);
-            }
-          } else {
-            dobDate = new Date(dobStr);
-          }
-          if (dobDate && !isNaN(dobDate.getTime())) {
-            var calcAge = Math.floor((new Date() - dobDate) / (365.25 * 24 * 3600 * 1000));
-            if (!isNaN(calcAge) && calcAge > 0 && calcAge < 120) {
-              ageVal = calcAge;
-            }
-          }
-        }
+  if (person) {
+    if (!heightVal && person.height && parseFloat(person.height) > 0) {
+      heightVal = person.height;
+    }
+    if (!ageVal) {
+      if (person.age && parseInt(person.age) > 0) {
+        ageVal = person.age;
+      } else if (person.dob) {
+        var dobParsed = parseDobToAge(person.dob);
+        if (dobParsed) ageVal = dobParsed;
       }
     }
+  }
 
-    // Also check converted walk-in profile if customer profile didn't have height/age
-    if ((!heightVal || !ageVal) && !isWalkin) {
-      var walkinMatch = (D.walkins||[]).find(function(w){ return w.converted_customer_id === resolvedId || w.id === resolvedId; });
-      if (walkinMatch) {
-        if (!heightVal && walkinMatch.height) heightVal = walkinMatch.height;
-        if (!ageVal && walkinMatch.age) ageVal = walkinMatch.age;
+  // 5. Fallback to converted Walk-in record if customer profile was incomplete
+  if ((!heightVal || !ageVal) && !isWalkin) {
+    var walkinMatch = (D.walkins||[]).find(function(w){
+      return w.converted_customer_id === resolvedId || w.id === resolvedId;
+    });
+    if (walkinMatch) {
+      if (!heightVal && walkinMatch.height && parseFloat(walkinMatch.height) > 0) {
+        heightVal = walkinMatch.height;
+      }
+      if (!ageVal) {
+        if (walkinMatch.age && parseInt(walkinMatch.age) > 0) {
+          ageVal = walkinMatch.age;
+        } else if (walkinMatch.dob) {
+          var dobParsed2 = parseDobToAge(walkinMatch.dob);
+          if (dobParsed2) ageVal = dobParsed2;
+        }
       }
     }
   }
 
   el_h.value = heightVal || '';
   el_a.value = ageVal || '';
-  el_h.placeholder = heightVal ? String(heightVal) : 'Not on file — please enter';
-  el_a.placeholder = ageVal ? String(ageVal) : 'Not on file — please enter';
+  el_h.placeholder = heightVal ? String(heightVal) : '170';
+  el_a.placeholder = ageVal ? String(ageVal) : '30';
+
+  // Automatically recalculate BMI, Visceral Fat preview, and Health Score Ring
+  calcBody();
 }
 
 // ── MODALS ──
@@ -2842,7 +2909,7 @@ function openModal(type) {
   if(type==='body') {
     var bodyCust = document.getElementById('body-customer');
     if(bodyCust && !document.getElementById('body-id').value) {
-      if(_selectedBodyCustId) {
+      if(bodyCust.value !== '__sv__' && _selectedBodyCustId) {
         var _isWalkin = (D.walkins||[]).some(function(w){ return w.id === _selectedBodyCustId; });
         bodyCust.value = _isWalkin ? 'walkin__' + _selectedBodyCustId : _selectedBodyCustId;
       }

@@ -4680,7 +4680,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         </div>
       </div>
       <div class="fr">
-        <div class="fg"><label for="body-customer">Customer *</label><select id="body-customer"><option value="">Select person</option></select></div>
+        <div class="fg"><label for="body-customer">Customer *</label><select id="body-customer" onchange="autofillBodyHeightAge(this.value)"><option value="">Select person</option></select></div>
         <div class="fg"><label for="body-date">Date *</label><input type="date" id="body-date"></div>
       </div>
       <div class="fr">
