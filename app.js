@@ -1052,6 +1052,7 @@ function _applySwitch(centerId) {
     safeStorage.removeItem('activeCenter');
   }
   _daysLeftCache = {};
+  if (typeof invalidateUmsCache === 'function') invalidateUmsCache();
   updateSidebarLogo();
   var sel = document.getElementById('center-switcher');
   if(sel) sel.value = ACTIVE_CENTER;
@@ -2230,6 +2231,7 @@ function updateSidebarLogo() {
 }
 async function loadCustomers() {
   D.customers = await dbGetAll('customers', 'created_at', _cFilter());
+  if (typeof invalidateUmsCache === 'function') invalidateUmsCache();
   try { renderCustomers(); } catch(e) {}
   try { renderOverview(); } catch(e) {}
   try {
@@ -2276,6 +2278,7 @@ async function loadBody() {
 async function loadFinance() {
   try { await loadPackProfitConfig(); } catch(e) {}
   D.finance = await dbGetAll('finance','date');
+  if (typeof invalidateUmsCache === 'function') invalidateUmsCache();
   try { renderFinance(); } catch(e) {}
   try { renderOverview(); } catch(e) {}
 }
@@ -8107,6 +8110,7 @@ async function loadPackProfitConfig() {
   } catch (e) {
     console.warn('pack_definitions load fallback:', e);
   }
+  if (typeof invalidateUmsCache === 'function') invalidateUmsCache();
 }
 
 async function loadPackProfit() {
@@ -8161,6 +8165,11 @@ function debounce(fn, wait) {
 }
 
 var _umsComputedDataCache = null;
+
+function invalidateUmsCache() {
+  _umsComputedDataCache = null;
+}
+window.invalidateUmsCache = invalidateUmsCache;
 
 function getUmsCalculatedRows() {
   var activeCenter = ACTIVE_CENTER || '';
@@ -9278,7 +9287,7 @@ async function saveCustomer() {
         showToast('Photos uploaded!', 'success');
       } catch(pe) { showToast('Photo upload failed: ' + pe.message, 'error'); }
     }
-    closeModal('customer'); await loadCustomers(); renderOverview();
+    closeModal('customer'); if (typeof invalidateUmsCache === 'function') invalidateUmsCache(); await loadCustomers(); renderOverview();
     // ── Mark walk-in as converted if this customer came from a walk-in ──
     var _savedCustIdForWalkin = id || (Array.isArray(savedRecords) && savedRecords[0] ? savedRecords[0].id : null);
     if(window._convertingWalkinId && _savedCustIdForWalkin) _markWalkinConverted(_savedCustIdForWalkin);
@@ -9976,7 +9985,7 @@ async function saveFinance() {
   try {
     if(id) await dbUpdate('finance',id,payload); else await dbInsert('finance',payload);
     auditLog(id?'Updated':'Added','Finance', (payload.type==='income'?'Income':'Expense')+' ₹'+Number(payload.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})+(payload.description?' — '+payload.description:''));
-    showToast(id?'Transaction updated!':'Transaction added!'); closeModal('finance'); await loadFinance(); renderOverview();
+    showToast(id?'Transaction updated!':'Transaction added!'); closeModal('finance'); if (typeof invalidateUmsCache === 'function') invalidateUmsCache(); await loadFinance(); renderOverview();
   }
   catch(e) { showToast('Error saving transaction: '+e.message,'error'); }
 }
@@ -10010,6 +10019,7 @@ async function delRecord(table, id, section) {
   var detail = rec ? (rec.name||rec.description||id) : id;
   try {
     await dbDelete(table, id);
+    if (typeof invalidateUmsCache === 'function') invalidateUmsCache();
     auditLog('Deleted', entityName, detail);
     showToast('Deleted!');
     if(section==='centers') await loadCenters();
@@ -14000,6 +14010,7 @@ async function loadPayments(){
     var r=await dbGetAll('payments','payment_date');
     var rawPayments=Array.isArray(r)?r:[];
     D.payments=filterPaymentsByCenter(rawPayments);
+    if (typeof invalidateUmsCache === 'function') invalidateUmsCache();
   }
   catch(e){D.payments=[];}
   renderPayments();checkOverduePayments();
@@ -14440,6 +14451,7 @@ async function savePayment(){
     notes:document.getElementById('payment-notes')?document.getElementById('payment-notes').value.trim()||null:null,
     center_id: ACTIVE_CENTER || null};
   try{if(id)await dbUpdate('payments',id,payload);else await dbInsert('payments',payload);
+    if (typeof invalidateUmsCache === 'function') invalidateUmsCache();
     showToast(id?'Updated!':'Saved!');closeModal('payment');await loadPayments();}
   catch(e){showToast('Error: '+e.message,'error');}
 }
@@ -14458,7 +14470,7 @@ function editPayment(id){
 }
 async function delPayment(id){
   if(!confirm('Delete?'))return;
-  try{await dbDelete('payments',id);showToast('Deleted!');await loadPayments();}
+  try{await dbDelete('payments',id);if (typeof invalidateUmsCache === 'function') invalidateUmsCache();showToast('Deleted!');await loadPayments();}
   catch(e){showToast('Error: '+e.message,'error');}
 }
 function sendPaymentWA(pid){
@@ -16836,6 +16848,7 @@ async function _doBulkGenerate() {
     // Reload customers so diet_plan fields reflect what the edge function saved
     var fresh = await dbGetAll('customers', '*');
     if(fresh) D.customers = fresh;
+    if (typeof invalidateUmsCache === 'function') invalidateUmsCache();
 
     renderCustomers();
     showToast('Done! '+data.done+' plans generated'+(data.failed?' | '+data.failed+' failed':''),'success');
