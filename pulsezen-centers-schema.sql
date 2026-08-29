@@ -502,6 +502,83 @@ ALTER TABLE customers ADD COLUMN IF NOT EXISTS pack_id uuid REFERENCES pack_defi
 ALTER TABLE finance ADD COLUMN IF NOT EXISTS pack_id uuid REFERENCES pack_definitions(id);
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS pack_id uuid REFERENCES pack_definitions(id);
 
+-- ==========================================
+-- 🥛 UMS PER-PACK RECIPES & CATALOGUE EXPANSION (v2.3.8)
+-- ==========================================
+
+-- 1. ADD RECIPE COLUMN TO PACK_DEFINITIONS
+ALTER TABLE pack_definitions ADD COLUMN IF NOT EXISTS recipe jsonb;
+
+-- 2. ADD DINOSHAKE TO PACK_COST_CONFIG (₹607 ÷ 19 servings = ₹31.95/scoop ex-tax)
+INSERT INTO pack_cost_config (product_key, label, cost_per_scoop)
+VALUES ('dinoshake', 'Dinoshake', 31.95)
+ON CONFLICT (product_key) DO UPDATE
+SET cost_per_scoop = EXCLUDED.cost_per_scoop, label = EXCLUDED.label, updated_at = now();
+
+-- 3. UPDATE EXISTING 4 PACK DEFINITIONS WITH WEIGHT-LOSS RECIPES
+UPDATE pack_definitions
+SET recipe = '{"f1":3,"ppp":1,"shakemate":1,"afresh":1}'::jsonb
+WHERE pack_name IN ('3-Day Trial', '26-Day', '30-Day', '90-Day');
+
+-- 4. INSERT / UPDATE 3 NEW PACK DEFINITIONS WITH SPECIFIC RECIPES
+INSERT INTO pack_definitions (pack_name, days, ums_price, active, recipe)
+SELECT 'Premium 30-Day', 30, 5600, true, '{"f1":2,"ppp":1,"shakemate":1,"dinoshake":1,"afresh":1}'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM pack_definitions WHERE pack_name = 'Premium 30-Day');
+
+UPDATE pack_definitions
+SET days = 30, ums_price = 5600, active = true, recipe = '{"f1":2,"ppp":1,"shakemate":1,"dinoshake":1,"afresh":1}'::jsonb
+WHERE pack_name = 'Premium 30-Day';
+
+INSERT INTO pack_definitions (pack_name, days, ums_price, active, recipe)
+SELECT 'Premium 30-Day Plus', 30, 7000, true, '{"f1":2,"ppp":1,"shakemate":1,"dinoshake":1,"afresh":1}'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM pack_definitions WHERE pack_name = 'Premium 30-Day Plus');
+
+UPDATE pack_definitions
+SET days = 30, ums_price = 7000, active = true, recipe = '{"f1":2,"ppp":1,"shakemate":1,"dinoshake":1,"afresh":1}'::jsonb
+WHERE pack_name = 'Premium 30-Day Plus';
+
+INSERT INTO pack_definitions (pack_name, days, ums_price, active, recipe)
+SELECT 'Hot Drink 30-Day', 30, 1000, true, '{"afresh":1}'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM pack_definitions WHERE pack_name = 'Hot Drink 30-Day');
+
+UPDATE pack_definitions
+SET days = 30, ums_price = 1000, active = true, recipe = '{"afresh":1}'::jsonb
+WHERE pack_name = 'Hot Drink 30-Day';
+
+-- 5. LINK REMAINING CUSTOMERS (TASK 2)
+-- Link 'Premium 30 days' @ ₹5600 to 'Premium 30-Day' (M Koushik, Naveena Jyothi, Manoj Nagam)
+UPDATE customers
+SET pack_id = (SELECT id FROM pack_definitions WHERE pack_name = 'Premium 30-Day' LIMIT 1)
+WHERE (pack_type = 'Premium 30 days' AND (pack_price = 5600 OR pack_price IS NULL OR name IN ('M Koushik', 'Naveena Jyothi', 'Manoj Nagam')))
+  AND name NOT IN ('Siva paarvati');
+
+-- Link 'Premium 30 days' @ ₹7000 to 'Premium 30-Day Plus' (Siva paarvati)
+UPDATE customers
+SET pack_id = (SELECT id FROM pack_definitions WHERE pack_name = 'Premium 30-Day Plus' LIMIT 1)
+WHERE (pack_type = 'Premium 30 days' AND (pack_price = 7000 OR name = 'Siva paarvati'))
+  OR (name = 'Siva paarvati');
+
+-- Link 'Hot Drink 30 days' to 'Hot Drink 30-Day' (Lalitha)
+UPDATE customers
+SET pack_id = (SELECT id FROM pack_definitions WHERE pack_name = 'Hot Drink 30-Day' LIMIT 1)
+WHERE pack_type = 'Hot Drink 30 days' OR name = 'Lalitha';
+
+-- Sync pack_id to payments and finance for these newly linked customers
+UPDATE payments p
+SET pack_id = c.pack_id
+FROM customers c
+WHERE p.person_id = c.id
+  AND c.pack_id IS NOT NULL
+  AND p.pack_id IS NULL;
+
+UPDATE finance f
+SET pack_id = c.pack_id
+FROM customers c
+WHERE f.customer_id = c.id
+  AND c.pack_id IS NOT NULL
+  AND f.pack_id IS NULL;
+
+
 
 
 

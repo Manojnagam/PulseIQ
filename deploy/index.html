@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="PulseZen Supervisor Dashboard - Manage wellness centers, track coach performance, consult customers, and monitor revenue dynamically with AI wellness scans.">
-<link rel="preload" href="app.min.js?v=2.3.7" as="script">
+<link rel="preload" href="app.min.js?v=2.3.8" as="script">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1331,7 +1331,7 @@ if ('caches' in window) {
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
 <script defer src="auth.core.min.js?v=1.9.1"></script>
-<script defer src="app.min.js?v=2.3.7"></script>
+<script defer src="app.min.js?v=2.3.8"></script>
 <script>
 window._showCustDbg = function() {
   var sec = document.getElementById('sec-customers');
@@ -2534,9 +2534,9 @@ window._perf.t('loadStart');
           <div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px">
               <span>📊</span> <span data-t="pt_ums_profit">UMS Pack Profit Tracking</span>
-              <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(39,174,96,0.15);color:var(--success);font-weight:700">Ex-GST</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(39,174,96,0.15);color:var(--success);font-weight:700">Monthly Ex-GST</span>
             </div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px" data-t="ps_ums_profit">Real profit per customer pack excluding GST (Daily shake cost ₹103.32)</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px" data-t="ps_ums_profit">Real monthly profit per customer pack excluding GST (5% split into 2.5% SGST + 2.5% CGST)</div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <button class="btn-c" style="font-size:12px;white-space:nowrap;padding:6px 12px" onclick="exportUmsProfitCSV()">⬇️ Export CSV</button>
@@ -2544,10 +2544,22 @@ window._perf.t('loadStart');
         </div>
 
         <!-- UMS Summary KPI Mini-Cards -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.15)" id="ums-summary-kpis">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.15)" id="ums-summary-kpis">
           <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px">
-            <div style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700" data-t="lbl_total_ums_collected">Total UMS Collected</div>
+            <div style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700" data-t="lbl_total_ums_collected">Total Collected</div>
             <div id="ums-total-collected" style="font-size:18px;font-weight:700;color:var(--success);margin-top:4px;font-family:'Space Grotesk',sans-serif">₹0</div>
+          </div>
+          <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px">
+            <div style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700" data-t="lbl_total_sgst">Total SGST (2.5%)</div>
+            <div id="ums-total-sgst" style="font-size:18px;font-weight:700;color:var(--muted);margin-top:4px;font-family:'Space Grotesk',sans-serif">₹0</div>
+          </div>
+          <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px">
+            <div style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700" data-t="lbl_total_cgst">Total CGST (2.5%)</div>
+            <div id="ums-total-cgst" style="font-size:18px;font-weight:700;color:var(--muted);margin-top:4px;font-family:'Space Grotesk',sans-serif">₹0</div>
+          </div>
+          <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px">
+            <div style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700" data-t="lbl_total_net_rev">Net Ex-Tax Revenue</div>
+            <div id="ums-total-net-rev" style="font-size:18px;font-weight:700;color:var(--text);margin-top:4px;font-family:'Space Grotesk',sans-serif">₹0</div>
           </div>
           <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px">
             <div style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700" data-t="lbl_total_prod_cost">Total Product Cost</div>
@@ -2567,6 +2579,9 @@ window._perf.t('loadStart');
         <div class="ttoolbar" style="justify-content:space-between;gap:8px;padding:10px 20px">
           <div style="display:flex;gap:8px;flex:1;min-width:260px;flex-wrap:wrap">
             <input class="search" id="ums-search" placeholder="🔍 Search customer or pack..." oninput="renderUmsProfit()" style="flex:1;min-width:180px">
+            <select id="ums-month-filter" onchange="renderUmsProfit()" style="padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-size:12.5px;cursor:pointer">
+              <option value="">All Months</option>
+            </select>
             <select id="ums-pack-filter" onchange="renderUmsProfit()" style="padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-size:12.5px;cursor:pointer">
               <option value="">All Packs</option>
               <option value="3">3-Day Trial</option>
@@ -2574,11 +2589,6 @@ window._perf.t('loadStart');
               <option value="30">30-Day Pack</option>
               <option value="90">90-Day Star UMS</option>
               <option value="other">Custom / Other</option>
-            </select>
-            <select id="ums-status-filter" onchange="renderUmsProfit()" style="padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-size:12.5px;cursor:pointer">
-              <option value="">All Statuses</option>
-              <option value="paid">✅ Fully Paid</option>
-              <option value="partial">⏳ Balance Due</option>
             </select>
           </div>
         </div>
@@ -2588,19 +2598,21 @@ window._perf.t('loadStart');
           <table id="ums-profit-table">
             <thead>
               <tr>
-                <th onclick="sortUms('customer')" style="cursor:pointer;user-select:none"><span data-t="th_customer">Customer</span> <span id="ums-sort-customer">▲</span></th>
+                <th onclick="sortUms('customer')" style="cursor:pointer;user-select:none"><span data-t="th_customer">Customer</span> <span id="ums-sort-customer"></span></th>
                 <th onclick="sortUms('pack')" style="cursor:pointer;user-select:none"><span data-t="th_pack">Pack Type</span> <span id="ums-sort-pack"></span></th>
-                <th onclick="sortUms('days')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_days">Days</span> <span id="ums-sort-days"></span></th>
-                <th onclick="sortUms('price')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_price">Pack Price</span> <span id="ums-sort-price"></span></th>
-                <th onclick="sortUms('paid')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_paid">Paid So Far</span> <span id="ums-sort-paid">▼</span></th>
-                <th onclick="sortUms('balance')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_balance">Balance</span> <span id="ums-sort-balance"></span></th>
+                <th onclick="sortUms('month')" style="cursor:pointer;user-select:none;text-align:center"><span data-t="th_month">Month</span> <span id="ums-sort-month">▼</span></th>
+                <th onclick="sortUms('paid')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_paid">Paid (₹)</span> <span id="ums-sort-paid"></span></th>
+                <th onclick="sortUms('sgst')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_sgst">SGST (2.5%)</span> <span id="ums-sort-sgst"></span></th>
+                <th onclick="sortUms('cgst')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_cgst">CGST (2.5%)</span> <span id="ums-sort-cgst"></span></th>
+                <th onclick="sortUms('netExTax')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_net_ex_tax">Net Ex-Tax</span> <span id="ums-sort-netExTax"></span></th>
+                <th onclick="sortUms('days')" style="cursor:pointer;user-select:none;text-align:center"><span data-t="th_days">Days</span> <span id="ums-sort-days"></span></th>
                 <th onclick="sortUms('cost')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_cost">Product Cost</span> <span id="ums-sort-cost"></span></th>
                 <th onclick="sortUms('profit')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_profit">Profit (Ex-GST)</span> <span id="ums-sort-profit"></span></th>
                 <th onclick="sortUms('margin')" style="cursor:pointer;user-select:none;text-align:right"><span data-t="th_margin">Margin %</span> <span id="ums-sort-margin"></span></th>
               </tr>
             </thead>
             <tbody id="ums-profit-body">
-              <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">Loading UMS pack profit records...</td></tr>
+              <tr><td colspan="11" style="text-align:center;padding:24px;color:var(--muted)">Loading UMS pack profit records...</td></tr>
             </tbody>
             <tfoot id="ums-profit-foot" style="position:sticky;bottom:0;background:rgba(24, 24, 27, 0.98);font-weight:700;border-top:2px solid var(--border-solid)">
             </tfoot>
@@ -5630,14 +5642,14 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
 
 <!-- Pack Cost & Pricing Settings Modal -->
 <div class="overlay" id="modal-cost-settings">
-  <div class="modal" style="max-width:760px;width:95%">
+  <div class="modal" style="max-width:850px;width:96%">
     <div class="mh">
       <div class="mt">⚙️ Pack Costs &amp; Pricing Configuration</div>
       <button class="mc" onclick="closeModal('cost-settings')">✕</button>
     </div>
     <div class="mb" style="max-height:80vh;overflow-y:auto">
       <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.5">
-        Configure per-scoop costs and pack pricing. Costs are ex-tax. Shake cost is dynamically computed: <strong>(F1 × 3) + (PPP × 1) + (ShakeMate × 1) + (Afresh × 1)</strong>.
+        Configure per-scoop purchase costs (ex-tax) and customize recipe scoops per pack. Live daily cost, total cost, profit ex-GST, and margin are calculated in real-time.
       </p>
 
       <div style="font-weight:700;font-size:13px;color:var(--primary);margin-bottom:8px">🥛 1. Scoop Cost Configuration (<code style="font-size:11px">pack_cost_config</code>)</div>
@@ -5645,39 +5657,33 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         <table style="width:100%;border-collapse:collapse;font-size:12.5px">
           <thead>
             <tr style="border-bottom:2px solid var(--border);color:var(--muted);text-align:left">
-              <th style="padding:8px 6px">Product / Scoop</th>
-              <th style="padding:8px 6px;text-align:center">Scoops / Serving</th>
+              <th style="padding:8px 6px">Product</th>
+              <th style="padding:8px 6px;text-align:center">Key</th>
               <th style="padding:8px 6px;text-align:right">Cost / Scoop (₹ ex-tax)</th>
-              <th style="padding:8px 6px;text-align:right">Daily Subtotal (₹)</th>
             </tr>
           </thead>
           <tbody id="cost-settings-scoops-body">
-            <tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">Loading scoop costs...</td></tr>
+            <tr><td colspan="3" style="text-align:center;padding:16px;color:var(--muted)">Loading scoop costs...</td></tr>
           </tbody>
-          <tfoot>
-            <tr style="border-top:2px solid var(--border);font-weight:700;background:rgba(39,174,96,0.08)">
-              <td colspan="3" style="padding:10px 8px;text-align:right;color:var(--text)">Calculated Daily Shake Cost:</td>
-              <td id="modal-daily-cost-total" style="padding:10px 8px;text-align:right;color:var(--success);font-size:14px">₹103.32</td>
-            </tr>
-          </tfoot>
         </table>
       </div>
 
-      <div style="font-weight:700;font-size:13px;color:var(--primary);margin-bottom:8px">📦 2. Pack Catalogue Definitions (<code style="font-size:11px">pack_definitions</code>)</div>
+      <div style="font-weight:700;font-size:13px;color:var(--primary);margin-bottom:8px">📦 2. Pack Catalogue Definitions &amp; Recipes (<code style="font-size:11px">pack_definitions</code>)</div>
       <div class="twrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px">
         <table style="width:100%;border-collapse:collapse;font-size:12.5px">
           <thead>
             <tr style="border-bottom:2px solid var(--border);color:var(--muted);text-align:left">
               <th style="padding:8px 6px">Pack Name</th>
-              <th style="padding:8px 6px;text-align:center">Days</th>
               <th style="padding:8px 6px;text-align:right">UMS Price (₹)</th>
+              <th style="padding:8px 6px;text-align:center">Recipe (Scoops/day)</th>
+              <th style="padding:8px 6px;text-align:right">Daily Cost (₹)</th>
               <th style="padding:8px 6px;text-align:right">Product Cost (₹)</th>
-              <th style="padding:8px 6px;text-align:right">Profit (₹)</th>
+              <th style="padding:8px 6px;text-align:right">Profit (Ex-GST)</th>
               <th style="padding:8px 6px;text-align:right">Margin</th>
             </tr>
           </thead>
           <tbody id="cost-settings-packs-body">
-            <tr><td colspan="6" style="text-align:center;padding:16px;color:var(--muted)">Loading pack definitions...</td></tr>
+            <tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted)">Loading pack definitions...</td></tr>
           </tbody>
         </table>
       </div>

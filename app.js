@@ -199,8 +199,10 @@ var T = {
     pt_pack_profit:'Pack Profitability', lbl_daily_shake_cost:'Daily Shake Cost',
     btn_edit_costs:'⚙️ Pack Costs', btn_recalculate:'🔄 Recalculate',
     th_customer:'Customer', th_pack:'Pack Type', th_days:'Days', th_price:'Pack Price',
-    th_paid:'Paid So Far', th_balance:'Balance', th_cost:'Product Cost', th_profit:'Profit (Ex-GST)', th_margin:'Margin %',
-    lbl_total_ums_collected:'Total UMS Collected', lbl_total_prod_cost:'Total Product Cost', lbl_total_profit_ex_gst:'Total Profit (Ex-GST)',
+    th_paid:'Paid (₹)', th_balance:'Balance', th_cost:'Product Cost', th_profit:'Profit (Ex-GST)', th_margin:'Margin %',
+    th_month:'Month', th_sgst:'SGST (2.5%)', th_cgst:'CGST (2.5%)', th_net_ex_tax:'Net Ex-Tax',
+    lbl_total_ums_collected:'Total Collected', lbl_total_sgst:'Total SGST (2.5%)', lbl_total_cgst:'Total CGST (2.5%)', lbl_total_net_rev:'Net Ex-Tax Revenue', lbl_total_prod_cost:'Total Product Cost', lbl_total_profit_ex_gst:'Total Profit (Ex-GST)',
+    opt_all_months:'All Months',
     // common buttons / indicators
     btn_save:'Save', btn_cancel:'Cancel', btn_edit:'Edit', btn_delete:'Delete',
     btn_add:'Add', btn_submit:'Submit', badge_active:'Active', badge_inactive:'Inactive'
@@ -222,8 +224,10 @@ var T = {
     pt_pack_profit:'ప్యాక్ లాభదాయకత', lbl_daily_shake_cost:'రోజువారీ షేక్ ఖర్చు',
     btn_edit_costs:'⚙️ ప్యాక్ ఖర్చులు సవరించు', btn_recalculate:'🔄 పునఃపరిశీలించు',
     th_customer:'కస్టమర్', th_pack:'ప్యాక్ రకం', th_days:'రోజులు', th_price:'ప్యాక్ ధర',
-    th_paid:'చెల్లించినది', th_balance:'బకాయి', th_cost:'ఉత్పత్తి ఖర్చు', th_profit:'లాభం (Ex-GST)', th_margin:'మార్జిన్ %',
-    lbl_total_ums_collected:'మొత్తం UMS వసూలు', lbl_total_prod_cost:'మొత్తం ఉత్పత్తి ఖర్చు', lbl_total_profit_ex_gst:'మొత్తం లాభం (Ex-GST)',
+    th_paid:'చెల్లించినది (₹)', th_balance:'బకాయి', th_cost:'ఉత్పత్తి ఖర్చు', th_profit:'లాభం (Ex-GST)', th_margin:'మార్జిన్ %',
+    th_month:'నెల', th_sgst:'SGST (2.5%)', th_cgst:'CGST (2.5%)', th_net_ex_tax:'నికర పన్ను మినహాయించి',
+    lbl_total_ums_collected:'మొత్తం వసూలు', lbl_total_sgst:'మొత్తం SGST (2.5%)', lbl_total_cgst:'మొత్తం CGST (2.5%)', lbl_total_net_rev:'నికర ఆదాయం (Ex-GST)', lbl_total_prod_cost:'మొత్తం ఉత్పత్తి ఖర్చు', lbl_total_profit_ex_gst:'మొత్తం లాభం (Ex-GST)',
+    opt_all_months:'అన్ని నెలలు',
     // common buttons / indicators
     btn_save:'భద్రపరచు', btn_cancel:'రద్దు చేయి', btn_edit:'మార్చు', btn_delete:'తొలగించు',
     btn_add:'జోడించు', btn_submit:'సమర్పించు', badge_active:'క్రియాశీల', badge_inactive:'నిష్క్రియాశీల'
@@ -377,8 +381,10 @@ var T = {
     pt_pack_profit:'Pack Profitability', lbl_daily_shake_cost:'Daily Shake Cost',
     btn_edit_costs:'⚙️ Pack Costs', btn_recalculate:'🔄 Recalculate',
     th_customer:'Customer', th_pack:'Pack Type', th_days:'Days', th_price:'Pack Price',
-    th_paid:'Paid So Far', th_balance:'Balance', th_cost:'Product Cost', th_profit:'Profit (Ex-GST)', th_margin:'Margin %',
-    lbl_total_ums_collected:'Total UMS Collected', lbl_total_prod_cost:'Total Product Cost', lbl_total_profit_ex_gst:'Total Profit (Ex-GST)',
+    th_paid:'Paid (₹)', th_balance:'Balance', th_cost:'Product Cost', th_profit:'Profit (Ex-GST)', th_margin:'Margin %',
+    th_month:'Month', th_sgst:'SGST (2.5%)', th_cgst:'CGST (2.5%)', th_net_ex_tax:'Net Ex-Tax',
+    lbl_total_ums_collected:'Total Collected', lbl_total_sgst:'Total SGST (2.5%)', lbl_total_cgst:'Total CGST (2.5%)', lbl_total_net_rev:'Net Ex-Tax Revenue', lbl_total_prod_cost:'Total Product Cost', lbl_total_profit_ex_gst:'Total Profit (Ex-GST)',
+    opt_all_months:'All Months',
     pt_analytics:'Analytics Dashboard', ps_analytics:'Business insights from your data',
     pt_coupons:'Coupon System', ps_coupons:'Track coupons from referrals for coaches & customers',
     pt_payments:'Payments', ps_payments:'Track partial payments and balances',
@@ -439,8 +445,10 @@ var T = {
     pt_pack_profit:'ప్యాక్ లాభదాయకత', lbl_daily_shake_cost:'రోజువారీ షేక్ ఖర్చు',
     btn_edit_costs:'⚙️ ప్యాక్ ఖర్చులు సవరించు', btn_recalculate:'🔄 పునఃపరిశీలించు',
     th_customer:'కస్టమర్', th_pack:'ప్యాక్ రకం', th_days:'రోజులు', th_price:'ప్యాక్ ధర',
-    th_paid:'చెల్లించినది', th_balance:'బకాయి', th_cost:'ఉత్పత్తి ఖర్చు', th_profit:'లాభం (Ex-GST)', th_margin:'మార్జిన్ %',
-    lbl_total_ums_collected:'మొత్తం UMS వసూలు', lbl_total_prod_cost:'మొత్తం ఉత్పత్తి ఖర్చు', lbl_total_profit_ex_gst:'మొత్తం లాభం (Ex-GST)',
+    th_paid:'చెల్లించినది (₹)', th_balance:'బకాయి', th_cost:'ఉత్పత్తి ఖర్చు', th_profit:'లాభం (Ex-GST)', th_margin:'మార్జిన్ %',
+    th_month:'నెల', th_sgst:'SGST (2.5%)', th_cgst:'CGST (2.5%)', th_net_ex_tax:'నికర పన్ను మినహాయించి',
+    lbl_total_ums_collected:'మొత్తం వసూలు', lbl_total_sgst:'మొత్తం SGST (2.5%)', lbl_total_cgst:'మొత్తం CGST (2.5%)', lbl_total_net_rev:'నికర ఆదాయం (Ex-GST)', lbl_total_prod_cost:'మొత్తం ఉత్పత్తి ఖర్చు', lbl_total_profit_ex_gst:'మొత్తం లాభం (Ex-GST)',
+    opt_all_months:'అన్ని నెలలు',
     pt_analytics:'విశ్లేషణలు డ్యాష్‌బోర్డ్', ps_analytics:'మీ డేటా నుండి వ్యాపార అంతర్దృష్టులు',
     pt_coupons:'కూపన్ సిస్టమ్', ps_coupons:'కోచ్‌లు & కస్టమర్ల రిఫరల్ కూపన్లను ట్రాక్ చేయండి',
     pt_payments:'చెల్లింపులు', ps_payments:'పాక్షిక చెల్లింపులు మరియు బాలెన్స్‌లను ట్రాక్ చేయండి',
@@ -7866,49 +7874,90 @@ function renderFinance() {
   try { renderUmsProfit(); } catch(e) { console.error('renderUmsProfit failed', e); }
 }
 
-// ── UMS PACK PROFITABILITY & HERBALIFE COST CONFIGURATION ──
-var UMS_GST_INCLUSIVE = false; // Toggle to true if customer pack payments include 5% GST (profit = paid/1.05 - cost)
-
+// ── UMS PACK PROFITABILITY & HERBALIFE COST CONFIGURATION (v2.3.8) ──
 var DEFAULT_PACK_SCOOPS = [
-  { key: 'f1', label: 'Formula 1', scoops: 3, cost_per_scoop: 19.70 },
-  { key: 'ppp', label: 'Personalized Protein Powder', scoops: 1, cost_per_scoop: 20.52 },
-  { key: 'shakemate', label: 'ShakeMate', scoops: 1, cost_per_scoop: 12.65 },
-  { key: 'afresh', label: 'Afresh', scoops: 1, cost_per_scoop: 11.05 }
+  { key: 'f1', label: 'Formula 1', cost_per_scoop: 19.70 },
+  { key: 'ppp', label: 'Personalized Protein Powder', cost_per_scoop: 20.52 },
+  { key: 'shakemate', label: 'ShakeMate', cost_per_scoop: 12.65 },
+  { key: 'dinoshake', label: 'Dinoshake', cost_per_scoop: 31.95 },
+  { key: 'afresh', label: 'Afresh', cost_per_scoop: 11.05 }
 ];
 
 var DEFAULT_PACK_DEFS = [
-  { id: 'trial-3', pack_name: '3-Day Trial', days: 3, ums_price: 900, active: true },
-  { id: 'standard-26', pack_name: '26-Day', days: 26, ums_price: 5600, active: true },
-  { id: 'premium-30', pack_name: '30-Day', days: 30, ums_price: 6969, active: true },
-  { id: 'star-90', pack_name: '90-Day', days: 90, ums_price: 15000, active: true }
+  { id: 'trial-3', pack_name: '3-Day Trial', days: 3, ums_price: 900, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
+  { id: 'standard-26', pack_name: '26-Day', days: 26, ums_price: 5600, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
+  { id: 'premium-30', pack_name: '30-Day', days: 30, ums_price: 6969, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
+  { id: 'premium-30-gain', pack_name: 'Premium 30-Day', days: 30, ums_price: 5600, active: true, recipe: { f1: 2, ppp: 1, shakemate: 1, dinoshake: 1, afresh: 1 } },
+  { id: 'premium-30-plus', pack_name: 'Premium 30-Day Plus', days: 30, ums_price: 7000, active: true, recipe: { f1: 2, ppp: 1, shakemate: 1, dinoshake: 1, afresh: 1 } },
+  { id: 'hot-drink-30', pack_name: 'Hot Drink 30-Day', days: 30, ums_price: 1000, active: true, recipe: { afresh: 1 } },
+  { id: 'star-90', pack_name: '90-Day', days: 90, ums_price: 15000, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } }
 ];
 
 var PACK_COSTS = null;
 var PACK_DEFS = null;
-var _umsSort = { col: 'paid', dir: 'desc' };
+var _umsSort = { col: 'month', dir: 'desc' };
 var _umsCachedRows = [];
+var _umsSelectedMonth = '';
 
-function getPackScoopConfigs() {
-  if (PACK_COSTS && Array.isArray(PACK_COSTS) && PACK_COSTS.length > 0) {
-    return DEFAULT_PACK_SCOOPS.map(function(def) {
-      var found = PACK_COSTS.find(function(c) { return c.product_key === def.key; });
-      return {
-        key: def.key,
-        label: (found && found.label) || def.label,
-        scoops: def.scoops,
-        cost_per_scoop: (found && found.cost_per_scoop != null) ? Number(found.cost_per_scoop) : def.cost_per_scoop
-      };
-    });
-  }
-  return DEFAULT_PACK_SCOOPS;
+function formatMonthYear(ym) {
+  if (!ym) return '—';
+  var parts = String(ym).split('-');
+  if (parts.length < 2) return ym;
+  var year = parts[0];
+  var mIndex = parseInt(parts[1], 10) - 1;
+  var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return (monthNames[mIndex] || parts[1]) + ' ' + year;
 }
 
-function getDailyShakeCost() {
-  var scoops = getPackScoopConfigs();
-  var total = 0;
-  scoops.forEach(function(s) {
-    total += (Number(s.scoops) || 1) * (Number(s.cost_per_scoop) || 0);
+function getPackScoopConfigs() {
+  var costs = (PACK_COSTS && Array.isArray(PACK_COSTS) && PACK_COSTS.length > 0) ? PACK_COSTS : [];
+  return DEFAULT_PACK_SCOOPS.map(function(def) {
+    var found = costs.find(function(c) { return c.product_key === def.key; });
+    return {
+      key: def.key,
+      label: (found && found.label) || def.label,
+      cost_per_scoop: (found && found.cost_per_scoop != null) ? Number(found.cost_per_scoop) : def.cost_per_scoop
+    };
   });
+}
+
+function getDailyShakeCost(packOrRecipe) {
+  var recipe = null;
+  if (packOrRecipe) {
+    if (typeof packOrRecipe === 'object') {
+      recipe = packOrRecipe.recipe || packOrRecipe;
+    }
+  }
+
+  var scoopMap = {};
+  if (recipe && typeof recipe === 'object' && Object.keys(recipe).length > 0) {
+    scoopMap = recipe;
+  } else {
+    // Default weight-loss fallback: (3 f1 + 1 ppp + 1 shakemate + 1 afresh) = ₹103.32
+    scoopMap = { f1: 3, ppp: 1, shakemate: 1, afresh: 1 };
+  }
+
+  var scoopConfigs = getPackScoopConfigs();
+  var costMap = {
+    f1: 19.70,
+    ppp: 20.52,
+    shakemate: 12.65,
+    dinoshake: 31.95,
+    afresh: 11.05
+  };
+  scoopConfigs.forEach(function(s) {
+    if (s.key && s.cost_per_scoop != null) {
+      costMap[s.key] = Number(s.cost_per_scoop);
+    }
+  });
+
+  var total = 0;
+  Object.keys(scoopMap).forEach(function(k) {
+    var count = Number(scoopMap[k]) || 0;
+    var unitCost = costMap[k] !== undefined ? costMap[k] : 0;
+    total += count * unitCost;
+  });
+
   return total > 0 ? total : 103.32;
 }
 
@@ -7919,8 +7968,24 @@ function getPackDefinitions() {
   return DEFAULT_PACK_DEFS;
 }
 
-function calcUmsProfit(paid, days, dailyCost, fullPrice, totalDays) {
+function formatRecipeSummary(recipe) {
+  if (!recipe || typeof recipe !== 'object') return 'F1×3 + PPP×1 + SM×1 + Afresh×1';
+  var labels = { f1: 'F1', ppp: 'PPP', shakemate: 'SM', dinoshake: 'Dino', afresh: 'Afresh' };
+  var parts = [];
+  ['f1', 'ppp', 'shakemate', 'dinoshake', 'afresh'].forEach(function(k) {
+    if (recipe[k] && Number(recipe[k]) > 0) {
+      parts.push((labels[k] || k) + '×' + recipe[k]);
+    }
+  });
+  return parts.length > 0 ? parts.join(' + ') : '—';
+}
+
+function calcUmsProfit(paid, days, dailyCostOrPackOrRecipe, fullPrice, totalDays) {
   var effectiveDays = Number(totalDays || days) || 0;
+  var dailyCost = typeof dailyCostOrPackOrRecipe === 'number'
+    ? dailyCostOrPackOrRecipe
+    : getDailyShakeCost(dailyCostOrPackOrRecipe);
+
   var fullCost = effectiveDays * dailyCost;
   var paidAmount = Number(paid) || 0;
   var price = Number(fullPrice) || 0;
@@ -7928,28 +7993,35 @@ function calcUmsProfit(paid, days, dailyCost, fullPrice, totalDays) {
     var matchingDef = getPackDefinitions().find(function(p) { return p.days === effectiveDays; });
     if (matchingDef) price = Number(matchingDef.ums_price);
   }
-  
+
   var paidRatio = price > 0 ? Math.min(1, paidAmount / price) : (paidAmount > 0 ? 1 : 0);
   var paidDaysEquivalent = effectiveDays * paidRatio;
   var productCostForPaid = paidDaysEquivalent * dailyCost;
-  
-  var revenueExTax = UMS_GST_INCLUSIVE ? (paidAmount / 1.05) : paidAmount;
+
+  var revenueExTax = paidAmount / 1.05;
+  var totalGst = paidAmount - revenueExTax;
+  var sgst = totalGst / 2;
+  var cgst = totalGst / 2;
+
   var profitExGst = revenueExTax - productCostForPaid;
-  
-  var fullRevenueExTax = UMS_GST_INCLUSIVE ? (price / 1.05) : price;
+
+  var fullRevenueExTax = price / 1.05;
   var fullPackProfit = fullRevenueExTax - fullCost;
-  
+
   var marginPct = paidAmount > 0 ? (profitExGst / paidAmount) * 100 : (price > 0 ? (fullPackProfit / price) * 100 : 0);
-  
+
   return {
     dailyCost: dailyCost,
     fullCost: fullCost,
     paidCost: productCostForPaid,
     paidDaysEquivalent: paidDaysEquivalent,
+    revenueExTax: revenueExTax,
+    sgst: sgst,
+    cgst: cgst,
+    totalGst: totalGst,
     profitExGst: profitExGst,
     fullPackProfit: fullPackProfit,
     marginPct: marginPct,
-    revenueExTax: revenueExTax,
     price: price
   };
 }
@@ -7973,28 +8045,28 @@ async function loadPackProfit() {
   var gridEl = document.getElementById('pp-cards');
   var badgeEl = document.getElementById('pp-daily-cost');
   if (!gridEl) return;
-  
-  var dailyCost = getDailyShakeCost();
-  var scoopConfigs = getPackScoopConfigs();
-  var scoopDetails = scoopConfigs.map(function(s) {
-    return s.key + '×' + s.scoops + ': ₹' + (s.scoops * s.cost_per_scoop).toFixed(2);
-  }).join(', ');
 
+  var defaultDailyCost = getDailyShakeCost();
   if (badgeEl) {
-    badgeEl.textContent = 'Daily Shake Cost: ₹' + dailyCost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    badgeEl.title = 'Formula: ' + scoopDetails;
+    badgeEl.textContent = 'Daily Shake Cost: ₹' + defaultDailyCost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' (Weight-loss)';
+    badgeEl.title = 'Standard recipe: F1×3 + PPP×1 + ShakeMate×1 + Afresh×1';
   }
 
   var packDefs = getPackDefinitions();
   gridEl.innerHTML = packDefs.map(function(p) {
     var days = Number(p.days) || 0;
     var price = Number(p.ums_price) || 0;
-    var calc = calcUmsProfit(price, days, dailyCost, price, days);
+    var packDailyCost = getDailyShakeCost(p);
+    var calc = calcUmsProfit(price, days, packDailyCost, price, days);
     var marginColor = calc.marginPct >= 50 ? '#4ade80' : (calc.marginPct >= 35 ? '#38bdf8' : '#facc15');
-    
+    var recipeStr = formatRecipeSummary(p.recipe);
+
     return '<div style="background:#131722;border:1px solid #242b3d;border-radius:10px;padding:14px;display:flex;flex-direction:column;justify-content:space-between">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">' +
-        '<span style="font-weight:700;font-size:13.5px;color:#f8fafc">' + (p.pack_name || (days + ' Days')) + '</span>' +
+        '<div>' +
+          '<span style="font-weight:700;font-size:13.5px;color:#f8fafc">' + (p.pack_name || (days + ' Days')) + '</span>' +
+          '<div style="font-size:10.5px;color:#94a3b8;margin-top:2px" title="Daily recipe">' + recipeStr + ' (₹' + packDailyCost.toFixed(2) + '/d)</div>' +
+        '</div>' +
         '<span style="font-size:11px;font-weight:700;color:#38bdf8;background:rgba(56,189,248,0.12);padding:2px 7px;border-radius:8px">' + days + 'd</span>' +
       '</div>' +
       '<div style="margin-bottom:8px">' +
@@ -8014,13 +8086,38 @@ function renderUmsProfit() {
   var tf = document.getElementById('ums-profit-foot');
   if (!tb) return;
 
-  var dailyCost = getDailyShakeCost();
   var activeCenter = ACTIVE_CENTER || '';
+  var packDefs = getPackDefinitions();
 
-  // 1. Gather target customers
+  // 1. Gather linked customers (exclude Walk-ins, Product Users, Custom, unlinked)
+  var UNLINKED_PACK_TYPES = ['walk-in', 'walk-in product', 'product user', 'custom'];
   var targetCustomers = (D.customers || []).filter(function(c) {
     if (activeCenter && c.wellness_center_id !== activeCenter && c.center_id !== activeCenter) return false;
-    return true;
+
+    // If pack_id is set, customer is linked!
+    if (c.pack_id) return true;
+
+    // If no pack_id, check pack_type
+    var pt = (c.pack_type || '').trim().toLowerCase();
+    if (!pt || UNLINKED_PACK_TYPES.indexOf(pt) !== -1) return false;
+
+    // Check if matches a known pack definition
+    var match = packDefs.some(function(p) {
+      return p.pack_name.toLowerCase() === pt || p.days === parsePack(pt);
+    });
+    return match;
+  });
+
+  // Group finance income rows by customer_id
+  var finByCust = {};
+  (D.finance || []).forEach(function(f) {
+    if (f.type === 'income' && (f.category === 'Pack sale to customer' || f.category === 'Coach pack payment' || (f.description && f.description.toLowerCase().includes('pack')))) {
+      var cid = f.customer_id;
+      if (cid) {
+        finByCust[cid] = finByCust[cid] || [];
+        finByCust[cid].push(f);
+      }
+    }
   });
 
   // Group payments by person_id
@@ -8032,102 +8129,167 @@ function renderUmsProfit() {
     }
   });
 
-  // Group finance pack sale entries by customer
-  var packFinanceByCust = {};
-  (D.finance || []).forEach(function(f) {
-    if (f.type === 'income' && (f.category === 'Pack sale to customer' || (f.description && f.description.toLowerCase().includes('pack')))) {
-      var cid = f.customer_id;
-      if (cid) {
-        packFinanceByCust[cid] = (packFinanceByCust[cid] || 0) + Number(f.amount || 0);
-      }
-    }
-  });
-
   var rows = [];
 
   targetCustomers.forEach(function(c) {
-    var hasPack = c.pack_type || c.pack_price || c.pack_days || (paymentsByPerson[c.id] && paymentsByPerson[c.id].length);
-    if (!hasPack) return;
-
-    var packName = c.pack_type || (c.pack_days ? c.pack_days + ' Days' : 'Standard 26 days');
-    var days = Number(c.pack_days) || parsePack(c.pack_type);
-    
-    // Determine pack price
-    var price = Number(c.pack_price) || 0;
-    var userPayments = paymentsByPerson[c.id] || [];
-    if (!price && userPayments.length > 0) {
-      price = userPayments.reduce(function(m, p) { return Math.max(m, Number(p.total_amount || 0)); }, 0);
+    // Determine pack definition
+    var matchingDef = null;
+    if (c.pack_id) {
+      matchingDef = packDefs.find(function(p) { return p.id === c.pack_id; });
     }
-    if (!price) {
-      var matchingDef = getPackDefinitions().find(function(p) { return p.days === days; });
-      if (matchingDef) price = Number(matchingDef.ums_price);
-      else if (days === 3) price = 900;
-      else if (days === 26) price = 5600;
-      else if (days === 30) price = 6969;
-      else if (days === 90) price = 15000;
-      else price = days * 215;
+    if (!matchingDef && c.pack_type) {
+      var ptLow = c.pack_type.toLowerCase();
+      matchingDef = packDefs.find(function(p) { return p.pack_name.toLowerCase() === ptLow; });
+      if (!matchingDef) {
+        var d = Number(c.pack_days) || parsePack(c.pack_type);
+        if (d > 0) matchingDef = packDefs.find(function(p) { return p.days === d; });
+      }
     }
+    if (!matchingDef) return; // Skip if no pack definition found
 
-    // Determine paid amount
-    var paid = 0;
-    if (userPayments.length > 0) {
-      paid = userPayments.reduce(function(s, p) { return s + Number(p.amount_paid || 0); }, 0);
-    } else if (packFinanceByCust[c.id]) {
-      paid = packFinanceByCust[c.id];
-    } else if (c.pack_price && Number(c.pack_price) > 0) {
-      var matchingFinSum = 0;
+    var defPrice = Number(matchingDef.ums_price) || 5600;
+    var custPrice = (c.pack_price != null && Number(c.pack_price) > 0) ? Number(c.pack_price) : null;
+    var effectivePrice = custPrice != null ? custPrice : defPrice;
+    var hasCustomPrice = (custPrice != null && custPrice !== defPrice);
+    var packDays = Number(matchingDef.days) || 26;
+    var packName = matchingDef.pack_name || (packDays + ' Days');
+    var dailyCost = getDailyShakeCost(matchingDef);
+
+    // Collect payment events { date: 'YYYY-MM-DD', amount: Number }
+    var rawTxns = [];
+
+    // 1. Check finance rows for this customer
+    var custFin = finByCust[c.id] || [];
+    if (!custFin.length) {
+      // Try description match if customer_id was null
       var cNameLow = (c.name || '').toLowerCase();
       (D.finance || []).forEach(function(f) {
         if (f.type === 'income' && f.category === 'Pack sale to customer' && f.description && f.description.toLowerCase().includes(cNameLow)) {
-          matchingFinSum += Number(f.amount || 0);
+          custFin.push(f);
         }
       });
-      paid = matchingFinSum > 0 ? matchingFinSum : Number(c.pack_price);
     }
 
-    var balance = Math.max(0, price - paid);
-    var calc = calcUmsProfit(paid, days, dailyCost, price, days);
+    if (custFin.length > 0) {
+      custFin.forEach(function(f) {
+        var amt = Number(f.amount) || 0;
+        if (amt > 0) {
+          rawTxns.push({
+            date: f.date || f.created_at || '2026-08-01',
+            amount: amt
+          });
+        }
+      });
+    } else if (paymentsByPerson[c.id] && paymentsByPerson[c.id].length > 0) {
+      // 2. Check payments rows
+      paymentsByPerson[c.id].forEach(function(p) {
+        var notes = p.notes || '';
+        // Check if notes has date-stamped installments e.g. "2026-07-15: ₹3000; 2026-08-01: ₹2600"
+        var instRegex = /(\d{4}-\d{2}-\d{2}):\s*₹?([\d,.]+)/g;
+        var match;
+        var foundInst = false;
+        while ((match = instRegex.exec(notes)) !== null) {
+          foundInst = true;
+          var iDate = match[1];
+          var iAmt = Number(match[2].replace(/,/g, '')) || 0;
+          if (iAmt > 0) rawTxns.push({ date: iDate, amount: iAmt });
+        }
+        if (!foundInst) {
+          var pAmt = Number(p.amount_paid) || 0;
+          if (pAmt > 0) {
+            rawTxns.push({ date: p.payment_date || '2026-08-01', amount: pAmt });
+          }
+        }
+      });
+    } else {
+      // 3. Fallback to customer join / start date and pack price
+      var defaultDate = c.pack_start_date || c.join_date || c.created_at || '2026-08-01';
+      rawTxns.push({ date: defaultDate, amount: effectivePrice });
+    }
 
-    rows.push({
-      customerId: c.id,
-      customerName: c.name || 'Unknown',
-      packName: packName,
-      days: days,
-      price: price,
-      paid: paid,
-      balance: balance,
-      cost: calc.paidCost,
-      fullCost: calc.fullCost,
-      profit: calc.profitExGst,
-      fullProfit: calc.fullPackProfit,
-      margin: calc.marginPct,
-      status: (paid >= price && price > 0) ? 'paid' : (paid > 0 ? 'partial' : 'unpaid'),
-      created_at: c.join_date || c.created_at || ''
+    // Group rawTxns by month (YYYY-MM)
+    var monthlySums = {};
+    rawTxns.forEach(function(t) {
+      var dStr = String(t.date || '').trim();
+      var ym = dStr.length >= 7 ? dStr.substring(0, 7) : '2026-08';
+      monthlySums[ym] = (monthlySums[ym] || 0) + (Number(t.amount) || 0);
+    });
+
+    Object.keys(monthlySums).forEach(function(ym) {
+      var monthPaid = monthlySums[ym];
+      if (monthPaid <= 0) return;
+
+      var netExTax = monthPaid / 1.05;
+      var totalGst = monthPaid - netExTax;
+      var sgst = totalGst / 2;
+      var cgst = totalGst / 2;
+
+      var daysCoveredInMonth = effectivePrice > 0 ? (monthPaid / effectivePrice) * packDays : 0;
+      var prodCost = daysCoveredInMonth * dailyCost;
+      var profitExGst = netExTax - prodCost;
+      var marginPct = monthPaid > 0 ? (profitExGst / monthPaid) * 100 : 0;
+
+      rows.push({
+        customerId: c.id,
+        customerName: c.name || 'Unknown',
+        packId: matchingDef.id,
+        packName: packName,
+        month: ym,
+        monthLabel: formatMonthYear(ym),
+        days: packDays,
+        daysCovered: daysCoveredInMonth,
+        defPrice: defPrice,
+        effectivePrice: effectivePrice,
+        hasCustomPrice: hasCustomPrice,
+        paid: monthPaid,
+        sgst: sgst,
+        cgst: cgst,
+        netExTax: netExTax,
+        cost: prodCost,
+        dailyCost: dailyCost,
+        profit: profitExGst,
+        margin: marginPct
+      });
     });
   });
 
-  // Filter rows by search, pack, status
+  // Populate Month Filter
+  var monthSel = document.getElementById('ums-month-filter');
+  var allMonths = [];
+  rows.forEach(function(r) {
+    if (r.month && allMonths.indexOf(r.month) === -1) allMonths.push(r.month);
+  });
+  allMonths.sort().reverse();
+
+  if (monthSel) {
+    var curVal = monthSel.value;
+    var opts = '<option value="">All Months</option>' + allMonths.map(function(ym) {
+      return '<option value="' + ym + '">' + formatMonthYear(ym) + '</option>';
+    }).join('');
+    monthSel.innerHTML = opts;
+    if (curVal && allMonths.indexOf(curVal) !== -1) monthSel.value = curVal;
+    _umsSelectedMonth = monthSel.value;
+  }
+
+  // Filter rows
   var q = (document.getElementById('ums-search') ? document.getElementById('ums-search').value : '').trim().toLowerCase();
   var packFilter = document.getElementById('ums-pack-filter') ? document.getElementById('ums-pack-filter').value : '';
-  var statusFilter = document.getElementById('ums-status-filter') ? document.getElementById('ums-status-filter').value : '';
+  var monthFilter = monthSel ? monthSel.value : _umsSelectedMonth;
 
   var filtered = rows.filter(function(r) {
     if (q && !(r.customerName.toLowerCase().includes(q) || r.packName.toLowerCase().includes(q))) return false;
+    if (monthFilter && r.month !== monthFilter) return false;
     if (packFilter) {
       if (packFilter === 'other') {
         if ([3, 26, 30, 90].indexOf(r.days) !== -1) return false;
       } else if (Number(packFilter) !== r.days) return false;
-    }
-    if (statusFilter) {
-      if (statusFilter === 'paid' && r.status !== 'paid') return false;
-      if (statusFilter === 'partial' && r.status !== 'partial' && r.status !== 'unpaid') return false;
     }
     return true;
   });
 
   // Sort rows
   filtered.sort(function(a, b) {
-    var col = _umsSort.col || 'paid';
+    var col = _umsSort.col || 'month';
     var dir = _umsSort.dir === 'asc' ? 1 : -1;
     var va = a[col], vb = b[col];
     if (typeof va === 'string') {
@@ -8138,55 +8300,58 @@ function renderUmsProfit() {
 
   _umsCachedRows = filtered;
 
-  // Render Table
+  // Render Table Body
   if (!filtered.length) {
-    tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--muted)">' +
-      (rows.length ? 'No customers match the current search filters.' : 'No UMS customer pack subscriptions found.') +
+    tb.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:28px;color:var(--muted)">' +
+      (rows.length ? 'No UMS records match current filters.' : 'No UMS customer pack subscriptions found.') +
       '</td></tr>';
   } else {
     tb.innerHTML = filtered.map(function(r) {
-      var badge = r.status === 'paid'
-        ? '<span class="badge bg" style="font-size:10.5px">✅ Paid</span>'
-        : (r.paid > 0
-          ? '<span class="badge by" style="font-size:10.5px">⏳ ₹' + r.balance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' bal</span>'
-          : '<span class="badge br" style="font-size:10.5px">⚠️ Unpaid</span>');
-      
       var profitColor = r.profit > 0 ? 'var(--success)' : (r.profit < 0 ? 'var(--danger)' : 'var(--muted)');
       var marginColor = r.margin >= 50 ? 'var(--success)' : (r.margin >= 35 ? '#38bdf8' : '#f59e0b');
+      var warnIcon = r.hasCustomPrice ? '<span title="Custom Pack Price: ₹' + r.effectivePrice.toLocaleString('en-IN') + ' vs Standard ₹' + r.defPrice.toLocaleString('en-IN') + '" style="cursor:help;margin-left:4px;font-size:12px">⚠️</span>' : '';
 
       return '<tr style="border-bottom:1px solid var(--border)">' +
         '<td style="font-weight:600">' +
           '<span style="color:var(--text);cursor:pointer" onclick="goTo(\'customers\');setTimeout(function(){var s=document.getElementById(\'customers-search\');if(s){s.value=\''+r.customerName.replace(/'/g,"\\'")+'\';renderCustomers();}},300)">' + r.customerName + '</span>' +
-          '<div style="margin-top:3px">' + badge + '</div>' +
+          warnIcon +
         '</td>' +
-        '<td>' +
-          '<span style="font-weight:500">' + r.packName + '</span>' +
-        '</td>' +
-        '<td style="text-align:right"><span class="badge" style="background:rgba(56,189,248,0.12);color:#38bdf8;font-size:11px">' + r.days + 'd</span></td>' +
-        '<td style="text-align:right;font-weight:600">₹' + r.price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+        '<td><span class="badge" style="background:rgba(56,189,248,0.12);color:#38bdf8;font-size:11px">' + r.packName + '</span></td>' +
+        '<td style="text-align:center"><span style="font-size:11.5px;color:var(--muted);font-weight:600">' + r.monthLabel + '</span></td>' +
         '<td style="text-align:right;font-weight:700;color:var(--success)">₹' + r.paid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
-        '<td style="text-align:right;color:' + (r.balance > 0 ? 'var(--danger)' : 'var(--muted)') + '">₹' + r.balance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
-        '<td style="text-align:right;color:var(--muted)">₹' + r.cost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+        '<td style="text-align:right;color:var(--muted);font-size:11.5px">₹' + r.sgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+        '<td style="text-align:right;color:var(--muted);font-size:11.5px">₹' + r.cgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+        '<td style="text-align:right;font-weight:600;color:var(--text)">₹' + r.netExTax.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+        '<td style="text-align:center"><span class="badge" style="background:rgba(255,255,255,0.06);font-size:11px">' + r.daysCovered.toFixed(1) + 'd</span></td>' +
+        '<td style="text-align:right;color:var(--danger)">₹' + r.cost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
         '<td style="text-align:right;font-weight:700;color:' + profitColor + '">₹' + r.profit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
         '<td style="text-align:right;font-weight:700;color:' + marginColor + '">' + r.margin.toFixed(1) + '%</td>' +
       '</tr>';
     }).join('');
   }
 
-  // Calculate Totals
-  var totPrice = filtered.reduce(function(s, r) { return s + r.price; }, 0);
+  // Calculate Grand Totals
   var totPaid = filtered.reduce(function(s, r) { return s + r.paid; }, 0);
-  var totBalance = filtered.reduce(function(s, r) { return s + r.balance; }, 0);
+  var totSgst = filtered.reduce(function(s, r) { return s + r.sgst; }, 0);
+  var totCgst = filtered.reduce(function(s, r) { return s + r.cgst; }, 0);
+  var totNetExTax = filtered.reduce(function(s, r) { return s + r.netExTax; }, 0);
   var totCost = filtered.reduce(function(s, r) { return s + r.cost; }, 0);
   var totProfit = filtered.reduce(function(s, r) { return s + r.profit; }, 0);
   var overallMargin = totPaid > 0 ? (totProfit / totPaid) * 100 : 0;
 
   // Render KPI Badges
   var elTotPaid = document.getElementById('ums-total-collected');
+  var elTotSgst = document.getElementById('ums-total-sgst');
+  var elTotCgst = document.getElementById('ums-total-cgst');
+  var elTotNetRev = document.getElementById('ums-total-net-rev');
   var elTotCost = document.getElementById('ums-total-cost');
   var elTotProfit = document.getElementById('ums-total-profit');
   var elTotMargin = document.getElementById('ums-overall-margin');
+
   if (elTotPaid) elTotPaid.textContent = '₹' + totPaid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  if (elTotSgst) elTotSgst.textContent = '₹' + totSgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  if (elTotCgst) elTotCgst.textContent = '₹' + totCgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  if (elTotNetRev) elTotNetRev.textContent = '₹' + totNetExTax.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   if (elTotCost) elTotCost.textContent = '₹' + totCost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   if (elTotProfit) {
     elTotProfit.textContent = '₹' + totProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -8200,12 +8365,13 @@ function renderUmsProfit() {
   // Render Footer Row
   if (tf) {
     tf.innerHTML = '<tr style="background:rgba(255,255,255,0.04);border-top:2px solid var(--border)">' +
-      '<td style="padding:12px 16px;font-weight:700">Total (' + filtered.length + ' customers)</td>' +
-      '<td>—</td>' +
-      '<td style="text-align:right">—</td>' +
-      '<td style="text-align:right;font-weight:700">₹' + totPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+      '<td style="padding:12px 16px;font-weight:700" colspan="2">Total (' + filtered.length + ' records)</td>' +
+      '<td style="text-align:center">—</td>' +
       '<td style="text-align:right;font-weight:700;color:var(--success)">₹' + totPaid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
-      '<td style="text-align:right;font-weight:700;color:' + (totBalance > 0 ? 'var(--danger)' : 'var(--muted)') + '">₹' + totBalance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+      '<td style="text-align:right;font-size:11.5px;color:var(--muted)">₹' + totSgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+      '<td style="text-align:right;font-size:11.5px;color:var(--muted)">₹' + totCgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+      '<td style="text-align:right;font-weight:700;color:var(--text)">₹' + totNetExTax.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+      '<td style="text-align:center">—</td>' +
       '<td style="text-align:right;font-weight:700;color:var(--danger)">₹' + totCost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
       '<td style="text-align:right;font-weight:700;color:' + (totProfit >= 0 ? 'var(--primary)' : 'var(--danger)') + '">₹' + totProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
       '<td style="text-align:right;font-weight:700;color:' + (overallMargin >= 50 ? 'var(--success)' : '#38bdf8') + '">' + overallMargin.toFixed(1) + '%</td>' +
@@ -8218,11 +8384,11 @@ function sortUms(col) {
     _umsSort.dir = _umsSort.dir === 'asc' ? 'desc' : 'asc';
   } else {
     _umsSort.col = col;
-    _umsSort.dir = (col === 'customer' || col === 'pack') ? 'asc' : 'desc';
+    _umsSort.dir = (col === 'customer' || col === 'pack' || col === 'month') ? 'asc' : 'desc';
   }
 
   // Update header arrows
-  ['customer', 'pack', 'days', 'price', 'paid', 'balance', 'cost', 'profit', 'margin'].forEach(function(c) {
+  ['customer', 'pack', 'month', 'paid', 'sgst', 'cgst', 'netExTax', 'days', 'cost', 'profit', 'margin'].forEach(function(c) {
     var el = document.getElementById('ums-sort-' + c);
     if (el) {
       el.textContent = (_umsSort.col === c) ? (_umsSort.dir === 'asc' ? '▲' : '▼') : '';
@@ -8237,31 +8403,48 @@ function exportUmsProfitCSV() {
     showToast('No UMS profit records to export', 'error');
     return;
   }
-  var headers = ['Customer Name', 'Pack Type', 'Days', 'Pack Price (₹)', 'Paid So Far (₹)', 'Balance (₹)', 'Product Cost Ex-GST (₹)', 'Real Profit Ex-GST (₹)', 'Margin %', 'Status'];
+  var headers = [
+    'Customer Name',
+    'Pack Type',
+    'Month',
+    'Amount Paid (₹)',
+    'SGST 2.5% (₹)',
+    'CGST 2.5% (₹)',
+    'Net Ex-Tax (₹)',
+    'Attributable Days',
+    'Daily Recipe Cost (₹)',
+    'Product Cost Ex-GST (₹)',
+    'Real Profit Ex-GST (₹)',
+    'Margin %',
+    'Custom Price Flag'
+  ];
   var rows = _umsCachedRows.map(function(r) {
     return [
       '"' + (r.customerName || '').replace(/"/g, '""') + '"',
       '"' + (r.packName || '').replace(/"/g, '""') + '"',
-      r.days,
-      r.price.toFixed(2),
+      r.monthLabel || r.month,
       r.paid.toFixed(2),
-      r.balance.toFixed(2),
+      r.sgst.toFixed(2),
+      r.cgst.toFixed(2),
+      r.netExTax.toFixed(2),
+      r.daysCovered.toFixed(2),
+      r.dailyCost.toFixed(2),
       r.cost.toFixed(2),
       r.profit.toFixed(2),
       r.margin.toFixed(1) + '%',
-      r.status
+      r.hasCustomPrice ? 'YES (₹' + r.effectivePrice + ' vs standard ₹' + r.defPrice + ')' : 'NO'
     ];
   });
-  
+
   var csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(',')].concat(rows.map(function(e){ return e.join(','); })).join('\n');
   var encodedUri = encodeURI(csvContent);
   var link = document.createElement('a');
   link.setAttribute('href', encodedUri);
-  link.setAttribute('download', 'ums_pack_profit_report_' + new Date().toISOString().split('T')[0] + '.csv');
+  link.setAttribute('download', 'ums_monthly_profit_report_' + new Date().toISOString().split('T')[0] + '.csv');
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  showToast('✅ UMS Profit CSV exported!');
+  showToast('✅ UMS Monthly Profit CSV exported!');
 }
 
 async function recalculatePackProfit() {
@@ -8278,23 +8461,20 @@ async function openCostSettings() {
   var packTb = document.getElementById('cost-settings-packs-body');
   if (!scoopTb || !packTb) return;
 
-  scoopTb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--muted)">Loading scoop costs...</td></tr>';
-  packTb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--muted)">Loading pack definitions...</td></tr>';
+  scoopTb.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:12px;color:var(--muted)">Loading scoop costs...</td></tr>';
+  packTb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:12px;color:var(--muted)">Loading pack definitions...</td></tr>';
 
   await loadPackProfitConfig();
 
   var scoops = getPackScoopConfigs();
-  var dailyCost = getDailyShakeCost();
 
   scoopTb.innerHTML = scoops.map(function(s) {
-    var subtotal = (s.scoops * s.cost_per_scoop).toFixed(2);
-    return '<tr data-key="' + s.key + '" data-scoops="' + s.scoops + '" style="border-bottom:1px solid var(--border)">' +
-      '<td style="padding:8px 6px;font-weight:600">' + s.label + ' <span style="font-size:11px;color:var(--muted)">(' + s.key + ')</span></td>' +
-      '<td style="padding:8px 6px;text-align:center"><span class="badge" style="background:rgba(56,189,248,0.12);color:#38bdf8">' + s.scoops + ' scoop' + (s.scoops > 1 ? 's' : '') + '</span></td>' +
+    return '<tr data-key="' + s.key + '" style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:8px 6px;font-weight:600">' + s.label + '</td>' +
+      '<td style="padding:8px 6px;text-align:center"><span class="badge" style="background:rgba(56,189,248,0.12);color:#38bdf8;font-size:11px">' + s.key + '</span></td>' +
       '<td style="padding:8px 6px;text-align:right">' +
-        '<input type="number" step="0.01" min="0" class="cs-cost-input" value="' + s.cost_per_scoop.toFixed(2) + '" oninput="updateModalDailyCostPreview()" style="width:100px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;text-align:right;font-size:12.5px;background:var(--surface);color:var(--text);font-weight:600">' +
+        '<input type="number" step="0.01" min="0" class="cs-cost-input" value="' + s.cost_per_scoop.toFixed(2) + '" oninput="updateModalDailyCostPreview()" style="width:105px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;text-align:right;font-size:12.5px;background:var(--surface);color:var(--text);font-weight:600">' +
       '</td>' +
-      '<td class="cs-subtotal" style="padding:8px 6px;text-align:right;font-weight:600;color:var(--text)">₹' + subtotal + '</td>' +
     '</tr>';
   }).join('');
 
@@ -8302,13 +8482,34 @@ async function openCostSettings() {
   packTb.innerHTML = packs.map(function(p) {
     var days = Number(p.days) || 0;
     var price = Number(p.ums_price) || 0;
-    var calc = calcUmsProfit(price, days, dailyCost, price, days);
+    var r = p.recipe || { f1: 3, ppp: 1, shakemate: 1, afresh: 1 };
+    var f1 = r.f1 != null ? r.f1 : 0;
+    var ppp = r.ppp != null ? r.ppp : 0;
+    var sm = r.shakemate != null ? r.shakemate : 0;
+    var dino = r.dinoshake != null ? r.dinoshake : 0;
+    var af = r.afresh != null ? r.afresh : 0;
+
+    var packDailyCost = getDailyShakeCost(p);
+    var calc = calcUmsProfit(price, days, packDailyCost, price, days);
+
     return '<tr data-pack-id="' + (p.id || '') + '" data-pack-name="' + (p.pack_name || '') + '" data-days="' + days + '" style="border-bottom:1px solid var(--border)">' +
-      '<td style="padding:8px 6px;font-weight:600">' + (p.pack_name || (days + ' Days')) + '</td>' +
-      '<td style="padding:8px 6px;text-align:center"><span class="badge" style="background:rgba(56,189,248,0.12);color:#38bdf8">' + days + 'd</span></td>' +
-      '<td style="padding:8px 6px;text-align:right">' +
-        '<input type="number" step="1" min="0" class="cs-pack-price-input" value="' + price + '" oninput="updateModalDailyCostPreview()" style="width:100px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;text-align:right;font-size:12.5px;background:var(--surface);color:var(--text);font-weight:600">' +
+      '<td style="padding:8px 6px;font-weight:600">' +
+        '<div>' + (p.pack_name || (days + ' Days')) + '</div>' +
+        '<div style="font-size:10.5px;color:var(--muted)">' + days + ' days</div>' +
       '</td>' +
+      '<td style="padding:8px 6px;text-align:right">' +
+        '<input type="number" step="1" min="0" class="cs-pack-price-input" value="' + price + '" oninput="updateModalDailyCostPreview()" style="width:90px;padding:5px 7px;border:1px solid var(--border);border-radius:8px;text-align:right;font-size:12px;background:var(--surface);color:var(--text);font-weight:600">' +
+      '</td>' +
+      '<td style="padding:8px 6px;text-align:center">' +
+        '<div style="display:inline-flex;gap:4px;align-items:center;font-size:11px">' +
+          '<span title="F1">F1:<input type="number" min="0" step="1" class="cs-r-f1" value="' + f1 + '" oninput="updateModalDailyCostPreview()" style="width:34px;padding:3px 2px;border:1px solid var(--border);border-radius:6px;text-align:center;font-size:11px;background:var(--surface);color:var(--text)"></span>' +
+          '<span title="PPP">PPP:<input type="number" min="0" step="1" class="cs-r-ppp" value="' + ppp + '" oninput="updateModalDailyCostPreview()" style="width:34px;padding:3px 2px;border:1px solid var(--border);border-radius:6px;text-align:center;font-size:11px;background:var(--surface);color:var(--text)"></span>' +
+          '<span title="ShakeMate">SM:<input type="number" min="0" step="1" class="cs-r-sm" value="' + sm + '" oninput="updateModalDailyCostPreview()" style="width:34px;padding:3px 2px;border:1px solid var(--border);border-radius:6px;text-align:center;font-size:11px;background:var(--surface);color:var(--text)"></span>' +
+          '<span title="Dinoshake">Dino:<input type="number" min="0" step="1" class="cs-r-dino" value="' + dino + '" oninput="updateModalDailyCostPreview()" style="width:34px;padding:3px 2px;border:1px solid var(--border);border-radius:6px;text-align:center;font-size:11px;background:var(--surface);color:var(--text)"></span>' +
+          '<span title="Afresh">Af:<input type="number" min="0" step="1" class="cs-r-afresh" value="' + af + '" oninput="updateModalDailyCostPreview()" style="width:34px;padding:3px 2px;border:1px solid var(--border);border-radius:6px;text-align:center;font-size:11px;background:var(--surface);color:var(--text)"></span>' +
+        '</div>' +
+      '</td>' +
+      '<td class="cs-pack-daily" style="padding:8px 6px;text-align:right;color:var(--text);font-weight:600">₹' + packDailyCost.toFixed(2) + '</td>' +
       '<td class="cs-pack-cost" style="padding:8px 6px;text-align:right;color:var(--muted)">₹' + calc.fullCost.toFixed(2) + '</td>' +
       '<td class="cs-pack-profit" style="padding:8px 6px;text-align:right;font-weight:700;color:var(--success)">₹' + calc.fullPackProfit.toFixed(2) + '</td>' +
       '<td class="cs-pack-margin" style="padding:8px 6px;text-align:right;font-weight:700;color:#38bdf8">' + calc.marginPct.toFixed(1) + '%</td>' +
@@ -8320,44 +8521,57 @@ async function openCostSettings() {
 
 function updateModalDailyCostPreview() {
   var scoopTb = document.getElementById('cost-settings-scoops-body');
-  if (!scoopTb) return;
-  var trs = scoopTb.querySelectorAll('tr[data-key]');
-  var newDailyCost = 0;
-  
-  trs.forEach(function(tr) {
-    var scoops = Number(tr.getAttribute('data-scoops')) || 1;
+  var packTb = document.getElementById('cost-settings-packs-body');
+  if (!scoopTb || !packTb) return;
+
+  var costMap = {};
+  var scoopTrs = scoopTb.querySelectorAll('tr[data-key]');
+  scoopTrs.forEach(function(tr) {
+    var key = tr.getAttribute('data-key');
     var inp = tr.querySelector('.cs-cost-input');
-    var costPerScoop = inp ? (Number(inp.value) || 0) : 0;
-    var sub = scoops * costPerScoop;
-    newDailyCost += sub;
-    var subEl = tr.querySelector('.cs-subtotal');
-    if (subEl) subEl.textContent = '₹' + sub.toFixed(2);
+    costMap[key] = inp ? (Number(inp.value) || 0) : 0;
   });
 
-  var totalEl = document.getElementById('modal-daily-cost-total');
-  if (totalEl) totalEl.textContent = '₹' + newDailyCost.toFixed(2);
-
   // Update pack definitions table live
-  var packTb = document.getElementById('cost-settings-packs-body');
-  if (packTb) {
-    var ptrs = packTb.querySelectorAll('tr[data-days]');
-    ptrs.forEach(function(ptr) {
-      var days = Number(ptr.getAttribute('data-days')) || 0;
-      var priceInp = ptr.querySelector('.cs-pack-price-input');
-      var price = priceInp ? (Number(priceInp.value) || 0) : 0;
-      var calc = calcUmsProfit(price, days, newDailyCost, price, days);
-      
-      var costEl = ptr.querySelector('.cs-pack-cost');
-      var profEl = ptr.querySelector('.cs-pack-profit');
-      var margEl = ptr.querySelector('.cs-pack-margin');
-      if (costEl) costEl.textContent = '₹' + calc.fullCost.toFixed(2);
-      if (profEl) {
-        profEl.textContent = '₹' + calc.fullPackProfit.toFixed(2);
-        profEl.style.color = calc.fullPackProfit >= 0 ? 'var(--success)' : 'var(--danger)';
-      }
-      if (margEl) margEl.textContent = calc.marginPct.toFixed(1) + '%';
-    });
-  }
+  var ptrs = packTb.querySelectorAll('tr[data-days]');
+  ptrs.forEach(function(ptr) {
+    var days = Number(ptr.getAttribute('data-days')) || 0;
+    var priceInp = ptr.querySelector('.cs-pack-price-input');
+    var price = priceInp ? (Number(priceInp.value) || 0) : 0;
+
+    var f1Inp = ptr.querySelector('.cs-r-f1');
+    var pppInp = ptr.querySelector('.cs-r-ppp');
+    var smInp = ptr.querySelector('.cs-r-sm');
+    var dinoInp = ptr.querySelector('.cs-r-dino');
+    var afInp = ptr.querySelector('.cs-r-afresh');
+
+    var f1 = f1Inp ? (Number(f1Inp.value) || 0) : 0;
+    var ppp = pppInp ? (Number(pppInp.value) || 0) : 0;
+    var sm = smInp ? (Number(smInp.value) || 0) : 0;
+    var dino = dinoInp ? (Number(dinoInp.value) || 0) : 0;
+    var af = afInp ? (Number(afInp.value) || 0) : 0;
+
+    var dailyCost = (f1 * (costMap.f1 || 0)) +
+                    (ppp * (costMap.ppp || 0)) +
+                    (sm * (costMap.shakemate || 0)) +
+                    (dino * (costMap.dinoshake || 0)) +
+                    (af * (costMap.afresh || 0));
+
+    var calc = calcUmsProfit(price, days, dailyCost, price, days);
+
+    var dailyEl = ptr.querySelector('.cs-pack-daily');
+    var costEl = ptr.querySelector('.cs-pack-cost');
+    var profEl = ptr.querySelector('.cs-pack-profit');
+    var margEl = ptr.querySelector('.cs-pack-margin');
+
+    if (dailyEl) dailyEl.textContent = '₹' + dailyCost.toFixed(2);
+    if (costEl) costEl.textContent = '₹' + calc.fullCost.toFixed(2);
+    if (profEl) {
+      profEl.textContent = '₹' + calc.fullPackProfit.toFixed(2);
+      profEl.style.color = calc.fullPackProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+    }
+    if (margEl) margEl.textContent = calc.marginPct.toFixed(1) + '%';
+  });
 }
 
 async function saveCostSettings() {
@@ -8386,10 +8600,26 @@ async function saveCostSettings() {
       var days = Number(tr.getAttribute('data-days')) || 0;
       var priceInp = tr.querySelector('.cs-pack-price-input');
       var price = priceInp ? (Number(priceInp.value) || 0) : 0;
+
+      var f1Inp = tr.querySelector('.cs-r-f1');
+      var pppInp = tr.querySelector('.cs-r-ppp');
+      var smInp = tr.querySelector('.cs-r-sm');
+      var dinoInp = tr.querySelector('.cs-r-dino');
+      var afInp = tr.querySelector('.cs-r-afresh');
+
+      var recipe = {
+        f1: f1Inp ? (Number(f1Inp.value) || 0) : 0,
+        ppp: pppInp ? (Number(pppInp.value) || 0) : 0,
+        shakemate: smInp ? (Number(smInp.value) || 0) : 0,
+        dinoshake: dinoInp ? (Number(dinoInp.value) || 0) : 0,
+        afresh: afInp ? (Number(afInp.value) || 0) : 0
+      };
+
       packUpdates.push({
         pack_name: name,
         days: days,
         ums_price: price,
+        recipe: recipe,
         active: true
       });
     });
@@ -8404,11 +8634,12 @@ async function saveCostSettings() {
       }, '?product_key=eq.' + encodeURIComponent(u.product_key));
     }));
 
-    // 2. Update pack_definitions rows
+    // 2. Update pack_definitions rows (including recipe)
     await Promise.all(packUpdates.map(function(p) {
       return req('PATCH', 'pack_definitions', {
         ums_price: p.ums_price,
         days: p.days,
+        recipe: p.recipe,
         active: p.active
       }, '?pack_name=eq.' + encodeURIComponent(p.pack_name));
     }));
@@ -8418,7 +8649,7 @@ async function saveCostSettings() {
     closeModal('cost-settings');
     await loadPackProfit();
     renderUmsProfit();
-    showToast('✅ Pack costs & pricing updated — UMS profits recalculated!', 'success');
+    showToast('✅ Pack recipes, costs & pricing updated — UMS profits recalculated!', 'success');
   } catch (err) {
     console.error('saveCostSettings error:', err);
     showToast('Error saving settings: ' + err.message, 'error');
