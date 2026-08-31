@@ -2649,25 +2649,89 @@ function goTo(name, el) {
     }
   }
 
-  // Direct execution with caching
-  if (name==='overview')    execTabModule('overview', function(){ if (typeof renderOverview === 'function') renderOverview(); });
-  if (name==='customers')   execTabModule('customers', function(){ if (typeof renderCustomers === 'function') renderCustomers(); });
-  if (name==='foods')       execTabModule('foods', function(){ renderFoodStats(); renderFoods(); });
-  if (name==='attendance')  execTabModule('attendance', renderAttendance);
-  if (name==='analytics')   execTabModule('analytics', renderAnalytics);
-  if (name==='coupons')     execTabModule('coupons', function(){ renderCouponView(); updateCouponCoachSelects(); });
-  if (name==='payments')    execTabModule('payments', function(){ renderPayments(); updatePaymentPersonSelect(); });
-  if (name==='orgtree')     execTabModule('orgtree', renderOrgTree);
-  if (name==='planmgmt')    execTabModule('planmgmt', renderPlanMgmt);
-  if (name==='pintracker')  execTabModule('pintracker', initPinTracker);
-  if (name==='bizanalyst')  execTabModule('bizanalyst', initBizAnalyst);
-  if (name==='profile')     execTabModule('profile', function(){ renderProfileCard(); updateProfileCoachSelect(); renderSvDietPlan(); });
-  if (name==='leads')       execTabModule('leads', function(){ renderLeadsStats(); renderLeads(); updateLeadCenterSel(); });
-  if (name==='guide')       execTabModule('guide', renderGuide);
-  if (name==='finance')     execTabModule('finance', function(){ if (typeof renderFinance === 'function') renderFinance(); });
-  if (name==='recovery')    execTabModule('recovery', function(){ if (typeof renderRecoveryHub === 'function') renderRecoveryHub(); });
-  if (name==='reports')     execTabModule('reports', function(){ if (typeof renderReportsView === 'function') renderReportsView(); });
-  if (name==='inventory')   execTabModule('inventory', function(){ if (typeof loadInventory === 'function') loadInventory(); });
+  // Helper for on-demand lazy loading of feature modules
+  function execLazyModule(modKey, renderFn) {
+    var isFirst = !window._loadedTabs[modKey] || window._tabDirty[modKey];
+    if (!isFirst && window._loadedModules && window._loadedModules[modKey]) {
+      if (typeof renderFn === 'function') renderFn();
+      return;
+    }
+    var secEl = document.getElementById('sec-' + modKey);
+    var loaderId = 'mod-loader-' + modKey;
+    var existingLoader = document.getElementById(loaderId);
+    if (!existingLoader && secEl && (!window._loadedModules || !window._loadedModules[modKey])) {
+      var l = document.createElement('div');
+      l.id = loaderId;
+      l.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted,#94a3b8);font-family:sans-serif">'
+        + '<div class="spinner" style="display:inline-block;width:24px;height:24px;border:3px solid rgba(255,255,255,0.15);border-top-color:#10b981;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:12px"></div>'
+        + '<div style="font-size:13px;font-weight:600">Loading module...</div>'
+        + '</div>';
+      secEl.prepend(l);
+    }
+
+    (async function() {
+      try {
+        if (typeof window.loadModule === 'function') {
+          await window.loadModule(modKey);
+        }
+        var lEl = document.getElementById(loaderId);
+        if (lEl) lEl.remove();
+        if (secEl) {
+          var oldErr = secEl.querySelector('.module-load-error');
+          if (oldErr) oldErr.remove();
+        }
+        if (typeof renderFn === 'function') renderFn();
+        window._loadedTabs[modKey] = true;
+        delete window._tabDirty[modKey];
+      } catch(err) {
+        console.error('[PulseIQ] Failed to load module:', modKey, err);
+        var lEl = document.getElementById(loaderId);
+        if (lEl) lEl.remove();
+        if (secEl) {
+          var errEl = secEl.querySelector('.module-load-error');
+          if (!errEl) {
+            errEl = document.createElement('div');
+            errEl.className = 'module-load-error';
+            secEl.prepend(errEl);
+          }
+          errEl.innerHTML = '<div style="padding:40px 20px;text-align:center;color:#ef4444;font-family:sans-serif">'
+            + '<div style="font-size:32px;margin-bottom:12px">⚠️</div>'
+            + '<div style="font-weight:700;font-size:15px;margin-bottom:6px">Failed to load ' + modKey + ' module</div>'
+            + '<div style="font-size:12px;color:var(--muted,#94a3b8);margin-bottom:16px">' + (err.message || 'Network connection failed') + '</div>'
+            + '<button onclick="goTo(\'' + modKey + '\', document.querySelector(\'.nav-item.active\') || this)" class="btn-p" style="padding:8px 18px;font-size:13px;background:#10b981;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">Retry 🔄</button>'
+            + '</div>';
+        }
+      }
+    })();
+  }
+
+  // Direct execution with caching & lazy loading
+  if (name==='overview')          execTabModule('overview', function(){ if (typeof renderOverview === 'function') renderOverview(); });
+  if (name==='customers')         execTabModule('customers', function(){ if (typeof renderCustomers === 'function') renderCustomers(); });
+  if (name==='foods')             execTabModule('foods', function(){ renderFoodStats(); renderFoods(); });
+  if (name==='attendance')        execTabModule('attendance', renderAttendance);
+  if (name==='analytics')         execTabModule('analytics', renderAnalytics);
+  if (name==='coupons')           execTabModule('coupons', function(){ renderCouponView(); updateCouponCoachSelects(); });
+  if (name==='payments')          execLazyModule('payments', function(){ renderPayments(); updatePaymentPersonSelect(); });
+  if (name==='orgtree')           execTabModule('orgtree', renderOrgTree);
+  if (name==='planmgmt')          execLazyModule('planmgmt', renderPlanMgmt);
+  if (name==='pintracker')        execTabModule('pintracker', initPinTracker);
+  if (name==='bizanalyst')        execLazyModule('bizanalyst', initBizAnalyst);
+  if (name==='profile')           execTabModule('profile', function(){ renderProfileCard(); updateProfileCoachSelect(); renderSvDietPlan(); });
+  if (name==='leads')             execTabModule('leads', function(){ renderLeadsStats(); renderLeads(); updateLeadCenterSel(); });
+  if (name==='guide')             execTabModule('guide', renderGuide);
+  if (name==='finance')           execTabModule('finance', function(){ if (typeof renderFinance === 'function') renderFinance(); });
+  if (name==='recovery')          execLazyModule('recovery', function(){ if (typeof renderRecoveryHub === 'function') renderRecoveryHub(); });
+  if (name==='reports')           execLazyModule('reports', function(){ if (typeof renderReportsView === 'function') renderReportsView(); });
+  if (name==='inventory')         execTabModule('inventory', function(){ if (typeof loadInventory === 'function') loadInventory(); });
+  if (name==='actioncenter')      execLazyModule('actioncenter', function(){ if (window.PulseIQ_ActionCenter) PulseIQ_ActionCenter.refreshTasks(window.D); });
+  if (name==='customerrisk')      execLazyModule('customerrisk', function(){ if (window.PulseIQ_CustomerRisk) PulseIQ_CustomerRisk.refreshDashboard(window.D); });
+  if (name==='coachanalytics')    execLazyModule('coachanalytics', function(){ if (window.PulseIQ_CoachAnalytics) PulseIQ_CoachAnalytics.refreshDashboard(window.D); });
+  if (name==='customerfollowup')  execLazyModule('customerfollowup', function(){ if (window.PulseIQ_CustomerFollowUp) PulseIQ_CustomerFollowUp.refreshDashboard(window.D); });
+  if (name==='forecasting')       execLazyModule('forecasting', function(){ if (window.PulseIQ_Forecasting) PulseIQ_Forecasting.refreshDashboard(window.D); });
+  if (name==='executivedashboard') execLazyModule('executivedashboard', function(){ if (window.PulseIQ_ExecutiveDashboard) PulseIQ_ExecutiveDashboard.refreshDashboard(window.D); });
+  if (name==='monitoring')        execLazyModule('monitoring', function(){ if (window.PulseIQ_MonitoringRenderer) PulseIQ_MonitoringRenderer.renderMonitoringDashboard('sec-monitoring'); });
+  if (name==='release')           execLazyModule('release', function(){ if (window.PulseIQ_ReleaseRenderer) PulseIQ_ReleaseRenderer.renderReleaseDashboard('sec-release'); });
   if (name==='expenses') {
     (async function() {
       if (!window._loadedTabs.expenses || window._tabDirty.expenses) {
@@ -2690,7 +2754,7 @@ function goTo(name, el) {
       }
     })();
   }
-  if (name==='goals')         execTabModule('goals', renderGoals);
+  if (name==='goals')         execLazyModule('goals', function(){ renderGoals(); if (window.PulseIQ_GoalTracking) PulseIQ_GoalTracking.refreshDashboard(window.D); });
   if (name==='notifications') execTabModule('notifications', renderNotifications);
   if (name==='coaches')       execTabModule('coaches', function(){ initCommission(); initCoachWorkTracker(); });
   if (name==='contests') {

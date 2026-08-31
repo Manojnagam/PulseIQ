@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="PulseZen Supervisor Dashboard - Manage wellness centers, track coach performance, consult customers, and monitor revenue dynamically with AI wellness scans.">
-<link rel="preload" href="app.min.js?v=2.3.14" as="script">
+<link rel="preload" href="app.min.js?v=2.3.15" as="script">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1340,7 +1340,7 @@ if ('caches' in window) {
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
 <script defer src="auth.core.min.js?v=1.9.1"></script>
-<script defer src="app.min.js?v=2.3.14"></script>
+<script defer src="app.min.js?v=2.3.15"></script>
 <script>
 window._showCustDbg = function() {
   var sec = document.getElementById('sec-customers');
@@ -1393,45 +1393,143 @@ window._perf.t('loadStart');
 <script defer src="mobile-debug.js?v=5.0"></script>
 <script defer src="pulseiq-premium.js?v=3.5"></script>
 <script>
-// Lazy-load secondary engine modules (Action Centre, Risk, Forecasting, Payments, …)
-// AFTER window.onload. These ~105 files were previously <script defer> tags, which
-// blocked window.onload — and bootDashboard (data fetch) only starts on onload.
-// They only power sections behind navigation clicks, so loading them ~0.4s after
-// boot is invisible to the user but makes first data paint dramatically faster.
+// Phase 2/3 Module Architecture:
+// 1. Group (a) Core scripts (29 files: shared, security, organisation, communication, performance)
+//    load eagerly ~400ms after load.
+// 2. Group (b) Feature modules (14 modules, 69 files) load on-demand via window.loadModule(name).
 (function(){
-  var MODS = [
+  var CORE_MODS = [
     'shared/constants.js','shared/date-utils.js','shared/formatting.js','shared/index.js',
     'security/role-engine.js','security/permission-engine.js','security/audit-helper.js','security/session-manager.js','security/auth-service.js','security/index.js',
     'organisation/organisation-engine.js','organisation/location-engine.js','organisation/context-manager.js','organisation/organisation-renderer.js','organisation/index.js',
     'communication/template-engine.js','communication/channel-manager.js','communication/preference-manager.js','communication/delivery-queue.js','communication/notification-engine.js','communication/communication-renderer.js','communication/index.js',
-    'reporting/report-engine.js','reporting/template-engine.js','reporting/export-engine.js','reporting/scheduler.js','reporting/report-renderer.js','reporting/index.js',
-    'monitoring/audit-engine.js','monitoring/event-log.js','monitoring/metrics-engine.js','monitoring/health-monitor.js','monitoring/diagnostics-engine.js','monitoring/monitoring-renderer.js','monitoring/index.js',
-    'performance/cache-manager.js','performance/lazy-loader.js','performance/worker-manager.js','performance/benchmark-engine.js','performance/optimisation-engine.js','performance/performance-renderer.js','performance/index.js',
-    'saas/plan-engine.js','saas/tenant-engine.js','saas/subscription-engine.js','saas/billing-engine.js','saas/usage-engine.js','saas/licensing-engine.js','saas/saas-renderer.js','saas/index.js',
-    'bi/metrics-engine.js','bi/insight-engine.js','bi/recommendation-engine.js','bi/nlg-engine.js','bi/index.js',
-    'action-center/priority-engine.js','action-center/action-engine.js','action-center/task-renderer.js','action-center/index.js',
-    'customer-risk/scoring-engine.js','customer-risk/risk-engine.js','customer-risk/risk-renderer.js','customer-risk/index.js',
-    'coach-analytics/metrics-engine.js','coach-analytics/scoring-engine.js','coach-analytics/analytics-renderer.js','coach-analytics/index.js',
-    'customer-followup/template-engine.js','customer-followup/followup-engine.js','customer-followup/queue-renderer.js','customer-followup/index.js',
-    'goal-tracking/target-engine.js','goal-tracking/progress-engine.js','goal-tracking/dashboard-renderer.js','goal-tracking/index.js',
-    'forecasting/confidence-engine.js','forecasting/trend-engine.js','forecasting/forecast-engine.js','forecasting/dashboard-renderer.js','forecasting/index.js',
-    'executive-dashboard/overview-engine.js','executive-dashboard/widget-engine.js','executive-dashboard/dashboard-renderer.js','executive-dashboard/index.js',
-    'payments/gateway-adapter.js','payments/payment-engine.js','payments/invoice-engine.js','payments/refund-engine.js','payments/reconciliation-engine.js','payments/payment-renderer.js','payments/index.js',
-    'resilience/backup-engine.js','resilience/restore-engine.js','resilience/snapshot-engine.js','resilience/recovery-engine.js','resilience/continuity-engine.js','resilience/resilience-renderer.js','resilience/index.js',
-    'release/validation-engine.js','release/regression-engine.js','release/security-review.js','release/compatibility-engine.js','release/release-checklist.js','release/documentation-engine.js','release/release-renderer.js','release/index.js'
+    'performance/cache-manager.js','performance/lazy-loader.js','performance/worker-manager.js','performance/benchmark-engine.js','performance/optimisation-engine.js','performance/performance-renderer.js','performance/index.js'
   ];
-  var started = false;
-  function loadMods(){
-    if (started) return; started = true;
-    MODS.forEach(function(src){
+
+  window._MODULE_DEFS = {
+    'actioncenter': {
+      files: ['action-center/priority-engine.js','action-center/action-engine.js','action-center/task-renderer.js','action-center/index.js'],
+      deps: []
+    },
+    'customerrisk': {
+      files: ['customer-risk/scoring-engine.js','customer-risk/risk-engine.js','customer-risk/risk-renderer.js','customer-risk/index.js'],
+      deps: []
+    },
+    'coachanalytics': {
+      files: ['coach-analytics/metrics-engine.js','coach-analytics/scoring-engine.js','coach-analytics/analytics-renderer.js','coach-analytics/index.js'],
+      deps: ['customerrisk']
+    },
+    'customerfollowup': {
+      files: ['customer-followup/template-engine.js','customer-followup/followup-engine.js','customer-followup/queue-renderer.js','customer-followup/index.js'],
+      deps: ['customerrisk']
+    },
+    'goals': {
+      files: ['goal-tracking/target-engine.js','goal-tracking/progress-engine.js','goal-tracking/dashboard-renderer.js','goal-tracking/index.js'],
+      deps: []
+    },
+    'forecasting': {
+      files: ['forecasting/confidence-engine.js','forecasting/trend-engine.js','forecasting/forecast-engine.js','forecasting/dashboard-renderer.js','forecasting/index.js'],
+      deps: []
+    },
+    'executivedashboard': {
+      files: ['executive-dashboard/overview-engine.js','executive-dashboard/widget-engine.js','executive-dashboard/dashboard-renderer.js','executive-dashboard/index.js'],
+      deps: []
+    },
+    'payments': {
+      files: ['payments/gateway-adapter.js','payments/payment-engine.js','payments/invoice-engine.js','payments/refund-engine.js','payments/reconciliation-engine.js','payments/payment-renderer.js','payments/index.js'],
+      deps: ['planmgmt', 'monitoring']
+    },
+    'planmgmt': {
+      files: ['saas/plan-engine.js','saas/tenant-engine.js','saas/subscription-engine.js','saas/billing-engine.js','saas/usage-engine.js','saas/licensing-engine.js','saas/saas-renderer.js','saas/index.js'],
+      deps: []
+    },
+    'bizanalyst': {
+      files: ['bi/metrics-engine.js','bi/insight-engine.js','bi/recommendation-engine.js','bi/nlg-engine.js','bi/index.js'],
+      deps: []
+    },
+    'reports': {
+      files: ['reporting/report-engine.js','reporting/template-engine.js','reporting/export-engine.js','reporting/scheduler.js','reporting/report-renderer.js','reporting/index.js'],
+      deps: []
+    },
+    'monitoring': {
+      files: ['monitoring/audit-engine.js','monitoring/event-log.js','monitoring/metrics-engine.js','monitoring/health-monitor.js','monitoring/diagnostics-engine.js','monitoring/monitoring-renderer.js','monitoring/index.js'],
+      deps: []
+    },
+    'recovery': {
+      files: ['resilience/backup-engine.js','resilience/restore-engine.js','resilience/snapshot-engine.js','resilience/recovery-engine.js','resilience/continuity-engine.js','resilience/resilience-renderer.js','resilience/index.js'],
+      deps: ['monitoring']
+    },
+    'release': {
+      files: ['release/validation-engine.js','release/regression-engine.js','release/security-review.js','release/compatibility-engine.js','release/release-checklist.js','release/documentation-engine.js','release/release-renderer.js','release/index.js'],
+      deps: ['monitoring', 'recovery']
+    }
+  };
+
+  window._loadedModules = window._loadedModules || {};
+  window._moduleLoadPromises = window._moduleLoadPromises || {};
+
+  function loadSingleScript(src) {
+    return new Promise(function(resolve, reject) {
+      var existing = document.querySelector('script[src="' + src + '"]');
+      if (existing && existing.getAttribute('data-loaded') === 'true') {
+        return resolve();
+      }
       var s = document.createElement('script');
       s.src = src;
-      s.async = false; // preserve execution order (modules wrap window.goTo in sequence)
-      s.onerror = function(){ console.warn('module failed to load:', src); };
+      s.async = false;
+      s.onload = function() {
+        s.setAttribute('data-loaded', 'true');
+        resolve();
+      };
+      s.onerror = function() {
+        s.remove();
+        reject(new Error('Failed to load script: ' + src));
+      };
       document.head.appendChild(s);
     });
   }
-  // Wait for onload (bootDashboard start) + a beat so the first data fetches go out first
+
+  window.loadModule = function(name) {
+    if (window._loadedModules[name]) return Promise.resolve(true);
+    if (window._moduleLoadPromises[name]) return window._moduleLoadPromises[name];
+    var def = window._MODULE_DEFS && window._MODULE_DEFS[name];
+    if (!def) return Promise.resolve(true);
+
+    var p = (async function() {
+      try {
+        if (def.deps && def.deps.length) {
+          for (var i = 0; i < def.deps.length; i++) {
+            await window.loadModule(def.deps[i]);
+          }
+        }
+        for (var j = 0; j < def.files.length; j++) {
+          await loadSingleScript(def.files[j]);
+        }
+        window._loadedModules[name] = true;
+        return true;
+      } catch (err) {
+        console.error('[PulseIQ loadModule Error] Failed to load module:', name, err);
+        delete window._moduleLoadPromises[name];
+        delete window._loadedModules[name];
+        throw err;
+      }
+    })();
+
+    window._moduleLoadPromises[name] = p;
+    return p;
+  };
+
+  var started = false;
+  function loadMods(){
+    if (started) return; started = true;
+    CORE_MODS.forEach(function(src){
+      var s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      s.onerror = function(){ console.warn('core module failed to load:', src); };
+      document.head.appendChild(s);
+    });
+  }
   if (document.readyState === 'complete') setTimeout(loadMods, 400);
   else window.addEventListener('load', function(){ setTimeout(loadMods, 400); });
 })();
