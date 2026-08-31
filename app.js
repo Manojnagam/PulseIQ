@@ -2618,6 +2618,15 @@ function goTo(name, el) {
     if (sbo) sbo.classList.remove('open');
   }
 
+  // Reset table pagination limits on tab switch
+  window._limUms = 50;
+  window._limFin = 50;
+  window._limCust = 50;
+  window._limCoach = 50;
+  window._limCoup = 50;
+  window._limPay = 50;
+  window._limWalk = 50;
+
   // Helper for immediate cached execution & performance measurement
   function execTabModule(tabKey, renderFn) {
     var isFirst = !window._loadedTabs[tabKey] || window._tabDirty[tabKey];
@@ -5075,6 +5084,10 @@ function renderOverview() {
 function renderCoaches() {
   var cs = document.getElementById('coaches-search');
   var q = cs ? (cs.value || '').toLowerCase() : '';
+  if (window._coachLastQ !== q) {
+    window._limCoach = 50;
+    window._coachLastQ = q;
+  }
   var _coaches = filterByCenter(D.coaches);
   var rows = _coaches.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.contact||'').toLowerCase().includes(q); });
   var tb = document.getElementById('coaches-body');
@@ -7776,6 +7789,7 @@ function setFinPeriod(period, btn) {
     if (ff) ff.value = from ? from.toISOString().split('T')[0] : '';
     if (ft) ft.value = to ? to.toISOString().split('T')[0] : '';
   }
+  window._limFin = 50;
   renderFinance();
 }
 function setFinMonthPicker(ym) {
@@ -7790,6 +7804,7 @@ function setFinMonthPicker(ym) {
   var ft = document.getElementById('fin-to');
   if (ff) ff.value = from.toISOString().split('T')[0];
   if (ft) ft.value = to.toISOString().split('T')[0];
+  window._limFin = 50;
   renderFinance();
 }
 function _getFinFiltered() {
@@ -7808,11 +7823,21 @@ function _getFinFiltered() {
     return true;
   });
 }
+var _finLastFilterSig = '';
+
 function renderFinance() {
   if (isCenterSession() && !isGrowthPlan()) {
     var _finLock = document.getElementById('fin-body');
     if (_finLock) _finLock.innerHTML = '<tr><td colspan="6">'+planLockHtml('Finance Dashboard', 'Track income, expenses, net profit and pending payments for your center.')+'</td></tr>';
     return;
+  }
+  var ff = document.getElementById('fin-from');
+  var ft = document.getElementById('fin-to');
+  var fs = document.getElementById('fin-search');
+  var finFilterSig = (ff ? ff.value : '') + '|' + (ft ? ft.value : '') + '|' + (fs ? fs.value : '');
+  if (_finLastFilterSig !== finFilterSig) {
+    window._limFin = 50;
+    _finLastFilterSig = finFilterSig;
   }
   var rows = _getFinFiltered();
   var tb = document.getElementById('fin-body');
@@ -8402,6 +8427,12 @@ function renderUmsProfit() {
   var packFilter = packSel ? packSel.value : '';
   var monthFilter = monthSel ? monthSel.value : '';
 
+  var filterSig = q + '|' + packFilter + '|' + monthFilter;
+  if (_umsLastFilterSig !== filterSig) {
+    window._limUms = 50;
+    _umsLastFilterSig = filterSig;
+  }
+
   var filtered = rows.filter(function(r) {
     if (q && !(r.customerName.toLowerCase().includes(q) || r.packName.toLowerCase().includes(q))) return false;
     if (monthFilter && r.month !== monthFilter) return false;
@@ -8434,7 +8465,8 @@ function renderUmsProfit() {
       (rows.length ? 'No UMS records match current filters.' : 'No UMS customer pack subscriptions found.') +
       '</td></tr>';
   } else {
-    tb.innerHTML = filtered.map(function(r) {
+    window._limUms = window._limUms || 50;
+    tb.innerHTML = filtered.slice(0, window._limUms).map(function(r) {
       var profitColor = r.profit > 0 ? 'var(--success)' : (r.profit < 0 ? 'var(--danger)' : 'var(--muted)');
       var marginColor = r.margin >= 50 ? 'var(--success)' : (r.margin >= 35 ? '#38bdf8' : '#f59e0b');
       var warnIcon = r.hasCustomPrice ? '<span title="Custom Pack Price: ₹' + r.effectivePrice.toLocaleString('en-IN') + ' vs Standard ₹' + r.defPrice.toLocaleString('en-IN') + '" style="cursor:help;margin-left:4px;font-size:12px">⚠️</span>' : '';
@@ -8456,6 +8488,9 @@ function renderUmsProfit() {
         '<td style="text-align:right;font-weight:700;color:' + marginColor + '">' + r.margin.toFixed(1) + '%</td>' +
       '</tr>';
     }).join('');
+    if (filtered.length > window._limUms) {
+      tb.innerHTML += '<tr><td colspan="11" style="text-align:center;padding:15px"><button class="btn-p" onclick="window._limUms+=50;renderUmsProfit()">⬇️ Load More (' + (filtered.length - window._limUms) + ' remaining)</button></td></tr>';
+    }
   }
 
   // Calculate Grand Totals
@@ -8507,12 +8542,21 @@ function renderUmsProfit() {
   }
 }
 
-var debouncedRenderUmsProfit = debounce(renderUmsProfit, 250);
-var debouncedRenderFinance = debounce(renderFinance, 250);
+var _umsLastFilterSig = '';
+
+var debouncedRenderUmsProfit = debounce(function() {
+  window._limUms = 50;
+  renderUmsProfit();
+}, 250);
+var debouncedRenderFinance = debounce(function() {
+  window._limFin = 50;
+  renderFinance();
+}, 250);
 window.debouncedRenderUmsProfit = debouncedRenderUmsProfit;
 window.debouncedRenderFinance = debouncedRenderFinance;
 
 function sortUms(col) {
+  window._limUms = 50;
   if (_umsSort.col === col) {
     _umsSort.dir = _umsSort.dir === 'asc' ? 'desc' : 'asc';
   } else {
@@ -8538,6 +8582,7 @@ function resetUmsFilters() {
   if (s) s.value = '';
   if (m) m.value = '';
   if (p) p.value = '';
+  window._limUms = 50;
   renderUmsProfit();
 }
 
@@ -14031,6 +14076,10 @@ function calcBalance(){
 }
 function renderPayments(){
   var q=(document.getElementById('payment-search')||{value:''}).value.toLowerCase();
+  if (window._payLastQ !== q) {
+    window._limPay = 50;
+    window._payLastQ = q;
+  }
   var allPayments=(D.payments||[]);
   if(ACTIVE_CENTER){
     var _pCustIds=filterByCenter(D.customers).map(function(c){return c.id;});
@@ -14533,6 +14582,10 @@ function startAutoPing(){
 function renderCustomers() {
   var cs = document.getElementById('customers-search');
   var q = cs ? (cs.value || '').toLowerCase() : '';
+  if (window._custLastQ !== q) {
+    window._limCust = 50;
+    window._custLastQ = q;
+  }
   var _custs = filterByCenter(D.customers);
   var rows = _custs.filter(function(c){ return (c.name||'').toLowerCase().includes(q)||(c.contact||'').toLowerCase().includes(q); });
   var tb = document.getElementById('customers-body');
@@ -14542,7 +14595,7 @@ function renderCustomers() {
   var todayMMDD = new Date().toISOString().slice(5,10);
   if (!rows.length) { tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="ei">👤</div><p>No customers found.</p></div></td></tr>'; }
   else {
-    window._limCust = window._limCust || 200;
+    window._limCust = window._limCust || 50;
     // Use pre-built indexes for O(1) per-row lookups (built by buildDataIndexes())
     var _rIdx = window._idx || {};
     var _rAttByCust   = _rIdx.attByCustomer  || {};
@@ -15088,6 +15141,11 @@ function renderWalkins() {
   var SRC = {google:'🔍 Google',customer_referral:'👤 Customer',coach_referral:'👨‍🏫 Coach',owner:'🏢 Owner',shake_party:'🎉 Shake Party',other:'Other'};
   var OUT = {checkup:'🔬 Checkup',trial:'📦 Trial Pack',product_sale:'🛒 Product Sale',other:'Other'};
   var OUT_COL = {checkup:'#1d4ed8',trial:'#b07800',product_sale:'#16a34a',other:'var(--muted)'};
+  var walkFilterSig = q + '|' + filterOutcome + '|' + filterSource + '|' + filterDate + '|' + filterMonth;
+  if (window._walkLastFilterSig !== walkFilterSig) {
+    window._limWalk = 50;
+    window._walkLastFilterSig = walkFilterSig;
+  }
   window._limWalk = window._limWalk || 50;
   tb.innerHTML = rows.slice(0, window._limWalk).map(function(w) {
     var refObj = w.referred_by_id ? findPerson(w.referred_by_id) : null;
