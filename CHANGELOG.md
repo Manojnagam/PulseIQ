@@ -2,6 +2,17 @@
 
 All notable changes to the PulseIQ project are documented in this file.
 
+## [2.3.17] - 2026-09-01
+
+### Added — Error Capture, Navigation Audit & On-Screen Diagnostics Panel
+- **Silent Error Capture**: Implemented always-on global `error`, `unhandledrejection`, and resource-failure event tracking into in-memory buffer `window.__diagErrors` (zero console pollution in normal mode).
+- **Navigation Audit**: Non-invasive wrapper on `window.goTo` recording tab navigation events, execution duration, exception states, and render completion into `window.__diagNav`.
+- **On-Screen Diagnostics Panel (`?perf=1`)**: Added responsive floating diagnostics pill and slide-up bottom-sheet report viewer allowing tablet and mobile inspection without browser DevTools.
+- **Session Persistence**: Mirrored diagnostic errors and navigation traces into `sessionStorage['pulseiq_diag_v1']` across page navigations in `?perf=1` mode.
+- **Copy Report Action**: Integrated one-click plain-text diagnostic summary exporter with clipboard fallback.
+
+---
+
 ## [2.3.16] - 2026-09-01
 
 ### Added — Opt-in Performance Diagnostics Telemetry
