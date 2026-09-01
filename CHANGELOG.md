@@ -2,6 +2,14 @@
 
 All notable changes to the PulseIQ project are documented in this file.
 
+## [2.3.16] - 2026-09-01
+
+### Added — Opt-in Performance Diagnostics Telemetry
+- **Diagnostics Module (`performance/perf-diagnostics.js`)**: Added opt-in performance telemetry module activated only when URL includes `?perf=1` or via `window.enablePerfDiagnostics()`.
+- **Render Function Profiling**: Non-invasive execution timing instrumentation for 27 key dashboard rendering and calculation functions, logging warnings when execution exceeds 100ms.
+- **Long Task & Resource Observers**: PerformanceObserver tracking for main-thread blocking long tasks (>50ms) and network requests (TTFB & transfer size).
+- **Diagnostics Report CLI (`window._perfReport()`)**: Formatted diagnostic report summarizing device metadata, DOM complexity, aggregated render timings, slow network requests, and long task attribution.
+
 ---
 
 ## [3.0.0] - 2026-07-29

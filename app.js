@@ -2680,7 +2680,13 @@ function goTo(name, el) {
           var oldErr = secEl.querySelector('.module-load-error');
           if (oldErr) oldErr.remove();
         }
+        var _t0 = (window.__perf && window.__perf.renders) ? performance.now() : 0;
         if (typeof renderFn === 'function') renderFn();
+        if (_t0 && window.__perf && window.__perf.renders) {
+          var _ms = Math.round((performance.now() - _t0) * 10) / 10;
+          window.__perf.renders.push({ fn: 'lazy:' + modKey, ms: _ms, ts: Date.now() });
+          if (_ms > 100) console.warn('[PERF] Slow lazy render: lazy:' + modKey + ' took ' + _ms + 'ms');
+        }
         window._loadedTabs[modKey] = true;
         delete window._tabDirty[modKey];
       } catch(err) {
