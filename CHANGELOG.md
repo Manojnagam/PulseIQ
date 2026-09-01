@@ -2,6 +2,16 @@
 
 All notable changes to the PulseIQ project are documented in this file.
 
+## [2.3.18] - 2026-09-01
+
+### Changed — Diagnostics Repair & Non-Blocking Panel
+- **Real Resource Error Target Capture**: Fixed resource failure listener in `performance/perf-diagnostics.js` to extract element `tagName`, the real failing URL (`src`/`href`), and a 150-character `outerHTML` snippet (never recording `location.href` as the source).
+- **Failed Resources Reporting**: Added detection and reporting for resource timing entries with HTTP `responseStatus >= 400` across both on-screen diagnostics panel and `window._perfReport()` CLI summary.
+- **GoTo Wrapper & Render Counter**: Integrated `goTo wrapper: installed/not installed` status check and `renders since load: N` execution counter to resolve navigation auditing discrepancies.
+- **Non-Blocking Diagnostics Sheet**: Refactored `toggleDiagnosticsPanel` to mount panel frame immediately and populate report sections asynchronously via `requestAnimationFrame` and microtasks, eliminating UI stutter on low-power devices and tablets.
+
+---
+
 ## [2.3.17] - 2026-09-01
 
 ### Added — Error Capture, Navigation Audit & On-Screen Diagnostics Panel

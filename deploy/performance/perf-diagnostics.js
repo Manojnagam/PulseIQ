@@ -1,5 +1,5 @@
 /**
- * PulseIQ Performance Diagnostics Module (v2.3.17)
+ * PulseIQ Performance Diagnostics Module (v2.3.18)
  * 
  * OPT-IN performance telemetry, error capture, navigation audit & on-screen report panel.
  * ZERO behavior/logic/rendering/data changes.
@@ -16,7 +16,7 @@
 (function() {
   'use strict';
 
-  var VERSION = 'v2.3.17';
+  var VERSION = 'v2.3.18';
   var SESSION_KEY = 'pulseiq_diag_v1';
 
   var TARGET_RENDER_FNS = [
@@ -115,14 +115,37 @@
     if (!window.__diagErrors) window.__diagErrors = [];
     var target = e.target;
     
-    // Check if resource loading error (script, img, link, etc.)
-    if (target && target !== window && (target.src || target.href) && !e.message) {
-      var src = target.src || target.href || '';
+    // Check if resource loading error (script, img, link, audio, video, source, etc.)
+    if (target && target !== window && (target.tagName || target.src || target.href) && !e.message) {
       var tag = (target.tagName || '').toLowerCase();
+      var rawAttr = target.getAttribute ? (target.getAttribute('src') || target.getAttribute('href')) : null;
+      var absUrl = target.src || target.href || target.currentSrc || '';
+      
+      var realUrl = '';
+      if (rawAttr === '' || rawAttr === null) {
+        realUrl = '(empty ' + (target.getAttribute && target.getAttribute('src') !== null ? 'src' : (target.getAttribute && target.getAttribute('href') !== null ? 'href' : 'source')) + ')';
+      } else if (absUrl && typeof location !== 'undefined' && absUrl === location.href && rawAttr !== location.href) {
+        realUrl = '(empty ' + (target.getAttribute && target.getAttribute('src') !== null ? 'src' : 'href') + ')';
+      } else if (absUrl) {
+        realUrl = absUrl;
+      } else if (rawAttr) {
+        realUrl = rawAttr;
+      } else {
+        realUrl = '(unknown source)';
+      }
+
+      var snippet = '';
+      try {
+        if (target.outerHTML) {
+          snippet = String(target.outerHTML).slice(0, 150);
+        }
+      } catch (err) {}
+
       var rec = {
         type: 'resource',
-        src: String(src).slice(0, 300),
         tag: String(tag),
+        src: String(realUrl).slice(0, 300),
+        snippet: snippet,
         ts: Date.now()
       };
       if (window.__diagErrors.length >= 100) window.__diagErrors.shift();
@@ -409,17 +432,16 @@
       return;
     }
 
-    var rep = generateDiagnosticReportObject();
     var sheet = document.createElement('div');
     sheet.id = '_diag_sheet';
     sheet.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:75vh;z-index:1000000;background:#090d16;color:#e2e8f0;border-top:2px solid #38bdf8;border-radius:16px 16px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,0.85);display:flex;flex-direction:column;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:11.5px;line-height:1.5;';
 
-    // Header
+    // Header (rendered immediately)
     var header = document.createElement('div');
     header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#0f172a;border-bottom:1px solid #1e293b;border-radius:14px 14px 0 0;flex-shrink:0;';
     header.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-weight:700;color:#38bdf8;font-size:13px">'
       + '<span>⚡ PulseIQ Diagnostics (' + VERSION + ')</span>'
-      + '<span style="font-size:10px;padding:2px 6px;border-radius:6px;background:#1e293b;color:#94a3b8">' + rep.dom.viewport + '</span>'
+      + '<span id="_diag_viewport_badge" style="font-size:10px;padding:2px 6px;border-radius:6px;background:#1e293b;color:#94a3b8">' + (typeof window !== 'undefined' ? (window.innerWidth + 'x' + window.innerHeight) : '') + '</span>'
       + '</div>'
       + '<div style="display:flex;align-items:center;gap:8px">'
       + '<button id="_diag_btn_copy" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">📋 Copy Report</button>'
@@ -428,42 +450,65 @@
       + '</div>';
     sheet.appendChild(header);
 
-    // Scrollable Content
+    // Scrollable Content with loading state
     var content = document.createElement('div');
     content.id = '_diag_content';
     content.style.cssText = 'padding:14px 16px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;';
-    content.innerHTML = buildDiagnosticsHTML(rep);
+    content.innerHTML = '<div id="_diag_loading" style="padding:24px;text-align:center;color:#38bdf8;font-size:13px;font-weight:700">⏳ Loading diagnostics...</div>';
     sheet.appendChild(content);
 
     document.body.appendChild(sheet);
 
-    // Event handlers
-    var copyBtn = document.getElementById('_diag_btn_copy');
-    if (copyBtn) {
-      copyBtn.onclick = function() {
-        var textReport = formatDiagnosticReportText(generateDiagnosticReportObject());
-        copyTextToClipboard(textReport, function() {
-          copyBtn.textContent = '✅ Copied!';
-          setTimeout(function() { if (copyBtn) copyBtn.textContent = '📋 Copy Report'; }, 2000);
-        });
-      };
-    }
-
-    var refreshBtn = document.getElementById('_diag_btn_refresh');
-    if (refreshBtn) {
-      refreshBtn.onclick = function() {
-        var newRep = generateDiagnosticReportObject();
-        var cEl = document.getElementById('_diag_content');
-        if (cEl) cEl.innerHTML = buildDiagnosticsHTML(newRep);
-      };
-    }
-
+    // Event handlers for immediate actions
     var closeBtn = document.getElementById('_diag_btn_close');
     if (closeBtn) {
       closeBtn.onclick = function() {
         sheet.remove();
       };
     }
+
+    // Populate content asynchronously so the sheet appears instantly on slow devices
+    setTimeout(function() {
+      populateDiagnosticsContent(sheet);
+    }, 10);
+  }
+
+  function populateDiagnosticsContent(sheet) {
+    if (!document.body.contains(sheet)) return;
+
+    requestAnimationFrame(function() {
+      var rep = generateDiagnosticReportObject();
+      var vpBadge = document.getElementById('_diag_viewport_badge');
+      if (vpBadge && rep.dom && rep.dom.viewport) {
+        vpBadge.textContent = rep.dom.viewport;
+      }
+
+      var cEl = document.getElementById('_diag_content');
+      if (!cEl) return;
+
+      cEl.innerHTML = buildDiagnosticsHTML(rep);
+
+      var copyBtn = document.getElementById('_diag_btn_copy');
+      if (copyBtn) {
+        copyBtn.onclick = function() {
+          var textReport = formatDiagnosticReportText(generateDiagnosticReportObject());
+          copyTextToClipboard(textReport, function() {
+            copyBtn.textContent = '✅ Copied!';
+            setTimeout(function() { if (copyBtn) copyBtn.textContent = '📋 Copy Report'; }, 2000);
+          });
+        };
+      }
+
+      var refreshBtn = document.getElementById('_diag_btn_refresh');
+      if (refreshBtn) {
+        refreshBtn.onclick = function() {
+          cEl.innerHTML = '<div style="padding:24px;text-align:center;color:#38bdf8;font-size:13px;font-weight:700">⏳ Refreshing...</div>';
+          setTimeout(function() {
+            populateDiagnosticsContent(sheet);
+          }, 10);
+        };
+      }
+    });
   }
 
   function copyTextToClipboard(text, onSuccess) {
@@ -504,27 +549,52 @@
     html.push('<div><b>UA:</b> ' + escapeHtml(rep.device.userAgent) + '</div>');
     html.push('<div><b>CPU:</b> ' + rep.device.hardwareConcurrency + ' cores | <b>RAM:</b> ' + rep.device.deviceMemory + ' | <b>Conn:</b> ' + rep.device.connectionEffectiveType + ' | <b>DPR:</b> ' + rep.device.dpr + '</div>');
     html.push('<div><b>DOM:</b> ' + rep.dom.totalNodes + ' nodes | <b>LocalStorage:</b> ' + rep.dom.localStorageKB + ' KB | <b>Viewport:</b> ' + rep.dom.viewport + '</div>');
+    html.push('<div><b>GoTo Wrapper:</b> ' + (rep.status && rep.status.goToWrapper === 'installed' ? '<span style="color:#10b981;font-weight:700">installed</span>' : '<span style="color:#ef4444;font-weight:700">not installed</span>') + ' | <b>Renders since load:</b> <span style="font-weight:700;color:#38bdf8">' + (rep.status ? rep.status.rendersSinceLoad : 0) + '</span></div>');
+    html.push('</div>');
+
+    // Failed Resources section (HTTP >= 400)
+    var failedRes = rep.failedResources || [];
+    html.push('<div style="background:#0f172a;padding:10px 12px;border-radius:8px;margin-bottom:12px;border:1px solid ' + (failedRes.length > 0 ? '#ef4444' : '#1e293b') + '">');
+    html.push('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">');
+    html.push('<span style="color:' + (failedRes.length > 0 ? '#ef4444' : '#10b981') + ';font-weight:700">❌ Failed Resources (HTTP >= 400: ' + failedRes.length + ')</span>');
+    html.push('</div>');
+    if (failedRes.length === 0) {
+      html.push('<div style="color:#10b981">✅ Zero resources with HTTP responseStatus >= 400.</div>');
+    } else {
+      failedRes.forEach(function(r) {
+        html.push('<div style="padding:6px 8px;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:6px;border-left:3px solid #ef4444">');
+        html.push('<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">');
+        html.push('<span style="background:#ef4444;color:#fff;font-size:9.5px;padding:1px 5px;border-radius:4px;font-weight:800">HTTP ' + r.status + '</span>');
+        html.push('<span style="color:#94a3b8;font-size:10px">' + escapeHtml(r.initiatorType) + ' | ' + r.transferSize + ' B | ' + r.duration + 'ms</span>');
+        html.push('</div>');
+        html.push('<div style="color:#f8fafc;font-weight:600;word-break:break-all">' + escapeHtml(r.name) + '</div>');
+        html.push('</div>');
+      });
+    }
     html.push('</div>');
 
     // Errors section
     var errs = rep.errors.items || [];
     html.push('<div style="background:#0f172a;padding:10px 12px;border-radius:8px;margin-bottom:12px;border:1px solid ' + (errs.length > 0 ? '#ef4444' : '#1e293b') + '">');
     html.push('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">');
-    html.push('<span style="color:' + (errs.length > 0 ? '#ef4444' : '#10b981') + ';font-weight:700">🚨 Errors & Rejections (' + errs.length + ')</span>');
+    html.push('<span style="color:' + (errs.length > 0 ? '#ef4444' : '#10b981') + ';font-weight:700">🚨 Captured Errors & Rejections (' + errs.length + ')</span>');
     html.push('</div>');
     if (errs.length === 0) {
       html.push('<div style="color:#10b981">✅ Zero errors or promise rejections captured.</div>');
     } else {
-      errs.slice(0, 20).forEach(function(err, idx) {
+      errs.slice(0, 20).forEach(function(err) {
         var typeBg = err.type === 'resource' ? '#f59e0b' : (err.type === 'promise' ? '#a78bfa' : '#ef4444');
         var timeStr = new Date(err.ts).toLocaleTimeString();
         html.push('<div style="padding:6px 8px;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:6px;border-left:3px solid ' + typeBg + '">');
         html.push('<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">');
-        html.push('<span style="background:' + typeBg + ';color:#000;font-size:9.5px;padding:1px 5px;border-radius:4px;font-weight:800;text-transform:uppercase">' + err.type + '</span>');
+        html.push('<span style="background:' + typeBg + ';color:#000;font-size:9.5px;padding:1px 5px;border-radius:4px;font-weight:800;text-transform:uppercase">' + err.type + (err.tag ? ' &lt;' + err.tag + '&gt;' : '') + '</span>');
         html.push('<span style="color:#94a3b8;font-size:10px">' + timeStr + '</span>');
         if (err.src) html.push('<span style="color:#64748b;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">' + escapeHtml(err.src) + (err.line ? ':' + err.line : '') + '</span>');
         html.push('</div>');
         html.push('<div style="color:#f8fafc;font-weight:600;word-break:break-word">' + escapeHtml(err.msg || err.src || 'Error') + '</div>');
+        if (err.snippet) {
+          html.push('<pre style="color:#94a3b8;font-size:10px;margin-top:4px;overflow-x:auto;white-space:pre-wrap;background:#000;padding:4px 6px;border-radius:4px">' + escapeHtml(err.snippet) + '</pre>');
+        }
         if (err.stack) {
           html.push('<pre style="color:#94a3b8;font-size:10px;margin-top:4px;overflow-x:auto;white-space:pre-wrap;background:#000;padding:4px 6px;border-radius:4px">' + escapeHtml(err.stack) + '</pre>');
         }
@@ -649,6 +719,29 @@
       return n.ttfb > 300 || n.total > 1000;
     }).sort(function(a, b) { return b.total - a.total; }).slice(0, 10);
 
+    // Failed HTTP resources (responseStatus >= 400 from Resource Timing API)
+    var failedResources = [];
+    if (typeof performance !== 'undefined' && typeof performance.getEntriesByType === 'function') {
+      try {
+        var resEntries = performance.getEntriesByType('resource');
+        resEntries.forEach(function(entry) {
+          if (entry.responseStatus && entry.responseStatus >= 400) {
+            failedResources.push({
+              name: (entry.name || '').slice(0, 200),
+              status: entry.responseStatus,
+              transferSize: entry.transferSize || 0,
+              duration: Math.round(entry.duration * 10) / 10,
+              initiatorType: entry.initiatorType || 'other'
+            });
+          }
+        });
+      } catch (e) {}
+    }
+
+    // GoTo wrapper status & total renders
+    var isGoToWrapped = (typeof window.goTo === 'function' && !!window.goTo.__diagWrapped);
+    var rendersCount = (window.__perf && Array.isArray(window.__perf.renders)) ? window.__perf.renders.length : 0;
+
     // LocalStorage size
     var lsSizeKB = 0;
     try {
@@ -684,6 +777,10 @@
       version: VERSION,
       url: typeof location !== 'undefined' ? location.href : '',
       timestamp: new Date().toISOString(),
+      status: {
+        goToWrapper: isGoToWrapped ? 'installed' : 'not installed',
+        rendersSinceLoad: rendersCount
+      },
       device: {
         userAgent: (typeof navigator !== 'undefined') ? navigator.userAgent : 'unknown',
         hardwareConcurrency: (typeof navigator !== 'undefined') ? (navigator.hardwareConcurrency || 'unknown') : 'unknown',
@@ -698,6 +795,7 @@
         localStorageKB: lsSizeKB,
         viewport: viewportStr
       },
+      failedResources: failedResources,
       errors: {
         totalCount: (window.__diagErrors || []).length,
         items: (window.__diagErrors || []).slice(-20).reverse()
@@ -707,7 +805,7 @@
         items: (window.__diagNav || []).slice(-20)
       },
       renders: {
-        totalRecorded: (window.__perf && window.__perf.renders) ? window.__perf.renders.length : 0,
+        totalRecorded: rendersCount,
         top15ByTotalTime: topRenders
       },
       longTasks: {
@@ -734,15 +832,27 @@
     lines.push('  CPU Cores: ' + rep.device.hardwareConcurrency + ' | RAM: ' + rep.device.deviceMemory + ' | Conn: ' + rep.device.connectionEffectiveType);
     lines.push('  Viewport: ' + rep.device.viewport + ' | Screen: ' + rep.device.screen + ' | DPR: ' + rep.device.dpr);
     lines.push('  DOM Nodes: ' + rep.dom.totalNodes + ' | LocalStorage: ' + rep.dom.localStorageKB + ' KB');
+    lines.push('  GoTo Wrapper: ' + (rep.status ? rep.status.goToWrapper : 'unknown') + ' | Renders Since Load: ' + (rep.status ? rep.status.rendersSinceLoad : 0));
     lines.push('----------------------------------------------------------------');
-    lines.push('🚨 ERRORS & REJECTIONS (' + rep.errors.totalCount + ' total, last ' + rep.errors.items.length + ' shown):');
+    lines.push('❌ FAILED RESOURCES (HTTP >= 400: ' + (rep.failedResources ? rep.failedResources.length : 0) + '):');
+    if (!rep.failedResources || rep.failedResources.length === 0) {
+      lines.push('  (Zero failed resources with status >= 400)');
+    } else {
+      rep.failedResources.forEach(function(r, idx) {
+        lines.push('  ' + (idx + 1) + '. [HTTP ' + r.status + '] ' + r.name);
+        lines.push('     Type: ' + r.initiatorType + ' | Transfer: ' + r.transferSize + ' bytes | Duration: ' + r.duration + 'ms');
+      });
+    }
+    lines.push('----------------------------------------------------------------');
+    lines.push('🚨 CAPTURED ERRORS & REJECTIONS (' + rep.errors.totalCount + ' total, last ' + rep.errors.items.length + ' shown):');
     if (rep.errors.items.length === 0) {
       lines.push('  (Zero errors captured)');
     } else {
       rep.errors.items.forEach(function(err, idx) {
         var t = new Date(err.ts).toLocaleTimeString();
-        lines.push('  ' + (idx + 1) + '. [' + err.type.toUpperCase() + '] ' + (err.msg || err.src || 'Unknown error') + ' (' + t + ')');
+        lines.push('  ' + (idx + 1) + '. [' + err.type.toUpperCase() + (err.tag ? ' <' + err.tag + '>' : '') + '] ' + (err.msg || err.src || 'Unknown error') + ' (' + t + ')');
         if (err.src) lines.push('     Source: ' + err.src + (err.line ? ':' + err.line + ':' + err.col : ''));
+        if (err.snippet) lines.push('     Snippet: ' + err.snippet);
         if (err.stack) lines.push('     Stack: ' + err.stack.replace(/\n/g, '\n     '));
       });
     }
