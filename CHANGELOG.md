@@ -2,6 +2,18 @@
 
 All notable changes to the PulseIQ project are documented in this file.
 
+## [2.3.19] - 2026-09-01
+
+### Added — In-Flight Network GET Deduplication & Data-Layer Audit
+- **In-Flight GET Deduplication (`shared/net-dedup.js`)**: Wrapped `window.fetch` to intercept concurrent identical `GET`/`HEAD` requests, collapsing redundant in-flight network trips while returning independent `.clone()` Response objects to every caller (zero caching, zero TTL, zero staleness; settlements immediately unlock direct network access).
+- **Report-Only Data-Layer Audit**:
+  - Identified 15s check-in polling interval (`app.js:2029`, `pollQrCheckins` calling `renderOverview`/`renderAttendance`) and multi-phase boot sequences firing 6–8× redundant renders during initial load.
+  - Traced malformed double-ampersand query strings (`?order=date.desc&&date=eq.`) to `app.js:18328-18329` passing leading ampersands into `dbGet()` (`app.js:1681`).
+  - Isolated the exact 3 elements with empty `src=""` on page load (`index.html:3382`, `index.html:5193`, `index.html:5646`) causing recurring startup 404 resource errors.
+  - Documented Supabase query dispatch concurrency (`Promise.all` Phase 1 and Phase 3 vs sequential `await` chains).
+
+---
+
 ## [2.3.18] - 2026-09-01
 
 ### Changed — Diagnostics Repair & Non-Blocking Panel
