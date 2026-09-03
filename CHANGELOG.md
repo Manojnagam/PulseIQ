@@ -2,6 +2,17 @@
 
 All notable changes to the PulseIQ project are documented in this file.
 
+## [2.3.23] - 2026-09-03
+
+### Changed — Diagnostics Hardening: Retry Wrapper Install, Setup Log, Session-Tagged Entries & Script Timings
+- **Isolated Setup Try/Catch Blocks**: Wrapped every setup routine (`restoreDiagSession`, error/unhandledrejection listeners, target function wrappers, observers, and UI initializers) in individual `try/catch` handlers recording diagnostics telemetry into `window.__diagSetupLog` without console output.
+- **GoTo Wrapper Installation Retry**: Attempt wrapper install immediately; if `window.goTo` is not yet defined, retry every 500ms up to 30 attempts, logging attempt counts and types to `__diagSetupLog` and capturing install time elapsed from `navigationStart`.
+- **Session-Tagged Telemetry**: Tagged entries restored from `sessionStorage` with `restored: true` in `__diagNav` and `__diagErrors`, reporting current-session counts separately from restored items in both text reports and UI modal headers.
+- **Script Load Timing & Execution Order**: Added script timing analysis section leveraging Resource Timing API to list `app.min.js`, `auth.core.min.js`, `net-dedup.js`, and `perf-diagnostics.js` with start times, transfer sizes, durations, and load order.
+- **Enhanced Status Reporting**: Upgraded report text and UI panel to display wrapper installation status, attempts needed, installation timestamp, and setup error diagnostics.
+
+---
+
 ## [2.3.22] - 2026-09-03
 
 ### Fixed — Malformed Double-Ampersand Query Strings & Empty Image Resource Errors

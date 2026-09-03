@@ -1,5 +1,5 @@
 /**
- * PulseIQ Performance Diagnostics Module (v2.3.22)
+ * PulseIQ Performance Diagnostics Module (v2.3.23)
  * 
  * OPT-IN performance telemetry, error capture, navigation audit & on-screen report panel.
  * ZERO behavior/logic/rendering/data changes.
@@ -16,7 +16,7 @@
 (function() {
   'use strict';
 
-  var VERSION = 'v2.3.22';
+  var VERSION = 'v2.3.23';
   var SESSION_KEY = 'pulseiq_diag_v1';
 
   var TARGET_RENDER_FNS = [
@@ -54,6 +54,17 @@
   // ════════════════════════════════════════════════════════════
   window.__diagErrors = window.__diagErrors || [];
   window.__diagNav = window.__diagNav || [];
+  window.__diagSetupLog = window.__diagSetupLog || [];
+
+  function logSetup(step, status, details) {
+    if (!window.__diagSetupLog) window.__diagSetupLog = [];
+    window.__diagSetupLog.push({
+      step: String(step),
+      status: String(status),
+      details: details || null,
+      ts: Date.now()
+    });
+  }
 
   var _isOptIn = false;
   var _isDiagnosticsActive = false;
@@ -76,17 +87,25 @@
         if (stored) {
           var parsed = JSON.parse(stored);
           if (parsed && Array.isArray(parsed.errors) && parsed.errors.length) {
+            var restoredErrors = parsed.errors.map(function(item) {
+              item.restored = true;
+              return item;
+            });
             var existingErr = window.__diagErrors || [];
-            window.__diagErrors = parsed.errors.concat(existingErr).slice(-100);
+            window.__diagErrors = restoredErrors.concat(existingErr).slice(-100);
           }
           if (parsed && Array.isArray(parsed.nav) && parsed.nav.length) {
+            var restoredNav = parsed.nav.map(function(item) {
+              item.restored = true;
+              return item;
+            });
             var existingNav = window.__diagNav || [];
-            window.__diagNav = parsed.nav.concat(existingNav).slice(-100);
+            window.__diagNav = restoredNav.concat(existingNav).slice(-100);
           }
         }
       }
     } catch (e) {
-      // Storage unavailable or quota exceeded
+      logSetup('restoreDiagSession', 'fail', (e && e.message) || String(e));
     }
   }
 
@@ -105,95 +124,117 @@
   }
 
   // Restore previous session if ?perf=1
-  restoreDiagSession();
+  try {
+    restoreDiagSession();
+    logSetup('restoreDiagSession', 'ok');
+  } catch (e) {
+    logSetup('restoreDiagSession', 'fail', (e && e.message) || String(e));
+  }
 
   // ════════════════════════════════════════════════════════════
   // 3. SILENT ALWAYS-ON ERROR CAPTURE (NO CONSOLE OUTPUT)
   // ════════════════════════════════════════════════════════════
   // A & C. Global Error & Resource Error listener (capture phase)
-  window.addEventListener('error', function(e) {
-    if (!window.__diagErrors) window.__diagErrors = [];
-    var target = e.target;
-    
-    // Check if resource loading error (script, img, link, audio, video, source, etc.)
-    if (target && target !== window && (target.tagName || target.src || target.href) && !e.message) {
-      var tag = (target.tagName || '').toLowerCase();
-      var rawAttr = target.getAttribute ? (target.getAttribute('src') || target.getAttribute('href')) : null;
-      var absUrl = target.src || target.href || target.currentSrc || '';
+  try {
+    window.addEventListener('error', function(e) {
+      if (!window.__diagErrors) window.__diagErrors = [];
+      var target = e.target;
       
-      var realUrl = '';
-      if (rawAttr === '' || rawAttr === null) {
-        realUrl = '(empty ' + (target.getAttribute && target.getAttribute('src') !== null ? 'src' : (target.getAttribute && target.getAttribute('href') !== null ? 'href' : 'source')) + ')';
-      } else if (absUrl && typeof location !== 'undefined' && absUrl === location.href && rawAttr !== location.href) {
-        realUrl = '(empty ' + (target.getAttribute && target.getAttribute('src') !== null ? 'src' : 'href') + ')';
-      } else if (absUrl) {
-        realUrl = absUrl;
-      } else if (rawAttr) {
-        realUrl = rawAttr;
-      } else {
-        realUrl = '(unknown source)';
+      // Check if resource loading error (script, img, link, audio, video, source, etc.)
+      if (target && target !== window && (target.tagName || target.src || target.href) && !e.message) {
+        var tag = (target.tagName || '').toLowerCase();
+        var rawAttr = target.getAttribute ? (target.getAttribute('src') || target.getAttribute('href')) : null;
+        var absUrl = target.src || target.href || target.currentSrc || '';
+        
+        var realUrl = '';
+        if (rawAttr === '' || rawAttr === null) {
+          realUrl = '(empty ' + (target.getAttribute && target.getAttribute('src') !== null ? 'src' : (target.getAttribute && target.getAttribute('href') !== null ? 'href' : 'source')) + ')';
+        } else if (absUrl && typeof location !== 'undefined' && absUrl === location.href && rawAttr !== location.href) {
+          realUrl = '(empty ' + (target.getAttribute && target.getAttribute('src') !== null ? 'src' : 'href') + ')';
+        } else if (absUrl) {
+          realUrl = absUrl;
+        } else if (rawAttr) {
+          realUrl = rawAttr;
+        } else {
+          realUrl = '(unknown source)';
+        }
+
+        var snippet = '';
+        try {
+          if (target.outerHTML) {
+            snippet = String(target.outerHTML).slice(0, 150);
+          }
+        } catch (err) {}
+
+        var rec = {
+          type: 'resource',
+          tag: String(tag),
+          src: String(realUrl).slice(0, 300),
+          snippet: snippet,
+          ts: Date.now()
+        };
+        if (window.__diagErrors.length >= 100) window.__diagErrors.shift();
+        window.__diagErrors.push(rec);
+        persistDiagSession();
+        updatePillBadge();
+        return;
       }
 
-      var snippet = '';
-      try {
-        if (target.outerHTML) {
-          snippet = String(target.outerHTML).slice(0, 150);
-        }
-      } catch (err) {}
+      // Standard JavaScript runtime error
+      if (e.message || (e.error && e.error.message)) {
+        var recJs = {
+          type: 'js',
+          msg: String(e.message || (e.error && e.error.message) || 'Unknown error').slice(0, 300),
+          src: e.filename || (e.error && e.error.fileName) || '',
+          line: e.lineno || (e.error && e.error.lineNumber) || 0,
+          col: e.colno || (e.error && e.error.columnNumber) || 0,
+          stack: (e.error && e.error.stack ? String(e.error.stack) : '').slice(0, 500),
+          ts: Date.now()
+        };
+        if (window.__diagErrors.length >= 100) window.__diagErrors.shift();
+        window.__diagErrors.push(recJs);
+        persistDiagSession();
+        updatePillBadge();
+      }
+    }, true); // Capture phase required for resource errors
+    logSetup('errorListener', 'ok');
+  } catch (e) {
+    logSetup('errorListener', 'fail', (e && e.message) || String(e));
+  }
 
+  // B. Unhandled Promise Rejection listener
+  try {
+    window.addEventListener('unhandledrejection', function(e) {
+      if (!window.__diagErrors) window.__diagErrors = [];
+      var reason = e.reason;
+      var msg = reason ? (reason.message || (typeof reason === 'string' ? reason : (typeof JSON !== 'undefined' ? JSON.stringify(reason) : String(reason)))) : 'Unhandled promise rejection';
+      var stack = (reason && reason.stack) ? String(reason.stack) : '';
       var rec = {
-        type: 'resource',
-        tag: String(tag),
-        src: String(realUrl).slice(0, 300),
-        snippet: snippet,
+        type: 'promise',
+        msg: String(msg).slice(0, 300),
+        stack: stack.slice(0, 500),
         ts: Date.now()
       };
       if (window.__diagErrors.length >= 100) window.__diagErrors.shift();
       window.__diagErrors.push(rec);
       persistDiagSession();
       updatePillBadge();
-      return;
-    }
-
-    // Standard JavaScript runtime error
-    if (e.message || (e.error && e.error.message)) {
-      var recJs = {
-        type: 'js',
-        msg: String(e.message || (e.error && e.error.message) || 'Unknown error').slice(0, 300),
-        src: e.filename || (e.error && e.error.fileName) || '',
-        line: e.lineno || (e.error && e.error.lineNumber) || 0,
-        col: e.colno || (e.error && e.error.columnNumber) || 0,
-        stack: (e.error && e.error.stack ? String(e.error.stack) : '').slice(0, 500),
-        ts: Date.now()
-      };
-      if (window.__diagErrors.length >= 100) window.__diagErrors.shift();
-      window.__diagErrors.push(recJs);
-      persistDiagSession();
-      updatePillBadge();
-    }
-  }, true); // Capture phase required for resource errors
-
-  // B. Unhandled Promise Rejection listener
-  window.addEventListener('unhandledrejection', function(e) {
-    if (!window.__diagErrors) window.__diagErrors = [];
-    var reason = e.reason;
-    var msg = reason ? (reason.message || (typeof reason === 'string' ? reason : (typeof JSON !== 'undefined' ? JSON.stringify(reason) : String(reason)))) : 'Unhandled promise rejection';
-    var stack = (reason && reason.stack) ? String(reason.stack) : '';
-    var rec = {
-      type: 'promise',
-      msg: String(msg).slice(0, 300),
-      stack: stack.slice(0, 500),
-      ts: Date.now()
-    };
-    if (window.__diagErrors.length >= 100) window.__diagErrors.shift();
-    window.__diagErrors.push(rec);
-    persistDiagSession();
-    updatePillBadge();
-  }, false);
+    }, false);
+    logSetup('unhandledRejectionListener', 'ok');
+  } catch (e) {
+    logSetup('unhandledRejectionListener', 'fail', (e && e.message) || String(e));
+  }
 
   // ════════════════════════════════════════════════════════════
   // 4. SILENT ALWAYS-ON NAV AUDIT (WRAPS window.goTo)
   // ════════════════════════════════════════════════════════════
+  var _goToInstallInfo = {
+    status: 'pending',
+    attempts: 0,
+    installTimeMs: null,
+    err: null
+  };
+
   function wrapGoTo() {
     var origGoTo = window.goTo;
     if (typeof origGoTo !== 'function' || origGoTo.__diagWrapped) return;
@@ -244,16 +285,55 @@
     window.goTo = wrappedGoTo;
   }
 
-  // Install goTo wrapper if already defined, or retry shortly
-  wrapGoTo();
-  if (typeof window.goTo !== 'function') {
-    var checkGoToTimer = setInterval(function() {
-      if (typeof window.goTo === 'function') {
-        wrapGoTo();
-        clearInterval(checkGoToTimer);
+  function installGoToWrapper() {
+    _goToInstallInfo.attempts++;
+    var tNow = Date.now();
+    var typeOfGoTo = typeof window.goTo;
+
+    if (typeOfGoTo === 'function') {
+      if (window.goTo.__diagWrapped) {
+        _goToInstallInfo.status = 'installed';
+        logSetup('goToWrapper', 'ok', { attempt: _goToInstallInfo.attempts, type: typeOfGoTo, alreadyWrapped: true });
+        return true;
       }
-    }, 100);
-    setTimeout(function() { clearInterval(checkGoToTimer); }, 10000);
+      try {
+        wrapGoTo();
+        var navStart = (typeof performance !== 'undefined' && performance.timeOrigin)
+          ? performance.timeOrigin
+          : (typeof performance !== 'undefined' && performance.timing ? performance.timing.navigationStart : 0);
+        var msSinceStart = navStart ? Math.round(tNow - navStart) : Math.round(performance.now());
+        _goToInstallInfo.status = 'installed';
+        _goToInstallInfo.installTimeMs = msSinceStart;
+        logSetup('goToWrapper', 'ok', { attempt: _goToInstallInfo.attempts, type: typeOfGoTo, installTimeMs: msSinceStart });
+        return true;
+      } catch (err) {
+        _goToInstallInfo.err = (err && err.message) || String(err);
+        logSetup('goToWrapper', 'fail', { attempt: _goToInstallInfo.attempts, type: typeOfGoTo, error: _goToInstallInfo.err });
+        return false;
+      }
+    } else {
+      logSetup('goToWrapper', 'retry', { attempt: _goToInstallInfo.attempts, type: typeOfGoTo });
+      return false;
+    }
+  }
+
+  // Attempt install immediately; retry every 500ms up to 30 attempts if not ready
+  try {
+    var _installedImmediate = installGoToWrapper();
+    if (!_installedImmediate) {
+      var _goToTimer = setInterval(function() {
+        var success = installGoToWrapper();
+        if (success || _goToInstallInfo.attempts >= 30) {
+          clearInterval(_goToTimer);
+          if (!success) {
+            _goToInstallInfo.status = 'failed';
+            logSetup('goToWrapper', 'failed_timeout', { attempts: _goToInstallInfo.attempts, type: typeof window.goTo });
+          }
+        }
+      }, 500);
+    }
+  } catch (e) {
+    logSetup('goToWrapperScheduler', 'fail', (e && e.message) || String(e));
   }
 
   // ════════════════════════════════════════════════════════════
@@ -309,8 +389,18 @@
   }
 
   function wrapAllTargetFunctions() {
-    TARGET_RENDER_FNS.forEach(wrapRenderFunction);
-    wrapGoTo();
+    TARGET_RENDER_FNS.forEach(function(fn) {
+      try {
+        wrapRenderFunction(fn);
+      } catch (e) {
+        logSetup('wrapRenderFunction:' + fn, 'fail', (e && e.message) || String(e));
+      }
+    });
+    try {
+      installGoToWrapper();
+    } catch (e) {
+      logSetup('wrapGoToInTargets', 'fail', (e && e.message) || String(e));
+    }
   }
 
   function hookModuleLoader() {
@@ -549,8 +639,34 @@
     html.push('<div><b>UA:</b> ' + escapeHtml(rep.device.userAgent) + '</div>');
     html.push('<div><b>CPU:</b> ' + rep.device.hardwareConcurrency + ' cores | <b>RAM:</b> ' + rep.device.deviceMemory + ' | <b>Conn:</b> ' + rep.device.connectionEffectiveType + ' | <b>DPR:</b> ' + rep.device.dpr + '</div>');
     html.push('<div><b>DOM:</b> ' + rep.dom.totalNodes + ' nodes | <b>LocalStorage:</b> ' + rep.dom.localStorageKB + ' KB | <b>Viewport:</b> ' + rep.dom.viewport + '</div>');
-    html.push('<div><b>GoTo Wrapper:</b> ' + (rep.status && rep.status.goToWrapper === 'installed' ? '<span style="color:#10b981;font-weight:700">installed</span>' : '<span style="color:#ef4444;font-weight:700">not installed</span>') + ' | <b>Renders since load:</b> <span style="font-weight:700;color:#38bdf8">' + (rep.status ? rep.status.rendersSinceLoad : 0) + '</span></div>');
+
+    var wrapColor = (rep.status && rep.status.goToWrapper === 'installed') ? '#10b981' : '#ef4444';
+    var wrapDetails = '';
+    if (rep.status && rep.status.goToAttempts) {
+      wrapDetails = ' <span style="font-size:11px;color:#94a3b8">(attempts: ' + rep.status.goToAttempts + (rep.status.goToInstallTimeMs !== null ? ', time: ' + rep.status.goToInstallTimeMs + 'ms' : '') + (rep.status.goToError ? ', err: ' + escapeHtml(rep.status.goToError) : '') + ')</span>';
+    }
+    html.push('<div><b>GoTo Wrapper:</b> <span style="color:' + wrapColor + ';font-weight:700">' + (rep.status ? rep.status.goToWrapper : 'unknown') + '</span>' + wrapDetails + ' | <b>Renders since load:</b> <span style="font-weight:700;color:#38bdf8">' + (rep.status ? rep.status.rendersSinceLoad : 0) + '</span></div>');
+    if (rep.status && rep.status.setupErrors && rep.status.setupErrors.length > 0) {
+      html.push('<div style="color:#ef4444;font-size:11px;margin-top:2px">⚠️ Setup issues: ' + rep.status.setupErrors.map(function(s){ return escapeHtml(s.step); }).join(', ') + '</div>');
+    }
     html.push('</div>');
+
+    // Script timings section
+    if (rep.scriptTimings && rep.scriptTimings.length > 0) {
+      html.push('<div style="background:#0f172a;padding:10px 12px;border-radius:8px;margin-bottom:12px;border:1px solid #1e293b">');
+      html.push('<div style="color:#38bdf8;font-weight:700;margin-bottom:6px">📜 Script Timings & Load Order</div>');
+      html.push('<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px">');
+      rep.scriptTimings.forEach(function(st) {
+        var kb = Math.round((st.transferSize / 1024) * 10) / 10;
+        html.push('<div style="background:rgba(0,0,0,0.3);padding:6px 8px;border-radius:6px;border-left:3px solid #38bdf8">');
+        html.push('<div style="font-weight:700;color:#f8fafc"><span style="color:#f59e0b">#' + st.order + '</span> ' + escapeHtml(st.label) + '</div>');
+        html.push('<div style="font-size:10px;color:#94a3b8">start: ' + st.startTime + 'ms | dur: ' + st.duration + 'ms</div>');
+        html.push('<div style="font-size:10px;color:#64748b">' + (kb > 0 ? kb + ' KB' : st.transferSize + ' B') + '</div>');
+        html.push('</div>');
+      });
+      html.push('</div>');
+      html.push('</div>');
+    }
 
     // Failed Resources section (HTTP >= 400)
     var failedRes = rep.failedResources || [];
@@ -577,7 +693,7 @@
     var errs = rep.errors.items || [];
     html.push('<div style="background:#0f172a;padding:10px 12px;border-radius:8px;margin-bottom:12px;border:1px solid ' + (errs.length > 0 ? '#ef4444' : '#1e293b') + '">');
     html.push('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">');
-    html.push('<span style="color:' + (errs.length > 0 ? '#ef4444' : '#10b981') + ';font-weight:700">🚨 Captured Errors & Rejections (' + errs.length + ')</span>');
+    html.push('<span style="color:' + (rep.errors.totalCount > 0 ? '#ef4444' : '#10b981') + ';font-weight:700">🚨 Captured Errors & Rejections (' + rep.errors.currentCount + ' current' + (rep.errors.restoredCount > 0 ? ', ' + rep.errors.restoredCount + ' restored' : '') + ')</span>');
     html.push('</div>');
     if (errs.length === 0) {
       html.push('<div style="color:#10b981">✅ Zero errors or promise rejections captured.</div>');
@@ -587,6 +703,9 @@
         var timeStr = new Date(err.ts).toLocaleTimeString();
         html.push('<div style="padding:6px 8px;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:6px;border-left:3px solid ' + typeBg + '">');
         html.push('<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">');
+        if (err.restored) {
+          html.push('<span style="background:#475569;color:#fff;font-size:9px;padding:1px 4px;border-radius:3px;font-weight:700">RESTORED</span>');
+        }
         html.push('<span style="background:' + typeBg + ';color:#000;font-size:9.5px;padding:1px 5px;border-radius:4px;font-weight:800;text-transform:uppercase">' + err.type + (err.tag ? ' &lt;' + err.tag + '&gt;' : '') + '</span>');
         html.push('<span style="color:#94a3b8;font-size:10px">' + timeStr + '</span>');
         if (err.src) html.push('<span style="color:#64748b;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">' + escapeHtml(err.src) + (err.line ? ':' + err.line : '') + '</span>');
@@ -606,7 +725,7 @@
     // Navigation Audit
     var navs = rep.navigation.items || [];
     html.push('<div style="background:#0f172a;padding:10px 12px;border-radius:8px;margin-bottom:12px;border:1px solid #1e293b">');
-    html.push('<div style="color:#38bdf8;font-weight:700;margin-bottom:6px">🧭 Navigation Audit (last ' + Math.min(navs.length, 20) + ')</div>');
+    html.push('<div style="color:#38bdf8;font-weight:700;margin-bottom:6px">🧭 Navigation Audit (' + rep.navigation.currentCount + ' current' + (rep.navigation.restoredCount > 0 ? ', ' + rep.navigation.restoredCount + ' restored' : '') + ')</div>');
     if (navs.length === 0) {
       html.push('<div style="color:#94a3b8">No navigation events recorded yet.</div>');
     } else {
@@ -614,7 +733,11 @@
       navs.slice(-20).reverse().forEach(function(n) {
         var statColor = n.thrown ? '#ef4444' : (n.reachedRender ? '#10b981' : '#f59e0b');
         html.push('<div style="background:rgba(0,0,0,0.3);padding:6px 8px;border-radius:6px;border-left:3px solid ' + statColor + '">');
-        html.push('<div style="font-weight:700;color:#f8fafc">' + escapeHtml(n.name) + ' <span style="font-size:10px;color:#94a3b8">' + n.ms + 'ms</span></div>');
+        html.push('<div style="font-weight:700;color:#f8fafc">');
+        if (n.restored) {
+          html.push('<span style="background:#475569;color:#fff;font-size:8.5px;padding:1px 3px;border-radius:3px;font-weight:700;margin-right:3px">RESTORED</span>');
+        }
+        html.push(escapeHtml(n.name) + ' <span style="font-size:10px;color:#94a3b8">' + n.ms + 'ms</span></div>');
         html.push('<div style="font-size:10px;color:' + statColor + '">' + (n.thrown ? '❌ Thrown: ' + escapeHtml(n.err || '') : (n.reachedRender ? '✅ Loaded' : '⚠️ Interrupted')) + '</div>');
         html.push('</div>');
       });
@@ -677,6 +800,46 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  function getScriptTimings() {
+    var targets = ['app.min.js', 'auth.core.min.js', 'net-dedup.js', 'perf-diagnostics.js', 'app.js', 'auth.core.js'];
+    var entries = [];
+    if (typeof performance !== 'undefined' && typeof performance.getEntriesByType === 'function') {
+      try {
+        var res = performance.getEntriesByType('resource');
+        res.forEach(function(entry) {
+          var name = entry.name || '';
+          for (var i = 0; i < targets.length; i++) {
+            var t = targets[i];
+            if (name.indexOf(t) !== -1) {
+              entries.push({
+                label: t,
+                name: name,
+                startTime: Math.round(entry.startTime * 10) / 10,
+                responseEnd: Math.round(entry.responseEnd * 10) / 10,
+                duration: Math.round(entry.duration * 10) / 10,
+                transferSize: entry.transferSize || 0
+              });
+              break;
+            }
+          }
+        });
+      } catch (e) {}
+    }
+    var unique = [];
+    var seen = {};
+    entries.forEach(function(item) {
+      if (!seen[item.name]) {
+        seen[item.name] = true;
+        unique.push(item);
+      }
+    });
+    unique.sort(function(a, b) { return a.startTime - b.startTime; });
+    unique.forEach(function(item, idx) {
+      item.order = idx + 1;
+    });
+    return unique;
   }
 
   // ════════════════════════════════════════════════════════════
@@ -742,6 +905,17 @@
     var isGoToWrapped = (typeof window.goTo === 'function' && !!window.goTo.__diagWrapped);
     var rendersCount = (window.__perf && Array.isArray(window.__perf.renders)) ? window.__perf.renders.length : 0;
 
+    var errorsTotal = (window.__diagErrors || []).length;
+    var errorsCurrent = (window.__diagErrors || []).filter(function(e) { return !e.restored; }).length;
+    var errorsRestored = (window.__diagErrors || []).filter(function(e) { return !!e.restored; }).length;
+
+    var navTotal = (window.__diagNav || []).length;
+    var navCurrent = (window.__diagNav || []).filter(function(n) { return !n.restored; }).length;
+    var navRestored = (window.__diagNav || []).filter(function(n) { return !!n.restored; }).length;
+
+    var setupLog = window.__diagSetupLog || [];
+    var setupErrors = setupLog.filter(function(s) { return s.status === 'fail' || s.status === 'failed_timeout'; });
+
     // LocalStorage size
     var lsSizeKB = 0;
     try {
@@ -778,9 +952,14 @@
       url: typeof location !== 'undefined' ? location.href : '',
       timestamp: new Date().toISOString(),
       status: {
-        goToWrapper: isGoToWrapped ? 'installed' : 'not installed',
+        goToWrapper: isGoToWrapped ? 'installed' : (_goToInstallInfo.status || 'not installed'),
+        goToAttempts: _goToInstallInfo.attempts,
+        goToInstallTimeMs: _goToInstallInfo.installTimeMs,
+        goToError: _goToInstallInfo.err,
+        setupErrors: setupErrors,
         rendersSinceLoad: rendersCount
       },
+      scriptTimings: getScriptTimings(),
       device: {
         userAgent: (typeof navigator !== 'undefined') ? navigator.userAgent : 'unknown',
         hardwareConcurrency: (typeof navigator !== 'undefined') ? (navigator.hardwareConcurrency || 'unknown') : 'unknown',
@@ -797,11 +976,15 @@
       },
       failedResources: failedResources,
       errors: {
-        totalCount: (window.__diagErrors || []).length,
+        totalCount: errorsTotal,
+        currentCount: errorsCurrent,
+        restoredCount: errorsRestored,
         items: (window.__diagErrors || []).slice(-20).reverse()
       },
       navigation: {
-        totalCount: (window.__diagNav || []).length,
+        totalCount: navTotal,
+        currentCount: navCurrent,
+        restoredCount: navRestored,
         items: (window.__diagNav || []).slice(-20)
       },
       renders: {
@@ -816,6 +999,7 @@
         totalRequests: netList.length,
         slowRequestsTop10: slowRequests
       },
+      setupLog: setupLog,
       tabPerfMetrics: window._tabPerfMetrics || {}
     };
   }
@@ -832,7 +1016,29 @@
     lines.push('  CPU Cores: ' + rep.device.hardwareConcurrency + ' | RAM: ' + rep.device.deviceMemory + ' | Conn: ' + rep.device.connectionEffectiveType);
     lines.push('  Viewport: ' + rep.device.viewport + ' | Screen: ' + rep.device.screen + ' | DPR: ' + rep.device.dpr);
     lines.push('  DOM Nodes: ' + rep.dom.totalNodes + ' | LocalStorage: ' + rep.dom.localStorageKB + ' KB');
-    lines.push('  GoTo Wrapper: ' + (rep.status ? rep.status.goToWrapper : 'unknown') + ' | Renders Since Load: ' + (rep.status ? rep.status.rendersSinceLoad : 0));
+
+    var goToText = '  GoTo Wrapper: ' + (rep.status ? rep.status.goToWrapper : 'unknown');
+    if (rep.status && rep.status.goToAttempts) {
+      goToText += ' (attempts: ' + rep.status.goToAttempts;
+      if (rep.status.goToInstallTimeMs !== null) goToText += ', installTime: ' + rep.status.goToInstallTimeMs + 'ms';
+      if (rep.status.goToError) goToText += ', err: ' + rep.status.goToError;
+      goToText += ')';
+    }
+    goToText += ' | Renders Since Load: ' + (rep.status ? rep.status.rendersSinceLoad : 0);
+    lines.push(goToText);
+    if (rep.status && rep.status.setupErrors && rep.status.setupErrors.length > 0) {
+      lines.push('  Setup Errors (' + rep.status.setupErrors.length + '): ' + rep.status.setupErrors.map(function(s){ return s.step + ' (' + (s.details ? JSON.stringify(s.details) : 'fail') + ')'; }).join('; '));
+    }
+
+    if (rep.scriptTimings && rep.scriptTimings.length > 0) {
+      lines.push('----------------------------------------------------------------');
+      lines.push('📜 SCRIPT TIMINGS & LOAD ORDER (from Resource Timing API):');
+      rep.scriptTimings.forEach(function(st) {
+        var kb = Math.round((st.transferSize / 1024) * 10) / 10;
+        lines.push('  ' + st.order + '. ' + st.label + ' — start: ' + st.startTime + 'ms, dur: ' + st.duration + 'ms, size: ' + (kb > 0 ? kb + ' KB' : (st.transferSize + ' B')));
+      });
+    }
+
     lines.push('----------------------------------------------------------------');
     lines.push('❌ FAILED RESOURCES (HTTP >= 400: ' + (rep.failedResources ? rep.failedResources.length : 0) + '):');
     if (!rep.failedResources || rep.failedResources.length === 0) {
@@ -844,25 +1050,27 @@
       });
     }
     lines.push('----------------------------------------------------------------');
-    lines.push('🚨 CAPTURED ERRORS & REJECTIONS (' + rep.errors.totalCount + ' total, last ' + rep.errors.items.length + ' shown):');
+    lines.push('🚨 CAPTURED ERRORS & REJECTIONS (' + rep.errors.currentCount + ' current, ' + rep.errors.restoredCount + ' restored | ' + rep.errors.totalCount + ' total):');
     if (rep.errors.items.length === 0) {
       lines.push('  (Zero errors captured)');
     } else {
       rep.errors.items.forEach(function(err, idx) {
         var t = new Date(err.ts).toLocaleTimeString();
-        lines.push('  ' + (idx + 1) + '. [' + err.type.toUpperCase() + (err.tag ? ' <' + err.tag + '>' : '') + '] ' + (err.msg || err.src || 'Unknown error') + ' (' + t + ')');
+        var restTag = err.restored ? '[RESTORED] ' : '';
+        lines.push('  ' + (idx + 1) + '. ' + restTag + '[' + err.type.toUpperCase() + (err.tag ? ' <' + err.tag + '>' : '') + '] ' + (err.msg || err.src || 'Unknown error') + ' (' + t + ')');
         if (err.src) lines.push('     Source: ' + err.src + (err.line ? ':' + err.line + ':' + err.col : ''));
         if (err.snippet) lines.push('     Snippet: ' + err.snippet);
         if (err.stack) lines.push('     Stack: ' + err.stack.replace(/\n/g, '\n     '));
       });
     }
     lines.push('----------------------------------------------------------------');
-    lines.push('🧭 NAVIGATION AUDIT (' + rep.navigation.totalCount + ' total, last ' + rep.navigation.items.length + ' shown):');
+    lines.push('🧭 NAVIGATION AUDIT (' + rep.navigation.currentCount + ' current, ' + rep.navigation.restoredCount + ' restored | ' + rep.navigation.totalCount + ' total):');
     if (rep.navigation.items.length === 0) {
       lines.push('  (No navigation events recorded)');
     } else {
       rep.navigation.items.forEach(function(n, idx) {
-        lines.push('  ' + (idx + 1) + '. ' + n.name + ' — ' + n.ms + 'ms | ' + (n.thrown ? 'THROWN: ' + n.err : (n.reachedRender ? 'SUCCESS' : 'EARLY-RETURN')));
+        var restTag = n.restored ? '[RESTORED] ' : '';
+        lines.push('  ' + (idx + 1) + '. ' + restTag + n.name + ' — ' + n.ms + 'ms | ' + (n.thrown ? 'THROWN: ' + n.err : (n.reachedRender ? 'SUCCESS' : 'EARLY-RETURN')));
       });
     }
     if (rep.tabPerfMetrics && Object.keys(rep.tabPerfMetrics).length > 0) {
@@ -927,11 +1135,11 @@
       };
     }
 
-    wrapAllTargetFunctions();
-    hookModuleLoader();
-    initLongTaskObserver();
-    initResourceObserver();
-    renderDiagnosticsUI();
+    try { wrapAllTargetFunctions(); logSetup('wrapAllTargetFunctions', 'ok'); } catch(e) { logSetup('wrapAllTargetFunctions', 'fail', (e && e.message) || String(e)); }
+    try { hookModuleLoader(); logSetup('hookModuleLoader', 'ok'); } catch(e) { logSetup('hookModuleLoader', 'fail', (e && e.message) || String(e)); }
+    try { initLongTaskObserver(); logSetup('initLongTaskObserver', 'ok'); } catch(e) { logSetup('initLongTaskObserver', 'fail', (e && e.message) || String(e)); }
+    try { initResourceObserver(); logSetup('initResourceObserver', 'ok'); } catch(e) { logSetup('initResourceObserver', 'fail', (e && e.message) || String(e)); }
+    try { renderDiagnosticsUI(); logSetup('renderDiagnosticsUI', 'ok'); } catch(e) { logSetup('renderDiagnosticsUI', 'fail', (e && e.message) || String(e)); }
 
     console.info('[PulseIQ] Performance diagnostics ACTIVE (?perf=1). Run _perfReport() to view detailed report.');
   }
