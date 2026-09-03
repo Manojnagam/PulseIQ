@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="PulseZen Supervisor Dashboard - Manage wellness centers, track coach performance, consult customers, and monitor revenue dynamically with AI wellness scans.">
-<link rel="preload" href="app.min.js?v=2.3.21" as="script">
+<link rel="preload" href="app.min.js?v=2.3.22" as="script">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1338,11 +1338,11 @@ if ('caches' in window) {
   }).catch(e => console.error(e));
 }
 </script>
-<script src="shared/net-dedup.js?v=2.3.21"></script>
+<script src="shared/net-dedup.js?v=2.3.22"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
 <script defer src="auth.core.min.js?v=1.9.1"></script>
-<script defer src="app.min.js?v=2.3.21"></script>
-<script defer src="performance/perf-diagnostics.js?v=2.3.21"></script>
+<script defer src="app.min.js?v=2.3.22"></script>
+<script defer src="performance/perf-diagnostics.js?v=2.3.22"></script>
 <script>
 window._showCustDbg = function() {
   var sec = document.getElementById('sec-customers');
@@ -3380,7 +3380,7 @@ window._perf.t('loadStart');
         <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:16px">
           <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:12px">🖼️ Photo / Logo</div>
           <div style="display:flex;align-items:center;gap:16px">
-            <img id="prof-photo-preview" src="" alt="Photo" style="display:none;width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border)">
+            <img id="prof-photo-preview" alt="Photo" style="display:none;width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border)">
             <div>
               <input type="file" id="prof-photo-input" accept="image/*" onchange="loadProfilePhoto(event)" style="font-size:13px">
               <div style="font-size:11px;color:var(--muted);margin-top:4px">Stored locally in browser — not uploaded to server</div>
@@ -5191,7 +5191,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
             </div>
           </div>
           <div id="inst-qr-wrap" style="margin:12px auto;display:none">
-            <img id="inst-qr-img" src="" alt="UPI QR Code" style="width:160px;height:160px;border:1px solid var(--border);border-radius:8px;padding:4px;background:#fff">
+            <img id="inst-qr-img" alt="UPI QR Code" style="width:160px;height:160px;border:1px solid var(--border);border-radius:8px;padding:4px;background:#fff">
             <div style="font-size:10px;color:var(--muted);margin-top:4px">Scan using any UPI App (GPay, PhonePe, Paytm, BHIM)</div>
           </div>
         </div>
@@ -5644,7 +5644,7 @@ ADD COLUMN IF NOT EXISTS wellness_center_id uuid references wellness_centers(id)
         Instruct clients to scan this QR code on their phones to check in.
       </p>
       <div style="background:#fff; padding:20px; border-radius:12px; display:inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom:16px;">
-        <img id="qr-kiosk-img" style="width:220px; height:220px; display:block;" src="" alt="Check-In QR Code">
+        <img id="qr-kiosk-img" style="width:220px; height:220px; display:block;" alt="Check-In QR Code">
       </div>
       <div style="font-size:14px; font-weight:700; margin-bottom:12px;" id="qr-kiosk-center-name">Center Name</div>
       <div style="background:var(--surface2); border-radius:8px; padding:10px; font-size:12px; word-break:break-all; font-family:monospace; margin-bottom:16px; text-align:left;" id="qr-kiosk-url">

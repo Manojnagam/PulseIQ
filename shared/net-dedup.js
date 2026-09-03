@@ -1,5 +1,5 @@
 /**
- * PulseIQ In-Flight Network GET Deduplication Module (v2.3.21)
+ * PulseIQ In-Flight Network GET Deduplication Module (v2.3.22)
  * 
  * Collapses concurrent identical GET/HEAD requests into a single in-flight fetch.
  * ZERO response caching, ZERO TTL, ZERO staleness:

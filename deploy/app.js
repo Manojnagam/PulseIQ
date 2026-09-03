@@ -1693,7 +1693,7 @@ async function req(method, table, body, filter, customHeaders) {
 }
 async function dbGet(table, order, extraFilter) {
   order = order || 'created_at';
-  var qs = '?order=' + order + '.desc' + (extraFilter ? '&' + extraFilter : '');
+  var qs = '?order=' + order + '.desc' + (extraFilter ? '&' + extraFilter.replace(/^&+/, '') : '');
   try { var r = await req('GET', table, null, qs); return Array.isArray(r) ? r : []; }
   catch(e) { console.error(table, e); return []; }
 }

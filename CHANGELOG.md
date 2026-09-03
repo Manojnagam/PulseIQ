@@ -2,6 +2,14 @@
 
 All notable changes to the PulseIQ project are documented in this file.
 
+## [2.3.22] - 2026-09-03
+
+### Fixed — Malformed Double-Ampersand Query Strings & Empty Image Resource Errors
+- **Query String Sanitization (`dbGet`)**: Stripped leading `&` characters from `extraFilter` arguments before concatenating query parameters (`app.js:1696`), permanently resolving malformed URLs (`?order=date.desc&&date=eq.YYYY-MM-DD`). Verified date-filtered attendance queries return identical records.
+- **Empty Image Source Removal (`index.html`)**: Removed static empty `src=""` attributes from `#prof-photo-preview` (line 3382), `#inst-qr-img` (line 5193), and `#qr-kiosk-img` (line 5646), eliminating all 3 failed resource network errors fired on page build while preserving styles, attributes, and dynamic Javascript image assignment.
+
+---
+
 ## [2.3.21] - 2026-09-03
 
 ### Changed — QR Poll Render Gating & Tab Visibility Pause

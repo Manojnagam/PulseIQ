@@ -1,5 +1,5 @@
 /**
- * PulseIQ Performance Diagnostics Module (v2.3.21)
+ * PulseIQ Performance Diagnostics Module (v2.3.22)
  * 
  * OPT-IN performance telemetry, error capture, navigation audit & on-screen report panel.
  * ZERO behavior/logic/rendering/data changes.
@@ -16,7 +16,7 @@
 (function() {
   'use strict';
 
-  var VERSION = 'v2.3.21';
+  var VERSION = 'v2.3.22';
   var SESSION_KEY = 'pulseiq_diag_v1';
 
   var TARGET_RENDER_FNS = [
