@@ -2,6 +2,14 @@
 
 All notable changes to the PulseIQ project are documented in this file.
 
+## [2.3.24] - 2026-09-03
+
+### Added — Preconnect & DNS-Prefetch to Supabase Origin
+- **Cold-Connection TTFB Optimization**: Added `<link rel="preconnect" href="https://erteibdxzdvsaujptxsd.supabase.co" crossorigin>` and `<link rel="dns-prefetch" href="https://erteibdxzdvsaujptxsd.supabase.co">` as the initial tags in `<head>` of `index.html`.
+- **Early Socket Warmup**: Initiates DNS resolution, TCP handshake, and TLS negotiation to Supabase during document parsing, directly eliminating cold connection overhead on initial authentication and metadata requests across all devices (laptop, tablet, and mobile).
+
+---
+
 ## [2.3.23] - 2026-09-03
 
 ### Changed — Diagnostics Hardening: Retry Wrapper Install, Setup Log, Session-Tagged Entries & Script Timings
