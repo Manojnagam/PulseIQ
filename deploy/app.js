@@ -18332,6 +18332,7 @@ function playChimeSound() {
 }
 
 async function pollQrCheckins() {
+  if (typeof document !== 'undefined' && document.hidden) return;
   if (!getActiveSbUrl() || !getActiveSbKey()) return;
   var todayStr = new Date().toISOString().split('T')[0];
   try {
@@ -18339,6 +18340,11 @@ async function pollQrCheckins() {
     var todayAtt = await dbGet('attendance', 'date', '&date=eq.' + todayStr);
     var todayCoachAtt = await dbGet('coach_attendance', 'date', '&date=eq.' + todayStr);
     
+    var currentSig = (todayAtt ? JSON.stringify(todayAtt) : '') + '|' + (todayCoachAtt ? JSON.stringify(todayCoachAtt) : '');
+    var isFirstPoll = (typeof window._lastQrPollSig === 'undefined');
+    var sigChanged = isFirstPoll || (window._lastQrPollSig !== currentSig);
+    window._lastQrPollSig = currentSig;
+
     var hasNew = false;
     
     if (Array.isArray(todayAtt)) {
@@ -18371,7 +18377,7 @@ async function pollQrCheckins() {
       });
     }
     
-    if (hasNew) {
+    if (hasNew && sigChanged) {
       _daysLeftCache = {};
       renderOverview();
       renderAttendance();

@@ -2,6 +2,17 @@
 
 All notable changes to the PulseIQ project are documented in this file.
 
+## [2.3.21] - 2026-09-03
+
+### Changed — QR Poll Render Gating & Tab Visibility Pause
+- **Tab Visibility Guard (`pollQrCheckins`)**: Added early exit when `document.hidden` is true, pausing 15-second polling network requests and rendering cycles when the browser tab is backgrounded.
+- **Change Signature Render Gating**:
+  - Implemented lightweight change signature calculation (`currentSig`) covering today's check-in payloads (`todayAtt` and `todayCoachAtt`) stored in `window._lastQrPollSig`.
+  - Conditioned `renderOverview()` and `renderAttendance()` calls on both `hasNew` check-ins and `sigChanged` detection.
+  - Preserved first-run behavior after boot while completely eliminating periodic ~200ms main-thread long tasks and redundant re-renders during idle sessions when attendance data is unchanged.
+
+---
+
 ## [2.3.20] - 2026-09-03
 
 ### Changed — Parallel Boot Loads & Collapsed Render Storm
