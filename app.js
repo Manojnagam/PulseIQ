@@ -273,12 +273,23 @@ async function startApp() {
     if (authEl) authEl.textContent = '● ' + _authUser.email;
 
     try {
-      // Check if this is super admin
+      // Parallel fetch: app_settings (super admin check) and wellness_centers (center auto-link)
       var superAdminEmail = '';
+      var centers = null;
       try {
-        var settingsRes = await fetch(CENTER_SB_URL + '/rest/v1/app_settings?key=eq.super_admin_email&select=value', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY } });
-        var settingsData = await settingsRes.json();
-        superAdminEmail = (Array.isArray(settingsData) && settingsData[0]) ? settingsData[0].value : '';
+        var _bootFetches = await Promise.all([
+          fetch(CENTER_SB_URL + '/rest/v1/app_settings?key=eq.super_admin_email&select=value', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY } }).catch(function(){ return null; }),
+          fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?select=id,name,owner_id,owner_email', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY } }).catch(function(){ return null; })
+        ]);
+        var settingsRes = _bootFetches[0];
+        var centersRes = _bootFetches[1];
+        if (settingsRes && settingsRes.ok) {
+          var settingsData = await settingsRes.json();
+          superAdminEmail = (Array.isArray(settingsData) && settingsData[0]) ? settingsData[0].value : '';
+        }
+        if (centersRes && centersRes.ok) {
+          centers = await centersRes.json();
+        }
       } catch(e) {}
       var HARDCODED_SUPER_ADMINS = ['manojnagam1551@gmail.com'];
       var isSuperAdmin = (_authUser.user_metadata && _authUser.user_metadata.role === 'super_admin') || _authUser.email === superAdminEmail || HARDCODED_SUPER_ADMINS.indexOf(_authUser.email) !== -1;
@@ -295,8 +306,12 @@ async function startApp() {
       } else {
         // Try to auto-link by email if auth_user_id not set yet
         var jwt = _authSession.access_token;
-        var centersRes = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?select=id,name,owner_id,owner_email', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY } });
-        var centers = await centersRes.json();
+        if (!centers) {
+          try {
+            var fbCentersRes = await fetch(CENTER_SB_URL + '/rest/v1/wellness_centers?select=id,name,owner_id,owner_email', { headers: { 'apikey': CENTER_SB_KEY, 'Authorization': 'Bearer ' + CENTER_SB_KEY } });
+            centers = await fbCentersRes.json();
+          } catch(e) { centers = []; }
+        }
         var myCenter = (Array.isArray(centers) ? centers : []).find(function(c){ return c.owner_id === _authUser.id; })
                     || (Array.isArray(centers) ? centers : []).find(function(c){ return c.owner_email === _authUser.email; });
 
@@ -2086,20 +2101,17 @@ async function loadAll() {
 
     // Phase 1: Load critical overview datasets concurrently in one batch
     var _ldMsg = document.getElementById('app-loading-msg'); if(_ldMsg) _ldMsg.textContent = 'Connecting to database…';
+    window._inLoadAll = true;
     var p1Jobs = [
       loadCenters().catch(function(e){ console.error('loadCenters:', e); }),
       loadCustomers().catch(function(e){ console.error('loadCustomers:', e); }),
       loadCoaches().catch(function(e){ console.error('loadCoaches:', e); }),
       loadFinance().catch(function(e){ console.error('loadFinance:', e); }),
-      loadAnnouncements().catch(function(e){ console.error('loadAnnouncements:', e); })
+      loadAnnouncements().catch(function(e){ console.error('loadAnnouncements:', e); }),
+      loadAttendance().catch(function(e){ console.error('loadAttendance:', e); })
     ];
-    if (!ACTIVE_CENTER) p1Jobs.push(loadAttendance().catch(function(e){ console.error('loadAttendance:', e); }));
     await Promise.all(p1Jobs);
     try { renderCenters(); updateCenterSelects(); updateCenterSwitcher(); } catch(re){}
-    if (ACTIVE_CENTER) {
-      if(_ldMsg) _ldMsg.textContent = 'Loading attendance…';
-      try { await loadAttendance(); } catch(ae) { console.error('attendance active load err:', ae); }
-    }
     
     _daysLeftCache = {};  // initial critical data loaded
     try { buildDataIndexes(); } catch(idxErr){ console.error('buildDataIndexes Phase1 err:', idxErr); } // build O(1) lookup maps after Phase 1
@@ -2113,6 +2125,7 @@ async function loadAll() {
     try { renderCustomers(); } catch(re){ console.error('renderCustomers crash:',re); }
     try { renderOverview(); } catch(re){ console.error('renderOverview crash:',re); }
     try { renderAnnouncementBanner(); } catch(re){ console.error('renderAnnouncementBanner crash:',re); }
+    window._inLoadAll = false;
     applyLang();
     (function(){ var btn=document.getElementById('dark-mode-btn'); if(btn) btn.textContent=safeStorage.getItem('svTheme')==='dark'?'☀️':'🌙'; })();
     startAutoPing();
@@ -2232,8 +2245,9 @@ function updateSidebarLogo() {
 async function loadCustomers() {
   D.customers = await dbGetAll('customers', 'created_at', _cFilter());
   if (typeof invalidateUmsCache === 'function') invalidateUmsCache();
-  try { renderCustomers(); } catch(e) {}
-  try { renderOverview(); } catch(e) {}
+  if (!window._inLoadAll) {
+    try { renderCustomers(); } catch(e) {}
+  }
   try {
     var _rawCache = safeStorage.getItem('pq_dashboard_cache_v1');
     var _cd = _rawCache ? JSON.parse(_rawCache) : {};
@@ -2256,7 +2270,6 @@ async function loadAttendance() {
     });
   }
   try { renderAttendance(); } catch(e) {}
-  try { renderOverview(); } catch(e) {}
 }
 
 async function loadBody() {
@@ -2281,13 +2294,11 @@ async function loadFinance() {
   if (typeof invalidateUmsCache === 'function') invalidateUmsCache();
   if (typeof invalidateChartSigs === 'function') invalidateChartSigs();
   try { renderFinance(); } catch(e) {}
-  try { renderOverview(); } catch(e) {}
 }
 async function loadCoaches() {
   var _coachFilter = ACTIVE_CENTER ? 'wellness_center_id=eq.' + ACTIVE_CENTER : '';
   D.coaches = await dbGet('coaches', 'created_at', _coachFilter);
   try { renderCoaches(); } catch(e) {}
-  try { renderOverview(); } catch(e) {}
   updateCoachSelects();
   updateCouponCoachSelects();
   updateCoachUplineSelects();

@@ -2,6 +2,18 @@
 
 All notable changes to the PulseIQ project are documented in this file.
 
+## [2.3.20] - 2026-09-03
+
+### Changed — Parallel Boot Loads & Collapsed Render Storm
+- **Parallel Boot Fetches (`startApp`)**: Verified zero dependency between `app_settings` and `wellness_centers`; dispatched both network requests concurrently via `Promise.all` instead of sequential `await` chains, cutting network round-trip latency during initial startup.
+- **Parallelized Attendance Load (`loadAll`)**: Moved `loadAttendance()` into Phase 1 `Promise.all` (`p1Jobs`) alongside other core datasets (`loadCenters`, `loadCustomers`, `loadCoaches`, `loadFinance`, `loadAnnouncements`), eliminating the sequential wait after Phase 1 resolution while preserving the active center scoping guard (`_custIdsFilter`).
+- **Collapsed Boot Render Storm**:
+  - Removed redundant per-loader `renderOverview()` invocations from `loadCustomers` (`app.js`), `loadAttendance` (`app.js`), `loadFinance` (`app.js`), and `loadCoaches` (`app.js`).
+  - Guarded `loadCustomers()` with `!window._inLoadAll` so Phase 1 settles once with a single unified `renderCustomers()` and `renderOverview()` pass, while retaining full reactive re-rendering for customer mutations (`saveCustomer`, `deleteRow`, etc.).
+  - Preserved Phase 0 cache renders, Phase 1 settlement renders, and Phase 3 background settlement renders, collapsing boot render passes from 6–8 redundant passes to exactly 3 passes.
+
+---
+
 ## [2.3.19] - 2026-09-01
 
 ### Added — In-Flight Network GET Deduplication & Data-Layer Audit
