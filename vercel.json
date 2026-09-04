@@ -9,10 +9,6 @@
     { "src": "/register", "dest": "/register.html" },
     { "src": "/checkin.html", "dest": "/checkin.html" },
     { "src": "/checkin", "dest": "/checkin.html" },
-    { "src": "/owner-login.html", "dest": "/pulsezen/owner-login.html" },
-    { "src": "/owner-login", "dest": "/pulsezen/owner-login.html" },
-    { "src": "/owner.html", "dest": "/pulsezen/owner.html" },
-    { "src": "/owner", "dest": "/pulsezen/owner.html" },
     { "src": "/robots.txt", "dest": "/robots.txt" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
