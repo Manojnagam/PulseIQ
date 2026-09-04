@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Portal Login — PulseZen</title>
+  <meta name="description" content="PulseZen Wellness Center Owner Self-Serve Portal Login">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="https://fonts.gstatic.com/s/dmserifdisplay/v17/-nFnOHM81r4j6k0gjAW3mujVU2B2G_Bx0g.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <style>
+    :root {
+      --primary: #1a3a28;
+      --primary-mid: #2d5a3d;
+      --primary-light: #3d7a52;
+      --accent: #e8a838;
+      --accent-light: #fef3c7;
+      --text: #111827;
+      --muted: #6b7280;
+      --surface: #f8faf9;
+      --border: #e5e7eb;
+      --white: #ffffff;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      --radius: 16px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .auth-container {
+      width: 100%;
+      max-width: 440px;
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 36px 30px;
+      border: 1px solid var(--border);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .brand-text {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 20px;
+      color: var(--primary);
+    }
+    .brand-text span {
+      color: var(--accent);
+    }
+    .brand-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary-light);
+      background: rgba(61, 122, 82, 0.1);
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-left: auto;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 26px;
+      color: var(--primary);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    p.subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    input[type="email"],
+    input[type="text"] {
+      width: 100%;
+      padding: 13px 16px;
+      font-size: 15px;
+      font-family: inherit;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      background: var(--white);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="email"]:focus,
+    input[type="text"]:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(61, 122, 82, 0.15);
+    }
+    .otp-input {
+      font-size: 22px !important;
+      letter-spacing: 8px;
+      text-align: center;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-mid));
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn:hover {
+      opacity: 0.95;
+    }
+    .btn:active {
+      transform: scale(0.99);
+    }
+    .btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .message-box {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .message-error {
+      background: rgba(220, 38, 38, 0.08);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      color: var(--danger);
+    }
+    .message-success {
+      background: rgba(22, 163, 74, 0.08);
+      border: 1px solid rgba(22, 163, 74, 0.2);
+      color: var(--success);
+    }
+    .text-link {
+      color: var(--primary-light);
+      font-size: 13px;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .text-link:hover {
+      text-decoration: underline;
+    }
+    .footer-note {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container">
+    <div class="brand">
+      <div class="brand-icon">P</div>
+      <div class="brand-text">Pulse<span>Zen</span></div>
+      <div class="brand-badge">Owners</div>
+    </div>
+
+    <!-- State 1: Request OTP -->
+    <div id="state-email">
+      <h1>Owner Portal</h1>
+      <p class="subtitle">Sign in with your registered owner email to manage customer transformations and stories.</p>
+
+      <div id="email-msg" class="message-box message-error"></div>
+
+      <form id="form-email" onsubmit="handleSendCode(event)">
+        <div class="form-group">
+          <label for="owner-email">Owner Email Address</label>
+          <input type="email" id="owner-email" required placeholder="owner@wellnesscenter.com" autocomplete="email">
+        </div>
+        <button type="submit" id="btn-send" class="btn">Send 6-Digit Code →</button>
+      </form>
+    </div>
+
+    <!-- State 2: Verify OTP -->
+    <div id="state-otp" style="display: none;">
+      <h1>Enter 6-Digit Code</h1>
+      <p class="subtitle">We sent a verification code to <strong id="display-email" style="color:var(--text);"></strong></p>
+
+      <div id="otp-msg" class="message-box message-error"></div>
+
+      <form id="form-otp" onsubmit="handleVerifyCode(event)">
+        <div class="form-group">
+          <label for="owner-otp">6-Digit Code</label>
+          <input type="text" id="owner-otp" class="otp-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="······" required autofocus autocomplete="one-time-code">
+        </div>
+        <button type="submit" id="btn-verify" class="btn">Verify & Sign In →</button>
+      </form>
+
+      <div style="margin-top: 16px; display: flex; justify-content: space-between;">
+        <span class="text-link" onclick="backToEmail()">← Change Email</span>
+        <span class="text-link" onclick="resendCode()">Resend Code</span>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      PulseZen Self-Serve Portal &copy; 2026. Only authorized wellness center owners may access.
+    </div>
+  </div>
+
+  <script>
+    var currentEmail = '';
+
+    // Check if owner already has an active session
+    (async function checkExistingSession() {
+      try {
+        var res = await fetch('/api/owner/list', { credentials: 'include' });
+        if (res.ok) {
+          window.location.replace('/owner.html');
+        }
+      } catch (e) {}
+    })();
+
+    function showMsg(id, text, isError) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      el.className = 'message-box ' + (isError ? 'message-error' : 'message-success');
+      el.style.display = 'block';
+    }
+
+    function hideMsg(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    }
+
+    async function handleSendCode(e) {
+      e.preventDefault();
+      hideMsg('email-msg');
+
+      var emailInput = document.getElementById('owner-email');
+      var email = (emailInput.value || '').trim();
+      if (!email) return;
+
+      var btn = document.getElementById('btn-send');
+      btn.disabled = true;
+      btn.textContent = 'Sending Code...';
+
+      try {
+        var res = await fetch('/api/owner/login-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        });
+
+        var data = await res.json().catch(function() { return {}; });
+
+        if (!res.ok) {
+          showMsg('email-msg', data.error || 'Failed to request login code. Please try again.', true);
+          btn.disabled = false;
+          btn.textContent = 'Send 6-Digit Code →';
+          return;
+        }
+
+        currentEmail = email;
+        document.getElementById('display-email').textContent = email;
+        document.getElementById('state-email').style.display = 'none';
+        document.getElementById('state-otp').style.display = 'block';
+        showMsg('otp-msg', data.message || 'If registered, a 6-digit code has been sent.', false);
+        setTimeout(function() {
+          var otpEl = document.getElementById('owner-otp');
+          if (otpEl) otpEl.focus();
+        }, 100);
+      } catch (err) {
+        showMsg('email-msg', 'Network error. Please check your internet connection.', true);
+        btn.disabled = false;
+        btn.textContent = 'Send 6-Digit Code →';
+      }
+    }
+
+    async function handleVerifyCode(e) {
+      e.preventDefault();
+      hideMsg('otp-msg');
+
+      var otpInput = document.getElementById('owner-otp');
+      var code = (otpInput.value || '').trim();
+      if (!code || code.length !== 6) {
+        showMsg('otp-msg', 'Please enter the complete 6-digit verification code.', true);
+        return;
+      }
+
+      var btn = document.getElementById('btn-verify');
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+
+      try {
+        var res = await fetch('/api/owner/login-verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email: currentEmail, code: code })
+        });
+
+        var data = await res.json().catch(function() { return {}; });
+
+        if (!res.ok) {
+          showMsg('otp-msg', data.error || 'Invalid or expired code. Please try again.', true);
+          btn.disabled = false;
+          btn.textContent = 'Verify & Sign In →';
+          return;
+        }
+
+        // Successfully verified session cookie
+        showMsg('otp-msg', 'Success! Redirecting to Owner Portal...', false);
+        setTimeout(function() {
+          window.location.replace('/owner.html');
+        }, 400);
+      } catch (err) {
+        showMsg('otp-msg', 'Network error verifying code. Please try again.', true);
+        btn.disabled = false;
+        btn.textContent = 'Verify & Sign In →';
+      }
+    }
+
+    function backToEmail() {
+      hideMsg('otp-msg');
+      document.getElementById('state-otp').style.display = 'none';
+      document.getElementById('state-email').style.display = 'block';
+      var btn = document.getElementById('btn-send');
+      btn.disabled = false;
+      btn.textContent = 'Send 6-Digit Code →';
+    }
+
+    async function resendCode() {
+      hideMsg('otp-msg');
+      var otpEl = document.getElementById('owner-otp');
+      if (otpEl) otpEl.value = '';
+      try {
+        var res = await fetch('/api/owner/login-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: currentEmail })
+        });
+        showMsg('otp-msg', 'New code sent! Please check your inbox.', false);
+      } catch (e) {
+        showMsg('otp-msg', 'Could not resend code. Please try again.', true);
+      }
+    }
+  </script>
+</body>
+</html>

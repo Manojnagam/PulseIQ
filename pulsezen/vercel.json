@@ -5,6 +5,7 @@
     }
   },
   "routes": [
+    { "src": "/api/owner/(.*)", "dest": "https://app.pulsezen.in/api/owner/$1" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { 
       "src": "^/$", 
