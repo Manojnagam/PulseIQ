@@ -8085,21 +8085,22 @@ function renderFinance() {
 
 // ── UMS PACK PROFITABILITY & HERBALIFE COST CONFIGURATION (v2.3.8) ──
 var DEFAULT_PACK_SCOOPS = [
-  { key: 'f1', label: 'Formula 1', cost_per_scoop: 19.70 },
+  { key: 'f1', label: 'Formula 1', cost_per_scoop: 19.54 },
   { key: 'ppp', label: 'Personalized Protein Powder', cost_per_scoop: 20.52 },
   { key: 'shakemate', label: 'ShakeMate', cost_per_scoop: 12.65 },
   { key: 'dinoshake', label: 'Dinoshake', cost_per_scoop: 31.95 },
   { key: 'afresh', label: 'Afresh', cost_per_scoop: 11.05 }
 ];
 
+var RECIPE_WL = { f1: 3, ppp: 1, shakemate: 1, afresh: 1 };
+var RECIPE_WG = { f1: 2, ppp: 1, shakemate: 1, dinoshake: 1, afresh: 1 };
+
 var DEFAULT_PACK_DEFS = [
   { id: 'trial-3', pack_name: '3-Day Trial', days: 3, ums_price: 900, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
   { id: 'standard-26', pack_name: '26-Day', days: 26, ums_price: 5600, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
-  { id: 'premium-30', pack_name: '30-Day', days: 30, ums_price: 6500, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
-  { id: 'premium-30-gain', pack_name: 'Premium 30-Day', days: 30, ums_price: 5600, active: true, recipe: { f1: 2, ppp: 1, shakemate: 1, dinoshake: 1, afresh: 1 } },
-  { id: 'premium-30-plus', pack_name: 'Premium 30-Day Plus', days: 30, ums_price: 7000, active: true, recipe: { f1: 2, ppp: 1, shakemate: 1, dinoshake: 1, afresh: 1 } },
-  { id: 'hot-drink-30', pack_name: 'Hot Drink 30-Day', days: 30, ums_price: 1000, active: true, recipe: { afresh: 1 } },
-  { id: 'star-90', pack_name: '90-Day', days: 90, ums_price: 15000, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } }
+  { id: 'standard-30', pack_name: '30-Day', days: 30, ums_price: 6969, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
+  { id: 'star-90', pack_name: '90-Day', days: 90, ums_price: 15000, active: true, recipe: { f1: 3, ppp: 1, shakemate: 1, afresh: 1 } },
+  { id: 'hot-drink-30', pack_name: 'Hot Drink 30-Day', days: 30, ums_price: 1000, active: true, recipe: { afresh: 1 } }
 ];
 
 var PACK_COSTS = null;
@@ -8130,7 +8131,7 @@ function getPackScoopConfigs() {
   });
 }
 
-function getDailyShakeCost(packOrRecipe) {
+function getDailyShakeCost(packOrRecipe, goal) {
   var recipe = null;
   if (packOrRecipe) {
     if (typeof packOrRecipe === 'object') {
@@ -8142,13 +8143,13 @@ function getDailyShakeCost(packOrRecipe) {
   if (recipe && typeof recipe === 'object' && Object.keys(recipe).length > 0) {
     scoopMap = recipe;
   } else {
-    // Default weight-loss fallback: (3 f1 + 1 ppp + 1 shakemate + 1 afresh) = ₹103.32
-    scoopMap = { f1: 3, ppp: 1, shakemate: 1, afresh: 1 };
+    var isGain = (goal && String(goal).toLowerCase().includes('gain'));
+    scoopMap = isGain ? RECIPE_WG : RECIPE_WL;
   }
 
   var scoopConfigs = getPackScoopConfigs();
   var costMap = {
-    f1: 19.70,
+    f1: 19.54,
     ppp: 20.52,
     shakemate: 12.65,
     dinoshake: 31.95,
@@ -8167,7 +8168,7 @@ function getDailyShakeCost(packOrRecipe) {
     total += count * unitCost;
   });
 
-  return total > 0 ? total : 103.32;
+  return total > 0 ? total : 102.84;
 }
 
 function getPackDefinitions() {
@@ -8254,39 +8255,94 @@ async function loadPackProfitConfig() {
 async function loadPackProfit() {
   var gridEl = document.getElementById('pp-cards');
   var badgeEl = document.getElementById('pp-daily-cost');
+  var badgeWlEl = document.getElementById('pp-daily-cost-wl');
+  var badgeWgEl = document.getElementById('pp-daily-cost-wg');
   if (!gridEl) return;
 
-  var defaultDailyCost = getDailyShakeCost();
+  var wlDailyCost = getDailyShakeCost(RECIPE_WL);
+  var wgDailyCost = getDailyShakeCost(RECIPE_WG);
+
+  if (badgeWlEl) {
+    badgeWlEl.textContent = '🟢 WL Daily Cost: ₹' + wlDailyCost.toFixed(2);
+    badgeWlEl.title = 'Weight Loss Recipe: F1×3 + PPP×1 + ShakeMate×1 + Afresh×1';
+  }
+  if (badgeWgEl) {
+    badgeWgEl.textContent = '🔵 WG Daily Cost: ₹' + wgDailyCost.toFixed(2);
+    badgeWgEl.title = 'Weight Gain Recipe: F1×2 + Dinoshake×1 + PPP×1 + ShakeMate×1 + Afresh×1';
+  }
   if (badgeEl) {
-    badgeEl.textContent = 'Daily Shake Cost: ₹' + defaultDailyCost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' (Weight-loss)';
-    badgeEl.title = 'Standard recipe: F1×3 + PPP×1 + ShakeMate×1 + Afresh×1';
+    badgeEl.textContent = 'Daily Shake Cost: ₹' + wlDailyCost.toFixed(2) + ' (Weight-loss)';
   }
 
   var packDefs = getPackDefinitions();
   gridEl.innerHTML = packDefs.map(function(p) {
     var days = Number(p.days) || 0;
     var price = Number(p.ums_price) || 0;
-    var packDailyCost = getDailyShakeCost(p);
-    var calc = calcUmsProfit(price, days, packDailyCost, price, days);
-    var marginColor = calc.marginPct >= 50 ? '#4ade80' : (calc.marginPct >= 35 ? '#38bdf8' : '#facc15');
-    var recipeStr = formatRecipeSummary(p.recipe);
+
+    var isHotDrinkOnly = p.id === 'hot-drink-30' || (p.recipe && Object.keys(p.recipe).length === 1 && p.recipe.afresh);
+    if (isHotDrinkOnly) {
+      var hotDaily = getDailyShakeCost(p.recipe || { afresh: 1 });
+      var calcHot = calcUmsProfit(price, days, hotDaily, price, days);
+      var marginColorHot = calcHot.marginPct >= 50 ? '#4ade80' : (calcHot.marginPct >= 35 ? '#38bdf8' : '#facc15');
+
+      return '<div style="background:#131722;border:1px solid #242b3d;border-radius:10px;padding:14px;display:flex;flex-direction:column;justify-content:space-between">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">' +
+          '<div>' +
+            '<span style="font-weight:700;font-size:13.5px;color:#f8fafc">' + (p.pack_name || (days + ' Days')) + '</span>' +
+            '<div style="font-size:10.5px;color:#94a3b8;margin-top:2px">☕ Afresh×1 (₹' + hotDaily.toFixed(2) + '/d)</div>' +
+          '</div>' +
+          '<span style="font-size:11px;font-weight:700;color:#38bdf8;background:rgba(56,189,248,0.12);padding:2px 7px;border-radius:8px">' + days + 'd</span>' +
+        '</div>' +
+        '<div style="margin-bottom:8px">' +
+          '<div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Profit (Ex-GST)</div>' +
+          '<div style="font-size:22px;font-weight:700;color:#4ade80;line-height:1.2">₹' + calcHot.fullPackProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#94a3b8;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">' +
+          '<span>₹' + price.toLocaleString('en-IN') + ' − ₹' + calcHot.fullCost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>' +
+          '<span style="font-weight:700;color:' + marginColorHot + '">' + calcHot.marginPct.toFixed(1) + '% margin</span>' +
+        '</div>' +
+      '</div>';
+    }
+
+    var calcWl = calcUmsProfit(price, days, wlDailyCost, price, days);
+    var calcWg = calcUmsProfit(price, days, wgDailyCost, price, days);
+
+    var marginColorWl = calcWl.marginPct >= 50 ? '#4ade80' : (calcWl.marginPct >= 35 ? '#38bdf8' : '#facc15');
+    var marginColorWg = calcWg.marginPct >= 50 ? '#4ade80' : (calcWg.marginPct >= 35 ? '#38bdf8' : '#facc15');
 
     return '<div style="background:#131722;border:1px solid #242b3d;border-radius:10px;padding:14px;display:flex;flex-direction:column;justify-content:space-between">' +
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
         '<div>' +
-          '<span style="font-weight:700;font-size:13.5px;color:#f8fafc">' + (p.pack_name || (days + ' Days')) + '</span>' +
-          '<div style="font-size:10.5px;color:#94a3b8;margin-top:2px" title="Daily recipe">' + recipeStr + ' (₹' + packDailyCost.toFixed(2) + '/d)</div>' +
+          '<span style="font-weight:700;font-size:14px;color:#f8fafc">' + (p.pack_name || (days + ' Days')) + '</span>' +
+          '<div style="font-size:12px;font-weight:700;color:#e2e8f0;margin-top:2px">₹' + price.toLocaleString('en-IN') + '</div>' +
         '</div>' +
-        '<span style="font-size:11px;font-weight:700;color:#38bdf8;background:rgba(56,189,248,0.12);padding:2px 7px;border-radius:8px">' + days + 'd</span>' +
+        '<span style="font-size:11px;font-weight:700;color:#38bdf8;background:rgba(56,189,248,0.12);padding:2px 8px;border-radius:8px">' + days + 'd</span>' +
       '</div>' +
-      '<div style="margin-bottom:8px">' +
-        '<div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Profit (Ex-GST)</div>' +
-        '<div style="font-size:22px;font-weight:700;color:#4ade80;line-height:1.2">₹' + calc.fullPackProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</div>' +
+
+      // Weight Loss Section
+      '<div style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:8px;padding:8px 10px;margin-bottom:8px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">' +
+          '<span style="font-size:11px;font-weight:700;color:#4ade80">🟢 Weight Loss <span style="font-weight:400;color:#94a3b8;font-size:10px">(₹' + wlDailyCost.toFixed(2) + '/d)</span></span>' +
+          '<span style="font-size:11px;font-weight:700;color:' + marginColorWl + '">' + calcWl.marginPct.toFixed(1) + '%</span>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
+          '<span style="font-size:16px;font-weight:700;color:#4ade80">₹' + calcWl.fullPackProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>' +
+          '<span style="font-size:10.5px;color:#94a3b8">₹' + price.toLocaleString('en-IN') + ' − ₹' + calcWl.fullCost.toFixed(2) + '</span>' +
+        '</div>' +
       '</div>' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#94a3b8;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">' +
-        '<span>₹' + price.toLocaleString('en-IN') + ' − ₹' + calc.fullCost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>' +
-        '<span style="font-weight:700;color:' + marginColor + '">' + calc.marginPct.toFixed(1) + '% margin</span>' +
+
+      // Weight Gain Section
+      '<div style="background:rgba(56,189,248,0.04);border:1px solid rgba(56,189,248,0.15);border-radius:8px;padding:8px 10px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">' +
+          '<span style="font-size:11px;font-weight:700;color:#38bdf8">🔵 Weight Gain <span style="font-weight:400;color:#94a3b8;font-size:10px">(₹' + wgDailyCost.toFixed(2) + '/d)</span></span>' +
+          '<span style="font-size:11px;font-weight:700;color:' + marginColorWg + '">' + calcWg.marginPct.toFixed(1) + '%</span>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
+          '<span style="font-size:16px;font-weight:700;color:#38bdf8">₹' + calcWg.fullPackProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>' +
+          '<span style="font-size:10.5px;color:#94a3b8">₹' + price.toLocaleString('en-IN') + ' − ₹' + calcWg.fullCost.toFixed(2) + '</span>' +
+        '</div>' +
       '</div>' +
+
     '</div>';
   }).join('');
 }
@@ -8380,7 +8436,11 @@ function getUmsCalculatedRows() {
     var hasCustomPrice = (custPrice != null && custPrice !== defPrice);
     var packDays = Number(matchingDef.days) || 26;
     var packName = matchingDef.pack_name || (packDays + ' Days');
-    var dailyCost = getDailyShakeCost(matchingDef);
+    var isHotDrinkOnly = matchingDef.id === 'hot-drink-30' || (matchingDef.recipe && Object.keys(matchingDef.recipe).length === 1 && matchingDef.recipe.afresh);
+    var isGain = (c.goal || '').trim().toLowerCase().includes('gain');
+    var dailyCost = isHotDrinkOnly
+      ? getDailyShakeCost({ afresh: 1 })
+      : (isGain ? getDailyShakeCost(RECIPE_WG) : getDailyShakeCost(RECIPE_WL));
 
     var rawTxns = [];
     var custFin = finByCust[c.id] || [];
@@ -8451,6 +8511,7 @@ function getUmsCalculatedRows() {
       rows.push({
         customerId: c.id,
         customerName: c.name || 'Unknown',
+        goal: isGain ? 'Weight Gain' : 'Weight Loss',
         packId: matchingDef.id,
         packName: packName,
         month: ym,
@@ -8590,7 +8651,12 @@ function renderUmsProfit() {
           '<span style="color:var(--text);cursor:pointer" onclick="goTo(\'customers\');setTimeout(function(){var s=document.getElementById(\'customers-search\');if(s){s.value=\''+r.customerName.replace(/'/g,"\\'")+'\';renderCustomers();}},300)">' + r.customerName + '</span>' +
           warnIcon +
         '</td>' +
-        '<td><span class="badge" style="background:rgba(56,189,248,0.12);color:#38bdf8;font-size:11px">' + r.packName + '</span></td>' +
+        '<td>' +
+          '<span class="badge" style="background:rgba(56,189,248,0.12);color:#38bdf8;font-size:11px">' + r.packName + '</span>' +
+          (r.goal === 'Weight Gain'
+            ? '<span class="badge" style="background:rgba(56,189,248,0.18);color:#38bdf8;font-size:10px;margin-left:4px" title="Weight Gain (₹' + r.dailyCost.toFixed(2) + '/d)">WG</span>'
+            : '<span class="badge" style="background:rgba(74,222,128,0.18);color:#4ade80;font-size:10px;margin-left:4px" title="Weight Loss (₹' + r.dailyCost.toFixed(2) + '/d)">WL</span>') +
+        '</td>' +
         '<td style="text-align:center"><span style="font-size:11.5px;color:var(--muted);font-weight:600">' + r.monthLabel + '</span></td>' +
         '<td style="text-align:right;font-weight:700;color:var(--success)">₹' + r.paid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
         '<td style="text-align:right;color:var(--muted);font-size:11.5px">₹' + r.sgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
