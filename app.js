@@ -5182,12 +5182,12 @@ function renderCoaches() {
     var st = c.status||'Active';
     var pinHtml = c.herbalife_pin ? '<span style="font-size:10px;background:var(--info-light);color:var(--info-text);padding:2px 7px;border-radius:10px;font-weight:600;display:block;margin-top:3px">'+c.herbalife_pin+'</span>' : '';
     // Check if this coach has a pack price but no payment record yet
-    var hasPackPrice = c.pack_type && c.pack_price && Number(c.pack_price) > 0;
+    var hasPackPrice = (c.pack_type || c.pack_start_date) && c.pack_price && Number(c.pack_price) > 0;
     var hasPaymentRecord = (D.payments||[]).some(function(p){return p.person_id===c.id;});
     var payBtn = (hasPackPrice && !hasPaymentRecord)
       ? '<button class="btn-p" style="font-size:11px;padding:3px 8px;background:#e8a838;border-color:#e8a838;margin-right:4px" onclick="openCoachPaymentSetup(\''+c.id+'\')">💰 Record Payment</button>'
       : '';
-    var renewBtn = c.pack_type ? '<button class="btn-p" style="font-size:11px;padding:3px 8px;margin-right:4px" onclick="openRenewForCoach(\''+c.id+'\')">🔄 Renew</button>' : '';
+    var renewBtn = (c.pack_type || c.pack_start_date || c.pack_price) ? '<button class="btn-p" style="font-size:11px;padding:3px 8px;margin-right:4px" onclick="openRenewForCoach(\''+c.id+'\')">🔄 Renew</button>' : '';
     var promoteBtn = '<button class="btn-p" style="font-size:11px;padding:3px 8px;background:#7c3aed;border-color:#7c3aed;margin-right:4px" onclick="openPromoteModal(\''+c.id+'\')" title="Promote to Supervisor — Open New Center">🏆 Promote</button>';
     return '<tr><td><strong>'+c.name+'</strong>'+pinHtml+'</td><td>'+(c.contact||'—')+'</td><td><span class="badge '+(st==='Active'?'bg':'br')+'">'+st+'</span></td><td>'+(c.upline||'—')+'</td><td>'+refs+'</td><td>'+(c.join_date||'—')+'</td><td><div class="acts">'+promoteBtn+payBtn+renewBtn+'<button class="btn-e" onclick="editCoach(\''+c.id+'\')">Edit</button><button class="btn-d" onclick="delRecord(\'coaches\',\''+c.id+'\',\'coaches\')">Delete</button></div></td></tr>';
   }).join('');
@@ -13204,7 +13204,7 @@ function openRenewForCoach(coachId){
   document.getElementById('renew-type').value='coach';
   document.getElementById('renew-cust-name').textContent=c.name+' (Coach)';
   document.getElementById('renew-prev-pack').textContent='Previous: '+(c.pack_type||'—')+' started '+(c.pack_start_date||'—');
-  document.getElementById('renew-pack-type').value=c.pack_type||'';
+  document.getElementById('renew-pack-type').value=c.pack_type||(c.pack_price===5600?'Standard 26 days':(c.pack_price===15000?'Star UMS 90 days':''));
   document.getElementById('renew-start-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('renew-price').value=c.pack_price||'';
   openModal('renew-pack');
@@ -14794,14 +14794,14 @@ function checkOverduePayments(){
 // COACH PACK STATUS + ALERTS
 // ══════════════════════════════════════════════
 function getCoachPackStatus(coach){
-  if(!coach.pack_type||!coach.pack_start_date)return{days:0,active:false};
-  var dur=coach.pack_type.includes('26')?26:30;
+  if((!coach.pack_type && !coach.pack_price) || !coach.pack_start_date)return{days:0,active:false};
+  var dur = (coach.pack_type && coach.pack_type.includes('26')) || coach.pack_price === 5600 ? 26 : (coach.pack_type && coach.pack_type.includes('90') || coach.pack_price === 15000 ? 90 : 30);
   var end=new Date(coach.pack_start_date);end.setDate(end.getDate()+dur);
   return{days:Math.max(0,Math.ceil((end-new Date())/86400000)),active:end>new Date()};
 }
 function renderCoachPackAlerts(){
   var exp=D.coaches.filter(function(c){var s=getCoachPackStatus(c);return s.active&&s.days<=3;});
-  var expired=D.coaches.filter(function(c){return c.pack_type&&!getCoachPackStatus(c).active;});
+  var expired=D.coaches.filter(function(c){return (c.pack_type || c.pack_start_date) && !getCoachPackStatus(c).active;});
   var el=document.getElementById('coach-alerts');
   if(!el){el=document.createElement('div');el.id='coach-alerts';var ov=document.getElementById('overview-stats');if(ov)ov.parentNode.insertBefore(el,ov);}
   var alerts=exp.map(function(c){return'<span style="color:var(--accent)">⚠️ '+c.name+' pack expires in '+getCoachPackStatus(c).days+'d</span>';})
