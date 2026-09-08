@@ -376,16 +376,18 @@
           badge.style.background = '#fefce8';
           badge.style.border = '1.5px solid #fde68a';
           badge.style.color = '#92400e';
-          badge.innerHTML = '⏳ <strong>' + locality + ' — ' + pincode + '</strong> has a pending registration. This area may not be available — you can still join as Non-Exclusive at ₹299/month.';
+          badge.innerHTML = '⏳ <strong>' + locality + ' — ' + pincode + '</strong> has a pending registration. Exclusivity may not be available — you can still join with the Basic plan (₹499/month).';
           p1.disabled = true;
           document.getElementById('p3').checked = true;
+          document.getElementById('nonExclusiveWarn').style.display = 'none';
         } else {
           badge.style.background = '#fef2f2';
           badge.style.border = '1.5px solid #fca5a5';
           badge.style.color = '#dc2626';
-          badge.innerHTML = '❌ <strong>' + locality + ' — ' + pincode + '</strong> is already taken. You can still join as Non-Exclusive at ₹299/month — your page goes live without area lock.';
+          badge.innerHTML = '❌ <strong>' + locality + ' — ' + pincode + '</strong> is already taken. You can still join with the Basic plan (₹499/month) — your page goes live without area lock.';
           p1.disabled = true;
           document.getElementById('p3').checked = true;
+          document.getElementById('nonExclusiveWarn').style.display = 'none';
         }
       } catch(e) {
         badge.style.background = '#fefce8';
@@ -396,7 +398,7 @@
     }, 600);
   }
 
-document.getElementById('r-city').addEventListener('input', checkAvailability);
+  document.getElementById('r-city').addEventListener('input', checkAvailability);
   document.getElementById('r-pincode').addEventListener('input', checkAvailability);
   document.getElementById('r-locality').addEventListener('input', checkAvailability);
 
@@ -404,14 +406,18 @@ document.getElementById('r-city').addEventListener('input', checkAvailability);
   document.querySelectorAll('input[name="plan"]').forEach(function(radio) {
     radio.addEventListener('change', function() {
       var warn = document.getElementById('nonExclusiveWarn');
-      warn.style.display = (this.value === 'Non-exclusive ₹299/month') ? 'block' : 'none';
+      var p1 = document.getElementById('p1');
+      warn.style.display = (this.value.indexOf('Basic') !== -1 && p1 && !p1.disabled) ? 'block' : 'none';
     });
   });
 
   function upgradeToExclusive() {
-    document.getElementById('p1').checked = true;
-    document.getElementById('nonExclusiveWarn').style.display = 'none';
-    document.getElementById('p1').closest('.plan-label') && document.getElementById('p1').dispatchEvent(new Event('change'));
+    var p1 = document.getElementById('p1');
+    if (p1 && !p1.disabled) {
+      p1.checked = true;
+      document.getElementById('nonExclusiveWarn').style.display = 'none';
+      p1.closest('.plan-label') && p1.dispatchEvent(new Event('change'));
+    }
   }
 
   // ── SUBMIT ──
