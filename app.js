@@ -10558,9 +10558,10 @@ async function generateBodyCompPoster(bodyId) {
   var h_m  = height / 100;
   var h_m2 = h_m * h_m; // guarded: height was confirmed > 0
 
-  // Weight ideal range (BMI band)
+  // Weight ideal range (BMI band) and midpoint average
   var idealWtLo = parseFloat((18.5 * h_m2).toFixed(1));
   var idealWtHi = parseFloat((24.9 * h_m2).toFixed(1));
+  var idealWtAvg = parseFloat(((idealWtLo + idealWtHi) / 2).toFixed(1));
   var wtGap = 0;
   if (weight < idealWtLo) wtGap = parseFloat((weight - idealWtLo).toFixed(1));
   else if (weight > idealWtHi) wtGap = parseFloat((weight - idealWtHi).toFixed(1));
@@ -10570,6 +10571,7 @@ async function generateBodyCompPoster(bodyId) {
   var fatKg       = fatPct ? parseFloat((weight * fatPct / 100).toFixed(2)) : 0;
   var leanKg      = weight - fatKg;
   var targetBf    = genderKnown ? (isMale ? 0.20 : 0.28) : null;
+  var avgFatPct   = genderKnown ? (isMale ? 15 : 23) : null;
   var fatToLoseKg = null, idealFatKg = null;
   if (targetBf !== null && fatKg > 0) {
     var _denom = 1 - targetBf; // targetBf is 0.20 or 0.28 — divide-by-zero impossible
@@ -10577,14 +10579,17 @@ async function generateBodyCompPoster(bodyId) {
     fatToLoseKg   = parseFloat((weight - targetWt).toFixed(1));
     idealFatKg    = parseFloat((targetWt * targetBf).toFixed(1));
   }
+  var avgIdealFatKg = (avgFatPct && idealWtAvg) ? parseFloat((idealWtAvg * avgFatPct / 100).toFixed(1)) : (idealFatKg || null);
 
   // Muscle — uses muscle_percentage, never muscle_mass (legacy dead column)
   var musclePct = parseFloat(b.muscle_percentage) || 0;
   var muscleKg  = musclePct ? parseFloat((weight * musclePct / 100).toFixed(2)) : 0;
   var musLoP    = genderKnown ? (isMale ? 33 : 24) : null;
   var musHiP    = genderKnown ? (isMale ? 39 : 30) : null;
+  var musAvgP   = (musLoP !== null && musHiP !== null) ? Math.round((musLoP + musHiP) / 2) : null;
   var musLoKg   = musLoP !== null ? parseFloat((weight * musLoP / 100).toFixed(1)) : null;
   var musHiKg   = musHiP !== null ? parseFloat((weight * musHiP / 100).toFixed(1)) : null;
+  var musAvgKg  = (musLoKg !== null && musHiKg !== null) ? parseFloat(((musLoKg + musHiKg) / 2).toFixed(1)) : null;
   var musGap    = null;
   if (muscleKg && musLoKg !== null && musHiKg !== null) {
     if      (muscleKg < musLoKg) musGap = parseFloat((muscleKg - musLoKg).toFixed(1));
@@ -10707,13 +10712,12 @@ async function generateBodyCompPoster(bodyId) {
   // Row: Weight
   if (h_m2 > 0) {
     var _wtS = wtGap === 0 ? '\u2713 Ideal' : (wtGap > 0 ? '+' + wtGap + ' kg' : wtGap + ' kg');
-    _bcpRow('Weight', weight + ' kg', idealWtLo + ' \u2013 ' + idealWtHi + ' kg', _wtS, wtGap === 0 ? CGR : CAM, normalRH, false);
+    _bcpRow('Weight', weight + ' kg', idealWtAvg + ' kg', _wtS, wtGap === 0 ? CGR : CAM, normalRH, false);
   }
 
   // Row: Body Fat (headline — largest, most prominent)
   if (fatKg > 0) {
-    var _fbnd   = genderKnown ? (isMale ? '10\u201320%' : '18\u201328%') : '';
-    var _fidStr = idealFatKg !== null ? 'up to ' + idealFatKg + ' kg' + (_fbnd ? ' (' + _fbnd + ')' : '') : (_fbnd || '\u2014');
+    var _fidStr = avgIdealFatKg !== null ? avgIdealFatKg + ' kg (' + avgFatPct + '%)' : (avgFatPct ? avgFatPct + '%' : '\u2014');
     var _fstat  = null, _fscol = CGR;
     if (fatToLoseKg !== null) {
       if (fatToLoseKg <= 0) { _fstat = '\u2713 In range'; _fscol = CGR; }
@@ -10725,9 +10729,10 @@ async function generateBodyCompPoster(bodyId) {
   // Row: Muscle mass
   if (muscleKg > 0 && genderKnown && musLoKg !== null) {
     var _msS = musGap === 0 ? '\u2713 In range' : (musGap > 0 ? '+' + musGap + ' kg' : musGap + ' kg');
+    var _midStr = musAvgKg !== null ? musAvgKg + ' kg (' + musAvgP + '%)' : (musAvgP ? musAvgP + '%' : '\u2014');
     _bcpRow('Muscle Mass',
       muscleKg + ' kg (' + musclePct + '%)',
-      musLoKg + ' \u2013 ' + musHiKg + ' kg (' + musLoP + '\u2013' + musHiP + '%)',
+      _midStr,
       _msS, musGap === 0 ? CGR : CAM, normalRH, false);
   }
 
@@ -10736,14 +10741,14 @@ async function generateBodyCompPoster(bodyId) {
     var _vfDisp = Math.round(vfRating * 10) / 10;
     var _vfStr  = (_vfDisp === Math.floor(_vfDisp)) ? String(Math.floor(_vfDisp)) : String(_vfDisp);
     var _vfS = vfRating <= 9 ? '\u2713 In range' : 'High \u26a0';
-    _bcpRow('Visceral Fat', 'Rating: ' + _vfStr, 'Ideal: 1 \u2013 9', _vfS, vfRating <= 9 ? CGR : CAM, normalRH, false);
+    _bcpRow('Visceral Fat', 'Rating: ' + _vfStr, '5', _vfS, vfRating <= 9 ? CGR : CAM, normalRH, false);
   }
 
   // Row: BMI
   if (bmiVal) {
     var _bmiOk = bmiVal >= 18.5 && bmiVal <= 24.9;
     var _bmiS  = bmiVal < 18.5 ? 'Below range' : (_bmiOk ? '\u2713 Normal' : 'Above range');
-    _bcpRow('BMI', bmiVal.toFixed(1), '18.5 \u2013 24.9', _bmiS, _bmiOk ? CGR : CAM, normalRH, false);
+    _bcpRow('BMI', bmiVal.toFixed(1), '21.7', _bmiS, _bmiOk ? CGR : CAM, normalRH, false);
   }
 
   // Row: Body age vs actual age
