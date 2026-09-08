@@ -314,12 +314,123 @@
     .testi-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff; font-weight:700; font-size:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
     .testi-name { font-size:13px; font-weight:700; color:var(--text); }
     .testi-meta { font-size:11px; color:var(--muted); }
-    .transformation-card { display:flex; flex-direction:column; }
-    .transformation-photos { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; border-radius:12px; overflow:hidden; }
-    .t-photo-wrap { position:relative; background:#000; aspect-ratio:4/5; border-radius:10px; overflow:hidden; }
-    .t-photo-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
-    .t-photo-label { position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,.68); color:#fff; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase; letter-spacing:.5px; }
-    .badge-verified { display:inline-block; font-size:10px; font-weight:700; color:#16a34a; background:#f0fdf4; padding:1px 6px; border-radius:10px; border:1px solid #bbf7d0; margin-left:4px; vertical-align:middle; }
+    /* ── UNCONGESTED TRANSFORMATIONS SHOWCASE ── */
+    #transformations-section { padding: 72px 0; background: var(--white); }
+    .transformations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 28px;
+      margin-top: 24px;
+    }
+    .t-card-clean {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+    }
+    .t-card-clean:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(26,58,40,0.08);
+      border-color: #cbd5e1;
+    }
+    .t-photos-clean {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .t-photo-item {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      aspect-ratio: 4 / 5;
+      background: #111827;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .t-photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .t-photo-pill {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .t-stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      align-self: flex-start;
+    }
+    .t-quote-clean {
+      font-size: 14.5px;
+      color: #1f2937;
+      line-height: 1.7;
+      margin-bottom: 18px;
+      flex-grow: 1;
+      font-style: italic;
+    }
+    .t-footer-clean {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .t-author-clean {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .t-avatar-clean {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .t-name-clean {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .t-verified-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: #16a34a;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
 
     /* ── LOCATION ── */
     .location { background:var(--primary); color:#fff; }
@@ -691,6 +802,18 @@
   </div>
 </section>
 
+<!-- REAL TRANSFORMATIONS (dynamic, shown only when center has verified transformations) -->
+<section style="background:var(--white); display:none;" id="transformations-section" class="lazy-section">
+  <div class="container">
+    <div class="section-header center fade-in">
+      <span class="section-tag">Verified Progress</span>
+      <h2 class="section-title">Real Member Transformations</h2>
+      <p class="section-sub">Authentic results achieved with consistent nutrition and daily coach guidance.</p>
+    </div>
+    <div class="transformations-grid fade-in" id="transformations-grid"></div>
+  </div>
+</section>
+
 <!-- TESTIMONIALS -->
 <section style="background:var(--surface)" id="testimonials" class="lazy-section">
   <div class="container">
@@ -982,35 +1105,58 @@
       var items = data.transformations || [];
       if (items.length === 0) return;
 
-      var grid = el('testimonials-grid');
-      if (!grid) return;
+      var sec = el('transformations-section');
+      var grid = el('transformations-grid');
+      if (!sec || !grid) return;
 
       var html = '';
       items.forEach(function(t) {
         var wtDiff = (t.start_weight_kg && t.end_weight_kg)
-          ? ' · Lost ' + (Number(t.start_weight_kg) - Number(t.end_weight_kg)).toFixed(1) + ' kg'
-          : '';
-        var duration = t.duration_weeks ? t.duration_weeks + ' weeks' : 'Member';
+          ? (Number(t.start_weight_kg) - Number(t.end_weight_kg)).toFixed(1)
+          : null;
+        var statText = '';
+        if (wtDiff && Number(wtDiff) > 0) {
+          statText = '⚡ Lost ' + wtDiff + ' kg' + (t.duration_weeks ? ' in ' + t.duration_weeks + ' weeks' : '');
+        } else if (t.duration_weeks) {
+          statText = '✨ ' + t.duration_weeks + ' Week Program';
+        }
+
         var initials = t.customer_name ? t.customer_name.charAt(0).toUpperCase() : 'M';
 
-        html += '<div class="testi-card transformation-card">';
-        html += '  <div class="transformation-photos">';
-        html += '    <div class="t-photo-wrap"><img src="/api/public/photo?id=' + encodeURIComponent(t.id) + '&kind=before" alt="Before" loading="lazy"><span class="t-photo-label">Before</span></div>';
-        html += '    <div class="t-photo-wrap"><img src="/api/public/photo?id=' + encodeURIComponent(t.id) + '&kind=after" alt="After" loading="lazy"><span class="t-photo-label">After</span></div>';
+        html += '<div class="t-card-clean">';
+        html += '  <div class="t-photos-clean">';
+        html += '    <div class="t-photo-item">';
+        html += '      <img src="/api/public/photo?id=' + encodeURIComponent(t.id) + '&kind=before" alt="Before Photo" loading="lazy">';
+        html += '      <span class="t-photo-pill">Before</span>';
+        html += '    </div>';
+        html += '    <div class="t-photo-item">';
+        html += '      <img src="/api/public/photo?id=' + encodeURIComponent(t.id) + '&kind=after" alt="After Photo" loading="lazy">';
+        html += '      <span class="t-photo-pill">After</span>';
+        html += '    </div>';
         html += '  </div>';
-        html += '  <div class="testi-stars">★★★★★</div>';
-        html += '  <p class="testi-text">“' + escapeHtml(t.ai_summary || '') + '”</p>';
-        html += '  <div class="testi-author">';
-        html += '    <div class="testi-avatar">' + initials + '</div>';
-        html += '    <div>';
-        html += '      <div class="testi-name">' + escapeHtml(t.customer_name) + ' <span class="badge-verified">✓ Verified Transformation</span></div>';
-        html += '      <div class="testi-meta">' + duration + wtDiff + '</div>';
+
+        if (statText) {
+          html += '  <div class="t-stat-pill">' + escapeHtml(statText) + '</div>';
+        }
+
+        if (t.ai_summary) {
+          html += '  <p class="t-quote-clean">“' + escapeHtml(t.ai_summary) + '”</p>';
+        }
+
+        html += '  <div class="t-footer-clean">';
+        html += '    <div class="t-author-clean">';
+        html += '      <div class="t-avatar-clean">' + initials + '</div>';
+        html += '      <div>';
+        html += '        <div class="t-name-clean">' + escapeHtml(t.customer_name) + '</div>';
+        html += '        <div class="t-verified-badge">✓ Verified Transformation</div>';
+        html += '      </div>';
         html += '    </div>';
         html += '  </div>';
         html += '</div>';
       });
 
       grid.innerHTML = html;
+      sec.style.display = 'block';
     } catch (e) {
       console.error('Error loading transformations:', e);
     }
