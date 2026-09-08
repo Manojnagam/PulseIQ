@@ -314,6 +314,12 @@
     .testi-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff; font-weight:700; font-size:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
     .testi-name { font-size:13px; font-weight:700; color:var(--text); }
     .testi-meta { font-size:11px; color:var(--muted); }
+    .transformation-card { display:flex; flex-direction:column; }
+    .transformation-photos { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; border-radius:12px; overflow:hidden; }
+    .t-photo-wrap { position:relative; background:#000; aspect-ratio:4/5; border-radius:10px; overflow:hidden; }
+    .t-photo-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
+    .t-photo-label { position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,.68); color:#fff; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase; letter-spacing:.5px; }
+    .badge-verified { display:inline-block; font-size:10px; font-weight:700; color:#16a34a; background:#f0fdf4; padding:1px 6px; border-radius:10px; border:1px solid #bbf7d0; margin-left:4px; vertical-align:middle; }
 
     /* ── LOCATION ── */
     .location { background:var(--primary); color:#fff; }
@@ -693,7 +699,7 @@
       <h2 class="section-title">What Our Members Say</h2>
       <p class="section-sub" id="testi-sub">Real stories from people who transformed their health at our wellness center.</p>
     </div>
-    <div class="testi-grid fade-in">
+    <div class="testi-grid fade-in" id="testimonials-grid">
       <div class="testi-card">
         <div class="testi-stars">★★★★★</div>
         <p class="testi-text">"I had tried so many diets before but nothing worked long-term. At this center the coach explained everything clearly and the daily shake routine made it easy to stay consistent. I lost 6 kg in my first month!"</p>
@@ -793,6 +799,7 @@
       <a href="https://pulsezen.in/terms.html" target="_blank">Terms</a>
       <a href="https://pulsezen.in/consent.html" target="_blank">Privacy</a>
       <a href="https://pulsezen.in" target="_blank">PulseZen</a>
+      <a href="https://pulsezen.in/owner-login" target="_blank" style="color:var(--accent); font-weight:600;">Owner Login 🔐</a>
     </div>
     <div class="footer-divider"></div>
     <div class="footer-copy" id="footer-copy">© 2025 Wellness Center. All rights reserved.</div>
@@ -948,9 +955,64 @@
       initScroll();
       initFadeIn();
 
+      if (c && c.id) {
+        loadTransformations(c.id);
+      }
     } catch(e) {
       el('loading').style.display = 'none';
       el('notfound').style.display = 'flex';
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  async function loadTransformations(centerId) {
+    try {
+      var res = await fetch('/api/public/transformations?center_id=' + encodeURIComponent(centerId));
+      if (!res.ok) return;
+      var data = await res.json();
+      var items = data.transformations || [];
+      if (items.length === 0) return;
+
+      var grid = el('testimonials-grid');
+      if (!grid) return;
+
+      var html = '';
+      items.forEach(function(t) {
+        var wtDiff = (t.start_weight_kg && t.end_weight_kg)
+          ? ' · Lost ' + (Number(t.start_weight_kg) - Number(t.end_weight_kg)).toFixed(1) + ' kg'
+          : '';
+        var duration = t.duration_weeks ? t.duration_weeks + ' weeks' : 'Member';
+        var initials = t.customer_name ? t.customer_name.charAt(0).toUpperCase() : 'M';
+
+        html += '<div class="testi-card transformation-card">';
+        html += '  <div class="transformation-photos">';
+        html += '    <div class="t-photo-wrap"><img src="/api/public/photo?id=' + encodeURIComponent(t.id) + '&kind=before" alt="Before" loading="lazy"><span class="t-photo-label">Before</span></div>';
+        html += '    <div class="t-photo-wrap"><img src="/api/public/photo?id=' + encodeURIComponent(t.id) + '&kind=after" alt="After" loading="lazy"><span class="t-photo-label">After</span></div>';
+        html += '  </div>';
+        html += '  <div class="testi-stars">★★★★★</div>';
+        html += '  <p class="testi-text">“' + escapeHtml(t.ai_summary || '') + '”</p>';
+        html += '  <div class="testi-author">';
+        html += '    <div class="testi-avatar">' + initials + '</div>';
+        html += '    <div>';
+        html += '      <div class="testi-name">' + escapeHtml(t.customer_name) + ' <span class="badge-verified">✓ Verified Transformation</span></div>';
+        html += '      <div class="testi-meta">' + duration + wtDiff + '</div>';
+        html += '    </div>';
+        html += '  </div>';
+        html += '</div>';
+      });
+
+      grid.innerHTML = html;
+    } catch (e) {
+      console.error('Error loading transformations:', e);
     }
   }
 

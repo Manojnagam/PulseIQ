@@ -50,3 +50,7 @@ shakemate.jpeg
 .vercel
 pulseiq.db
 lh_report.json
+
+# Owner portal — never commit live data exports or HTTP scratch files
+_audit/
+*.http

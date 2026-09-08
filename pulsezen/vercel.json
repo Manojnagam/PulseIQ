@@ -1,17 +1,29 @@
 {
+  "version": 2,
+  "crons": [
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "0 3 * * *"
+    }
+  ],
   "functions": {
     "api/router.js": {
       "includeFiles": "*.html"
     }
   },
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { 
-      "src": "^/$", 
-      "headers": { "host": "^(?!(www\\.|app\\.)?pulsezen\\.in|localhost).*" }, 
-      "dest": "/api/router" 
-    },
-    { "src": "/(.*)", "dest": "/$1" }
+  "rewrites": [
+    { "source": "/owner-login", "destination": "/owner-login.html" },
+    { "source": "/owner", "destination": "/owner.html" },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "^(?!(www\\.|app\\.)?pulsezen\\.in|localhost).*"
+        }
+      ],
+      "destination": "/api/router"
+    }
   ],
   "headers": [
     {
@@ -24,6 +36,14 @@
       "source": "/(.*).html",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=3600, stale-while-revalidate=600" }
+      ]
+    },
+    {
+      "source": "/api/public/:path*",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
       ]
     }
   ]
