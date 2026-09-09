@@ -869,7 +869,14 @@
 
         if (!res.ok) {
           var errData = await res.json().catch(function() { return {}; });
-          throw new Error(errData.error || 'Failed to get upload URL');
+          var errMsg = errData.error || 'Failed to get upload URL';
+          if (errData.details) {
+            var detailStr = typeof errData.details === 'string'
+              ? errData.details
+              : (errData.details.message || errData.details.error || JSON.stringify(errData.details));
+            if (detailStr && detailStr !== '{}') errMsg += ' (' + detailStr + ')';
+          }
+          throw new Error(errMsg);
         }
 
         var data = await res.json();
@@ -884,7 +891,8 @@
         });
 
         if (!uploadRes.ok) {
-          throw new Error('Storage upload failed: HTTP ' + uploadRes.status);
+          var uploadErrText = await uploadRes.text().catch(function() { return ''; });
+          throw new Error('Storage upload failed: HTTP ' + uploadRes.status + (uploadErrText ? ' - ' + uploadErrText : ''));
         }
 
         if (stepNum === 1) {

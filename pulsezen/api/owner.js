@@ -377,14 +377,23 @@ async function handleUploadUrl(req, res) {
     const uploadSignUrl = `${supabaseUrl}/storage/v1/object/upload/sign/transformations/${targetPath}`;
     const signRes = await fetch(uploadSignUrl, {
       method: 'POST',
-      headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}`, 'Content-Type': 'application/json' }
+      headers: {
+        'apikey': serviceKey,
+        'Authorization': `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
     });
     if (!signRes.ok) {
       const err = await signRes.json().catch(() => ({}));
       return res.status(502).json({ error: 'Failed to create signed upload URL', details: err });
     }
     const data = await signRes.json();
-    return res.status(200).json({ upload_url: `${supabaseUrl}${data.url}`, path: targetPath, token: data.token });
+    const rawUrl = data.url || '';
+    const uploadPath = rawUrl.startsWith('/storage/v1')
+      ? rawUrl
+      : `/storage/v1${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
+    return res.status(200).json({ upload_url: `${supabaseUrl}${uploadPath}`, path: targetPath, token: data.token });
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error', details: err.message });
   }
