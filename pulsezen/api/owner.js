@@ -122,24 +122,57 @@ async function handleLoginRequest(req, res) {
       })
     });
 
+    let emailSent = false;
     if (userExists) {
       console.log(`[PulseZen Owner OTP] For ${normalizedEmail}: ${otp}`);
       const resendKey = process.env.RESEND_API_KEY;
       if (resendKey) {
+        const emailBody = {
+          to: [normalizedEmail],
+          subject: `Your PulseZen Portal Login Code: ${otp}`,
+          html: `
+            <div style="font-family:sans-serif; max-width:460px; margin:0 auto; padding:24px; border:1px solid #e5e7eb; border-radius:12px;">
+              <h2 style="color:#1a3a28; margin-top:0;">PulseZen Owner Portal</h2>
+              <p style="font-size:15px; color:#374151;">Your 6-digit login verification code is:</p>
+              <div style="font-size:32px; font-weight:800; letter-spacing:6px; color:#1a3a28; background:#f3f4f6; padding:14px; text-align:center; border-radius:8px; margin:18px 0;">
+                ${otp}
+              </div>
+              <p style="font-size:13px; color:#6b7280;">This code expires in 10 minutes. If you did not request this, please ignore this message.</p>
+            </div>
+          `
+        };
+
         try {
-          await fetch('https://api.resend.com/emails', {
+          let emailRes = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${resendKey}`,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              from: 'PulseZen <no-reply@pulsezen.in>',
-              to: [normalizedEmail],
-              subject: `Your PulseZen Portal Login Code: ${otp}`,
-              html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code expires in 10 minutes.</p>`
+              ...emailBody,
+              from: 'PulseZen <no-reply@pulsezen.in>'
             })
           });
+
+          if (!emailRes.ok) {
+            // If pulsezen.in is not verified on Resend yet, fallback to onboarding@resend.dev
+            emailRes = await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${resendKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                ...emailBody,
+                from: 'PulseZen <onboarding@resend.dev>'
+              })
+            });
+          }
+
+          if (emailRes.ok) {
+            emailSent = true;
+          }
         } catch (e) {
           console.error('Failed to send OTP email via Resend:', e);
         }
@@ -150,7 +183,7 @@ async function handleLoginRequest(req, res) {
       success: true,
       message: 'If this email is registered, a verification code has been sent.'
     };
-    if (!process.env.RESEND_API_KEY && userExists) {
+    if (!emailSent && userExists) {
       responsePayload.dev_code = otp;
     }
 
