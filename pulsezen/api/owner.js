@@ -93,16 +93,6 @@ async function handleLoginRequest(req, res) {
 
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false&invalidated=eq.false`, {
-      method: 'PATCH',
-      headers: {
-        'apikey': serviceKey,
-        'Authorization': `Bearer ${serviceKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ invalidated: true })
-    });
-
     await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
       method: 'POST',
       headers: {
@@ -242,32 +232,34 @@ async function handleLoginVerify(req, res) {
     }
 
     const nowIso = new Date().toISOString();
-    const otpUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false&invalidated=eq.false&expires_at=gt.${encodeURIComponent(nowIso)}&order=created_at.desc&limit=1`;
+    const otpUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false&expires_at=gt.${encodeURIComponent(nowIso)}&order=created_at.desc&limit=5`;
     const otpRes = await fetch(otpUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
     const otps = await otpRes.json();
-    const activeOtpRow = Array.isArray(otps) && otps.length > 0 ? otps[0] : null;
-
-    if (!activeOtpRow || !activeOtpRow.code_hash) {
+    if (!Array.isArray(otps) || otps.length === 0) {
       await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
-      return res.status(401).json({ error: 'code_expired_or_invalid', message: 'Verification code has expired or is invalid. Please request a new one.' });
+      return res.status(401).json({ error: 'code_expired_or_invalid', message: 'Verification code has expired. Please request a new one.' });
     }
 
     const candidateHmac = crypto.createHmac('sha256', sessionSecret);
     candidateHmac.update(`${normalizedEmail}:${tokenCode}`);
     const candidateHash = candidateHmac.digest('hex');
-
-    const expectedBuf = Buffer.from(activeOtpRow.code_hash, 'hex');
     const actualBuf = Buffer.from(candidateHash, 'hex');
-    const isMatch = expectedBuf.length === actualBuf.length && crypto.timingSafeEqual(expectedBuf, actualBuf);
 
-    if (!isMatch) {
+    const matchingOtp = otps.find(row => {
+      if (!row.code_hash) return false;
+      const expectedBuf = Buffer.from(row.code_hash, 'hex');
+      return expectedBuf.length === actualBuf.length && crypto.timingSafeEqual(expectedBuf, actualBuf);
+    });
+
+    if (!matchingOtp) {
       await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
-      return res.status(401).json({ error: 'invalid_code', message: 'Invalid verification code' });
+      return res.status(401).json({ error: 'invalid_code', message: 'Invalid verification code. Please check your latest email.' });
     }
 
-    await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(activeOtpRow.id)}`, {
+    // Mark all pending OTPs for this email as consumed
+    await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false`, {
       method: 'PATCH',
       headers: {
         'apikey': serviceKey,
