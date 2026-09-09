@@ -51,30 +51,30 @@ async function handleLoginRequest(req, res) {
   const clientIp = rawIp && rawIp !== 'unknown' && rawIp !== '127.0.0.1' && rawIp !== '::1' ? rawIp : null;
 
   try {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
 
-    const emailCheckUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&created_at=gte.${encodeURIComponent(oneHourAgo)}&select=id`;
+    const emailCheckUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&created_at=gte.${encodeURIComponent(fifteenMinsAgo)}&select=id`;
     const emailRes = await fetch(emailCheckUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
     const emailRows = await emailRes.json();
-    if (Array.isArray(emailRows) && emailRows.length >= 3) {
+    if (Array.isArray(emailRows) && emailRows.length >= 8) {
       return res.status(429).json({
         error: 'rate_limited_email',
-        message: 'Too many login requests for this email. Maximum 3 requests per hour.'
+        message: 'Too many login requests for this email. Please wait a few minutes before trying again.'
       });
     }
 
     if (clientIp) {
-      const ipCheckUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?ip_address=eq.${encodeURIComponent(clientIp)}&attempt_type=eq.request_otp&created_at=gte.${encodeURIComponent(oneHourAgo)}&select=id`;
+      const ipCheckUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?ip_address=eq.${encodeURIComponent(clientIp)}&attempt_type=eq.request_otp&created_at=gte.${encodeURIComponent(fifteenMinsAgo)}&select=id`;
       const ipRes = await fetch(ipCheckUrl, {
         headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
       });
       const ipRows = await ipRes.json();
-      if (Array.isArray(ipRows) && ipRows.length >= 10) {
+      if (Array.isArray(ipRows) && ipRows.length >= 20) {
         return res.status(429).json({
           error: 'rate_limited_ip',
-          message: 'Too many login requests from this IP. Maximum 10 requests per hour.'
+          message: 'Too many login requests from this IP. Please wait a few minutes before trying again.'
         });
       }
     }

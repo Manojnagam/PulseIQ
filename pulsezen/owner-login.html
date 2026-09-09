@@ -295,7 +295,7 @@
         var data = await res.json().catch(function() { return {}; });
 
         if (!res.ok) {
-          showMsg('email-msg', data.error || 'Failed to request login code. Please try again.', true);
+          showMsg('email-msg', data.message || data.error || 'Failed to request login code. Please try again.', true);
           btn.disabled = false;
           btn.textContent = 'Send 6-Digit Code →';
           return;
@@ -348,7 +348,7 @@
         var data = await res.json().catch(function() { return {}; });
 
         if (!res.ok) {
-          showMsg('otp-msg', data.error || 'Invalid or expired code. Please try again.', true);
+          showMsg('otp-msg', data.message || data.error || 'Invalid or expired code. Please try again.', true);
           btn.disabled = false;
           btn.textContent = 'Verify & Sign In →';
           return;
