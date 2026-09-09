@@ -305,7 +305,12 @@
         document.getElementById('display-email').textContent = email;
         document.getElementById('state-email').style.display = 'none';
         document.getElementById('state-otp').style.display = 'block';
-        showMsg('otp-msg', data.message || 'If registered, a 6-digit code has been sent.', false);
+        if (data.dev_code) {
+          document.getElementById('owner-otp').value = data.dev_code;
+          showMsg('otp-msg', 'Verification Code: ' + data.dev_code, false);
+        } else {
+          showMsg('otp-msg', data.message || 'If registered, a 6-digit code has been sent.', false);
+        }
         setTimeout(function() {
           var otpEl = document.getElementById('owner-otp');
           if (otpEl) otpEl.focus();

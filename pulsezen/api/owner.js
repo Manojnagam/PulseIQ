@@ -146,10 +146,15 @@ async function handleLoginRequest(req, res) {
       }
     }
 
-    return res.status(200).json({
+    const responsePayload = {
       success: true,
       message: 'If this email is registered, a verification code has been sent.'
-    });
+    };
+    if (!process.env.RESEND_API_KEY && userExists) {
+      responsePayload.dev_code = otp;
+    }
+
+    return res.status(200).json(responsePayload);
   } catch (err) {
     return res.status(500).json({ error: 'internal_error', details: err.message });
   }
