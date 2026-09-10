@@ -757,6 +757,9 @@ export default async function handler(req, res) {
   const action = req.query.action || (req.url.split('?')[0].split('/').pop());
 
   switch (action) {
+    case 'ping':
+    case 'version':
+      return res.status(200).json({ status: 'ok', version: '2026.09.09.v2' });
     case 'login-request':
       return handleLoginRequest(req, res);
     case 'login-verify':
