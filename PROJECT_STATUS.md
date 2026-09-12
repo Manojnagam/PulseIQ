@@ -200,6 +200,19 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
 - **Targeted Fix 2**: Updated `loadScript` in `auth.core.js` to match script base name (`app.min.js`) and aligned version parameter to `v=2.2.3`. Prevents redundant script tag injection when `app.min.js` is already present in DOM.
 - **Verification**: `node --check app.min.js` & `node --check deploy/app.min.js` passed with **0 errors**. `acorn.parse()` verified **100% clean parse across all JS bundles**.
 
+---
+
+## 🔍 PulseZen Owner Portal & Customer Transformations — Independent Audit (2026-09-12)
+
+- **Audit Status**: Complete (Read-Only Diagnostic Audit) 🛑
+- **Core Diagnosis**: Recent attempts failed primarily due to:
+  1. **Deployment Out-of-Sync**: Vercel live deployment at `pulsezen.in` does not run the latest `main` branch commits (empirically confirmed via `api/owner?action=ping` returning `404 Unknown action: ping` despite commit `8ed5a09`).
+  2. **Subdomain Routing & Legacy Map Blocker**: `pulsezen/api/router.js` routes `dharanis` and `bksprime` to static legacy files (`dharanis.html`, `bks-prime.html`) which have zero dynamic transformation fetching. `center.html` (which contains `loadTransformations()`) is never rendered for existing centers.
+  3. **Incomplete Lifecycle**: No "Edit" or "Delete" capabilities exist in code or UI; no owner account registration flow exists (manual SQL required in `owner_users`).
+  4. **Authentication Bypass Risk**: Dev code fallback returns plaintext OTP in HTTP response if Resend fails.
+- **Next Action Pointer**: Review Audit Findings with engineering review board / ChatGPT. Do not execute implementation until architecture and minimal repair plan phases are approved.
+
+
 
 
 
