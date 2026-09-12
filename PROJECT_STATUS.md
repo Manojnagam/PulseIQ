@@ -204,22 +204,40 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
 
 ## 🔍 PulseZen Owner Portal & Customer Transformations — Phase 0 Review & Audit (2026-09-12)
 
-- **Audit Status**: Phase 0 Authentication Patch Under Review (NOT DEPLOYED) 🛑
+- **Audit Status**: Phase 0 Authentication Security & Reliability Patch Completed (NOT DEPLOYED) 🛑
 - **Live Customer-Data Preservation Constraint**:
   - All existing customer records, photos, testimonials, centre profiles, owner accounts, and CRM business data are strictly preserved.
-  - Zero database mutations, migrations, backfills, cleanup scripts, or storage deletions permitted.
+  - Zero database writes, migrations, backfills, cleanup scripts, storage deletions, or test fixtures against production.
   - Normal authentication activity after an approved release writes only authentication records; it never touches customer/business data.
-- **Confirmed Findings**:
-  1. **Authentication Leak Contained in Patch**: Development fallback in `pulsezen/api/owner.js` leaked plaintext OTP in HTTP response when email failed, and logged OTP to server console. Patch removes cleartext logging, deletes `dev_code`, moves provider configuration check before user lookup (preventing enumeration), persists attempt before email dispatch, invalidates uncompleted attempts on provider failure, and enforces atomic conditional consumption (`PATCH ...?consumed=eq.false RETURNING *`) to prevent concurrent OTP reuse.
-  2. **Deployment Mismatch Confirmed**: Production `pulsezen.in` returns `{"error":"Unknown action: ping"}`, confirming the live deployment is running an older lambda bundle than repository `main`.
-  3. **Isolation Confirmed**: `pulsezen` is a separate Vercel project (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`) with rewrite configuration explicitly excluding `app.pulsezen.in`. Deployments to `pulsezen` do not touch PulseIQ CRM.
-  4. **Publication Invariant Verified**: Public exposure strictly requires `status = 'published'` AND `consent_given = true`.
-- **Unverified Findings**:
-  1. **Exact Live Production Commit**: Cannot be definitively established from client-accessible HTTP headers (hypothesized to predate `8ed5a09`).
-  2. **Production Vercel Environment Variables**: Presence and values of `RESEND_API_KEY`, `GROQ_API_KEY`, and `OWNER_SESSION_SECRET` in live Vercel dashboard cannot be directly inspected from client requests.
-- **Exact Pending Release Decision**:
-  - Review and approval of the isolated Phase 0 authentication patch before any deployment command is executed.
-  - No public showcase, edit/delete, or onboarding feature work permitted until Phase 0 is reviewed and approved.
+- **Corrected & Confirmed Findings**:
+  1. **Delivery Pending Gate**: `handleLoginRequest` persists pending OTP attempts with `invalidated: true` before email dispatch, guaranteeing the code is never verifiable while delivery is pending. Only upon confirmed provider HTTP 200 OK is the record activated via `PATCH ...?id=eq.${attemptId}&invalidated=eq.true` setting `{ invalidated: false, success: true }`, with explicit HTTP status and `rows.length === 1` checks.
+  2. **Fail-Closed Provider Failure & Timeout**: If the email provider times out, throws, or returns non-200, the attempt remains `invalidated: true` (with best-effort `consumed: true` mark) and returns HTTP 502 `delivery_failed`. Even if the provider accepted the message before timing out, the unactivated code cannot be verified.
+  3. **Strict Atomic Conditional Consumption**: `handleLoginVerify` re-evaluates all eligibility criteria directly at the database UPDATE step (`PATCH ...?id=eq.${matchingOtp.id}&consumed=eq.false&invalidated=eq.false&expires_at=gt.${updateTimeIso}` with `Prefer: return=representation`). Requires HTTP 200 and exactly 1 returned row before granting a session token. Concurrency collisions, late invalidations, or mid-flight expiries between SELECT and PATCH immediately fail closed with HTTP 401.
+  4. **SQL NULL Semantics Correction**: Removed inaccurate "null-safe" claims regarding `invalidated=not.eq.true`. Under SQL three-valued logic, `NULL != TRUE` evaluates to `UNKNOWN`, which is falsy in a `WHERE` filter and excludes NULL rows. The codebase now explicitly uses `invalidated=eq.false` aligning with the verified schema definition (`invalidated boolean NOT NULL DEFAULT false`).
+  5. **Zero OTP Disclosure**: Plaintext OTP logging removed; `dev_code` response property deleted; client-side `dev_code` handling removed from `pulsezen/owner-login.html`. Response body and headers verified free of sensitive OTP disclosures across all flows.
+- **Deployment & Production Metadata Status (Unverified)**:
+  1. **Production Source Commit**: `UNVERIFIED`. Live `pulsezen.in` returns HTTP 404 for `action=ping`, confirming the production deployment runs an older lambda bundle than repository `main`, but runtime headers do not reveal the exact Git commit SHA.
+  2. **Git Auto-Deployment Status**: `UNVERIFIED`. Cannot verify whether pushes to repository `main` trigger automatic Vercel production deployments without Vercel project webhook settings.
+  3. **Cross-Project Deployment Isolation**: `UNVERIFIED` at infrastructure level. Local `pulsezen/.vercel/project.json` binds to project `pulsezen` (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`) and `pulsezen/vercel.json` excludes `app.pulsezen.in`, but authoritative Vercel dashboard project mappings remain unverified.
+  4. **Live PostgreSQL Schema**: `UNVERIFIED` against live database. Intended schema is proven by `owner_portal_migration.sql`, but direct read-only inspection of live `information_schema.columns` on Supabase requires authorized database credentials not present in the local environment.
+  5. **Production Release Scope**: Cannot claim a two-file production release without an authoritative diff against the live deployed baseline.
+- **Automated Regression & Security Test Coverage**:
+  - Test Suite: `pulsezen/test/auth.test.mjs` (8/8 tests passing)
+  - Deployment exclusion: `pulsezen/.vercelignore` configured to exclude `test/` and `*.test.*`.
+  - Scenarios covered:
+    - Test 1: Provider timeout after simulated acceptance fails closed (HTTP 502) and leaves OTP completely ineligible.
+    - Test 2: Failure to persist delivery activation fails closed with HTTP 500 and leaves OTP ineligible.
+    - Test 3: Failure to invalidate pending attempt on provider failure still fails closed via delivery pending gate.
+    - Test 4: SQL NULL semantics verification (proves `not.eq.true` excludes NULL in SQL; validates explicit `invalidated=eq.false`).
+    - Test 5: Concurrent single-use verification under 10-way race conditions (exactly 1 succeeds, 9 receive HTTP 401).
+    - Test 5b: Mid-flight expiry between lookup and consumption rejected (HTTP 401).
+    - Test 5c: Mid-flight invalidation between lookup and consumption rejected (HTTP 401).
+    - Test 6: Zero OTP disclosure across all responses, headers, and server logs.
+- **Remaining Technical Blockers Before Deployment**:
+  1. Read-only verification of live Supabase `owner_login_attempts` schema metadata using authorized credentials.
+  2. Access to authoritative Vercel project configuration to confirm deployment baseline, Git trigger settings, and environment variables (`RESEND_API_KEY`, `OWNER_SESSION_SECRET`).
+  3. Formal Phase 0 deployment review and authorization. Zero feature work (showcase, edit/delete, onboarding) will proceed until Phase 0 is resolved.
+
 
 
 

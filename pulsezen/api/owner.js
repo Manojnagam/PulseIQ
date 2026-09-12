@@ -146,7 +146,8 @@ async function handleLoginRequest(req, res) {
     const codeHash = hmac.digest('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    // Step 1: Persist attempt record BEFORE dispatching email. If persistence fails, abort before email is sent
+    // Step 1: Persist pending attempt record with invalidated=true (DELIVERY PENDING GATE).
+    // The OTP is completely ineligible for verification while delivery is pending.
     const attemptInsertRes = await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
       method: 'POST',
       headers: {
@@ -162,18 +163,22 @@ async function handleLoginRequest(req, res) {
         code_hash: codeHash,
         success: false,
         consumed: false,
-        invalidated: false,
+        invalidated: true, // Ineligible until delivery confirmation
         expires_at: expiresAt
       })
     });
 
     if (!attemptInsertRes.ok) {
-      console.error('[PulseZen Auth] Failed to persist OTP attempt; aborting email dispatch');
+      console.error('[PulseZen Auth] Failed to persist pending OTP attempt; aborting email dispatch');
       return res.status(500).json({ error: 'internal_error', message: 'Unable to process login request. Please try again.' });
     }
 
     const insertedRows = await attemptInsertRes.json().catch(() => []);
-    const attemptId = insertedRows && insertedRows[0] ? insertedRows[0].id : null;
+    if (!Array.isArray(insertedRows) || insertedRows.length !== 1) {
+      console.error('[PulseZen Auth] Unexpected insert response structure; aborting email dispatch');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process login request. Please try again.' });
+    }
+    const attemptId = insertedRows[0].id;
 
     // Step 2: Deliver email via provider
     const emailBody = {
@@ -223,38 +228,13 @@ async function handleLoginRequest(req, res) {
         emailSent = true;
       }
     } catch (e) {
-      console.error('[PulseZen Auth] Failed to deliver verification code via email provider');
+      console.error('[PulseZen Auth] Failed to deliver verification code via email provider (timeout/error)');
     }
 
-    // Step 3: If email delivery failed, invalidate the persisted attempt and fail closed
+    // Step 3: Provider failure or timeout: fail closed.
+    // The attempt remains invalidated=true in the database.
     if (!emailSent) {
-      if (attemptId) {
-        try {
-          await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(attemptId)}`, {
-            method: 'PATCH',
-            headers: {
-              'apikey': serviceKey,
-              'Authorization': `Bearer ${serviceKey}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              consumed: true,
-              invalidated: true,
-              success: false
-            })
-          });
-        } catch (patchErr) {
-          console.error('[PulseZen Auth] Failed to invalidate un-delivered attempt in persistence store');
-        }
-      }
-      return res.status(502).json({
-        error: 'delivery_failed',
-        message: 'Unable to deliver verification code. Please try again later.'
-      });
-    }
-
-    // Step 4: Email delivery succeeded; mark attempt as successful
-    if (attemptId) {
+      // Best-effort explicitly consume the failed attempt as well
       await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(attemptId)}`, {
         method: 'PATCH',
         headers: {
@@ -262,8 +242,40 @@ async function handleLoginRequest(req, res) {
           'Authorization': `Bearer ${serviceKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ success: true })
+        body: JSON.stringify({ consumed: true, invalidated: true, success: false })
       }).catch(() => {});
+
+      return res.status(502).json({
+        error: 'delivery_failed',
+        message: 'Unable to deliver verification code. Please try again later.'
+      });
+    }
+
+    // Step 4: Provider succeeded: ACTIVATE the OTP attempt by setting invalidated=false.
+    // Must verify HTTP response and exact row count.
+    const activateRes = await fetch(
+      `${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(attemptId)}&invalidated=eq.true`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ invalidated: false, success: true })
+      }
+    );
+
+    if (!activateRes.ok) {
+      console.error('[PulseZen Auth] Failed to persist activation for delivered OTP; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to activate verification code. Please try again.' });
+    }
+
+    const activatedRows = await activateRes.json().catch(() => []);
+    if (!Array.isArray(activatedRows) || activatedRows.length !== 1) {
+      console.error('[PulseZen Auth] Activation row count mismatch; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to activate verification code. Please try again.' });
     }
 
     return res.status(200).json({
@@ -324,8 +336,8 @@ async function handleLoginVerify(req, res) {
     }
 
     const nowIso = new Date().toISOString();
-    // Use invalidated=not.eq.true for NULL safety across legacy rows
-    const otpUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false&invalidated=not.eq.true&expires_at=gt.${encodeURIComponent(nowIso)}&order=created_at.desc&limit=5`;
+    // Strictly enforce active eligibility: unconsumed, non-invalidated (explicitly false for verified NOT NULL schema), unexpired
+    const otpUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false&invalidated=eq.false&expires_at=gt.${encodeURIComponent(nowIso)}&order=created_at.desc&limit=5`;
     const otpRes = await fetch(otpUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
@@ -352,9 +364,14 @@ async function handleLoginVerify(req, res) {
     }
 
     // Atomic conditional consumption under concurrency:
-    // Only the request that successfully updates consumed from false -> true RETURNING * is granted the session.
+    // Rechecks ALL applicable eligibility conditions at the UPDATE step:
+    // 1. matching id
+    // 2. consumed = false (single-use lock)
+    // 3. invalidated = false (not invalidated during/after lookup)
+    // 4. expires_at > updateTimeIso (not expired between lookup and consumption)
+    const updateTimeIso = new Date().toISOString();
     const consumeRes = await fetch(
-      `${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(matchingOtp.id)}&consumed=eq.false`,
+      `${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(matchingOtp.id)}&consumed=eq.false&invalidated=eq.false&expires_at=gt.${encodeURIComponent(updateTimeIso)}`,
       {
         method: 'PATCH',
         headers: {
@@ -373,13 +390,13 @@ async function handleLoginVerify(req, res) {
     }
 
     const consumedRows = await consumeRes.json().catch(() => []);
-    if (!Array.isArray(consumedRows) || consumedRows.length === 0) {
-      // Concurrency collision: another request already consumed this OTP in a race
+    if (!Array.isArray(consumedRows) || consumedRows.length !== 1) {
+      // Concurrency collision, late invalidation, or expiry between lookup and consumption
       await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
       return res.status(401).json({ error: 'code_expired_or_invalid', message: 'Verification code has already been used or expired.' });
     }
 
-    // Cleanup: Invalidate any remaining active OTPs for this email in the background
+    // Invalidate any remaining active OTPs for this email in the background
     fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false`, {
       method: 'PATCH',
       headers: {
