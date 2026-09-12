@@ -79,6 +79,34 @@ async function handleLoginRequest(req, res) {
       }
     }
 
+    // Provider configuration check: fail closed early before user lookup to prevent account enumeration
+    const resendKey = process.env.RESEND_API_KEY;
+    if (!resendKey) {
+      console.error('[PulseZen Auth] RESEND_API_KEY is not configured; failing closed');
+      await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
+        method: 'POST',
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          ip_address: clientIp,
+          attempt_type: 'request_otp',
+          code_hash: null,
+          success: false,
+          consumed: true,
+          invalidated: true,
+          expires_at: null
+        })
+      });
+      return res.status(503).json({
+        error: 'service_unavailable',
+        message: 'Email delivery service is currently unavailable. Please contact support.'
+      });
+    }
+
     const lookupUrl = `${supabaseUrl}/rest/v1/owner_users?email=eq.${encodeURIComponent(normalizedEmail)}&status=eq.active&select=id,center_id`;
     const lookupRes = await fetch(lookupUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
@@ -112,41 +140,42 @@ async function handleLoginRequest(req, res) {
       });
     }
 
-    // Fail closed if email delivery provider is not configured
-    const resendKey = process.env.RESEND_API_KEY;
-    if (!resendKey) {
-      console.error('[PulseZen Auth] RESEND_API_KEY is not configured; failing closed');
-      await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
-        method: 'POST',
-        headers: {
-          'apikey': serviceKey,
-          'Authorization': `Bearer ${serviceKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: normalizedEmail,
-          ip_address: clientIp,
-          attempt_type: 'request_otp',
-          code_hash: null,
-          success: false,
-          consumed: true,
-          invalidated: true,
-          expires_at: null
-        })
-      });
-      return res.status(503).json({
-        error: 'service_unavailable',
-        message: 'Email delivery service is currently unavailable. Please contact support.'
-      });
-    }
-
     const otp = crypto.randomInt(100000, 1000000).toString();
     const hmac = crypto.createHmac('sha256', sessionSecret);
     hmac.update(`${normalizedEmail}:${otp}`);
     const codeHash = hmac.digest('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    // Deliver email via provider before creating an active OTP record
+    // Step 1: Persist attempt record BEFORE dispatching email. If persistence fails, abort before email is sent
+    const attemptInsertRes = await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
+      method: 'POST',
+      headers: {
+        'apikey': serviceKey,
+        'Authorization': `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        email: normalizedEmail,
+        ip_address: clientIp,
+        attempt_type: 'request_otp',
+        code_hash: codeHash,
+        success: false,
+        consumed: false,
+        invalidated: false,
+        expires_at: expiresAt
+      })
+    });
+
+    if (!attemptInsertRes.ok) {
+      console.error('[PulseZen Auth] Failed to persist OTP attempt; aborting email dispatch');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process login request. Please try again.' });
+    }
+
+    const insertedRows = await attemptInsertRes.json().catch(() => []);
+    const attemptId = insertedRows && insertedRows[0] ? insertedRows[0].id : null;
+
+    // Step 2: Deliver email via provider
     const emailBody = {
       to: [normalizedEmail],
       subject: `Your PulseZen Portal Login Code: ${otp}`,
@@ -177,7 +206,6 @@ async function handleLoginRequest(req, res) {
       });
 
       if (!emailRes.ok) {
-        // Fallback to onboarding domain if custom domain is unverified
         emailRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -198,51 +226,45 @@ async function handleLoginRequest(req, res) {
       console.error('[PulseZen Auth] Failed to deliver verification code via email provider');
     }
 
-    // Fail closed if email delivery failed: do not leave a usable OTP in the database
+    // Step 3: If email delivery failed, invalidate the persisted attempt and fail closed
     if (!emailSent) {
-      await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
-        method: 'POST',
-        headers: {
-          'apikey': serviceKey,
-          'Authorization': `Bearer ${serviceKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: normalizedEmail,
-          ip_address: clientIp,
-          attempt_type: 'request_otp',
-          code_hash: null,
-          success: false,
-          consumed: true,
-          invalidated: true,
-          expires_at: null
-        })
-      });
+      if (attemptId) {
+        try {
+          await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(attemptId)}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': serviceKey,
+              'Authorization': `Bearer ${serviceKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              consumed: true,
+              invalidated: true,
+              success: false
+            })
+          });
+        } catch (patchErr) {
+          console.error('[PulseZen Auth] Failed to invalidate un-delivered attempt in persistence store');
+        }
+      }
       return res.status(502).json({
         error: 'delivery_failed',
         message: 'Unable to deliver verification code. Please try again later.'
       });
     }
 
-    // Email delivery succeeded: record active OTP
-    await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
-      method: 'POST',
-      headers: {
-        'apikey': serviceKey,
-        'Authorization': `Bearer ${serviceKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: normalizedEmail,
-        ip_address: clientIp,
-        attempt_type: 'request_otp',
-        code_hash: codeHash,
-        success: true,
-        consumed: false,
-        invalidated: false,
-        expires_at: expiresAt
-      })
-    });
+    // Step 4: Email delivery succeeded; mark attempt as successful
+    if (attemptId) {
+      await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(attemptId)}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ success: true })
+      }).catch(() => {});
+    }
 
     return res.status(200).json({
       success: true,
@@ -302,7 +324,8 @@ async function handleLoginVerify(req, res) {
     }
 
     const nowIso = new Date().toISOString();
-    const otpUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false&invalidated=eq.false&expires_at=gt.${encodeURIComponent(nowIso)}&order=created_at.desc&limit=5`;
+    // Use invalidated=not.eq.true for NULL safety across legacy rows
+    const otpUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false&invalidated=not.eq.true&expires_at=gt.${encodeURIComponent(nowIso)}&order=created_at.desc&limit=5`;
     const otpRes = await fetch(otpUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
@@ -328,16 +351,44 @@ async function handleLoginVerify(req, res) {
       return res.status(401).json({ error: 'invalid_code', message: 'Invalid verification code. Please check your latest email.' });
     }
 
-    // Mark all pending OTPs for this email as consumed
-    await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false`, {
+    // Atomic conditional consumption under concurrency:
+    // Only the request that successfully updates consumed from false -> true RETURNING * is granted the session.
+    const consumeRes = await fetch(
+      `${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(matchingOtp.id)}&consumed=eq.false`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ consumed: true })
+      }
+    );
+
+    if (!consumeRes.ok) {
+      await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
+      return res.status(500).json({ error: 'internal_error', message: 'Failed to record session verification. Please try again.' });
+    }
+
+    const consumedRows = await consumeRes.json().catch(() => []);
+    if (!Array.isArray(consumedRows) || consumedRows.length === 0) {
+      // Concurrency collision: another request already consumed this OTP in a race
+      await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
+      return res.status(401).json({ error: 'code_expired_or_invalid', message: 'Verification code has already been used or expired.' });
+    }
+
+    // Cleanup: Invalidate any remaining active OTPs for this email in the background
+    fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false`, {
       method: 'PATCH',
       headers: {
         'apikey': serviceKey,
         'Authorization': `Bearer ${serviceKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ consumed: true })
-    });
+      body: JSON.stringify({ consumed: true, invalidated: true })
+    }).catch(() => {});
 
     await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, true);
 

@@ -202,26 +202,24 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
 
 ---
 
-## 🔍 PulseZen Owner Portal & Customer Transformations — Corrected Engineering Audit (2026-09-12)
+## 🔍 PulseZen Owner Portal & Customer Transformations — Phase 0 Review & Audit (2026-09-12)
 
-- **Audit Status**: Phase 0 Authentication Patch Prepared (Not Production Deployed) 🛑
+- **Audit Status**: Phase 0 Authentication Patch Under Review (NOT DEPLOYED) 🛑
+- **Live Customer-Data Preservation Constraint**:
+  - All existing customer records, photos, testimonials, centre profiles, owner accounts, and CRM business data are strictly preserved.
+  - Zero database mutations, migrations, backfills, cleanup scripts, or storage deletions permitted.
+  - Normal authentication activity after an approved release writes only authentication records; it never touches customer/business data.
 - **Confirmed Findings**:
-  1. **Authentication Leak Contained Locally**: The `dev_code` fallback in `pulsezen/api/owner.js` exposed plaintext OTP in HTTP responses when email failed, and logged OTP to server console. Patched locally to fail closed (502/503), invalidate uncompleted attempts, remove logs, and delete client handling in `owner-login.html`.
-  2. **Deployment Mismatch**: Production returns `{"error":"Unknown action: ping"}` on `/api/owner?action=ping`, confirming the live deployment is running an older lambda bundle than repository `main`.
-  3. **Static Subdomain Interception**: In `pulsezen/api/router.js`, active centers (`dharanis`, `bksprime`) serve static files that do not fetch from `/api/public/transformations`. Dynamic rendering in `center.html` is never invoked for them.
-  4. **Incomplete Lifecycle**: No API endpoints or UI exist for editing or deleting transformations once created.
-  5. **Publication Invariant Verified**: Separate consent and publish calls enforce an atomic safety invariant: public exposure strictly requires `status = 'published'` AND `consent_given = true`. Consent recording before publish is an intentional staged gate.
-- **Identified Hypotheses (Requiring Direct Vercel Access to Verify)**:
-  - Exact commit currently active in production (hypothesized to be `bdb8075` or earlier based on API response matching).
-  - Vercel dashboard environment variable configuration for `RESEND_API_KEY` and `GROQ_API_KEY`.
-- **Architectural & Compliance Records**:
-  - **Draft Recovery**: Client-side browser `sessionStorage` is not a complete solution; multi-device draft recovery requires server-side draft persistence and retrieval.
-  - **Testimonial Accuracy & Attribution**: Static keyword filtering alone (`findBannedTerms`) cannot validate customer approval or testimonial factual accuracy; forcing first-person "I" quotes from bullet notes creates unapproved attribution risk.
-- **Concrete Authentication & Deployment Risks**:
-  - Email provider outages will block owner sign-ins when failing closed (acceptable trade-off against credential bypass).
-  - Redeploying Vercel without verified `RESEND_API_KEY` in project environment variables will cause all owner OTP requests to return 503.
-  - Vercel Hobby plan function count limits may reject builds if multiple serverless lambdas are reintroduced.
-- **Next Action Pointer**: Await explicit authorization before deploying Phase 0 authentication patch. Do not implement public showcase or feature work until Phase 0 is reviewed and approved.
+  1. **Authentication Leak Contained in Patch**: Development fallback in `pulsezen/api/owner.js` leaked plaintext OTP in HTTP response when email failed, and logged OTP to server console. Patch removes cleartext logging, deletes `dev_code`, moves provider configuration check before user lookup (preventing enumeration), persists attempt before email dispatch, invalidates uncompleted attempts on provider failure, and enforces atomic conditional consumption (`PATCH ...?consumed=eq.false RETURNING *`) to prevent concurrent OTP reuse.
+  2. **Deployment Mismatch Confirmed**: Production `pulsezen.in` returns `{"error":"Unknown action: ping"}`, confirming the live deployment is running an older lambda bundle than repository `main`.
+  3. **Isolation Confirmed**: `pulsezen` is a separate Vercel project (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`) with rewrite configuration explicitly excluding `app.pulsezen.in`. Deployments to `pulsezen` do not touch PulseIQ CRM.
+  4. **Publication Invariant Verified**: Public exposure strictly requires `status = 'published'` AND `consent_given = true`.
+- **Unverified Findings**:
+  1. **Exact Live Production Commit**: Cannot be definitively established from client-accessible HTTP headers (hypothesized to predate `8ed5a09`).
+  2. **Production Vercel Environment Variables**: Presence and values of `RESEND_API_KEY`, `GROQ_API_KEY`, and `OWNER_SESSION_SECRET` in live Vercel dashboard cannot be directly inspected from client requests.
+- **Exact Pending Release Decision**:
+  - Review and approval of the isolated Phase 0 authentication patch before any deployment command is executed.
+  - No public showcase, edit/delete, or onboarding feature work permitted until Phase 0 is reviewed and approved.
 
 
 
