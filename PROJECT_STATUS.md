@@ -250,7 +250,12 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
        - Prunes `owner_login_attempts` records older than 24 hours (`created_at < now() - 24h`).
      - **Constraint**: Must NOT be executed, modified, disabled, or rescheduled during this task.
   4. **Cross-Project Deployment Isolation**: `UNVERIFIED` at infrastructure level. Local `pulsezen/.vercel/project.json` binds to project `pulsezen` (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`) and `pulsezen/vercel.json` excludes `app.pulsezen.in`, but full production domain bindings (including the 2 domains hidden under "+2") remain unverified.
-  5. **Production Release Scope & Baseline Scenarios**: All baseline comparisons remain purely **hypothetical** until the deployment-source baseline is established from “View code source”. Deploying the current repository branch `main` would bundle earlier unreleased code. A minimal release must apply **authentication-only changes against the verified production baseline**; the entire current `pulsezen/api/owner.js` must NOT be copied into an older baseline, as it contains unrelated and unapproved handlers (`transformation`, `summarize`, `publish`, etc.).
+  5. **Deployment-Source Baseline Established (4 Files)**:
+     - The four user-supplied files copied from Vercel deployment `pulsezen-2j7js36nw-manojnagam1551-6558s-projects.vercel.app` (`api/owner.js`, `api/_session.js`, `api/_owner-helper.js`, `owner-login.html`) establish the **deployment-source baseline**.
+     - **Provenance & Verification**: Comparing the raw Git tree at commit `b1eb857bbce2fb4ab4917d17976893e8e0403cc7` (created Sep 9) against the supplied code confirms an exact match across all four files. This avoids chat formatting artifacts and markdown link mangling.
+     - **Preservation of Non-Authentication Handlers**: The candidate retains 100% of the deployed non-authentication handlers from `owner.js` (`handleList`, `handleUploadUrl`, `handleCreateTransformation`, `handleSummarize`, `handleSummarySelect`, `handleConsent`, `handlePublish`, `handleUnpublish`). Specifically, the deployed upload URL generation logic is preserved unmodified (`${centerId}/${crypto.randomUUID()}.${ext}`); newer upload-path normalization was strictly excluded.
+     - **Separate UI Observation**: `owner-login.html` function `resendCode()` currently displays `New code sent! Please check your inbox.` unconditionally without checking `res.ok`. In accordance with instructions, this is recorded as an existing UI behavior observation and is **NOT** expanded or altered in this authentication-only release.
+     - **Complete Deployment Preservation Boundary**: Only 4 files have been verified against the deployment source. Whole-deployment baseline verification remains open: any eventual deployment must preserve all other deployed static assets, images, `center.html`, `index.html`, and `api/public.js`.
 - **Automated Regression & Security Test Coverage**:
   - Test Suite: `pulsezen/test/auth.test.mjs` (25/25 tests passing across 5 suites, mocked PostgREST DB, NOT live PostgreSQL integration tests).
   - Deployment exclusion: `pulsezen/.vercelignore` configured to exclude `test/` and `*.test.*`.
@@ -261,11 +266,10 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
     - Suite 4 (Zero Disclosure, Maintenance & Secret Handling): Zero OTP disclosure in response bodies, headers, or server console logs; emergency maintenance mode toggle via `OWNER_AUTH_MAINTENANCE=true` (503); missing session secret rejection for signing, verification, and handler entry without literal fallback; signing-key byte preservation for nonblank keys with surrounding whitespace.
     - Suite 5 (Database Failure & Mandatory Audit Resilience): Database error on email rate limits (500), database error on IP rate limits (500), database error on owner user lookup (500, not 200 unknown user), database error on verify failure count (500), database error on active OTP lookup (500), mandatory audit persistence failure on successful login prevents session issuance (500), failed-verification persistence error on wrong code fails closed with generic service error (500) and issues no cookie.
 - **Remaining Production Release Checks (Pending Evidence)**:
-  1. Deployed code source from Vercel “View code source” for `pulsezen-2j7js36nw-manojnagam1551-6558s-projects.vercel.app` (specifically `api/owner.js`, `api/_session.js`, and login UI).
-  2. Project root setting (`pulsezen` vs `.`) and Git deployment settings in Vercel project configuration.
-  3. Full domain bindings assigned to the project (specifically revealing the 2 domains hidden under “+2” to confirm complete isolation from `app.pulsezen.in`).
-  4. Required environment variable presence and **Production** scope (names only: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `OWNER_SESSION_SECRET`, `CRON_SECRET` — no values).
-  5. Authentication-only release diff against the verified deployment-source baseline.
+  1. Project root setting (`pulsezen` vs `.`) and Git deployment settings in Vercel project configuration.
+  2. Full domain bindings assigned to the project (specifically revealing the 2 domains hidden under “+2” to confirm complete isolation from `app.pulsezen.in`).
+  3. Required environment variable presence and **Production** scope (names only: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `OWNER_SESSION_SECRET`, `CRON_SECRET` — no values).
+  4. Final release review and deployment authorization.
 
 
 
