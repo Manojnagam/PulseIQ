@@ -35,6 +35,13 @@ function parseOptionalFloat(val) {
 async function handleLoginRequest(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  if (process.env.OWNER_AUTH_MAINTENANCE === 'true') {
+    return res.status(503).json({
+      error: 'service_maintenance',
+      message: 'Owner portal authentication is temporarily undergoing maintenance. Please check back shortly.'
+    });
+  }
+
   const sessionSecret = getSessionSecret();
   const { email } = req.body || {};
   if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -252,9 +259,11 @@ async function handleLoginRequest(req, res) {
     }
 
     // Step 4: Provider succeeded: ACTIVATE the OTP attempt by setting invalidated=false.
-    // Must verify HTTP response and exact row count.
+    // Guard against race with background revocation or delayed delivery:
+    // Requires: matching id, invalidated=true (pending), consumed=false (unrevoked), success=false, and unexpired.
+    const activateTimeIso = new Date().toISOString();
     const activateRes = await fetch(
-      `${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(attemptId)}&invalidated=eq.true`,
+      `${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(attemptId)}&invalidated=eq.true&consumed=eq.false&success=eq.false&expires_at=gt.${encodeURIComponent(activateTimeIso)}`,
       {
         method: 'PATCH',
         headers: {
@@ -292,6 +301,13 @@ async function handleLoginRequest(req, res) {
 // -----------------------------------------------------------------------------
 async function handleLoginVerify(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  if (process.env.OWNER_AUTH_MAINTENANCE === 'true') {
+    return res.status(503).json({
+      error: 'service_maintenance',
+      message: 'Owner portal authentication is temporarily undergoing maintenance. Please check back shortly.'
+    });
+  }
 
   const sessionSecret = getSessionSecret();
   const { email, code } = req.body || {};

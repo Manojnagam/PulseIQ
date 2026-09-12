@@ -204,39 +204,42 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
 
 ## 🔍 PulseZen Owner Portal & Customer Transformations — Phase 0 Review & Audit (2026-09-12)
 
-- **Audit Status**: Phase 0 Authentication Security & Reliability Patch Completed (NOT DEPLOYED) 🛑
+- **Audit Status**: Under review—not deployed 🛑
 - **Live Customer-Data Preservation Constraint**:
   - All existing customer records, photos, testimonials, centre profiles, owner accounts, and CRM business data are strictly preserved.
   - Zero database writes, migrations, backfills, cleanup scripts, storage deletions, or test fixtures against production.
   - Normal authentication activity after an approved release writes only authentication records; it never touches customer/business data.
 - **Corrected & Confirmed Findings**:
-  1. **Delivery Pending Gate**: `handleLoginRequest` persists pending OTP attempts with `invalidated: true` before email dispatch, guaranteeing the code is never verifiable while delivery is pending. Only upon confirmed provider HTTP 200 OK is the record activated via `PATCH ...?id=eq.${attemptId}&invalidated=eq.true` setting `{ invalidated: false, success: true }`, with explicit HTTP status and `rows.length === 1` checks.
-  2. **Fail-Closed Provider Failure & Timeout**: If the email provider times out, throws, or returns non-200, the attempt remains `invalidated: true` (with best-effort `consumed: true` mark) and returns HTTP 502 `delivery_failed`. Even if the provider accepted the message before timing out, the unactivated code cannot be verified.
-  3. **Strict Atomic Conditional Consumption**: `handleLoginVerify` re-evaluates all eligibility criteria directly at the database UPDATE step (`PATCH ...?id=eq.${matchingOtp.id}&consumed=eq.false&invalidated=eq.false&expires_at=gt.${updateTimeIso}` with `Prefer: return=representation`). Requires HTTP 200 and exactly 1 returned row before granting a session token. Concurrency collisions, late invalidations, or mid-flight expiries between SELECT and PATCH immediately fail closed with HTTP 401.
-  4. **SQL NULL Semantics Correction**: Removed inaccurate "null-safe" claims regarding `invalidated=not.eq.true`. Under SQL three-valued logic, `NULL != TRUE` evaluates to `UNKNOWN`, which is falsy in a `WHERE` filter and excludes NULL rows. The codebase now explicitly uses `invalidated=eq.false` aligning with the verified schema definition (`invalidated boolean NOT NULL DEFAULT false`).
-  5. **Zero OTP Disclosure**: Plaintext OTP logging removed; `dev_code` response property deleted; client-side `dev_code` handling removed from `pulsezen/owner-login.html`. Response body and headers verified free of sensitive OTP disclosures across all flows.
-- **Deployment & Production Metadata Status (Unverified)**:
-  1. **Production Source Commit**: `UNVERIFIED`. Live `pulsezen.in` returns HTTP 404 for `action=ping`, confirming the production deployment runs an older lambda bundle than repository `main`, but runtime headers do not reveal the exact Git commit SHA.
+  1. **Delivery Pending Gate**: `handleLoginRequest` persists pending OTP attempts with `invalidated: true` before email dispatch, guaranteeing the code is never verifiable while delivery is pending. Only upon confirmed provider HTTP 200 OK is the record activated via `PATCH ...?id=eq.${attemptId}&invalidated=eq.true&consumed=eq.false&success=eq.false&expires_at=gt.${activateTimeIso}` setting `{ invalidated: false, success: true }`, with explicit HTTP status and `rows.length === 1` checks.
+  2. **Check Activation Against Revocation**: Guarded the activation `UPDATE` against mid-flight revocation and delayed provider delivery race conditions by requiring `consumed=eq.false`, `success=eq.false`, and unexpired `expires_at`. If background cleanup or user consumption revoked the pending attempt while provider delivery was delayed, activation fails closed (0 rows matched) and leaves the row revoked, preventing reactivation.
+  3. **Ambiguous Database Outcome Tested & Documented**: If the database commits the activation write (`invalidated: false, success: true`) but the HTTP response to `handleLoginRequest` is lost over the network, `login-request` returns HTTP 500 (never directly issuing a session). When the user subsequently verifies with the delivered code, normal eligibility and atomic consumption checks govern session issuance.
+  4. **Strict Atomic Conditional Consumption**: `handleLoginVerify` re-evaluates all eligibility criteria directly at the database UPDATE step (`PATCH ...?id=eq.${matchingOtp.id}&consumed=eq.false&invalidated=eq.false&expires_at=gt.${updateTimeIso}` with `Prefer: return=representation`). Requires HTTP 200 and exactly 1 returned row before granting a session token. Concurrency collisions, late invalidations, or mid-flight expiries between SELECT and PATCH immediately fail closed with HTTP 401.
+  5. **SQL NULL Semantics Correction**: Removed inaccurate "null-safe" claims regarding `invalidated=not.eq.true`. Under SQL three-valued logic, `NULL != TRUE` evaluates to `UNKNOWN`, which is falsy in a `WHERE` filter and excludes NULL rows. The codebase now explicitly uses `invalidated=eq.false` aligning with the verified schema definition (`invalidated boolean NOT NULL DEFAULT false`).
+  6. **Zero OTP Disclosure**: Plaintext OTP logging removed; `dev_code` response property deleted; client-side `dev_code` handling removed from `pulsezen/owner-login.html`. Response body and headers verified free of sensitive OTP disclosures across all flows.
+  7. **Owner Auth Maintenance Mechanism**: Integrated narrow-scope emergency maintenance toggle via `process.env.OWNER_AUTH_MAINTENANCE === 'true'` in `handleLoginRequest` and `handleLoginVerify` (returning HTTP 503 `service_maintenance`). Does not revoke existing session tokens, does not alter shared email credentials, and does not affect public pages or CRM operations.
+- **Deployment & Production Metadata Status (Explicitly Unverified)**:
+  1. **Production Source Commit**: `UNVERIFIED`. Live `pulsezen.in` returns HTTP 404 for `action=ping`, which establishes a runtime mismatch only, not proof of an older deployment or exact commit. Client-accessible HTTP headers do not reveal the active Git commit SHA.
   2. **Git Auto-Deployment Status**: `UNVERIFIED`. Cannot verify whether pushes to repository `main` trigger automatic Vercel production deployments without Vercel project webhook settings.
   3. **Cross-Project Deployment Isolation**: `UNVERIFIED` at infrastructure level. Local `pulsezen/.vercel/project.json` binds to project `pulsezen` (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`) and `pulsezen/vercel.json` excludes `app.pulsezen.in`, but authoritative Vercel dashboard project mappings remain unverified.
   4. **Live PostgreSQL Schema**: `UNVERIFIED` against live database. Intended schema is proven by `owner_portal_migration.sql`, but direct read-only inspection of live `information_schema.columns` on Supabase requires authorized database credentials not present in the local environment.
   5. **Production Release Scope**: Cannot claim a two-file production release without an authoritative diff against the live deployed baseline.
 - **Automated Regression & Security Test Coverage**:
-  - Test Suite: `pulsezen/test/auth.test.mjs` (8/8 tests passing)
+  - Test Suite: `pulsezen/test/auth.test.mjs` (16/16 tests passing, mocked PostgREST DB, NOT live PostgreSQL integration tests).
   - Deployment exclusion: `pulsezen/.vercelignore` configured to exclude `test/` and `*.test.*`.
   - Scenarios covered:
-    - Test 1: Provider timeout after simulated acceptance fails closed (HTTP 502) and leaves OTP completely ineligible.
-    - Test 2: Failure to persist delivery activation fails closed with HTTP 500 and leaves OTP ineligible.
-    - Test 3: Failure to invalidate pending attempt on provider failure still fails closed via delivery pending gate.
-    - Test 4: SQL NULL semantics verification (proves `not.eq.true` excludes NULL in SQL; validates explicit `invalidated=eq.false`).
-    - Test 5: Concurrent single-use verification under 10-way race conditions (exactly 1 succeeds, 9 receive HTTP 401).
-    - Test 5b: Mid-flight expiry between lookup and consumption rejected (HTTP 401).
-    - Test 5c: Mid-flight invalidation between lookup and consumption rejected (HTTP 401).
-    - Test 6: Zero OTP disclosure across all responses, headers, and server logs.
-- **Remaining Technical Blockers Before Deployment**:
-  1. Read-only verification of live Supabase `owner_login_attempts` schema metadata using authorized credentials.
-  2. Access to authoritative Vercel project configuration to confirm deployment baseline, Git trigger settings, and environment variables (`RESEND_API_KEY`, `OWNER_SESSION_SECRET`).
-  3. Formal Phase 0 deployment review and authorization. Zero feature work (showcase, edit/delete, onboarding) will proceed until Phase 0 is resolved.
+    - Suite 1 (Standard Auth): Full successful login lifecycle, wrong code rejection (401), expired code rejection (401), reused code rejection (401), 5-strike brute-force lockout (429).
+    - Suite 2 (Delivery & Revocation Gating): Provider timeout after simulated acceptance (502), deterministic race test ensuring revoked attempt cannot be reactivated by delayed delivery (500), ambiguous DB commit with lost response, activation write rejection (500), fail-closed cleanup on provider failure (502).
+    - Suite 3 (Concurrency & Semantics): SQL NULL three-valued logic verification, 10-way parallel atomic single-use verification race (1 winner, 9 401s), mid-flight expiry rejection (401), mid-flight invalidation rejection (401).
+    - Suite 4 (Disclosure & Maintenance): Zero OTP disclosure in response bodies, headers, or server logs; isolated maintenance mode toggle (503).
+- **Checklist of Metadata / Screenshots Needed for Production Verification**:
+  1. **Supabase Schema (Read-Only Metadata)**:
+     - Screenshot or query output of `information_schema.columns` for table `owner_login_attempts` showing column names (`id`, `email`, `attempt_type`, `code_hash`, `success`, `consumed`, `invalidated`, `expires_at`), data types, nullability, and default values. (No customer rows or secret keys needed).
+  2. **Vercel Project & Deployment Identity**:
+     - Screenshot of Vercel Project Settings for `pulsezen`: Root Directory setting (e.g. `pulsezen` vs root `.`), connected Git repository and Production Branch name.
+     - Screenshot of Deployments tab showing latest production deployment: Deployment ID, created time, and associated Git commit SHA.
+  3. **Vercel Environment Variables Configuration**:
+     - Confirmation (checkbox / variable name list without values) that `RESEND_API_KEY`, `OWNER_SESSION_SECRET`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` are configured for the Production environment on the `pulsezen` project.
+
 
 
 
