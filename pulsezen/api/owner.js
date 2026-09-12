@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { getOwnerSession, getSupabaseConfig, findBannedTerms } from './_owner-helper.js';
-import { signOwnerSession } from './_session.js';
+import { signOwnerSession, getSessionSecret } from './_session.js';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -12,10 +12,6 @@ You must strictly enforce ALL of these rules without exception:
 3. Never claim to cure, treat, reverse or heal any disease. Never use any of these words: cure, cured, cures, treat, treats, heal, heals, reverse, reversed, medicine, medical, doctor, prescription, diabetes-free, disease-free.
 4. Never mention "Herbalife" or any brand name.
 5. Output plain text only. No quotes, no markdown, no emoji.`;
-
-function getSessionSecret() {
-  return process.env.OWNER_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'pulsezen_owner_fallback_secret_key_2026';
-}
 
 function parseOptionalInt(val) {
   if (val === undefined || val === null || val === '') return null;
@@ -43,6 +39,10 @@ async function handleLoginRequest(req, res) {
   }
 
   const sessionSecret = getSessionSecret();
+  if (!sessionSecret) {
+    console.error('[PulseZen Auth] Session secret is not configured; failing closed');
+    return res.status(500).json({ error: 'server_misconfiguration', message: 'Authentication service is not properly configured.' });
+  }
   const { email } = req.body || {};
   if (!email || typeof email !== 'string' || !email.includes('@')) {
     return res.status(400).json({ error: 'Valid email address is required' });
@@ -64,8 +64,16 @@ async function handleLoginRequest(req, res) {
     const emailRes = await fetch(emailCheckUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
-    const emailRows = await emailRes.json();
-    if (Array.isArray(emailRows) && emailRows.length >= 8) {
+    if (!emailRes.ok) {
+      console.error('[PulseZen Auth] Database error querying email rate limits; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process login request. Please try again.' });
+    }
+    const emailRows = await emailRes.json().catch(() => null);
+    if (!Array.isArray(emailRows)) {
+      console.error('[PulseZen Auth] Unexpected response structure for email rate limits; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process login request. Please try again.' });
+    }
+    if (emailRows.length >= 8) {
       return res.status(429).json({
         error: 'rate_limited_email',
         message: 'Too many login requests for this email. Please wait a few minutes before trying again.'
@@ -77,8 +85,16 @@ async function handleLoginRequest(req, res) {
       const ipRes = await fetch(ipCheckUrl, {
         headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
       });
-      const ipRows = await ipRes.json();
-      if (Array.isArray(ipRows) && ipRows.length >= 20) {
+      if (!ipRes.ok) {
+        console.error('[PulseZen Auth] Database error querying IP rate limits; failing closed');
+        return res.status(500).json({ error: 'internal_error', message: 'Unable to process login request. Please try again.' });
+      }
+      const ipRows = await ipRes.json().catch(() => null);
+      if (!Array.isArray(ipRows)) {
+        console.error('[PulseZen Auth] Unexpected response structure for IP rate limits; failing closed');
+        return res.status(500).json({ error: 'internal_error', message: 'Unable to process login request. Please try again.' });
+      }
+      if (ipRows.length >= 20) {
         return res.status(429).json({
           error: 'rate_limited_ip',
           message: 'Too many login requests from this IP. Please wait a few minutes before trying again.'
@@ -107,7 +123,7 @@ async function handleLoginRequest(req, res) {
           invalidated: true,
           expires_at: null
         })
-      });
+      }).catch(err => console.error('[PulseZen Auth] Failed to record unconfigured provider attempt:', err.message));
       return res.status(503).json({
         error: 'service_unavailable',
         message: 'Email delivery service is currently unavailable. Please contact support.'
@@ -118,10 +134,18 @@ async function handleLoginRequest(req, res) {
     const lookupRes = await fetch(lookupUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
-    const users = await lookupRes.json();
-    const userExists = Array.isArray(users) && users.length > 0;
+    if (!lookupRes.ok) {
+      console.error('[PulseZen Auth] Database error during owner user lookup; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process login request. Please try again.' });
+    }
+    const users = await lookupRes.json().catch(() => null);
+    if (!Array.isArray(users)) {
+      console.error('[PulseZen Auth] Unexpected response structure for owner user lookup; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process login request. Please try again.' });
+    }
+    const userExists = users.length > 0;
 
-    // If user does not exist, record rate-limiting attempt (without usable OTP) and return anti-enumeration response
+    // If user does not exist, record rate-limiting attempt (without usable OTP) and return generic outward response
     if (!userExists) {
       await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
         method: 'POST',
@@ -140,10 +164,10 @@ async function handleLoginRequest(req, res) {
           invalidated: true,
           expires_at: null
         })
-      });
+      }).catch(err => console.error('[PulseZen Auth] Failed to record non-existent user attempt:', err.message));
       return res.status(200).json({
         success: true,
-        message: 'If this email is registered, a verification code has been sent.'
+        message: 'If this email is registered and eligible, a verification code will be sent.'
       });
     }
 
@@ -238,10 +262,10 @@ async function handleLoginRequest(req, res) {
       console.error('[PulseZen Auth] Failed to deliver verification code via email provider (timeout/error)');
     }
 
-    // Step 3: Provider failure or timeout: fail closed.
-    // The attempt remains invalidated=true in the database.
+    // Step 3: Provider failure or timeout: fail closed internally.
+    // The attempt remains invalidated=true (and marked consumed=true) in the database.
     if (!emailSent) {
-      // Best-effort explicitly consume the failed attempt as well
+      console.error('[PulseZen Auth] Email provider failed or timed out during dispatch; failing closed internally');
       await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts?id=eq.${encodeURIComponent(attemptId)}`, {
         method: 'PATCH',
         headers: {
@@ -250,11 +274,12 @@ async function handleLoginRequest(req, res) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ consumed: true, invalidated: true, success: false })
-      }).catch(() => {});
+      }).catch(err => console.error('[PulseZen Auth] Failed to mark failed attempt consumed:', err.message));
 
-      return res.status(502).json({
-        error: 'delivery_failed',
-        message: 'Unable to deliver verification code. Please try again later.'
+      // Return generic outward response without exposing account existence or provider delivery state
+      return res.status(200).json({
+        success: true,
+        message: 'If this email is registered and eligible, a verification code will be sent.'
       });
     }
 
@@ -289,7 +314,7 @@ async function handleLoginRequest(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: 'If this email is registered, a verification code has been sent.'
+      message: 'If this email is registered and eligible, a verification code will be sent.'
     });
   } catch (err) {
     return res.status(500).json({ error: 'internal_error', details: 'An internal error occurred' });
@@ -310,6 +335,10 @@ async function handleLoginVerify(req, res) {
   }
 
   const sessionSecret = getSessionSecret();
+  if (!sessionSecret) {
+    console.error('[PulseZen Auth] Session secret is not configured; failing closed');
+    return res.status(500).json({ error: 'server_misconfiguration', message: 'Authentication service is not properly configured.' });
+  }
   const { email, code } = req.body || {};
   if (!email || !code) {
     return res.status(400).json({ error: 'Email and verification code are required' });
@@ -331,8 +360,16 @@ async function handleLoginVerify(req, res) {
     const failRes = await fetch(failCheckUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
-    const failRows = await failRes.json();
-    if (Array.isArray(failRows) && failRows.length >= 5) {
+    if (!failRes.ok) {
+      console.error('[PulseZen Auth] Database error querying verification failure limits; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
+    }
+    const failRows = await failRes.json().catch(() => null);
+    if (!Array.isArray(failRows)) {
+      console.error('[PulseZen Auth] Unexpected response structure for verification failures; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
+    }
+    if (failRows.length >= 5) {
       return res.status(429).json({
         error: 'account_locked',
         message: 'Too many failed verification attempts. Please wait 15 minutes before trying again.'
@@ -343,8 +380,16 @@ async function handleLoginVerify(req, res) {
     const userRes = await fetch(userUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
-    const users = await userRes.json();
-    const user = Array.isArray(users) && users.length > 0 ? users[0] : null;
+    if (!userRes.ok) {
+      console.error('[PulseZen Auth] Database error querying owner user; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
+    }
+    const users = await userRes.json().catch(() => null);
+    if (!Array.isArray(users)) {
+      console.error('[PulseZen Auth] Unexpected response structure for owner user query; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
+    }
+    const user = users.length > 0 ? users[0] : null;
 
     if (!user) {
       await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
@@ -357,8 +402,16 @@ async function handleLoginVerify(req, res) {
     const otpRes = await fetch(otpUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
-    const otps = await otpRes.json();
-    if (!Array.isArray(otps) || otps.length === 0) {
+    if (!otpRes.ok) {
+      console.error('[PulseZen Auth] Database error querying active OTP attempts; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
+    }
+    const otps = await otpRes.json().catch(() => null);
+    if (!Array.isArray(otps)) {
+      console.error('[PulseZen Auth] Unexpected response structure for active OTP query; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
+    }
+    if (otps.length === 0) {
       await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
       return res.status(401).json({ error: 'code_expired_or_invalid', message: 'Verification code has expired. Please request a new one.' });
     }
@@ -421,9 +474,13 @@ async function handleLoginVerify(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ consumed: true, invalidated: true })
-    }).catch(() => {});
+    }).catch(err => console.error('[PulseZen Auth] Background active OTP invalidation error:', err.message));
 
-    await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, true);
+    const recordSuccess = await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, true);
+    if (!recordSuccess) {
+      console.error('[PulseZen Auth] Failed mandatory audit persistence before session issuance; failing closed');
+      return res.status(500).json({ error: 'internal_error', message: 'Unable to complete verification audit. Please try again.' });
+    }
 
     const token = signOwnerSession({
       owner_id: user.id,
@@ -447,7 +504,7 @@ async function handleLoginVerify(req, res) {
 
 async function recordVerifyAttempt(supabaseUrl, serviceKey, email, ip, success) {
   try {
-    await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
+    const res = await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
       method: 'POST',
       headers: {
         'apikey': serviceKey,
@@ -463,7 +520,15 @@ async function recordVerifyAttempt(supabaseUrl, serviceKey, email, ip, success) 
         invalidated: false
       })
     });
-  } catch (e) {}
+    if (!res.ok) {
+      console.error(`[PulseZen Auth] Failed to persist verify attempt record (status=${res.status})`);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('[PulseZen Auth] Error persisting verify attempt record:', e.message);
+    return false;
+  }
 }
 
 // -----------------------------------------------------------------------------

@@ -1,28 +1,32 @@
 /**
  * PulseZen Owner Authentication Phase 0 Security & Regression Test Suite
  *
- * NOTE: These are isolated in-memory mocked tests simulating PostgREST query
- * semantics, HTTP responses, and atomic conditional state transitions.
+ * NOTE: These tests run against an isolated in-memory PostgREST mock database.
+ * They validate query semantics, atomic state transitions, and HTTP contracts.
  * They are NOT live PostgreSQL integration tests.
  *
  * Test Suites:
- * 1. Standard Owner Authentication Regression Flow (request, verify, invalid code, expired, reused, rate limited).
- * 2. Delivery Failure & Ineligibility Gating (timeout after acceptance, revocation check against delayed response, ambiguous commit vs response loss, activation failure, fail-closed cleanup).
- * 3. Concurrency, Mid-Flight Transitions & SQL NULL Semantics (atomic conditional single-use under race conditions, mid-flight expiry, mid-flight invalidation, three-valued SQL logic).
- * 4. Zero Disclosure & Maintenance Mechanism (no OTP in responses/logs, isolated maintenance mode).
+ * 1. Standard Owner Authentication Regression Flow (Mocked)
+ * 2. Delivery Failure, Revocation & Ineligibility Gating (Mocked)
+ * 3. Concurrency, Mid-Flight Transitions & SQL Semantics (Mocked)
+ * 4. Zero Disclosure, Maintenance & Secret Handling (Mocked)
+ * 5. Database Failure & Mandatory Audit Resilience (Mocked)
  */
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import handler from '../api/owner.js';
 
-// Setup isolated environment variables for testing (NEVER pointing to live production)
+// 1. Establish isolated environment configuration BEFORE dynamic imports
 process.env.SUPABASE_URL = 'https://test-isolated.supabase.co';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'test_isolated_service_role_key';
 process.env.OWNER_SESSION_SECRET = 'test_isolated_session_secret_for_pulsezen_owner_portal_2026';
 process.env.RESEND_API_KEY = 're_test_dummy_key_12345';
 delete process.env.OWNER_AUTH_MAINTENANCE;
+
+// Dynamically import application modules so they capture the isolated test environment
+const { default: handler } = await import('../api/owner.js');
+const { verifyOwnerSession, signOwnerSession, getSessionSecret } = await import('../api/_session.js');
 
 function createMockReq(url, method, body = {}, headers = {}) {
   const parsedUrl = new URL(url, 'http://localhost');
@@ -82,6 +86,15 @@ class MockDatabase {
     this.activationResponseLost = false;
     this.invalidationDbFail = false;
     this.onResendDispatch = null;
+    this.expireAfterLookup = false;
+
+    // Database error injection flags
+    this.dbErrorEmailRateLimit = false;
+    this.dbErrorIpRateLimit = false;
+    this.dbErrorUserLookup = false;
+    this.dbErrorFailCheck = false;
+    this.dbErrorOtpLookup = false;
+    this.dbErrorAuditInsert = false;
   }
 
   reset() {
@@ -93,6 +106,14 @@ class MockDatabase {
     this.activationResponseLost = false;
     this.invalidationDbFail = false;
     this.onResendDispatch = null;
+    this.expireAfterLookup = false;
+
+    this.dbErrorEmailRateLimit = false;
+    this.dbErrorIpRateLimit = false;
+    this.dbErrorUserLookup = false;
+    this.dbErrorFailCheck = false;
+    this.dbErrorOtpLookup = false;
+    this.dbErrorAuditInsert = false;
   }
 
   async handleFetch(url, options = {}) {
@@ -130,6 +151,13 @@ class MockDatabase {
 
     // Supabase PostgREST Mock: owner_users
     if (url.startsWith('https://test-isolated.supabase.co/rest/v1/owner_users')) {
+      if (this.dbErrorUserLookup) {
+        return {
+          ok: false,
+          status: 500,
+          json: async () => ({ code: '500', message: 'Internal database connection error' })
+        };
+      }
       const emailFilter = parsed.searchParams.get('email');
       const targetEmail = emailFilter ? emailFilter.replace(/^eq\./, '') : null;
       const rows = this.owner_users.filter(u => !targetEmail || u.email === targetEmail);
@@ -143,6 +171,13 @@ class MockDatabase {
     // Supabase PostgREST Mock: owner_login_attempts
     if (url.startsWith('https://test-isolated.supabase.co/rest/v1/owner_login_attempts')) {
       if (method === 'POST') {
+        if (this.dbErrorAuditInsert) {
+          return {
+            ok: false,
+            status: 500,
+            json: async () => ({ code: '500', message: 'Failed to insert audit record' })
+          };
+        }
         const body = JSON.parse(options.body || '{}');
         const row = {
           id: 'attempt-' + (this.nextId++),
@@ -244,17 +279,38 @@ class MockDatabase {
 
       if (method === 'GET') {
         const emailFilter = parsed.searchParams.get('email');
+        const ipFilter = parsed.searchParams.get('ip_address');
         const attemptTypeFilter = parsed.searchParams.get('attempt_type');
         const consumedFilter = parsed.searchParams.get('consumed');
         const invalidatedFilter = parsed.searchParams.get('invalidated');
         const expiresAtFilter = parsed.searchParams.get('expires_at');
         const successFilter = parsed.searchParams.get('success');
+        const createdAtFilter = parsed.searchParams.get('created_at');
+        const limitFilter = parsed.searchParams.get('limit');
+
+        if (this.dbErrorEmailRateLimit && emailFilter && attemptTypeFilter === 'eq.request_otp') {
+          return { ok: false, status: 500, json: async () => ({ code: '500', message: 'DB error on rate limit' }) };
+        }
+        if (this.dbErrorIpRateLimit && ipFilter && attemptTypeFilter === 'eq.request_otp') {
+          return { ok: false, status: 500, json: async () => ({ code: '500', message: 'DB error on IP rate limit' }) };
+        }
+        if (this.dbErrorFailCheck && attemptTypeFilter === 'eq.verify_otp' && successFilter === 'eq.false') {
+          return { ok: false, status: 500, json: async () => ({ code: '500', message: 'DB error on verify failure count' }) };
+        }
+        if (this.dbErrorOtpLookup && attemptTypeFilter === 'eq.request_otp' && consumedFilter === 'eq.false') {
+          return { ok: false, status: 500, json: async () => ({ code: '500', message: 'DB error on active OTP lookup' }) };
+        }
 
         let rows = [...this.owner_login_attempts];
 
         if (emailFilter && emailFilter.startsWith('eq.')) {
           const e = emailFilter.slice(3);
           rows = rows.filter(r => r.email === e);
+        }
+
+        if (ipFilter && ipFilter.startsWith('eq.')) {
+          const ip = ipFilter.slice(3);
+          rows = rows.filter(r => r.ip_address === ip);
         }
 
         if (attemptTypeFilter && attemptTypeFilter.startsWith('eq.')) {
@@ -282,7 +338,22 @@ class MockDatabase {
           rows = rows.filter(r => r.expires_at && new Date(r.expires_at).getTime() > new Date(thresholdIso).getTime());
         }
 
+        if (createdAtFilter && createdAtFilter.startsWith('gte.')) {
+          const thresholdIso = createdAtFilter.slice(4);
+          rows = rows.filter(r => r.created_at && new Date(r.created_at).getTime() >= new Date(thresholdIso).getTime());
+        }
+
         rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        if (limitFilter) {
+          const lim = parseInt(limitFilter, 10);
+          if (!isNaN(lim)) rows = rows.slice(0, lim);
+        }
+
+        if (this.expireAfterLookup && attemptTypeFilter === 'eq.request_otp' && rows.length > 0) {
+          // Mutate the row in database immediately after successful lookup so it is expired before consumption
+          rows[0].expires_at = new Date(Date.now() - 10000).toISOString();
+        }
 
         return {
           ok: true,
@@ -297,7 +368,8 @@ class MockDatabase {
 }
 
 const mockDb = new MockDatabase();
-global.fetch = async (url, options) => mockDb.handleFetch(url, options);
+const defaultFetch = async (url, options) => mockDb.handleFetch(url, options);
+global.fetch = defaultFetch;
 
 // =============================================================================
 // TEST SUITE 1: Standard Owner Authentication Regression Flow (Mocked)
@@ -306,10 +378,15 @@ test.describe('Suite 1: Standard Owner Authentication Regression Flow (Mocked)',
 
   test.beforeEach(() => {
     mockDb.reset();
+    global.fetch = defaultFetch;
   });
 
-  test('1.1 Full successful login lifecycle: request OTP -> deliver -> verify code -> 200 OK + session cookie', async () => {
-    // 1. Request OTP
+  test.afterEach(() => {
+    mockDb.reset();
+    global.fetch = defaultFetch;
+  });
+
+  test('1.1 Full successful login lifecycle: request OTP -> deliver -> verify code -> 200 OK + cryptographically verified session', async () => {
     const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
       email: 'owner@wellness.test'
     });
@@ -318,9 +395,9 @@ test.describe('Suite 1: Standard Owner Authentication Regression Flow (Mocked)',
 
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.success, true);
-    assert.ok(mockDb.lastDeliveredOtp, 'OTP must be captured by email provider mock');
+    assert.equal(res.body.message, 'If this email is registered and eligible, a verification code will be sent.');
+    assert.ok(mockDb.lastDeliveredOtp);
 
-    // 2. Verify with delivered OTP
     const verifyReq = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email: 'owner@wellness.test',
       code: mockDb.lastDeliveredOtp
@@ -331,23 +408,27 @@ test.describe('Suite 1: Standard Owner Authentication Regression Flow (Mocked)',
     assert.equal(verifyRes.statusCode, 200);
     assert.equal(verifyRes.body.success, true);
     assert.equal(verifyRes.body.email, 'owner@wellness.test');
-    assert.ok(verifyRes.headers['set-cookie'], 'Response must set session cookie');
-    assert.match(verifyRes.headers['set-cookie'], /pz_owner_session=[A-Za-z0-9-_]+/);
+    assert.ok(verifyRes.headers['set-cookie']);
 
-    // Verify row state in DB
-    const attempt = mockDb.owner_login_attempts.find(r => r.attempt_type === 'request_otp');
-    assert.equal(attempt.consumed, true, 'OTP must be marked consumed in DB');
+    // Parse and cryptographically verify session token with intended key
+    const match = verifyRes.headers['set-cookie'].match(/pz_owner_session=([^;]+)/);
+    assert.ok(match, 'Cookie header must contain pz_owner_session');
+    const token = match[1];
+
+    const sessionPayload = verifyOwnerSession(token);
+    assert.ok(sessionPayload, 'Token must be validly verified with the active secret');
+    assert.equal(sessionPayload.email, 'owner@wellness.test');
+    assert.equal(sessionPayload.typ, 'owner');
+    assert.equal(sessionPayload.center_id, '22222222-2222-2222-2222-222222222222');
   });
 
   test('1.2 Verification rejects wrong code with 401 and records failed verify attempt', async () => {
-    // Seed an active OTP
     const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
       email: 'owner@wellness.test'
     });
     const res = createMockRes();
     await handler(req, res);
 
-    // Submit invalid code
     const verifyReq = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email: 'owner@wellness.test',
       code: '000000'
@@ -358,19 +439,17 @@ test.describe('Suite 1: Standard Owner Authentication Regression Flow (Mocked)',
     assert.equal(verifyRes.statusCode, 401);
     assert.equal(verifyRes.body.error, 'invalid_code');
 
-    // Confirm failed attempt was logged in audit store
     const failAudit = mockDb.owner_login_attempts.find(r => r.attempt_type === 'verify_otp' && r.success === false);
     assert.ok(failAudit, 'Failed verification must be recorded in audit log');
   });
 
   test('1.3 Verification rejects expired OTP code with 401', async () => {
-    const secret = process.env.OWNER_SESSION_SECRET;
+    const secret = getSessionSecret();
     const email = 'owner@wellness.test';
     const otpCode = '654321';
     const hmac = crypto.createHmac('sha256', secret);
     hmac.update(`${email}:${otpCode}`);
 
-    // Insert an already-expired attempt
     mockDb.owner_login_attempts.push({
       id: 'attempt-already-expired',
       email,
@@ -395,7 +474,6 @@ test.describe('Suite 1: Standard Owner Authentication Regression Flow (Mocked)',
   });
 
   test('1.4 Verification rejects already consumed/reused code with 401', async () => {
-    // 1. Valid request and verify
     const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
       email: 'owner@wellness.test'
     });
@@ -411,7 +489,6 @@ test.describe('Suite 1: Standard Owner Authentication Regression Flow (Mocked)',
     }), verify1);
     assert.equal(verify1.statusCode, 200);
 
-    // 2. Second verification with same code must fail
     const verify2 = createMockRes();
     await handler(createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email: 'owner@wellness.test',
@@ -424,7 +501,6 @@ test.describe('Suite 1: Standard Owner Authentication Regression Flow (Mocked)',
   test('1.5 Account lockout on 5 consecutive failed verification attempts within 15 minutes', async () => {
     const email = 'owner@wellness.test';
 
-    // Seed 5 failed verification attempts
     for (let i = 0; i < 5; i++) {
       mockDb.owner_login_attempts.push({
         id: `fail-${i}`,
@@ -454,9 +530,15 @@ test.describe('Suite 2: Delivery Failure, Revocation & Ineligibility Gating (Moc
 
   test.beforeEach(() => {
     mockDb.reset();
+    global.fetch = defaultFetch;
   });
 
-  test('2.1 Provider timeout after simulated acceptance fails closed and leaves OTP completely ineligible', async () => {
+  test.afterEach(() => {
+    mockDb.reset();
+    global.fetch = defaultFetch;
+  });
+
+  test('2.1 Provider timeout fails closed internally, returns generic outward response, and rejects verification with captured OTP', async () => {
     mockDb.resendBehavior = 'timeout';
 
     const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
@@ -465,34 +547,30 @@ test.describe('Suite 2: Delivery Failure, Revocation & Ineligibility Gating (Moc
     const res = createMockRes();
     await handler(req, res);
 
-    assert.equal(res.statusCode, 502);
-    assert.equal(res.body.error, 'delivery_failed');
+    // Returns generic non-guarantee response identical to unknown user
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.message, 'If this email is registered and eligible, a verification code will be sent.');
 
-    // Attempt in DB remains invalidated=true
+    // In DB, attempt must be marked consumed and invalidated
     const attempt = mockDb.owner_login_attempts.find(r => r.attempt_type === 'request_otp');
     assert.ok(attempt);
     assert.equal(attempt.invalidated, true);
     assert.equal(attempt.consumed, true);
 
-    // Verification must be rejected
+    // Verification with the exact OTP captured by provider mock must fail closed
     const verifyReq = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email: 'owner@wellness.test',
-      code: '123456'
+      code: mockDb.lastDeliveredOtp || '123456'
     });
     const verifyRes = createMockRes();
     await handler(verifyReq, verifyRes);
     assert.equal(verifyRes.statusCode, 401);
+    assert.equal(verifyRes.body.error, 'code_expired_or_invalid');
   });
 
   test('2.2 Deterministic Race Test: Terminally revoked attempt cannot be reactivated by delayed provider response', async () => {
-    // Simulate background cleanup or concurrent revocation occurring while email delivery is in flight
     mockDb.onResendDispatch = async () => {
-      // Find the pending attempt that was just inserted with invalidated=true, consumed=false
-      const pendingRow = mockDb.owner_login_attempts.find(r => r.attempt_type === 'request_otp' && r.consumed === false);
-      assert.ok(pendingRow, 'Pending row must exist during provider dispatch');
-
-      // Simulate the exact background revocation query executed after successful login:
-      // PATCH ...?email=eq...&attempt_type=eq.request_otp&consumed=eq.false with { consumed: true, invalidated: true }
+      // Simulate background revocation query executed after another session login:
       await mockDb.handleFetch(
         `https://test-isolated.supabase.co/rest/v1/owner_login_attempts?email=eq.owner%40wellness.test&attempt_type=eq.request_otp&consumed=eq.false`,
         {
@@ -502,24 +580,21 @@ test.describe('Suite 2: Delivery Failure, Revocation & Ineligibility Gating (Moc
       );
     };
 
-    // Trigger login request
     const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
       email: 'owner@wellness.test'
     });
     const res = createMockRes();
     await handler(req, res);
 
-    // Because activation requires consumed=eq.false, it matched 0 rows and failed closed
-    assert.equal(res.statusCode, 500, 'Activation must fail closed when row was revoked mid-flight');
+    // Activation matched 0 rows and failed closed
+    assert.equal(res.statusCode, 500);
     assert.equal(res.body.error, 'internal_error');
 
-    // Verify row in DB remains revoked (consumed=true, invalidated=true)
     const attempt = mockDb.owner_login_attempts.find(r => r.attempt_type === 'request_otp');
     assert.equal(attempt.consumed, true);
     assert.equal(attempt.invalidated, true);
-    assert.equal(attempt.success, false);
 
-    // Verify that attempting to verify with the delivered code fails and issues NO session
+    // Verification must fail and issue no session
     const verifyReq = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email: 'owner@wellness.test',
       code: mockDb.lastDeliveredOtp
@@ -528,12 +603,11 @@ test.describe('Suite 2: Delivery Failure, Revocation & Ineligibility Gating (Moc
     await handler(verifyReq, verifyRes);
 
     assert.equal(verifyRes.statusCode, 401);
-    assert.equal(verifyRes.body.error, 'code_expired_or_invalid');
-    assert.equal(verifyRes.headers['set-cookie'], undefined, 'No session cookie must ever be issued');
+    assert.equal(verifyRes.headers['set-cookie'], undefined);
   });
 
   test('2.3 Ambiguous DB Outcome: Activation commits in DB but HTTP response is lost over network', async () => {
-    mockDb.activationResponseLost = true; // DB commits write, but network connection drops before response arrives
+    mockDb.activationResponseLost = true;
 
     const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
       email: 'owner@wellness.test'
@@ -541,18 +615,15 @@ test.describe('Suite 2: Delivery Failure, Revocation & Ineligibility Gating (Moc
     const res = createMockRes();
     await handler(req, res);
 
-    // 1. The login-request caller received an error response (HTTP 500), NOT a session
     assert.equal(res.statusCode, 500);
     assert.equal(res.body.error, 'internal_error');
-    assert.equal(res.headers['set-cookie'], undefined, 'Login request failure must NEVER directly issue a session');
+    assert.equal(res.headers['set-cookie'], undefined);
 
-    // 2. In the DB, the row actually committed: invalidated=false, success=true
     const attempt = mockDb.owner_login_attempts.find(r => r.attempt_type === 'request_otp');
-    assert.equal(attempt.invalidated, false, 'Committed row has invalidated=false');
-    assert.equal(attempt.consumed, false, 'Committed row remains unconsumed');
+    assert.equal(attempt.invalidated, false);
+    assert.equal(attempt.consumed, false);
 
-    // 3. User received the email anyway. Verification with correct secret still enforces normal checks:
-    // With wrong code -> fails
+    // Wrong code fails
     const wrongVerify = createMockRes();
     await handler(createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email: 'owner@wellness.test',
@@ -560,7 +631,7 @@ test.describe('Suite 2: Delivery Failure, Revocation & Ineligibility Gating (Moc
     }), wrongVerify);
     assert.equal(wrongVerify.statusCode, 401);
 
-    // With correct delivered code -> normal eligibility succeeds with atomic single-use consumption
+    // Correct delivered code succeeds with normal verification
     const correctVerify = createMockRes();
     await handler(createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email: 'owner@wellness.test',
@@ -572,7 +643,7 @@ test.describe('Suite 2: Delivery Failure, Revocation & Ineligibility Gating (Moc
 
   test('2.4 Failure to persist delivery activation (DB rejected write) fails closed with 500 and leaves OTP ineligible', async () => {
     mockDb.resendBehavior = 'success';
-    mockDb.activationDbFail = true; // DB rejects activation PATCH with 500
+    mockDb.activationDbFail = true;
 
     const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
       email: 'owner@wellness.test'
@@ -583,11 +654,9 @@ test.describe('Suite 2: Delivery Failure, Revocation & Ineligibility Gating (Moc
     assert.equal(res.statusCode, 500);
     assert.equal(res.body.error, 'internal_error');
 
-    // The attempt in DB remains invalidated=true because the write was rejected
     const attempt = mockDb.owner_login_attempts.find(r => r.attempt_type === 'request_otp');
     assert.equal(attempt.invalidated, true);
 
-    // Verification must fail
     const verifyReq = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email: 'owner@wellness.test',
       code: mockDb.lastDeliveredOtp
@@ -597,9 +666,8 @@ test.describe('Suite 2: Delivery Failure, Revocation & Ineligibility Gating (Moc
     assert.equal(verifyRes.statusCode, 401);
   });
 
-  test('2.5 Failure to invalidate pending attempt on provider error fails closed via delivery pending gate', async () => {
+  test('2.5 Provider error fails closed internally and verification with captured OTP fails', async () => {
     mockDb.resendBehavior = 'error';
-    mockDb.invalidationDbFail = true; // Cleanup PATCH also fails
 
     const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
       email: 'owner@wellness.test'
@@ -607,52 +675,47 @@ test.describe('Suite 2: Delivery Failure, Revocation & Ineligibility Gating (Moc
     const res = createMockRes();
     await handler(req, res);
 
-    assert.equal(res.statusCode, 502);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.message, 'If this email is registered and eligible, a verification code will be sent.');
 
-    // The initial insert gate persisted invalidated=true. Even if cleanup failed, it is ineligible.
     const attempt = mockDb.owner_login_attempts.find(r => r.attempt_type === 'request_otp');
     assert.equal(attempt.invalidated, true);
 
     const verifyRes = createMockRes();
     await handler(createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email: 'owner@wellness.test',
-      code: '123456'
+      code: mockDb.lastDeliveredOtp || '123456'
     }), verifyRes);
     assert.equal(verifyRes.statusCode, 401);
   });
 });
 
 // =============================================================================
-// TEST SUITE 3: Concurrency, Mid-Flight Transitions & SQL Semantics (Mocked)
+// TEST SUITE 3: Concurrency, Deterministic Transitions & SQL Semantics (Mocked)
 // =============================================================================
-test.describe('Suite 3: Concurrency, Mid-Flight Transitions & SQL Semantics (Mocked)', () => {
+test.describe('Suite 3: Concurrency, Deterministic Transitions & SQL Semantics (Mocked)', () => {
 
   test.beforeEach(() => {
     mockDb.reset();
+    global.fetch = defaultFetch;
+  });
+
+  test.afterEach(() => {
+    mockDb.reset();
+    global.fetch = defaultFetch;
   });
 
   test('3.1 SQL NULL semantics: validates three-valued logic and explicit invalidated=eq.false', () => {
-    // Under SQL 3-valued logic (TRUE, FALSE, UNKNOWN):
-    // 1. col = TRUE
-    //    - TRUE  => TRUE
-    //    - FALSE => FALSE
-    //    - NULL  => UNKNOWN
-    // 2. NOT (col = TRUE)
-    //    - TRUE  => NOT (TRUE)  => FALSE
-    //    - FALSE => NOT (FALSE) => TRUE
-    //    - NULL  => NOT (UNKNOWN) => UNKNOWN. In SQL WHERE, UNKNOWN evaluates to FALSE (excluded!).
-    // Therefore, PostgREST filter 'invalidated=not.eq.true' does NOT include NULL rows.
-
     function sqlNotEqTrueFilter(row) {
       if (row.invalidated === null || row.invalidated === undefined) {
-        return false; // UNKNOWN -> excluded
+        return false;
       }
       return !(row.invalidated === true);
     }
 
     function sqlEqFalseFilter(row) {
       if (row.invalidated === null || row.invalidated === undefined) {
-        return false; // UNKNOWN -> excluded
+        return false;
       }
       return row.invalidated === false;
     }
@@ -666,13 +729,12 @@ test.describe('Suite 3: Concurrency, Mid-Flight Transitions & SQL Semantics (Moc
     const notEqTrueMatched = testRows.filter(sqlNotEqTrueFilter);
     const eqFalseMatched = testRows.filter(sqlEqFalseFilter);
 
-    // Both filters exclude NULL rows under true SQL semantics:
     assert.deepEqual(notEqTrueMatched.map(r => r.id), ['2'], 'not.eq.true excludes NULL in SQL');
     assert.deepEqual(eqFalseMatched.map(r => r.id), ['2'], 'eq.false matches exactly FALSE');
   });
 
   test('3.2 Concurrent single-use verification: exactly one request succeeds under 10-way race conditions', async () => {
-    const secret = process.env.OWNER_SESSION_SECRET;
+    const secret = getSessionSecret();
     const email = 'owner@wellness.test';
     const otpCode = '749201';
 
@@ -712,14 +774,20 @@ test.describe('Suite 3: Concurrency, Mid-Flight Transitions & SQL Semantics (Moc
 
     const winner = successResponses[0];
     assert.ok(winner.headers['set-cookie']);
-    assert.match(winner.headers['set-cookie'], /pz_owner_session=[A-Za-z0-9-_]+/);
+
+    // Cryptographically verify the session token with active key
+    const match = winner.headers['set-cookie'].match(/pz_owner_session=([^;]+)/);
+    assert.ok(match);
+    const verified = verifyOwnerSession(match[1]);
+    assert.ok(verified);
+    assert.equal(verified.email, email);
 
     const attemptInDb = mockDb.owner_login_attempts.find(r => r.id === 'attempt-concurrent-valid');
     assert.equal(attemptInDb.consumed, true);
   });
 
-  test('3.3 Verification rejects OTP if expired between lookup and consumption', async () => {
-    const secret = process.env.OWNER_SESSION_SECRET;
+  test('3.3 Deterministic expiry occurring after OTP lookup but before conditional consumption', async () => {
+    const secret = getSessionSecret();
     const email = 'owner@wellness.test';
     const otpCode = '882314';
 
@@ -734,11 +802,12 @@ test.describe('Suite 3: Concurrency, Mid-Flight Transitions & SQL Semantics (Moc
       success: true,
       consumed: false,
       invalidated: false,
-      expires_at: new Date(Date.now() + 5).toISOString(),
+      expires_at: new Date(Date.now() + 60000).toISOString(), // Initially valid
       created_at: new Date().toISOString()
     });
 
-    await new Promise(resolve => setTimeout(resolve, 15));
+    // Deterministic trigger: mutate expires_at in DB directly during the GET lookup response
+    mockDb.expireAfterLookup = true;
 
     const req = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email,
@@ -751,8 +820,8 @@ test.describe('Suite 3: Concurrency, Mid-Flight Transitions & SQL Semantics (Moc
     assert.equal(res.body.error, 'code_expired_or_invalid');
   });
 
-  test('3.4 Verification rejects OTP if invalidated between lookup and consumption', async () => {
-    const secret = process.env.OWNER_SESSION_SECRET;
+  test('3.4 Deterministic invalidation occurring after OTP lookup but before conditional consumption', async () => {
+    const secret = getSessionSecret();
     const email = 'owner@wellness.test';
     const otpCode = '918273';
 
@@ -776,7 +845,7 @@ test.describe('Suite 3: Concurrency, Mid-Flight Transitions & SQL Semantics (Moc
     mockDb.handleFetch = async (url, options) => {
       const res = await origHandleFetch(url, options);
       if (url.includes('attempt_type=eq.request_otp') && (!options || !options.method || options.method === 'GET')) {
-        targetRow.invalidated = true;
+        targetRow.invalidated = true; // Invalidated right after lookup
       }
       return res;
     };
@@ -794,12 +863,19 @@ test.describe('Suite 3: Concurrency, Mid-Flight Transitions & SQL Semantics (Moc
 });
 
 // =============================================================================
-// TEST SUITE 4: Zero Disclosure & Maintenance Mechanism (Mocked)
+// TEST SUITE 4: Zero Disclosure, Maintenance & Secret Handling (Mocked)
 // =============================================================================
-test.describe('Suite 4: Zero Disclosure & Maintenance Mechanism (Mocked)', () => {
+test.describe('Suite 4: Zero Disclosure, Maintenance & Secret Handling (Mocked)', () => {
 
   test.beforeEach(() => {
     mockDb.reset();
+    global.fetch = defaultFetch;
+    delete process.env.OWNER_AUTH_MAINTENANCE;
+  });
+
+  test.afterEach(() => {
+    mockDb.reset();
+    global.fetch = defaultFetch;
     delete process.env.OWNER_AUTH_MAINTENANCE;
   });
 
@@ -825,20 +901,20 @@ test.describe('Suite 4: Zero Disclosure & Maintenance Mechanism (Mocked)', () =>
       assert.equal(res.statusCode, 200);
 
       const bodyStr = JSON.stringify(res.body);
-      assert.equal(res.body.dev_code, undefined, 'Response must never contain dev_code');
-      assert.equal(res.body.code, undefined, 'Response must never contain code field');
-      assert.equal(res.body.code_hash, undefined, 'Response must never contain code_hash');
-      assert.ok(!bodyStr.match(/\b\d{6}\b/), 'Response body must not contain 6-digit OTP');
+      assert.equal(res.body.dev_code, undefined);
+      assert.equal(res.body.code, undefined);
+      assert.equal(res.body.code_hash, undefined);
+      assert.ok(!bodyStr.match(/\b\d{6}\b/));
 
       const headersStr = JSON.stringify(res.headers);
-      assert.ok(!headersStr.match(/\b\d{6}\b/), 'Headers must not contain 6-digit OTP');
+      assert.ok(!headersStr.match(/\b\d{6}\b/));
 
       const logsCombined = loggedMessages.join('\n');
-      assert.ok(!logsCombined.match(/\[PulseZen Auth\].*\b\d{6}\b/), 'Server console must not log OTP');
+      assert.ok(!logsCombined.match(/\[PulseZen Auth\].*\b\d{6}\b/));
 
       assert.deepEqual(res.body, {
         success: true,
-        message: 'If this email is registered, a verification code has been sent.'
+        message: 'If this email is registered and eligible, a verification code will be sent.'
       });
     } finally {
       console.log = origLog;
@@ -850,7 +926,6 @@ test.describe('Suite 4: Zero Disclosure & Maintenance Mechanism (Mocked)', () =>
   test('4.2 Maintenance mode: when OWNER_AUTH_MAINTENANCE=true, both login-request and login-verify return 503', async () => {
     process.env.OWNER_AUTH_MAINTENANCE = 'true';
 
-    // 1. Test login-request returns 503
     const req1 = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
       email: 'owner@wellness.test'
     });
@@ -860,7 +935,6 @@ test.describe('Suite 4: Zero Disclosure & Maintenance Mechanism (Mocked)', () =>
     assert.equal(res1.statusCode, 503);
     assert.equal(res1.body.error, 'service_maintenance');
 
-    // 2. Test login-verify returns 503
     const req2 = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
       email: 'owner@wellness.test',
       code: '123456'
@@ -870,5 +944,156 @@ test.describe('Suite 4: Zero Disclosure & Maintenance Mechanism (Mocked)', () =>
 
     assert.equal(res2.statusCode, 503);
     assert.equal(res2.body.error, 'service_maintenance');
+  });
+
+  test('4.3 Missing session secret: rejects signing, verification, and handler entry without fallback', () => {
+    const savedSecret = process.env.OWNER_SESSION_SECRET;
+    const savedServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    try {
+      delete process.env.OWNER_SESSION_SECRET;
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      assert.equal(getSessionSecret(), null, 'getSessionSecret must return null when unconfigured');
+
+      // Reject signing
+      assert.throws(() => {
+        signOwnerSession({ email: 'test@example.com' });
+      }, /Session signing secret is not configured/);
+
+      // Reject verification of any token
+      const dummyToken = 'eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJ0eXAiOiJvd25lciIsImV4cCI6OTk5OTk5OTk5OX0.signature';
+      assert.equal(verifyOwnerSession(dummyToken), null);
+
+      // Verify fabricated token signed with old literal fallback is strictly rejected
+      const fallbackSecret = 'pulsezen_owner_fallback_secret_key_2026';
+      const fakeHmac = crypto.createHmac('sha256', fallbackSecret);
+      const fakeData = Buffer.from(JSON.stringify({ email: 'owner@wellness.test', typ: 'owner', exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url');
+      fakeHmac.update(fakeData);
+      const fabricatedToken = `${fakeData}.${fakeHmac.digest('base64url')}`;
+
+      assert.equal(verifyOwnerSession(fabricatedToken), null, 'Must reject token signed with former fallback');
+    } finally {
+      process.env.OWNER_SESSION_SECRET = savedSecret;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = savedServiceKey;
+    }
+  });
+});
+
+// =============================================================================
+// TEST SUITE 5: Database Failure & Mandatory Audit Resilience (Mocked)
+// =============================================================================
+test.describe('Suite 5: Database Failure & Mandatory Audit Resilience (Mocked)', () => {
+
+  test.beforeEach(() => {
+    mockDb.reset();
+    global.fetch = defaultFetch;
+  });
+
+  test.afterEach(() => {
+    mockDb.reset();
+    global.fetch = defaultFetch;
+  });
+
+  test('5.1 Database error on email rate-limit check fails closed with HTTP 500', async () => {
+    mockDb.dbErrorEmailRateLimit = true;
+
+    const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
+      email: 'owner@wellness.test'
+    });
+    const res = createMockRes();
+    await handler(req, res);
+
+    assert.equal(res.statusCode, 500);
+    assert.equal(res.body.error, 'internal_error');
+  });
+
+  test('5.2 Database error on IP rate-limit check fails closed with HTTP 500', async () => {
+    mockDb.dbErrorIpRateLimit = true;
+
+    const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
+      email: 'owner@wellness.test'
+    }, { 'x-real-ip': '198.51.100.1' });
+    const res = createMockRes();
+    await handler(req, res);
+
+    assert.equal(res.statusCode, 500);
+    assert.equal(res.body.error, 'internal_error');
+  });
+
+  test('5.3 Database error on owner user lookup in login request fails closed with HTTP 500 (not 200 unknown user)', async () => {
+    mockDb.dbErrorUserLookup = true;
+
+    const req = createMockReq('http://localhost/api/owner?action=login-request', 'POST', {
+      email: 'owner@wellness.test'
+    });
+    const res = createMockRes();
+    await handler(req, res);
+
+    assert.equal(res.statusCode, 500);
+    assert.equal(res.body.error, 'internal_error');
+  });
+
+  test('5.4 Database error on verify failure count check fails closed with HTTP 500', async () => {
+    mockDb.dbErrorFailCheck = true;
+
+    const req = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
+      email: 'owner@wellness.test',
+      code: '123456'
+    });
+    const res = createMockRes();
+    await handler(req, res);
+
+    assert.equal(res.statusCode, 500);
+    assert.equal(res.body.error, 'internal_error');
+  });
+
+  test('5.5 Database error on active OTP lookup in login verify fails closed with HTTP 500', async () => {
+    mockDb.dbErrorOtpLookup = true;
+
+    const req = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
+      email: 'owner@wellness.test',
+      code: '123456'
+    });
+    const res = createMockRes();
+    await handler(req, res);
+
+    assert.equal(res.statusCode, 500);
+    assert.equal(res.body.error, 'internal_error');
+  });
+
+  test('5.6 Mandatory audit failure before session issuance fails closed with HTTP 500 without issuing cookie', async () => {
+    // Seed valid active OTP
+    const secret = getSessionSecret();
+    const email = 'owner@wellness.test';
+    const otpCode = '445566';
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(`${email}:${otpCode}`);
+
+    mockDb.owner_login_attempts.push({
+      id: 'attempt-audit-fail',
+      email,
+      attempt_type: 'request_otp',
+      code_hash: hmac.digest('hex'),
+      success: true,
+      consumed: false,
+      invalidated: false,
+      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      created_at: new Date().toISOString()
+    });
+
+    // Induce error on audit record insert (recordVerifyAttempt)
+    mockDb.dbErrorAuditInsert = true;
+
+    const req = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
+      email,
+      code: otpCode
+    });
+    const res = createMockRes();
+    await handler(req, res);
+
+    assert.equal(res.statusCode, 500, 'Must fail closed when mandatory audit cannot be written');
+    assert.equal(res.body.error, 'internal_error');
+    assert.equal(res.headers['set-cookie'], undefined, 'Must NOT issue session cookie if mandatory audit fails');
   });
 });

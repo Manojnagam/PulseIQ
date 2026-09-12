@@ -1,8 +1,19 @@
 import crypto from 'crypto';
 
-const secret = process.env.OWNER_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'pulsezen_owner_fallback_secret_key_2026';
+export function getSessionSecret() {
+  const secret = process.env.OWNER_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secret || typeof secret !== 'string' || secret.trim().length === 0) {
+    return null;
+  }
+  return secret.trim();
+}
 
 export function signOwnerSession(payload, expiresInSeconds = 604800) {
+  const secret = getSessionSecret();
+  if (!secret) {
+    throw new Error('Session signing secret is not configured');
+  }
+
   const exp = Math.floor(Date.now() / 1000) + expiresInSeconds;
   const data = {
     ...payload,
@@ -21,6 +32,11 @@ export function signOwnerSession(payload, expiresInSeconds = 604800) {
 
 export function verifyOwnerSession(token) {
   if (!token || typeof token !== 'string') {
+    return null;
+  }
+
+  const secret = getSessionSecret();
+  if (!secret) {
     return null;
   }
 
