@@ -978,6 +978,37 @@ test.describe('Suite 4: Zero Disclosure, Maintenance & Secret Handling (Mocked)'
       process.env.SUPABASE_SERVICE_ROLE_KEY = savedServiceKey;
     }
   });
+
+  test('4.4 Signing key byte compatibility: preserves exact bytes for nonblank keys with surrounding whitespace', () => {
+    const rawWhitespaceKey = '  secret_with_leading_and_trailing_spaces  ';
+    const savedSecret = process.env.OWNER_SESSION_SECRET;
+    const savedServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    try {
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+      process.env.OWNER_SESSION_SECRET = rawWhitespaceKey;
+
+      const resolved = getSessionSecret();
+      assert.equal(resolved, rawWhitespaceKey, 'getSessionSecret must return exact nonblank string without altering bytes');
+
+      const token = signOwnerSession({ email: 'owner@wellness.test' });
+      const verified = verifyOwnerSession(token);
+      assert.ok(verified, 'Session signed with raw whitespace key must verify successfully');
+      assert.equal(verified.email, 'owner@wellness.test');
+
+      // Reject token signed with trimmed version of the key to prove exact byte compatibility
+      const trimmedKey = rawWhitespaceKey.trim();
+      const hmacTrimmed = crypto.createHmac('sha256', trimmedKey);
+      const dataPayload = Buffer.from(JSON.stringify({ email: 'owner@wellness.test', typ: 'owner', exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url');
+      hmacTrimmed.update(dataPayload);
+      const trimmedToken = `${dataPayload}.${hmacTrimmed.digest('base64url')}`;
+
+      assert.equal(verifyOwnerSession(trimmedToken), null, 'Tokens signed with trimmed bytes must not match raw key');
+    } finally {
+      process.env.OWNER_SESSION_SECRET = savedSecret;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = savedServiceKey;
+    }
+  });
 });
 
 // =============================================================================
@@ -1095,5 +1126,42 @@ test.describe('Suite 5: Database Failure & Mandatory Audit Resilience (Mocked)',
     assert.equal(res.statusCode, 500, 'Must fail closed when mandatory audit cannot be written');
     assert.equal(res.body.error, 'internal_error');
     assert.equal(res.headers['set-cookie'], undefined, 'Must NOT issue session cookie if mandatory audit fails');
+  });
+
+  test('5.7 Failed-verification persistence failure on wrong code fails closed with HTTP 500 and issues no cookie', async () => {
+    // Seed an eligible OTP
+    const secret = getSessionSecret();
+    const email = 'owner@wellness.test';
+    const realCode = '112233';
+    const wrongCode = '999999';
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(`${email}:${realCode}`);
+
+    mockDb.owner_login_attempts.push({
+      id: 'attempt-wrong-code-fail-audit',
+      email,
+      attempt_type: 'request_otp',
+      code_hash: hmac.digest('hex'),
+      success: true,
+      consumed: false,
+      invalidated: false,
+      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      created_at: new Date().toISOString()
+    });
+
+    // Make the failed-verification INSERT return a database error
+    mockDb.dbErrorAuditInsert = true;
+
+    const req = createMockReq('http://localhost/api/owner?action=login-verify', 'POST', {
+      email,
+      code: wrongCode
+    });
+    const res = createMockRes();
+    await handler(req, res);
+
+    // Must return generic service error rather than ordinary 401 credential rejection
+    assert.equal(res.statusCode, 500, 'Must fail closed with HTTP 500 when failed-verification persistence errors');
+    assert.equal(res.body.error, 'internal_error');
+    assert.equal(res.headers['set-cookie'], undefined, 'Must NOT issue session cookie when failed audit fails');
   });
 });

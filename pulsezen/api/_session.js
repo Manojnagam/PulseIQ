@@ -5,7 +5,7 @@ export function getSessionSecret() {
   if (!secret || typeof secret !== 'string' || secret.trim().length === 0) {
     return null;
   }
-  return secret.trim();
+  return secret;
 }
 
 export function signOwnerSession(payload, expiresInSeconds = 604800) {

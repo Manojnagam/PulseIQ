@@ -392,7 +392,11 @@ async function handleLoginVerify(req, res) {
     const user = users.length > 0 ? users[0] : null;
 
     if (!user) {
-      await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
+      const recorded = await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
+      if (!recorded) {
+        console.error('[PulseZen Auth] Failed to record verification failure audit (unknown user); failing closed');
+        return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
+      }
       return res.status(401).json({ error: 'invalid_credentials', message: 'Invalid verification code or email' });
     }
 
@@ -412,7 +416,11 @@ async function handleLoginVerify(req, res) {
       return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
     }
     if (otps.length === 0) {
-      await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
+      const recorded = await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
+      if (!recorded) {
+        console.error('[PulseZen Auth] Failed to record verification failure audit (expired/missing OTP); failing closed');
+        return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
+      }
       return res.status(401).json({ error: 'code_expired_or_invalid', message: 'Verification code has expired. Please request a new one.' });
     }
 
@@ -428,7 +436,11 @@ async function handleLoginVerify(req, res) {
     });
 
     if (!matchingOtp) {
-      await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
+      const recorded = await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
+      if (!recorded) {
+        console.error('[PulseZen Auth] Failed to record verification failure audit (wrong code); failing closed');
+        return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
+      }
       return res.status(401).json({ error: 'invalid_code', message: 'Invalid verification code. Please check your latest email.' });
     }
 
@@ -461,7 +473,11 @@ async function handleLoginVerify(req, res) {
     const consumedRows = await consumeRes.json().catch(() => []);
     if (!Array.isArray(consumedRows) || consumedRows.length !== 1) {
       // Concurrency collision, late invalidation, or expiry between lookup and consumption
-      await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
+      const recorded = await recordVerifyAttempt(supabaseUrl, serviceKey, normalizedEmail, clientIp, false);
+      if (!recorded) {
+        console.error('[PulseZen Auth] Failed to record verification failure audit (collision/consumption conflict); failing closed');
+        return res.status(500).json({ error: 'internal_error', message: 'Unable to process verification. Please try again.' });
+      }
       return res.status(401).json({ error: 'code_expired_or_invalid', message: 'Verification code has already been used or expired.' });
     }
 
