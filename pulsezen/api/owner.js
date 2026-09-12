@@ -86,13 +86,145 @@ async function handleLoginRequest(req, res) {
     const users = await lookupRes.json();
     const userExists = Array.isArray(users) && users.length > 0;
 
+    // If user does not exist, record rate-limiting attempt (without usable OTP) and return anti-enumeration response
+    if (!userExists) {
+      await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
+        method: 'POST',
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          ip_address: clientIp,
+          attempt_type: 'request_otp',
+          code_hash: null,
+          success: false,
+          consumed: true,
+          invalidated: true,
+          expires_at: null
+        })
+      });
+      return res.status(200).json({
+        success: true,
+        message: 'If this email is registered, a verification code has been sent.'
+      });
+    }
+
+    // Fail closed if email delivery provider is not configured
+    const resendKey = process.env.RESEND_API_KEY;
+    if (!resendKey) {
+      console.error('[PulseZen Auth] RESEND_API_KEY is not configured; failing closed');
+      await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
+        method: 'POST',
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          ip_address: clientIp,
+          attempt_type: 'request_otp',
+          code_hash: null,
+          success: false,
+          consumed: true,
+          invalidated: true,
+          expires_at: null
+        })
+      });
+      return res.status(503).json({
+        error: 'service_unavailable',
+        message: 'Email delivery service is currently unavailable. Please contact support.'
+      });
+    }
+
     const otp = crypto.randomInt(100000, 1000000).toString();
     const hmac = crypto.createHmac('sha256', sessionSecret);
     hmac.update(`${normalizedEmail}:${otp}`);
     const codeHash = hmac.digest('hex');
-
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
+    // Deliver email via provider before creating an active OTP record
+    const emailBody = {
+      to: [normalizedEmail],
+      subject: `Your PulseZen Portal Login Code: ${otp}`,
+      html: `
+        <div style="font-family:sans-serif; max-width:460px; margin:0 auto; padding:24px; border:1px solid #e5e7eb; border-radius:12px;">
+          <h2 style="color:#1a3a28; margin-top:0;">PulseZen Owner Portal</h2>
+          <p style="font-size:15px; color:#374151;">Your 6-digit login verification code is:</p>
+          <div style="font-size:32px; font-weight:800; letter-spacing:6px; color:#1a3a28; background:#f3f4f6; padding:14px; text-align:center; border-radius:8px; margin:18px 0;">
+            ${otp}
+          </div>
+          <p style="font-size:13px; color:#6b7280;">This code expires in 10 minutes. If you did not request this, please ignore this message.</p>
+        </div>
+      `
+    };
+
+    let emailSent = false;
+    try {
+      let emailRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...emailBody,
+          from: 'PulseZen <no-reply@pulsezen.in>'
+        })
+      });
+
+      if (!emailRes.ok) {
+        // Fallback to onboarding domain if custom domain is unverified
+        emailRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            ...emailBody,
+            from: 'PulseZen <onboarding@resend.dev>'
+          })
+        });
+      }
+
+      if (emailRes.ok) {
+        emailSent = true;
+      }
+    } catch (e) {
+      console.error('[PulseZen Auth] Failed to deliver verification code via email provider');
+    }
+
+    // Fail closed if email delivery failed: do not leave a usable OTP in the database
+    if (!emailSent) {
+      await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
+        method: 'POST',
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          ip_address: clientIp,
+          attempt_type: 'request_otp',
+          code_hash: null,
+          success: false,
+          consumed: true,
+          invalidated: true,
+          expires_at: null
+        })
+      });
+      return res.status(502).json({
+        error: 'delivery_failed',
+        message: 'Unable to deliver verification code. Please try again later.'
+      });
+    }
+
+    // Email delivery succeeded: record active OTP
     await fetch(`${supabaseUrl}/rest/v1/owner_login_attempts`, {
       method: 'POST',
       headers: {
@@ -105,81 +237,19 @@ async function handleLoginRequest(req, res) {
         ip_address: clientIp,
         attempt_type: 'request_otp',
         code_hash: codeHash,
-        success: userExists,
+        success: true,
         consumed: false,
         invalidated: false,
         expires_at: expiresAt
       })
     });
 
-    let emailSent = false;
-    if (userExists) {
-      console.log(`[PulseZen Owner OTP] For ${normalizedEmail}: ${otp}`);
-      const resendKey = process.env.RESEND_API_KEY;
-      if (resendKey) {
-        const emailBody = {
-          to: [normalizedEmail],
-          subject: `Your PulseZen Portal Login Code: ${otp}`,
-          html: `
-            <div style="font-family:sans-serif; max-width:460px; margin:0 auto; padding:24px; border:1px solid #e5e7eb; border-radius:12px;">
-              <h2 style="color:#1a3a28; margin-top:0;">PulseZen Owner Portal</h2>
-              <p style="font-size:15px; color:#374151;">Your 6-digit login verification code is:</p>
-              <div style="font-size:32px; font-weight:800; letter-spacing:6px; color:#1a3a28; background:#f3f4f6; padding:14px; text-align:center; border-radius:8px; margin:18px 0;">
-                ${otp}
-              </div>
-              <p style="font-size:13px; color:#6b7280;">This code expires in 10 minutes. If you did not request this, please ignore this message.</p>
-            </div>
-          `
-        };
-
-        try {
-          let emailRes = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${resendKey}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              ...emailBody,
-              from: 'PulseZen <no-reply@pulsezen.in>'
-            })
-          });
-
-          if (!emailRes.ok) {
-            // If pulsezen.in is not verified on Resend yet, fallback to onboarding@resend.dev
-            emailRes = await fetch('https://api.resend.com/emails', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${resendKey}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                ...emailBody,
-                from: 'PulseZen <onboarding@resend.dev>'
-              })
-            });
-          }
-
-          if (emailRes.ok) {
-            emailSent = true;
-          }
-        } catch (e) {
-          console.error('Failed to send OTP email via Resend:', e);
-        }
-      }
-    }
-
-    const responsePayload = {
+    return res.status(200).json({
       success: true,
       message: 'If this email is registered, a verification code has been sent.'
-    };
-    if (!emailSent && userExists) {
-      responsePayload.dev_code = otp;
-    }
-
-    return res.status(200).json(responsePayload);
+    });
   } catch (err) {
-    return res.status(500).json({ error: 'internal_error', details: err.message });
+    return res.status(500).json({ error: 'internal_error', details: 'An internal error occurred' });
   }
 }
 
@@ -232,7 +302,7 @@ async function handleLoginVerify(req, res) {
     }
 
     const nowIso = new Date().toISOString();
-    const otpUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false&expires_at=gt.${encodeURIComponent(nowIso)}&order=created_at.desc&limit=5`;
+    const otpUrl = `${supabaseUrl}/rest/v1/owner_login_attempts?email=eq.${encodeURIComponent(normalizedEmail)}&attempt_type=eq.request_otp&consumed=eq.false&invalidated=eq.false&expires_at=gt.${encodeURIComponent(nowIso)}&order=created_at.desc&limit=5`;
     const otpRes = await fetch(otpUrl, {
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
@@ -759,7 +829,7 @@ export default async function handler(req, res) {
   switch (action) {
     case 'ping':
     case 'version':
-      return res.status(200).json({ status: 'ok', version: '2026.09.09.v2' });
+      return res.status(200).json({ status: 'ok', service: 'pulsezen-owner-api' });
     case 'login-request':
       return handleLoginRequest(req, res);
     case 'login-verify':

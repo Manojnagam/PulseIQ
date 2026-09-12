@@ -202,15 +202,26 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
 
 ---
 
-## 🔍 PulseZen Owner Portal & Customer Transformations — Independent Audit (2026-09-12)
+## 🔍 PulseZen Owner Portal & Customer Transformations — Corrected Engineering Audit (2026-09-12)
 
-- **Audit Status**: Complete (Read-Only Diagnostic Audit) 🛑
-- **Core Diagnosis**: Recent attempts failed primarily due to:
-  1. **Deployment Out-of-Sync**: Vercel live deployment at `pulsezen.in` does not run the latest `main` branch commits (empirically confirmed via `api/owner?action=ping` returning `404 Unknown action: ping` despite commit `8ed5a09`).
-  2. **Subdomain Routing & Legacy Map Blocker**: `pulsezen/api/router.js` routes `dharanis` and `bksprime` to static legacy files (`dharanis.html`, `bks-prime.html`) which have zero dynamic transformation fetching. `center.html` (which contains `loadTransformations()`) is never rendered for existing centers.
-  3. **Incomplete Lifecycle**: No "Edit" or "Delete" capabilities exist in code or UI; no owner account registration flow exists (manual SQL required in `owner_users`).
-  4. **Authentication Bypass Risk**: Dev code fallback returns plaintext OTP in HTTP response if Resend fails.
-- **Next Action Pointer**: Review Audit Findings with engineering review board / ChatGPT. Do not execute implementation until architecture and minimal repair plan phases are approved.
+- **Audit Status**: Phase 0 Authentication Patch Prepared (Not Production Deployed) 🛑
+- **Confirmed Findings**:
+  1. **Authentication Leak Contained Locally**: The `dev_code` fallback in `pulsezen/api/owner.js` exposed plaintext OTP in HTTP responses when email failed, and logged OTP to server console. Patched locally to fail closed (502/503), invalidate uncompleted attempts, remove logs, and delete client handling in `owner-login.html`.
+  2. **Deployment Mismatch**: Production returns `{"error":"Unknown action: ping"}` on `/api/owner?action=ping`, confirming the live deployment is running an older lambda bundle than repository `main`.
+  3. **Static Subdomain Interception**: In `pulsezen/api/router.js`, active centers (`dharanis`, `bksprime`) serve static files that do not fetch from `/api/public/transformations`. Dynamic rendering in `center.html` is never invoked for them.
+  4. **Incomplete Lifecycle**: No API endpoints or UI exist for editing or deleting transformations once created.
+  5. **Publication Invariant Verified**: Separate consent and publish calls enforce an atomic safety invariant: public exposure strictly requires `status = 'published'` AND `consent_given = true`. Consent recording before publish is an intentional staged gate.
+- **Identified Hypotheses (Requiring Direct Vercel Access to Verify)**:
+  - Exact commit currently active in production (hypothesized to be `bdb8075` or earlier based on API response matching).
+  - Vercel dashboard environment variable configuration for `RESEND_API_KEY` and `GROQ_API_KEY`.
+- **Architectural & Compliance Records**:
+  - **Draft Recovery**: Client-side browser `sessionStorage` is not a complete solution; multi-device draft recovery requires server-side draft persistence and retrieval.
+  - **Testimonial Accuracy & Attribution**: Static keyword filtering alone (`findBannedTerms`) cannot validate customer approval or testimonial factual accuracy; forcing first-person "I" quotes from bullet notes creates unapproved attribution risk.
+- **Concrete Authentication & Deployment Risks**:
+  - Email provider outages will block owner sign-ins when failing closed (acceptable trade-off against credential bypass).
+  - Redeploying Vercel without verified `RESEND_API_KEY` in project environment variables will cause all owner OTP requests to return 503.
+  - Vercel Hobby plan function count limits may reject builds if multiple serverless lambdas are reintroduced.
+- **Next Action Pointer**: Await explicit authorization before deploying Phase 0 authentication patch. Do not implement public showcase or feature work until Phase 0 is reviewed and approved.
 
 
 
