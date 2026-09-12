@@ -221,11 +221,20 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
   7. **SQL NULL Semantics Correction**: Uses explicit `invalidated=eq.false` aligning with the verified schema definition (`invalidated boolean NOT NULL DEFAULT false`), rejecting the false claim that `not.eq.true` safely includes NULL rows in SQL three-valued logic.
   8. **Zero OTP Disclosure**: Plaintext OTP logging removed; `dev_code` response property deleted; client-side `dev_code` handling removed from `pulsezen/owner-login.html`.
   9. **Owner Auth Maintenance Mechanism**: Integrated narrow-scope emergency maintenance toggle via `process.env.OWNER_AUTH_MAINTENANCE === 'true'` in `handleLoginRequest` and `handleLoginVerify` (returning HTTP 503 `service_maintenance`). Does not revoke existing session tokens, does not alter shared email credentials, and does not affect public pages or CRM operations.
-- **Deployment & Production Metadata Status (Explicitly Unverified)**:
-  1. **Production Source Commit**: `UNVERIFIED`. Live `pulsezen.in` returns HTTP 404 for `action=ping`, which establishes a runtime mismatch only. It does not prove deployment age, chronology, or a specific baseline commit. Client-accessible HTTP headers do not reveal the active Git commit SHA.
-  2. **Git Auto-Deployment Status**: `UNVERIFIED`. Cannot verify whether pushes to repository `main` trigger automatic Vercel production deployments without Vercel project webhook settings.
-  3. **Cross-Project Deployment Isolation**: `UNVERIFIED` at infrastructure level. Local `pulsezen/.vercel/project.json` binds to project `pulsezen` (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`) and `pulsezen/vercel.json` excludes `app.pulsezen.in`, but authoritative Vercel dashboard project mappings remain unverified.
-  4. **Live PostgreSQL Schema**: `UNVERIFIED` against live database. Intended schema is proven by `owner_portal_migration.sql`, but direct read-only inspection of live `information_schema.columns` on Supabase requires authorized database credentials not present in the local environment.
+- **Deployment & Production Metadata Status**:
+  1. **Live PostgreSQL Schema (`owner_login_attempts`)**: **VERIFIED COLUMN METADATA — BLOCKER CLOSED**.
+     - User-provided authoritative `information_schema.columns` output confirms:
+       - `code_hash`: text, nullable (`is_nullable = 'YES'`).
+       - `consumed`: boolean, `NOT NULL`, `DEFAULT false`.
+       - `invalidated`: boolean, `NOT NULL`, `DEFAULT false`.
+       - `success`: boolean, `NOT NULL`, `DEFAULT false`.
+       - `expires_at`: timestamp with time zone, nullable (`is_nullable = 'YES'`).
+       - Other supplied columns (`id`, `email`, `ip_address`, `attempt_type`, `created_at`) match the authentication patch’s expected structure.
+     - **Resolution**: The column-schema compatibility blocker is closed. **No database migration is required** for the reviewed authentication patch.
+     - **Boundary Note**: This metadata verifies column definitions only; it does not claim to verify database runtime permissions, RLS policies, or live runtime network integration.
+  2. **Production Source Commit**: `UNVERIFIED`. Live `pulsezen.in` returns HTTP 404 for `action=ping`, which establishes a runtime mismatch only. It does not prove deployment age, chronology, or a specific baseline commit. Client-accessible HTTP headers do not reveal the active Git commit SHA.
+  3. **Git Auto-Deployment Status**: `UNVERIFIED`. Cannot verify whether pushes to repository `main` trigger automatic Vercel production deployments without Vercel project webhook settings.
+  4. **Cross-Project Deployment Isolation**: `UNVERIFIED` at infrastructure level. Local `pulsezen/.vercel/project.json` binds to project `pulsezen` (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`) and `pulsezen/vercel.json` excludes `app.pulsezen.in`, but authoritative Vercel dashboard project mappings remain unverified.
   5. **Production Release Scope & Baseline Scenarios**: All baseline comparisons remain purely **hypothetical** until authoritative Vercel deployment metadata is provided. Deploying the current repository branch `main` would bundle earlier unreleased code. A minimal release must apply **authentication-only changes against the verified production baseline**; the entire current `pulsezen/api/owner.js` must NOT be copied into an older baseline, as it contains unrelated and unapproved handlers (`transformation`, `summarize`, `publish`, etc.).
 - **Automated Regression & Security Test Coverage**:
   - Test Suite: `pulsezen/test/auth.test.mjs` (25/25 tests passing across 5 suites, mocked PostgREST DB, NOT live PostgreSQL integration tests).
@@ -236,17 +245,12 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
     - Suite 3 (Concurrency & Deterministic Transitions): SQL NULL three-valued logic verification, 10-way parallel atomic single-use verification race with cryptographic signature validation (1 winner, 9 401s), deterministic mid-flight expiry occurring after lookup but before consumption (401), deterministic mid-flight invalidation occurring after lookup but before consumption (401).
     - Suite 4 (Zero Disclosure, Maintenance & Secret Handling): Zero OTP disclosure in response bodies, headers, or server console logs; emergency maintenance mode toggle via `OWNER_AUTH_MAINTENANCE=true` (503); missing session secret rejection for signing, verification, and handler entry without literal fallback; signing-key byte preservation for nonblank keys with surrounding whitespace.
     - Suite 5 (Database Failure & Mandatory Audit Resilience): Database error on email rate limits (500), database error on IP rate limits (500), database error on owner user lookup (500, not 200 unknown user), database error on verify failure count (500), database error on active OTP lookup (500), mandatory audit persistence failure on successful login prevents session issuance (500), failed-verification persistence error on wrong code fails closed with generic service error (500) and issues no cookie.
-- **Checklist of Metadata / Screenshots Needed for Production Verification**:
-  1. **Supabase Schema (Read-Only Metadata)**:
-     - Output or screenshot of `information_schema.columns` query for table `owner_login_attempts` showing column names (`id`, `email`, `attempt_type`, `code_hash`, `success`, `consumed`, `invalidated`, `expires_at`), data types, nullability, and default values. (No customer rows or secret keys needed).
-  2. **Vercel Active Deployment & Source SHA**:
-     - Screenshot of Vercel Deployments tab showing active production deployment ID and source commit SHA.
-  3. **Vercel Project Root & Git Settings**:
-     - Screenshot of Vercel Project Settings showing Root Directory (e.g. `pulsezen` vs `.`), connected repository, and production branch.
-  4. **Vercel Domain Bindings**:
-     - Screenshot of Domains tab showing configured domains for `pulsezen` (confirming `pulsezen.in` mapping and exclusion of `app.pulsezen.in`).
-  5. **Vercel Environment Variables Configuration**:
-     - Confirmation of configured variable names under Project Settings $\rightarrow$ Environment Variables (names only, no secret values): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `OWNER_SESSION_SECRET`.
+- **Remaining Production Release Checks (Pending Verification)**:
+  1. Active Vercel production deployment ID and source commit for `pulsezen.in`.
+  2. Project root setting (`pulsezen` vs `.`) and Git auto-deployment settings in Vercel.
+  3. Domain bindings separating `pulsezen.in` from `app.pulsezen.in`.
+  4. Required environment variable presence and **Production** scope (names only: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `OWNER_SESSION_SECRET` — no values).
+  5. Authentication-only release diff against the verified production baseline.
 
 
 
