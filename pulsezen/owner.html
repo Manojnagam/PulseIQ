@@ -507,11 +507,41 @@
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
-      margin-top: 8px;
       transition: background 0.2s;
     }
     .btn-unpublish:hover {
       background: #fecaca;
+    }
+    .btn-action-group {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-action {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-edit {
+      background: #e0f2fe;
+      color: #0369a1;
+      border-color: #bae6fd;
+    }
+    .btn-edit:hover {
+      background: #bae6fd;
+    }
+    .btn-delete {
+      background: #fef2f2;
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+    .btn-delete:hover {
+      background: #fee2e2;
     }
     .empty-state {
       text-align: center;
@@ -652,7 +682,7 @@
         </div>
 
         <div id="ai-content">
-          <p style="font-size:13px; color:var(--muted); margin-bottom:12px">
+          <p id="ai-variants-hint" style="font-size:13px; color:var(--muted); margin-bottom:12px">
             Pick one of the 2 AI variants below, then edit freely to perfect it:
           </p>
           <div class="variant-card" id="card-v1" onclick="selectVariant(0)">
@@ -736,6 +766,7 @@
           return;
         }
         var data = await res.json();
+        resetReviewFormState('');
         renderList(data.transformations || []);
       } catch (e) {
         window.location.replace('/owner-login.html');
@@ -869,14 +900,7 @@
 
         if (!res.ok) {
           var errData = await res.json().catch(function() { return {}; });
-          var errMsg = errData.error || 'Failed to get upload URL';
-          if (errData.details) {
-            var detailStr = typeof errData.details === 'string'
-              ? errData.details
-              : (errData.details.message || errData.details.error || JSON.stringify(errData.details));
-            if (detailStr && detailStr !== '{}') errMsg += ' (' + detailStr + ')';
-          }
-          throw new Error(errMsg);
+          throw new Error(errData.error || 'Failed to get upload URL');
         }
 
         var data = await res.json();
@@ -891,8 +915,7 @@
         });
 
         if (!uploadRes.ok) {
-          var uploadErrText = await uploadRes.text().catch(function() { return ''; });
-          throw new Error('Storage upload failed: HTTP ' + uploadRes.status + (uploadErrText ? ' - ' + uploadErrText : ''));
+          throw new Error('Storage upload failed: HTTP ' + uploadRes.status);
         }
 
         if (stepNum === 1) {
@@ -953,10 +976,10 @@
       btn.innerHTML = '<span class="loader"></span> Saving Draft...';
 
       try {
-        // B4 Fix: Coerce empty strings to null client-side
-        var durationWeeks = state.facts.weeks && state.facts.weeks.trim() !== '' ? parseInt(state.facts.weeks, 10) : null;
-        var startWt = state.facts.startWt && state.facts.startWt.trim() !== '' ? parseFloat(state.facts.startWt) : null;
-        var endWt = state.facts.endWt && state.facts.endWt.trim() !== '' ? parseFloat(state.facts.endWt) : null;
+        // Send raw numeric input for strict server-side validation
+        var rawWeeks = (state.facts.weeks !== undefined && state.facts.weeks !== null && state.facts.weeks.trim() !== '') ? state.facts.weeks.trim() : null;
+        var rawStart = (state.facts.startWt !== undefined && state.facts.startWt !== null && state.facts.startWt.trim() !== '') ? state.facts.startWt.trim() : null;
+        var rawEnd = (state.facts.endWt !== undefined && state.facts.endWt !== null && state.facts.endWt.trim() !== '') ? state.facts.endWt.trim() : null;
 
         // 1. Create transformation record (status=draft)
         var transRes = await fetch('/api/owner/transformation', {
@@ -967,9 +990,9 @@
             customer_name: state.facts.name,
             before_path: state.beforePath,
             after_path: state.afterPath,
-            duration_weeks: durationWeeks,
-            start_weight_kg: startWt,
-            end_weight_kg: endWt,
+            duration_weeks: rawWeeks,
+            start_weight_kg: rawStart,
+            end_weight_kg: rawEnd,
             health_issue: state.facts.issue || null,
             customer_words: words
           })
@@ -983,9 +1006,23 @@
         var transData = await transRes.json();
         state.transformationId = transData.id;
 
+        // Capture review snapshot at the exact moment review begins covering all editable facts
+        state.reviewSnapshot = {
+          customer_name: (transData.row && transData.row.customer_name) ? transData.row.customer_name : state.facts.name,
+          duration_weeks: (transData.row && transData.row.duration_weeks !== undefined) ? transData.row.duration_weeks : (rawWeeks ? Number(rawWeeks) : null),
+          start_weight_kg: (transData.row && transData.row.start_weight_kg !== undefined) ? transData.row.start_weight_kg : (rawStart ? Number(rawStart) : null),
+          end_weight_kg: (transData.row && transData.row.end_weight_kg !== undefined) ? transData.row.end_weight_kg : (rawEnd ? Number(rawEnd) : null),
+          health_issue: (transData.row && transData.row.health_issue !== undefined) ? transData.row.health_issue : (state.facts.issue || null),
+          customer_words: (transData.row && transData.row.customer_words) ? transData.row.customer_words : words
+        };
+
+        // Reset review form and consent state for new story
+        resetReviewFormState(state.facts.name);
+
         goToStep(5);
         document.getElementById('ai-loading').style.display = 'block';
         document.getElementById('ai-content').style.display = 'none';
+        var fallbackText = '';
 
         // 2. Call AI summarize
         var aiRes = await fetch('/api/owner/summarize', {
@@ -998,7 +1035,7 @@
         document.getElementById('ai-loading').style.display = 'none';
         document.getElementById('ai-content').style.display = 'block';
 
-        var aiData = await aiRes.json();
+        var aiData = await aiRes.json().catch(function() { return {}; });
         if (!aiRes.ok) {
           if (aiData.error === 'claim_blocked') {
             showAlert('⚠️ ' + aiData.message, true);
@@ -1007,25 +1044,91 @@
             btn.textContent = 'Generate Clean Summary 🤖';
             return;
           }
-          throw new Error(aiData.error || 'Failed to generate AI summary');
+          throw new Error(aiData.error || 'AI summary service returned an error');
         }
 
-        state.aiVariants = aiData.variants || [];
-        document.getElementById('text-v1').textContent = state.aiVariants[0] || '';
-        document.getElementById('text-v2').textContent = state.aiVariants[1] || '';
-        selectVariant(0);
+        renderAiVariants(aiData.variants || [], fallbackText);
       } catch (err) {
-        showAlert(err.message, true);
+        if (state.transformationId) {
+          document.getElementById('ai-loading').style.display = 'none';
+          document.getElementById('ai-content').style.display = 'block';
+          renderAiVariants([], fallbackText, 'AI service notice: ' + (err.message || 'Service unavailable') + '.');
+        } else {
+          showAlert(err.message, true);
+          goToStep(4);
+        }
+      } finally {
         btn.disabled = false;
         btn.textContent = 'Generate Clean Summary 🤖';
       }
     }
 
+    // Step 5: Render variants, guard against empty options, and allow manual entry
+    function renderAiVariants(variants, fallbackText, errorMessage) {
+      var v1 = (variants && typeof variants[0] === 'string') ? variants[0].trim() : '';
+      var v2 = (variants && typeof variants[1] === 'string') ? variants[1].trim() : '';
+      state.aiVariants = [v1, v2];
+
+      var cardV1 = document.getElementById('card-v1');
+      var cardV2 = document.getElementById('card-v2');
+      var textV1 = document.getElementById('text-v1');
+      var textV2 = document.getElementById('text-v2');
+      var hint = document.getElementById('ai-variants-hint');
+      var chosenArea = document.getElementById('chosen-text');
+
+      if (v1) {
+        cardV1.style.display = 'block';
+        textV1.textContent = v1;
+      } else {
+        cardV1.style.display = 'none';
+        cardV1.classList.remove('selected');
+        textV1.textContent = '';
+      }
+
+      if (v2) {
+        cardV2.style.display = 'block';
+        textV2.textContent = v2;
+      } else {
+        cardV2.style.display = 'none';
+        cardV2.classList.remove('selected');
+        textV2.textContent = '';
+      }
+
+      if (v1 || v2) {
+        if (hint) {
+          hint.style.display = 'block';
+          hint.textContent = (v1 && v2)
+            ? 'Pick one of the 2 AI variants below, then edit freely to perfect it:'
+            : 'Review the generated summary below, or edit freely to perfect it:';
+        }
+        if (v1) {
+          selectVariant(0);
+        } else {
+          selectVariant(1);
+        }
+      } else {
+        if (hint) hint.style.display = 'none';
+        cardV1.classList.remove('selected');
+        cardV2.classList.remove('selected');
+
+        var currentVal = (chosenArea.value || '').trim();
+        if (!currentVal && fallbackText) {
+          chosenArea.value = fallbackText.trim();
+          state.chosenSummary = fallbackText.trim();
+        }
+
+        var msg = errorMessage || 'AI summary unavailable. Please enter or edit your clean testimonial summary below.';
+        showAlert(msg, false);
+      }
+    }
+
     // Step 5: Variant select & Edit
     function selectVariant(idx) {
+      var text = (state.aiVariants && typeof state.aiVariants[idx] === 'string') ? state.aiVariants[idx].trim() : '';
+      if (!text) return; // Guard: Empty variants must NOT appear selectable or overwrite state
+
       document.getElementById('card-v1').classList.toggle('selected', idx === 0);
       document.getElementById('card-v2').classList.toggle('selected', idx === 1);
-      var text = state.aiVariants[idx] || '';
       document.getElementById('chosen-text').value = text;
       state.chosenSummary = text;
     }
@@ -1047,7 +1150,11 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ id: state.transformationId, text: text })
+          body: JSON.stringify({
+            id: state.transformationId,
+            text: text,
+            review_snapshot: state.reviewSnapshot
+          })
         });
 
         var resData = await res.json().catch(function() { return {}; });
@@ -1067,6 +1174,31 @@
       }
     }
 
+    // Review-form state isolation: always reset consent checkbox, phone digits, and story-specific state
+    function resetReviewFormState(customerName) {
+      document.getElementById('consent-check').checked = false;
+      document.getElementById('c-phone').value = '';
+      document.getElementById('c-name').value = customerName ? customerName.trim() : '';
+      document.getElementById('chosen-text').value = '';
+      var cardV1 = document.getElementById('card-v1');
+      var cardV2 = document.getElementById('card-v2');
+      if (cardV1) {
+        cardV1.classList.remove('selected');
+        cardV1.style.display = 'block';
+        document.getElementById('text-v1').textContent = '';
+      }
+      if (cardV2) {
+        cardV2.classList.remove('selected');
+        cardV2.style.display = 'block';
+        document.getElementById('text-v2').textContent = '';
+      }
+      var hint = document.getElementById('ai-variants-hint');
+      if (hint) hint.style.display = 'block';
+      state.chosenSummary = '';
+      state.aiVariants = [];
+      validateConsentForm();
+    }
+
     // Step 6: Consent Gate validation
     function validateConsentForm() {
       var check = document.getElementById('consent-check').checked;
@@ -1079,9 +1211,16 @@
 
     async function handlePublishFinal() {
       hideAlert();
+      var check = document.getElementById('consent-check').checked;
       var name = document.getElementById('c-name').value.trim();
       var phone = document.getElementById('c-phone').value.trim();
       var btn = document.getElementById('btn-publish');
+
+      if (!check || !name || !/^\d{4}$/.test(phone)) {
+        showAlert('Explicit customer consent confirmation and last 4 digits of phone are required.', true);
+        validateConsentForm();
+        return;
+      }
 
       btn.disabled = true;
       btn.innerHTML = '<span class="loader"></span> Publishing...';
@@ -1094,6 +1233,7 @@
           credentials: 'include',
           body: JSON.stringify({
             id: state.transformationId,
+            consent_given: true,
             consent_name: name,
             consent_phone_last4: phone
           })
@@ -1109,7 +1249,10 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ id: state.transformationId })
+          body: JSON.stringify({
+            id: state.transformationId,
+            review_snapshot: state.reviewSnapshot
+          })
         });
 
         if (!pubRes.ok) {
@@ -1139,9 +1282,7 @@
         document.getElementById('f-end-wt').value = '';
         document.getElementById('f-issue').value = '';
         document.getElementById('f-words').value = '';
-        document.getElementById('chosen-text').value = '';
-        document.getElementById('consent-check').checked = false;
-        document.getElementById('c-phone').value = '';
+        resetReviewFormState('');
         goToStep(1);
 
         // Refresh list
@@ -1188,7 +1329,128 @@
       }
     }
 
-    // Render Transformations List with B3 public images and B5 unpublish button
+    // Factual edit handler
+    async function handleEditTransformation(id, currentName, currentWeeks, currentStartWt, currentEndWt, currentIssue, currentWords) {
+      var newName = prompt('Customer Name:', currentName || '');
+      if (newName === null) return;
+      var newWeeks = prompt('Duration (weeks):', currentWeeks || '');
+      if (newWeeks === null) return;
+      var newStartWt = prompt('Start Weight (kg):', currentStartWt || '');
+      if (newStartWt === null) return;
+      var newEndWt = prompt('End Weight (kg):', currentEndWt || '');
+      if (newEndWt === null) return;
+      var newIssue = prompt('Health/Wellness Focus:', currentIssue || '');
+      if (newIssue === null) return;
+      var newWords = prompt('Customer Words / Notes:', currentWords || '');
+      if (newWords === null) return;
+
+      try {
+        // Send raw inputs for strict server-side validation
+        var res = await fetch('/api/owner/edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            id: id,
+            customer_name: newName.trim(),
+            duration_weeks: (newWeeks && newWeeks.trim() !== '') ? newWeeks.trim() : null,
+            start_weight_kg: (newStartWt && newStartWt.trim() !== '') ? newStartWt.trim() : null,
+            end_weight_kg: (newEndWt && newEndWt.trim() !== '') ? newEndWt.trim() : null,
+            health_issue: (newIssue && newIssue.trim() !== '') ? newIssue.trim() : null,
+            customer_words: newWords.trim()
+          })
+        });
+
+        if (!res.ok) {
+          var data = await res.json().catch(function() { return {}; });
+          throw new Error(data.error || 'Failed to update transformation');
+        }
+
+        showAlert('Transformation details updated. Story returned to draft for summary review.', false);
+        await loadTransformationsList();
+      } catch (err) {
+        showAlert(err.message, true);
+      }
+    }
+
+    // Delete handler with explicit confirmation explaining photo retention
+    async function handleDeleteTransformation(id, customerName) {
+      var confirmed = confirm('Are you sure you want to permanently delete the transformation for "' + (customerName || 'this customer') + '"? The story will be removed from your center page, but stored photos are retained safely per data retention policy.');
+      if (!confirmed) return;
+
+      try {
+        var res = await fetch('/api/owner/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ id: id, confirm: true })
+        });
+
+        if (!res.ok) {
+          var data = await res.json().catch(function() { return {}; });
+          throw new Error(data.error || 'Failed to delete transformation');
+        }
+
+        showAlert('Transformation story removed from center page successfully. Stored photos retained safely.', false);
+        await loadTransformationsList();
+      } catch (err) {
+        showAlert(err.message, true);
+      }
+    }
+
+    // Reopen review workflow for an edited existing story
+    async function handleReopenReview(item) {
+      hideAlert();
+      state.transformationId = item.id;
+      state.facts = {
+        name: item.customer_name,
+        weeks: item.duration_weeks !== null ? String(item.duration_weeks) : '',
+        startWt: item.start_weight_kg !== null ? String(item.start_weight_kg) : '',
+        endWt: item.end_weight_kg !== null ? String(item.end_weight_kg) : '',
+        issue: item.health_issue || ''
+      };
+      // Capture review snapshot at the exact moment review begins covering all editable facts
+      state.reviewSnapshot = {
+        customer_name: item.customer_name,
+        duration_weeks: item.duration_weeks !== null ? Number(item.duration_weeks) : null,
+        start_weight_kg: item.start_weight_kg !== null ? Number(item.start_weight_kg) : null,
+        end_weight_kg: item.end_weight_kg !== null ? Number(item.end_weight_kg) : null,
+        health_issue: item.health_issue || null,
+        customer_words: item.customer_words
+      };
+
+      // Review-form state isolation: ALWAYS reset consent checkbox, phone digits, and other story-specific state
+      // Require explicit consent confirmation for the current story
+      resetReviewFormState(item.customer_name);
+      document.getElementById('f-words').value = item.customer_words || '';
+
+      goToStep(5);
+      document.getElementById('ai-loading').style.display = 'block';
+      document.getElementById('ai-content').style.display = 'none';
+      var fallbackText = item.ai_summary || '';
+
+      try {
+        var aiRes = await fetch('/api/owner/summarize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ id: item.id })
+        });
+        document.getElementById('ai-loading').style.display = 'none';
+        document.getElementById('ai-content').style.display = 'block';
+
+        var aiData = await aiRes.json().catch(function() { return {}; });
+        if (!aiRes.ok) throw new Error(aiData.error || 'Failed to generate AI summary');
+
+        renderAiVariants(aiData.variants || [], fallbackText);
+      } catch (err) {
+        document.getElementById('ai-loading').style.display = 'none';
+        document.getElementById('ai-content').style.display = 'block';
+        renderAiVariants([], fallbackText, 'AI service notice: ' + (err.message || 'Service unavailable') + '.');
+      }
+    }
+
+    // Render Transformations List with B3 public images, unpublish, edit, review, and delete buttons
     function renderList(items) {
       var container = document.getElementById('transformations-container');
       var countEl = document.getElementById('list-count');
@@ -1245,15 +1507,68 @@
           html += '  <div style="font-size:11px; color:var(--success); margin-top:8px; font-weight:600;">✓ Customer consent verified (•••• ' + escapeHtml(item.consent_phone_last4 || '') + ')</div>';
         }
 
-        // B5: Unpublish button on published cards
+        // Action controls
+        html += '  <div class="btn-action-group">';
         if (isPublished) {
-          html += '  <div><button class="btn-unpublish" onclick="handleUnpublish(\'' + escapeHtml(item.id) + '\')">Withdraw Consent / Unpublish</button></div>';
+          html += '    <button class="btn-unpublish action-unpublish-btn" data-id="' + escapeHtml(item.id) + '">Withdraw / Unpublish</button>';
+        } else {
+          html += '    <button class="btn-action btn-review action-review-btn" data-id="' + escapeHtml(item.id) + '" style="background:#ecfdf5; color:#047857; border-color:#a7f3d0;">Review & Publish</button>';
         }
+        html += '    <button class="btn-action btn-edit action-edit-btn" data-id="' + escapeHtml(item.id) + '">Edit Details</button>';
+        html += '    <button class="btn-action btn-delete action-delete-btn" data-id="' + escapeHtml(item.id) + '">Delete</button>';
+        html += '  </div>';
 
         html += '</div>';
       });
 
       container.innerHTML = html;
+
+      // Safe event binding without inline onclick code execution
+      var itemMap = new Map();
+      items.forEach(function(it) { itemMap.set(String(it.id), it); });
+
+      container.querySelectorAll('.action-unpublish-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var id = this.getAttribute('data-id');
+          if (id) handleUnpublish(id);
+        });
+      });
+
+      container.querySelectorAll('.action-review-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var id = this.getAttribute('data-id');
+          var item = itemMap.get(id);
+          if (item) handleReopenReview(item);
+        });
+      });
+
+      container.querySelectorAll('.action-edit-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var id = this.getAttribute('data-id');
+          var item = itemMap.get(id);
+          if (item) {
+            handleEditTransformation(
+              item.id,
+              item.customer_name,
+              item.duration_weeks,
+              item.start_weight_kg,
+              item.end_weight_kg,
+              item.health_issue,
+              item.customer_words
+            );
+          }
+        });
+      });
+
+      container.querySelectorAll('.action-delete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var id = this.getAttribute('data-id');
+          var item = itemMap.get(id);
+          if (item) {
+            handleDeleteTransformation(item.id, item.customer_name);
+          }
+        });
+      });
     }
 
     function escapeHtml(str) {

@@ -682,7 +682,7 @@
         </div>
 
         <div id="ai-content">
-          <p style="font-size:13px; color:var(--muted); margin-bottom:12px">
+          <p id="ai-variants-hint" style="font-size:13px; color:var(--muted); margin-bottom:12px">
             Pick one of the 2 AI variants below, then edit freely to perfect it:
           </p>
           <div class="variant-card" id="card-v1" onclick="selectVariant(0)">
@@ -1022,6 +1022,7 @@
         goToStep(5);
         document.getElementById('ai-loading').style.display = 'block';
         document.getElementById('ai-content').style.display = 'none';
+        var fallbackText = '';
 
         // 2. Call AI summarize
         var aiRes = await fetch('/api/owner/summarize', {
@@ -1034,7 +1035,7 @@
         document.getElementById('ai-loading').style.display = 'none';
         document.getElementById('ai-content').style.display = 'block';
 
-        var aiData = await aiRes.json();
+        var aiData = await aiRes.json().catch(function() { return {}; });
         if (!aiRes.ok) {
           if (aiData.error === 'claim_blocked') {
             showAlert('⚠️ ' + aiData.message, true);
@@ -1043,25 +1044,91 @@
             btn.textContent = 'Generate Clean Summary 🤖';
             return;
           }
-          throw new Error(aiData.error || 'Failed to generate AI summary');
+          throw new Error(aiData.error || 'AI summary service returned an error');
         }
 
-        state.aiVariants = aiData.variants || [];
-        document.getElementById('text-v1').textContent = state.aiVariants[0] || '';
-        document.getElementById('text-v2').textContent = state.aiVariants[1] || '';
-        selectVariant(0);
+        renderAiVariants(aiData.variants || [], fallbackText);
       } catch (err) {
-        showAlert(err.message, true);
+        if (state.transformationId) {
+          document.getElementById('ai-loading').style.display = 'none';
+          document.getElementById('ai-content').style.display = 'block';
+          renderAiVariants([], fallbackText, 'AI service notice: ' + (err.message || 'Service unavailable') + '.');
+        } else {
+          showAlert(err.message, true);
+          goToStep(4);
+        }
+      } finally {
         btn.disabled = false;
         btn.textContent = 'Generate Clean Summary 🤖';
       }
     }
 
+    // Step 5: Render variants, guard against empty options, and allow manual entry
+    function renderAiVariants(variants, fallbackText, errorMessage) {
+      var v1 = (variants && typeof variants[0] === 'string') ? variants[0].trim() : '';
+      var v2 = (variants && typeof variants[1] === 'string') ? variants[1].trim() : '';
+      state.aiVariants = [v1, v2];
+
+      var cardV1 = document.getElementById('card-v1');
+      var cardV2 = document.getElementById('card-v2');
+      var textV1 = document.getElementById('text-v1');
+      var textV2 = document.getElementById('text-v2');
+      var hint = document.getElementById('ai-variants-hint');
+      var chosenArea = document.getElementById('chosen-text');
+
+      if (v1) {
+        cardV1.style.display = 'block';
+        textV1.textContent = v1;
+      } else {
+        cardV1.style.display = 'none';
+        cardV1.classList.remove('selected');
+        textV1.textContent = '';
+      }
+
+      if (v2) {
+        cardV2.style.display = 'block';
+        textV2.textContent = v2;
+      } else {
+        cardV2.style.display = 'none';
+        cardV2.classList.remove('selected');
+        textV2.textContent = '';
+      }
+
+      if (v1 || v2) {
+        if (hint) {
+          hint.style.display = 'block';
+          hint.textContent = (v1 && v2)
+            ? 'Pick one of the 2 AI variants below, then edit freely to perfect it:'
+            : 'Review the generated summary below, or edit freely to perfect it:';
+        }
+        if (v1) {
+          selectVariant(0);
+        } else {
+          selectVariant(1);
+        }
+      } else {
+        if (hint) hint.style.display = 'none';
+        cardV1.classList.remove('selected');
+        cardV2.classList.remove('selected');
+
+        var currentVal = (chosenArea.value || '').trim();
+        if (!currentVal && fallbackText) {
+          chosenArea.value = fallbackText.trim();
+          state.chosenSummary = fallbackText.trim();
+        }
+
+        var msg = errorMessage || 'AI summary unavailable. Please enter or edit your clean testimonial summary below.';
+        showAlert(msg, false);
+      }
+    }
+
     // Step 5: Variant select & Edit
     function selectVariant(idx) {
+      var text = (state.aiVariants && typeof state.aiVariants[idx] === 'string') ? state.aiVariants[idx].trim() : '';
+      if (!text) return; // Guard: Empty variants must NOT appear selectable or overwrite state
+
       document.getElementById('card-v1').classList.toggle('selected', idx === 0);
       document.getElementById('card-v2').classList.toggle('selected', idx === 1);
-      var text = state.aiVariants[idx] || '';
       document.getElementById('chosen-text').value = text;
       state.chosenSummary = text;
     }
@@ -1115,8 +1182,18 @@
       document.getElementById('chosen-text').value = '';
       var cardV1 = document.getElementById('card-v1');
       var cardV2 = document.getElementById('card-v2');
-      if (cardV1) cardV1.classList.remove('selected');
-      if (cardV2) cardV2.classList.remove('selected');
+      if (cardV1) {
+        cardV1.classList.remove('selected');
+        cardV1.style.display = 'block';
+        document.getElementById('text-v1').textContent = '';
+      }
+      if (cardV2) {
+        cardV2.classList.remove('selected');
+        cardV2.style.display = 'block';
+        document.getElementById('text-v2').textContent = '';
+      }
+      var hint = document.getElementById('ai-variants-hint');
+      if (hint) hint.style.display = 'block';
       state.chosenSummary = '';
       state.aiVariants = [];
       validateConsentForm();
@@ -1350,6 +1427,7 @@
       goToStep(5);
       document.getElementById('ai-loading').style.display = 'block';
       document.getElementById('ai-content').style.display = 'none';
+      var fallbackText = item.ai_summary || '';
 
       try {
         var aiRes = await fetch('/api/owner/summarize', {
@@ -1361,22 +1439,14 @@
         document.getElementById('ai-loading').style.display = 'none';
         document.getElementById('ai-content').style.display = 'block';
 
-        var aiData = await aiRes.json();
+        var aiData = await aiRes.json().catch(function() { return {}; });
         if (!aiRes.ok) throw new Error(aiData.error || 'Failed to generate AI summary');
 
-        state.aiVariants = aiData.variants || [];
-        document.getElementById('text-v1').textContent = state.aiVariants[0] || '';
-        document.getElementById('text-v2').textContent = state.aiVariants[1] || '';
-        selectVariant(0);
+        renderAiVariants(aiData.variants || [], fallbackText);
       } catch (err) {
         document.getElementById('ai-loading').style.display = 'none';
         document.getElementById('ai-content').style.display = 'block';
-        var fallbackText = item.ai_summary || item.customer_words || '';
-        state.aiVariants = [fallbackText, fallbackText];
-        document.getElementById('text-v1').textContent = fallbackText;
-        document.getElementById('text-v2').textContent = fallbackText;
-        selectVariant(0);
-        showAlert('AI service notice: ' + err.message + '. You can review or edit the summary directly below.', false);
+        renderAiVariants([], fallbackText, 'AI service notice: ' + (err.message || 'Service unavailable') + '.');
       }
     }
 

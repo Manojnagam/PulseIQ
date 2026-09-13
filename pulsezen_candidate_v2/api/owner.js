@@ -787,7 +787,7 @@ async function callGroqVariant(groqKey, customerWords, styleHint) {
     const hits = findBannedTerms(text);
     attempts.push({ attempt, user_prompt: userPrompt, raw_output: text, banned_terms_detected: hits });
 
-    if (hits.length === 0) {
+    if (text && hits.length === 0) {
       return { ok: true, text, rawOutput: text, hits: [], attempts };
     }
     lastHits = hits;
@@ -819,23 +819,34 @@ async function handleSummarize(req, res) {
     const customerWords = rows[0].customer_words;
     const v1 = await callGroqVariant(groqKey, customerWords, 'Variant 1: Express feeling lighter, consistent habits, and personal well-being in simple first-person.');
     if (!v1.ok) {
-      return res.status(400).json({
-        error: 'claim_blocked',
-        message: "The customer's words contain medical or curative claims which cannot be published. Please rewrite without medical claims.",
-        banned_terms: v1.hits
-      });
+      if (v1.hits && v1.hits.length > 0) {
+        return res.status(400).json({
+          error: 'claim_blocked',
+          message: "The customer's words contain medical or curative claims which cannot be published. Please rewrite without medical claims.",
+          banned_terms: v1.hits
+        });
+      }
+      return res.status(502).json({ error: 'Failed to generate AI summary', details: 'AI provider returned an empty or invalid summary.' });
     }
 
     const v2 = await callGroqVariant(groqKey, customerWords, 'Variant 2: Express daily routine, energy to do everyday tasks, and positive personal changes in simple first-person.');
     if (!v2.ok) {
-      return res.status(400).json({
-        error: 'claim_blocked',
-        message: "The customer's words contain medical or curative claims which cannot be published. Please rewrite without medical claims.",
-        banned_terms: v2.hits
-      });
+      if (v2.hits && v2.hits.length > 0) {
+        return res.status(400).json({
+          error: 'claim_blocked',
+          message: "The customer's words contain medical or curative claims which cannot be published. Please rewrite without medical claims.",
+          banned_terms: v2.hits
+        });
+      }
+      return res.status(502).json({ error: 'Failed to generate AI summary', details: 'AI provider returned an empty or invalid summary.' });
     }
 
-    return res.status(200).json({ id: rows[0].id, variants: [v1.text, v2.text] });
+    const validVariants = [v1.text, v2.text].filter(t => typeof t === 'string' && t.trim().length > 0);
+    if (validVariants.length === 0) {
+      return res.status(502).json({ error: 'Failed to generate AI summary', details: 'AI provider returned no valid variants.' });
+    }
+
+    return res.status(200).json({ id: rows[0].id, variants: validVariants });
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error', details: err.message });
   }
