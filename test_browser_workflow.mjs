@@ -205,10 +205,10 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, async () => {
   console.log(`Test server running at ${BASE_URL}`);
 
-  // Seed transformation
-  const initialId = '12345678-1234-1234-1234-123456789abc';
-  db.transformations[initialId] = {
-    id: initialId,
+  // Seed Story A (consented story)
+  const storyAId = '12345678-1234-1234-1234-123456789abc';
+  db.transformations[storyAId] = {
+    id: storyAId,
     center_id: centerId,
     customer_name: 'Pooja Reddy',
     before_path: `${centerId}/pooja_before.jpg`,
@@ -226,6 +226,28 @@ server.listen(PORT, async () => {
   };
   db.storage.add(`${centerId}/pooja_before.jpg`);
   db.storage.add(`${centerId}/pooja_after.jpg`);
+
+  // Seed Story B (unconsented story - must not inherit Story A state)
+  const storyBId = '87654321-4321-4321-4321-cba987654321';
+  db.transformations[storyBId] = {
+    id: storyBId,
+    center_id: centerId,
+    customer_name: 'Kiran Kumar',
+    before_path: `${centerId}/kiran_before.jpg`,
+    after_path: `${centerId}/kiran_after.jpg`,
+    duration_weeks: 12,
+    start_weight_kg: 85.0,
+    end_weight_kg: 77.0,
+    health_issue: 'Cardiovascular fitness',
+    customer_words: 'Lost 8kg in 12 weeks with consistent workout and nutritious diet.',
+    ai_summary: null,
+    status: 'draft',
+    consent_given: false,
+    consent_name: null,
+    consent_phone_last4: null
+  };
+  db.storage.add(`${centerId}/kiran_before.jpg`);
+  db.storage.add(`${centerId}/kiran_after.jpg`);
 
   // Launch Edge with remote debugging
   const debuggingPort = 9222;
@@ -291,9 +313,9 @@ server.listen(PORT, async () => {
       });
       console.log(`[Browser Check 1] Cards rendered in Owner Portal: ${eval1.result.result.value}`);
 
-      // 2. Publish story in Owner Portal with review snapshot
-      console.log('-> Browser Step 2: Owner publishes transformation with valid review snapshot...');
-      const initialSnapshot = {
+      // 2. Publish Story A with valid review snapshot
+      console.log('-> Browser Step 2: Owner publishes Story A with valid review snapshot...');
+      const snapshotA = {
         customer_name: 'Pooja Reddy',
         duration_weeks: 6,
         start_weight_kg: 68.0,
@@ -309,8 +331,8 @@ server.listen(PORT, async () => {
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
               body: JSON.stringify({
-                id: '${initialId}',
-                review_snapshot: ${JSON.stringify(initialSnapshot)}
+                id: '${storyAId}',
+                review_snapshot: ${JSON.stringify(snapshotA)}
               })
             });
             const data = await res.json();
@@ -320,7 +342,7 @@ server.listen(PORT, async () => {
         awaitPromise: true,
         returnByValue: true
       });
-      console.log('[Browser Check 2] Publish status:', JSON.stringify(evalPubRes.result.result.value));
+      console.log('[Browser Check 2] Story A publish status:', JSON.stringify(evalPubRes.result.result.value));
 
       // 3. Navigate to Center Public Page and verify publication appearance
       console.log('-> Browser Step 3: Navigating to Public Centre Showcase...');
@@ -346,11 +368,11 @@ server.listen(PORT, async () => {
       });
       console.log('[Browser Check 3] Public Centre Page Presentation:', JSON.stringify(evalPub.result.result.value));
 
-      // 4. Edit details in Owner Portal with quotes, backslashes, and multiline text
+      // 4. Edit details of Story A with quotes, backslashes, and multiline text
       console.log('-> Browser Step 4: Factual Edit with Quotes & Special Characters in Owner Portal...');
       const specialText = `Pooja's "Transformation" \\Coach notes\\\nLine 2: 100% verified.`;
       const editPayload = {
-        id: initialId,
+        id: storyAId,
         customer_name: 'Pooja "O\'Reddy" \\Test\\',
         duration_weeks: 8,
         end_weight_kg: 61.0,
@@ -375,7 +397,7 @@ server.listen(PORT, async () => {
       });
       console.log('[Browser Check 4] Factual Edit with special characters:', JSON.stringify(evalEdit.result.result.value));
 
-      // 5. Verify Centre Public Page immediately hides story after factual edit returned it to draft
+      // 5. Verify Centre Public Page immediately hides Story A after factual edit returned it to draft
       console.log('-> Browser Step 5: Checking Centre Public Page after factual edit (Consistency Safety)...');
       const evalPubAfterEdit = await sendCmd('Runtime.evaluate', {
         expression: `
@@ -391,7 +413,7 @@ server.listen(PORT, async () => {
       });
       console.log('[Browser Check 5] Public Centre Page post-edit (Story retracted for review):', JSON.stringify(evalPubAfterEdit.result.result.value));
 
-      // 6. Navigate back to Owner Portal and test addEventListener DOM Click
+      // 6. Navigate back to Owner Portal and verify addEventListener DOM Safe Bindings
       console.log('-> Browser Step 6: Navigating to Owner Portal to verify addEventListener and safe DOM bindings...');
       await sendCmd('Page.navigate', { url: `${BASE_URL}/owner.html` });
       await new Promise(r => setTimeout(r, 1500));
@@ -399,13 +421,12 @@ server.listen(PORT, async () => {
       const evalDomCheck = await sendCmd('Runtime.evaluate', {
         expression: `
           (() => {
-            const card = document.querySelector('.t-card');
-            const nameEl = card ? card.querySelector('.t-name') : null;
-            const editBtn = card ? card.querySelector('.action-edit-btn') : null;
-            const reviewBtn = card ? card.querySelector('.action-review-btn') : null;
-            const delBtn = card ? card.querySelector('.action-delete-btn') : null;
+            const cards = document.querySelectorAll('.t-card');
+            const editBtn = cards[0] ? cards[0].querySelector('.action-edit-btn') : null;
+            const reviewBtn = cards[0] ? cards[0].querySelector('.action-review-btn') : null;
+            const delBtn = cards[0] ? cards[0].querySelector('.action-delete-btn') : null;
             return {
-              renderedName: nameEl ? nameEl.textContent : null,
+              cardCount: cards.length,
               hasInlineOnclickEdit: editBtn ? editBtn.hasAttribute('onclick') : true,
               hasInlineOnclickReview: reviewBtn ? reviewBtn.hasAttribute('onclick') : true,
               hasInlineOnclickDelete: delBtn ? delBtn.hasAttribute('onclick') : true,
@@ -417,60 +438,84 @@ server.listen(PORT, async () => {
       });
       console.log('[Browser Check 6] DOM Safe Binding & Zero Inline Onclick:', JSON.stringify(evalDomCheck.result.result.value));
 
-      // 7. Reopen edited existing story, review summary in wizard, advance and republish
-      console.log('-> Browser Step 7: Reopening edited story, reviewing summary, and republishing...');
-      const evalReopenAndRepublish = await sendCmd('Runtime.evaluate', {
+      // 7. Review-form State Isolation: Open Consented Story A followed by Unconsented Story B
+      console.log('-> Browser Step 7: Testing Review-Form State Isolation (Consented Story A -> Unconsented Story B)...');
+      const evalIsolation = await sendCmd('Runtime.evaluate', {
         expression: `
           (async () => {
-            // Click the Review & Publish button on the draft card
-            const reviewBtn = document.querySelector('.action-review-btn');
-            if (!reviewBtn) return { error: 'Review button not found' };
-            reviewBtn.click();
+            const results = {};
 
-            // Wait for wizard step 5 to become active
+            // 7a: Reopen Consented Story A for review
+            const reviewBtnA = document.querySelector('.action-review-btn[data-id="${storyAId}"]');
+            if (!reviewBtnA) return { error: 'Review button for Story A not found' };
+            reviewBtnA.click();
             await new Promise(r => setTimeout(r, 1000));
-            const step5Active = document.getElementById('step-5').classList.contains('active');
-            const snapshotCaptured = Boolean(state.reviewSnapshot && state.reviewSnapshot.customer_name);
 
-            // Select summary variant 0 and save chosen summary
+            // Select summary for Story A and advance to Step 6
             selectVariant(0);
             await saveChosenSummary();
             await new Promise(r => setTimeout(r, 500));
 
-            const step6Active = document.getElementById('step-6').classList.contains('active');
-
-            // Complete consent gate and publish final
+            // Simulate user interacting with Step 6 for Story A: checking consent and entering phone
             document.getElementById('consent-check').checked = true;
-            document.getElementById('c-name').value = 'Pooja O Reddy';
-            document.getElementById('c-phone').value = '5566';
+            document.getElementById('c-phone').value = '9988';
             validateConsentForm();
+
+            results.storyA_consentChecked = document.getElementById('consent-check').checked;
+            results.storyA_phone = document.getElementById('c-phone').value;
+            results.storyA_publishEnabled = !document.getElementById('btn-publish').disabled;
+
+            // 7b: Now switch directly to Unconsented Story B
+            const reviewBtnB = document.querySelector('.action-review-btn[data-id="${storyBId}"]');
+            if (!reviewBtnB) return { error: 'Review button for Story B not found' };
+            reviewBtnB.click();
+            await new Promise(r => setTimeout(r, 1000));
+
+            // Verify Story B inherited NOTHING from Story A:
+            // Checkbox must be reset to false, phone must be reset to empty, publish must be disabled
+            results.storyB_inheritedConsentCheck = document.getElementById('consent-check').checked; // MUST be false
+            results.storyB_inheritedPhone = document.getElementById('c-phone').value;                 // MUST be ''
+            results.storyB_name = document.getElementById('c-name').value;                           // MUST be 'Kiran Kumar'
+            results.storyB_publishDisabled = document.getElementById('btn-publish').disabled;        // MUST be true
+
+            // 7c: Attempt to publish Story B WITHOUT explicit consent confirmation
+            // Calling handlePublishFinal() directly must be rejected and must NOT publish
+            await handlePublishFinal();
+            const alertEl = document.getElementById('global-alert');
+            results.unconfirmedPublishRejected = alertEl.style.display !== 'none' && alertEl.textContent.includes('consent');
+
+            // 7d: Now provide EXPLICIT confirmation for Story B and publish
+            selectVariant(1);
+            await saveChosenSummary();
+            await new Promise(r => setTimeout(r, 500));
+
+            document.getElementById('consent-check').checked = true;
+            document.getElementById('c-phone').value = '4321';
+            validateConsentForm();
+            results.storyB_explicitConfirmEnabled = !document.getElementById('btn-publish').disabled;
 
             await handlePublishFinal();
             await new Promise(r => setTimeout(r, 1000));
 
-            // Verify list reflects published state
-            const listCard = document.querySelector('.t-card');
-            const badge = listCard ? listCard.querySelector('.badge') : null;
+            // Verify Story B is published in DOM list
+            const cardB = Array.from(document.querySelectorAll('.t-card')).find(c => c.textContent.includes('Kiran Kumar'));
+            const badgeB = cardB ? cardB.querySelector('.badge') : null;
+            results.storyB_finalStatusBadge = badgeB ? badgeB.textContent : null;
 
-            return {
-              step5Active,
-              snapshotCaptured,
-              step6Active,
-              finalBadge: badge ? badge.textContent : null
-            };
+            return results;
           })()
         `,
         awaitPromise: true,
         returnByValue: true
       });
-      console.log('[Browser Check 7] Reopen review & republish workflow:', JSON.stringify(evalReopenAndRepublish.result.result.value));
+      console.log('[Browser Check 7] Review-form State Isolation & Unconsented Story B:', JSON.stringify(evalIsolation.result.result.value));
 
-      // 8. Verify public center showcase shows the republished story
-      console.log('-> Browser Step 8: Verifying republished story on Public Centre Page...');
+      // 8. Verify Centre Public Page shows published Story B
+      console.log('-> Browser Step 8: Verifying published Story B on Public Centre Showcase...');
       await sendCmd('Page.navigate', { url: `${BASE_URL}/center.html` });
       await new Promise(r => setTimeout(r, 1500));
 
-      const evalRepublishedPublic = await sendCmd('Runtime.evaluate', {
+      const evalPublicB = await sendCmd('Runtime.evaluate', {
         expression: `
           (async () => {
             await loadTransformations('${centerId}');
@@ -485,9 +530,9 @@ server.listen(PORT, async () => {
         awaitPromise: true,
         returnByValue: true
       });
-      console.log('[Browser Check 8] Public Centre Page Presentation post-republish:', JSON.stringify(evalRepublishedPublic.result.result.value));
+      console.log('[Browser Check 8] Public Centre Page Presentation post-republish:', JSON.stringify(evalPublicB.result.result.value));
 
-      // 9. Owner Deletes transformation (Zero storage deletion check & confirmation text)
+      // 9. Owner deletes Story B (Zero storage deletions enforced)
       console.log('-> Browser Step 9: Owner deletes transformation (Zero storage deletions enforced)...');
       const evalDel = await sendCmd('Runtime.evaluate', {
         expression: `
@@ -496,7 +541,7 @@ server.listen(PORT, async () => {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
-              body: JSON.stringify({ id: '${initialId}', confirm: true })
+              body: JSON.stringify({ id: '${storyBId}', confirm: true })
             });
             const data = await res.json();
             return {

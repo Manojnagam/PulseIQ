@@ -1115,9 +1115,16 @@
 
     async function handlePublishFinal() {
       hideAlert();
+      var check = document.getElementById('consent-check').checked;
       var name = document.getElementById('c-name').value.trim();
       var phone = document.getElementById('c-phone').value.trim();
       var btn = document.getElementById('btn-publish');
+
+      if (!check || !name || !/^\d{4}$/.test(phone)) {
+        showAlert('Explicit customer consent confirmation and last 4 digits of phone are required.', true);
+        validateConsentForm();
+        return;
+      }
 
       btn.disabled = true;
       btn.innerHTML = '<span class="loader"></span> Publishing...';
@@ -1318,14 +1325,19 @@
         customer_words: item.customer_words
       };
 
-      document.getElementById('c-name').value = item.consent_name || item.customer_name || '';
+      // Review-form state isolation: ALWAYS reset consent checkbox, phone digits, and other story-specific state
+      // Require explicit consent confirmation for the current story
+      document.getElementById('consent-check').checked = false;
+      document.getElementById('c-phone').value = '';
+      document.getElementById('c-name').value = item.customer_name || '';
       document.getElementById('f-words').value = item.customer_words || '';
-      if (item.consent_phone_last4) {
-        document.getElementById('c-phone').value = item.consent_phone_last4;
-      }
-      if (item.consent_given) {
-        document.getElementById('consent-check').checked = true;
-      }
+      document.getElementById('chosen-text').value = '';
+      var cardV1 = document.getElementById('card-v1');
+      var cardV2 = document.getElementById('card-v2');
+      if (cardV1) cardV1.classList.remove('selected');
+      if (cardV2) cardV2.classList.remove('selected');
+      state.chosenSummary = '';
+      state.aiVariants = [];
       validateConsentForm();
 
       goToStep(5);
