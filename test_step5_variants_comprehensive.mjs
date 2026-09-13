@@ -321,6 +321,169 @@ test('Step 5 Variant Rendering, Selection, Textarea State, and Error Handling', 
     await page.close();
   });
 
+  await t.test('6. Malformed Collection: string ("just a string") rejected, cards hidden, manual entry works', async () => {
+    mockSummarizeHandler = (req, res) => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ id: 'trans-123', variants: 'just a string' }));
+    };
+
+    const page = await setupPage();
+    await page.evaluate(async () => {
+      await handleReopenReview({
+        id: 'trans-123',
+        customer_name: 'Pooja Reddy',
+        customer_words: 'Lost 5.5 kg in 10 weeks.',
+        status: 'draft',
+        ai_summary: null
+      });
+    });
+
+    await page.waitForSelector('#step-5.active');
+    const v1Display = await page.$eval('#card-v1', el => getComputedStyle(el).display);
+    const v2Display = await page.$eval('#card-v2', el => getComputedStyle(el).display);
+    assert.equal(v1Display, 'none', 'Variant A hidden when variants is a string');
+    assert.equal(v2Display, 'none', 'Variant B hidden when variants is a string');
+
+    await page.focus('#chosen-text');
+    await page.keyboard.type('Manual entry when variants was a string.');
+    lastSavedSummary = null;
+    await page.click('#btn-next-5');
+    await page.waitForSelector('#step-6.active');
+    assert.equal(lastSavedSummary, 'Manual entry when variants was a string.');
+    await page.close();
+  });
+
+  await t.test('7. Malformed Collection: object ({ 0: "obj text" }) rejected, cards hidden, manual entry works', async () => {
+    mockSummarizeHandler = (req, res) => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ id: 'trans-123', variants: { 0: 'obj text', 1: 'another text' } }));
+    };
+
+    const page = await setupPage();
+    await page.evaluate(async () => {
+      await handleReopenReview({
+        id: 'trans-123',
+        customer_name: 'Pooja Reddy',
+        customer_words: 'Lost 5.5 kg in 10 weeks.',
+        status: 'draft',
+        ai_summary: null
+      });
+    });
+
+    await page.waitForSelector('#step-5.active');
+    const v1Display = await page.$eval('#card-v1', el => getComputedStyle(el).display);
+    const v2Display = await page.$eval('#card-v2', el => getComputedStyle(el).display);
+    assert.equal(v1Display, 'none', 'Variant A hidden when variants is an object');
+    assert.equal(v2Display, 'none', 'Variant B hidden when variants is an object');
+
+    await page.focus('#chosen-text');
+    await page.keyboard.type('Manual entry when variants was an object.');
+    lastSavedSummary = null;
+    await page.click('#btn-next-5');
+    await page.waitForSelector('#step-6.active');
+    assert.equal(lastSavedSummary, 'Manual entry when variants was an object.');
+    await page.close();
+  });
+
+  await t.test('8. Malformed Entries: pure whitespace entries (["   ", "\\t\\n  "]) rejected, cards hidden, manual entry works', async () => {
+    mockSummarizeHandler = (req, res) => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ id: 'trans-123', variants: ['   ', '\t\n  '] }));
+    };
+
+    const page = await setupPage();
+    await page.evaluate(async () => {
+      await handleReopenReview({
+        id: 'trans-123',
+        customer_name: 'Pooja Reddy',
+        customer_words: 'Lost 5.5 kg in 10 weeks.',
+        status: 'draft',
+        ai_summary: null
+      });
+    });
+
+    await page.waitForSelector('#step-5.active');
+    const v1Display = await page.$eval('#card-v1', el => getComputedStyle(el).display);
+    const v2Display = await page.$eval('#card-v2', el => getComputedStyle(el).display);
+    assert.equal(v1Display, 'none', 'Variant A hidden when entries are whitespace');
+    assert.equal(v2Display, 'none', 'Variant B hidden when entries are whitespace');
+
+    await page.focus('#chosen-text');
+    await page.keyboard.type('Manual entry when entries were pure whitespace.');
+    lastSavedSummary = null;
+    await page.click('#btn-next-5');
+    await page.waitForSelector('#step-6.active');
+    assert.equal(lastSavedSummary, 'Manual entry when entries were pure whitespace.');
+    await page.close();
+  });
+
+  await t.test('9. Malformed Entries: non-string entries ([123, {text: "hi"}, null, true]) rejected, cards hidden, manual entry works', async () => {
+    mockSummarizeHandler = (req, res) => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ id: 'trans-123', variants: [123, { text: 'hi' }, null, true] }));
+    };
+
+    const page = await setupPage();
+    await page.evaluate(async () => {
+      await handleReopenReview({
+        id: 'trans-123',
+        customer_name: 'Pooja Reddy',
+        customer_words: 'Lost 5.5 kg in 10 weeks.',
+        status: 'draft',
+        ai_summary: null
+      });
+    });
+
+    await page.waitForSelector('#step-5.active');
+    const v1Display = await page.$eval('#card-v1', el => getComputedStyle(el).display);
+    const v2Display = await page.$eval('#card-v2', el => getComputedStyle(el).display);
+    assert.equal(v1Display, 'none', 'Variant A hidden for non-string entries');
+    assert.equal(v2Display, 'none', 'Variant B hidden for non-string entries');
+
+    await page.focus('#chosen-text');
+    await page.keyboard.type('Manual entry when entries were non-strings.');
+    lastSavedSummary = null;
+    await page.click('#btn-next-5');
+    await page.waitForSelector('#step-6.active');
+    assert.equal(lastSavedSummary, 'Manual entry when entries were non-strings.');
+    await page.close();
+  });
+
+  await t.test('10. Mixed Collection: 1 valid string + non-string/whitespace retains valid variant and hides second card', async () => {
+    mockSummarizeHandler = (req, res) => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ id: 'trans-123', variants: ['Clean active lifestyle.', null, 456, '   '] }));
+    };
+
+    const page = await setupPage();
+    await page.evaluate(async () => {
+      await handleReopenReview({
+        id: 'trans-123',
+        customer_name: 'Pooja Reddy',
+        customer_words: 'Lost 5.5 kg in 10 weeks.',
+        status: 'draft',
+        ai_summary: null
+      });
+    });
+
+    await page.waitForSelector('#step-5.active');
+    const v1Display = await page.$eval('#card-v1', el => getComputedStyle(el).display);
+    const v2Display = await page.$eval('#card-v2', el => getComputedStyle(el).display);
+    const v1Text = await page.$eval('#text-v1', el => el.textContent.trim());
+    const chosenVal = await page.$eval('#chosen-text', el => el.value.trim());
+
+    assert.equal(v1Display, 'block', 'Variant A is visible for valid entry');
+    assert.equal(v2Display, 'none', 'Variant B is hidden for non-string/whitespace');
+    assert.equal(v1Text, 'Clean active lifestyle.');
+    assert.equal(chosenVal, 'Clean active lifestyle.');
+
+    lastSavedSummary = null;
+    await page.click('#btn-next-5');
+    await page.waitForSelector('#step-6.active');
+    assert.equal(lastSavedSummary, 'Clean active lifestyle.');
+    await page.close();
+  });
+
   await browser.close();
   server.close();
 });

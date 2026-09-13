@@ -817,36 +817,54 @@ async function handleSummarize(req, res) {
     if (!rows || rows.length === 0) return res.status(404).json({ error: 'Transformation record not found' });
 
     const customerWords = rows[0].customer_words;
-    const v1 = await callGroqVariant(groqKey, customerWords, 'Variant 1: Express feeling lighter, consistent habits, and personal well-being in simple first-person.');
-    if (!v1.ok) {
-      if (v1.hits && v1.hits.length > 0) {
-        return res.status(400).json({
-          error: 'claim_blocked',
-          message: "The customer's words contain medical or curative claims which cannot be published. Please rewrite without medical claims.",
-          banned_terms: v1.hits
-        });
-      }
-      return res.status(502).json({ error: 'Failed to generate AI summary', details: 'AI provider returned an empty or invalid summary.' });
+
+    let v1 = null;
+    let v1Error = null;
+    try {
+      v1 = await callGroqVariant(groqKey, customerWords, 'Variant 1: Express feeling lighter, consistent habits, and personal well-being in simple first-person.');
+    } catch (err) {
+      v1Error = err;
     }
 
-    const v2 = await callGroqVariant(groqKey, customerWords, 'Variant 2: Express daily routine, energy to do everyday tasks, and positive personal changes in simple first-person.');
-    if (!v2.ok) {
-      if (v2.hits && v2.hits.length > 0) {
-        return res.status(400).json({
-          error: 'claim_blocked',
-          message: "The customer's words contain medical or curative claims which cannot be published. Please rewrite without medical claims.",
-          banned_terms: v2.hits
-        });
-      }
-      return res.status(502).json({ error: 'Failed to generate AI summary', details: 'AI provider returned an empty or invalid summary.' });
+    let v2 = null;
+    let v2Error = null;
+    try {
+      v2 = await callGroqVariant(groqKey, customerWords, 'Variant 2: Express daily routine, energy to do everyday tasks, and positive personal changes in simple first-person.');
+    } catch (err) {
+      v2Error = err;
     }
 
-    const validVariants = [v1.text, v2.text].filter(t => typeof t === 'string' && t.trim().length > 0);
-    if (validVariants.length === 0) {
-      return res.status(502).json({ error: 'Failed to generate AI summary', details: 'AI provider returned no valid variants.' });
+    // Preserve claim-blocking rules: if either generation encountered prohibited medical claims, fail closed (400)
+    if (v1 && !v1.ok && Array.isArray(v1.hits) && v1.hits.length > 0) {
+      return res.status(400).json({
+        error: 'claim_blocked',
+        message: "The customer's words contain medical or curative claims which cannot be published. Please rewrite without medical claims.",
+        banned_terms: v1.hits
+      });
+    }
+    if (v2 && !v2.ok && Array.isArray(v2.hits) && v2.hits.length > 0) {
+      return res.status(400).json({
+        error: 'claim_blocked',
+        message: "The customer's words contain medical or curative claims which cannot be published. Please rewrite without medical claims.",
+        banned_terms: v2.hits
+      });
     }
 
-    return res.status(200).json({ id: rows[0].id, variants: validVariants });
+    // Retain valid compliant variants when companion generation is empty or unavailable
+    const validVariants = [];
+    if (v1 && v1.ok && typeof v1.text === 'string' && v1.text.trim().length > 0) {
+      validVariants.push(v1.text.trim());
+    }
+    if (v2 && v2.ok && typeof v2.text === 'string' && v2.text.trim().length > 0) {
+      validVariants.push(v2.text.trim());
+    }
+
+    if (validVariants.length > 0) {
+      return res.status(200).json({ id: rows[0].id, variants: validVariants });
+    }
+
+    const failureDetail = (v1Error?.message || v2Error?.message || 'AI provider returned no valid variants.');
+    return res.status(502).json({ error: 'Failed to generate AI summary', details: failureDetail });
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error', details: err.message });
   }
@@ -886,7 +904,8 @@ async function handleSummarySelect(req, res) {
   if (!session || !session.center_id) return res.status(401).json({ error: 'Unauthorized' });
 
   const { id, text, review_snapshot } = req.body || {};
-  if (!id || !text || typeof text !== 'string') return res.status(400).json({ error: 'Transformation id and summary text are required' });
+  const cleanText = (typeof text === 'string') ? text.trim() : '';
+  if (!id || !cleanText) return res.status(400).json({ error: 'Transformation id and summary text are required' });
 
   if (!review_snapshot) {
     return res.status(400).json({
@@ -903,7 +922,6 @@ async function handleSummarySelect(req, res) {
     });
   }
 
-  const cleanText = text.trim();
   const hits = findBannedTerms(cleanText);
   if (hits.length > 0) {
     return res.status(400).json({
