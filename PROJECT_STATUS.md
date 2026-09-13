@@ -293,7 +293,7 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
      - Date: 2026-09-13
      - Source: `pulsezen_candidate_v2.zip` (SHA-256 `9828A2DC979AFF5D2999E1CD41CBDBECAE45AD75550735FEECF5F049902BC862`)
      - Issues: Encountered Fastify 400 on `upload-url` due to empty JSON body. Retained as rollback target.
-  2. **Deployment `dpl_2M2bot2KVJxLz2iXNu1S9wnLB8Nx` (Active Production)**:
+  2. **Deployment `dpl_2M2bot2KVJxLz2iXNu1S9wnLB8Nx` (Rollback Target)**:
      - Date: 2026-09-13
      - Source Archive: `pulsezen_candidate_isolated.zip`
      - Source SHA-256: `CAF7AA3BFD4FC86695B4E04EB2E7B0698BAD66F049E755A6CB2A1953186DD08E`
@@ -301,14 +301,28 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
      - Project Linkage: `pulsezen` (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`), Org: `team_sCJEuNqKJQKCc3Sofuec2ogz`
      - Source Verification: 100% byte-for-byte identical across all 45 assets against baseline `pulsezen_candidate_v2.zip`; strictly **only** `api/owner.js` modified to add `body: JSON.stringify({})`, route guarding, and URL normalization.
      - Rollback Baseline: `dpl_CUNi73uV9LuwonX8ezFtNpT6fchs` retained.
+     - Acceptance Gate: Authenticated upload acceptance testing left to the owner; upload issue marked pending owner acceptance.
+  3. **Deployment `dpl_Avs7C2yG3RRy7NkfNuZmn7MDdui2` (Active Production — Step 5 Variant Fix)**:
+     - Date: 2026-09-13
+     - Source Archive: `pulsezen_candidate_v4.zip`
+     - Source SHA-256: `487C63B38566A904226A6651AE50905D8B2FDB14041D6E11E060B4FBD321CCF0`
+     - Production Alias: `https://pulsezen.in`, `https://pulsezen-zeta.vercel.app`, `https://pulsezen-manojnagam1551-6558s-projects.vercel.app`
+     - Project Linkage: `pulsezen` (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`), Org: `team_sCJEuNqKJQKCc3Sofuec2ogz`
+     - Source Verification: Exactly 2 files changed against deployed baseline `CAF7AA3BFD4FC86695B4E04EB2E7B0698BAD66F049E755A6CB2A1953186DD08E`: `api/owner.js` and `owner.html`. All other 44 files 100% byte-for-byte identical.
+     - Immediate Rollback Reference: `dpl_2M2bot2KVJxLz2iXNu1S9wnLB8Nx` retained.
+     - Status: **Code approved with observations; Owner acceptance pending**.
+     - Verification Evidence: 6/6 test suites passed empirically (unit tests, backend partial-result handling, and browser-driven new-story flow tests).
      - Post-Deployment Read-Only Smoke Checks:
        - `https://pulsezen.in/`: HTTP 200 (69,928 bytes)
-       - `https://pulsezen.in/owner-login.html`: HTTP 200 (12,127 bytes)
-       - `https://pulsezen.in/owner.html`: HTTP 200 (53,726 bytes)
+       - `https://pulsezen.in/owner-login`: HTTP 200 (12,127 bytes)
+       - `https://pulsezen.in/owner`: HTTP 200 (56,902 bytes)
        - `https://pulsezen.in/dharanis.html`: HTTP 200 (75,497 bytes)
        - `https://pulsezen.in/bks-prime.html`: HTTP 200 (74,299 bytes)
-       - `https://pulsezen.in/center.html`: HTTP 200 (64,701 bytes)
-       - `https://pulsezen.in/api/public?action=transformations...`: HTTP 200 (73 bytes)
-       - `https://pulsezen.in/api/owner/upload-url` (Auth guard): HTTP 401 Unauthorized (24 bytes)
+       - `https://pulsezen.in/api/owner/ping`: HTTP 200 (`{"status":"ok","service":"pulsezen-owner-api"}`)
+       - `https://pulsezen.in/api/public/transformations?center_id=2c1c3a6e-35b4-4e30-bbae-a0cf02d8dd7a`: HTTP 200 (`{"center_id":"2c1c3a6e-35b4-4e30-bbae-a0cf02d8dd7a","transformations":[]}`)
+       - `https://pulsezen.in/api/owner/upload-url` (Auth guard): HTTP 401 Unauthorized (`{"error":"Unauthorized"}`)
        - `https://app.pulsezen.in/` (Separate CRM): HTTP 200 (398,061 bytes, untouched)
-     - Acceptance Gate: Authenticated upload acceptance testing left to the owner; upload issue is not marked as production-verified until that succeeds.
+     - Acceptance Gate: Production acceptance remains `PENDING_OWNER_ACCEPTANCE` until the owner performs real browser verification:
+       1. Photo uploads (Before and After).
+       2. Populated AI summary variant selection (Variant A / Variant B) or clean manual fallback.
+       3. Progression to Step 6 Consent Gate and publishing.
