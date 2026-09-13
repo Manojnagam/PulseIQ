@@ -288,13 +288,27 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
   3. Required environment variable presence and **Production** scope (names only: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `OWNER_SESSION_SECRET`, `CRON_SECRET` — no values).
   4. Final release review and deployment authorization.
 
-
-
-
-
-
-
-
-
-
-
+- **Production Release History**:
+  1. **Deployment `dpl_CUNi73uV9LuwonX8ezFtNpT6fchs` (Rollback Reference)**:
+     - Date: 2026-09-13
+     - Source: `pulsezen_candidate_v2.zip` (SHA-256 `9828A2DC979AFF5D2999E1CD41CBDBECAE45AD75550735FEECF5F049902BC862`)
+     - Issues: Encountered Fastify 400 on `upload-url` due to empty JSON body. Retained as rollback target.
+  2. **Deployment `dpl_2M2bot2KVJxLz2iXNu1S9wnLB8Nx` (Active Production)**:
+     - Date: 2026-09-13
+     - Source Archive: `pulsezen_candidate_isolated.zip`
+     - Source SHA-256: `CAF7AA3BFD4FC86695B4E04EB2E7B0698BAD66F049E755A6CB2A1953186DD08E`
+     - Production Alias: `https://pulsezen.in`
+     - Project Linkage: `pulsezen` (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`), Org: `team_sCJEuNqKJQKCc3Sofuec2ogz`
+     - Source Verification: 100% byte-for-byte identical across all 45 assets against baseline `pulsezen_candidate_v2.zip`; strictly **only** `api/owner.js` modified to add `body: JSON.stringify({})`, route guarding, and URL normalization.
+     - Rollback Baseline: `dpl_CUNi73uV9LuwonX8ezFtNpT6fchs` retained.
+     - Post-Deployment Read-Only Smoke Checks:
+       - `https://pulsezen.in/`: HTTP 200 (69,928 bytes)
+       - `https://pulsezen.in/owner-login.html`: HTTP 200 (12,127 bytes)
+       - `https://pulsezen.in/owner.html`: HTTP 200 (53,726 bytes)
+       - `https://pulsezen.in/dharanis.html`: HTTP 200 (75,497 bytes)
+       - `https://pulsezen.in/bks-prime.html`: HTTP 200 (74,299 bytes)
+       - `https://pulsezen.in/center.html`: HTTP 200 (64,701 bytes)
+       - `https://pulsezen.in/api/public?action=transformations...`: HTTP 200 (73 bytes)
+       - `https://pulsezen.in/api/owner/upload-url` (Auth guard): HTTP 401 Unauthorized (24 bytes)
+       - `https://app.pulsezen.in/` (Separate CRM): HTTP 200 (398,061 bytes, untouched)
+     - Acceptance Gate: Authenticated upload acceptance testing left to the owner; upload issue is not marked as production-verified until that succeeds.
