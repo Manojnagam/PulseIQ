@@ -252,9 +252,26 @@ Milestone 6 — Executive Dashboard & Coach Analytics Telemetry has been fully i
   4. **Cross-Project Deployment Isolation**: `UNVERIFIED` at infrastructure level. Local `pulsezen/.vercel/project.json` binds to project `pulsezen` (`prj_RckD9DhM7zvO5rOWD9LyXADt2x7j`) and `pulsezen/vercel.json` excludes `app.pulsezen.in`, but full production domain bindings (including the 2 domains hidden under "+2") remain unverified.
   5. **Deployment-Source Baseline Established (4 Files)**:
      - The four user-supplied files copied from Vercel deployment `pulsezen-2j7js36nw-manojnagam1551-6558s-projects.vercel.app` (`api/owner.js`, `api/_session.js`, `api/_owner-helper.js`, `owner-login.html`) establish the **deployment-source baseline**.
-     - **Provenance & Verification**: Comparing the raw Git tree at commit `b1eb857bbce2fb4ab4917d17976893e8e0403cc7` (created Sep 9) against the supplied code confirms an exact match across all four files. This avoids chat formatting artifacts and markdown link mangling.
-     - **Preservation of Non-Authentication Handlers**: The candidate retains 100% of the deployed non-authentication handlers from `owner.js` (`handleList`, `handleUploadUrl`, `handleCreateTransformation`, `handleSummarize`, `handleSummarySelect`, `handleConsent`, `handlePublish`, `handleUnpublish`). Specifically, the deployed upload URL generation logic is preserved unmodified (`${centerId}/${crypto.randomUUID()}.${ext}`); newer upload-path normalization was strictly excluded.
-     - **Separate UI Observation**: `owner-login.html` function `resendCode()` currently displays `New code sent! Please check your inbox.` unconditionally without checking `res.ok`. In accordance with instructions, this is recorded as an existing UI behavior observation and is **NOT** expanded or altered in this authentication-only release.
+     - **Provenance & Verification**: Comparing the user-supplied source files against local Git history resolves to commit `02abc1fbacd17da1628fdaca71c64ba3b997a9ca` (where `handleUploadUrl` directly returns `upload_url: ${supabaseUrl}${data.url}`). Commit `b1eb857` had introduced the `rawUrl`/`uploadPath` normalization which was not present in the user's deployed source. Using commit `02abc1f` as the baseline source eliminates this discrepancy and avoids copying chat markdown artifacts or URL escapes.
+     - **Function-by-Function Comparison of Non-Authentication Functions**:
+       - `handleList`: 100% identical to deployed baseline.
+       - `handleUploadUrl`: **100% identical to deployed baseline** (`upload_url: ${supabaseUrl}${data.url}` directly, without `body: JSON.stringify({})` or `rawUrl`/`uploadPath` normalization).
+       - `handleCreateTransformation`: 100% identical to deployed baseline.
+       - `handleSummarize`: 100% identical to deployed baseline.
+       - `handleSummarySelect`: 100% identical to deployed baseline.
+       - `handleConsent`: 100% identical to deployed baseline.
+       - `handlePublish`: 100% identical to deployed baseline.
+       - `handleUnpublish`: 100% identical to deployed baseline.
+       - `handleLogout`: 100% identical to deployed baseline.
+       - `parseOptionalInt`, `parseOptionalFloat`: 100% identical to deployed baseline.
+       - `_owner-helper.js`: 100% identical to deployed baseline (0 lines changed).
+     - **Authentication Differences Applied in Candidate**:
+       - `handleLoginRequest`: OTP leak removed, generic outward response, fail-closed DB query checks, pending delivery gate (`invalidated: true`), maintenance toggle.
+       - `handleLoginVerify`: Safe secret resolution, fail-closed DB query checks, active OTP query filtering (`invalidated=eq.false`), conditional atomic consumption re-check, mandatory verification audit persistence checks on all rejection paths.
+       - `_session.js`: Fallback secret removed, dynamic secret resolution preserving exact key bytes.
+       - `owner-login.html`: Client `dev_code` handling removed.
+       - Dispatcher: Added `ping`/`version` health check action returning `{ status: 'ok', service: 'pulsezen-owner-api' }`.
+     - **Separate UI Observation**: `owner-login.html` function `resendCode()` currently displays `New code sent! Please check your inbox.` unconditionally without checking `res.ok`. In accordance with instructions, this is recorded as an existing UI behavior observation and is **NOT** altered in this release candidate.
      - **Complete Deployment Preservation Boundary**: Only 4 files have been verified against the deployment source. Whole-deployment baseline verification remains open: any eventual deployment must preserve all other deployed static assets, images, `center.html`, `index.html`, and `api/public.js`.
 - **Automated Regression & Security Test Coverage**:
   - Test Suite: `pulsezen/test/auth.test.mjs` (25/25 tests passing across 5 suites, mocked PostgREST DB, NOT live PostgreSQL integration tests).
