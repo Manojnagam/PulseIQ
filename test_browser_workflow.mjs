@@ -1,6 +1,7 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import ownerHandler from './pulsezen_candidate_v2/api/owner.js';
 import publicHandler from './pulsezen_candidate_v2/api/public.js';
@@ -20,6 +21,62 @@ const secret = 'test-secret-must-be-32-chars-long-123456';
 process.env.SUPABASE_URL = BASE_URL;
 process.env.SUPABASE_SERVICE_ROLE_KEY = secret;
 process.env.OWNER_SESSION_SECRET = secret;
+process.env.GROQ_API_KEY = 'gsk_mock_live_test_key_12345';
+
+// Intercept ONLY external AI provider calls (Groq API) while exercising the real handleSummarize handler
+const origFetch = globalThis.fetch;
+let mockGroqMode = 'normal'; // 'normal' | 'banned_claim'
+
+globalThis.fetch = async (input, init) => {
+  const urlStr = typeof input === 'string' ? input : input?.url || '';
+
+  if (urlStr.includes('api.groq.com')) {
+    const reqBody = JSON.parse(init?.body || '{}');
+    const userPrompt = reqBody.messages?.find(m => m.role === 'user')?.content || '';
+
+    if (mockGroqMode === 'banned_claim') {
+      // Simulate external AI generating a medical claim ("cured diabetes") that must be blocked by handleSummarize
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                role: 'assistant',
+                content: 'This program completely cured my chronic condition and healed all symptoms.'
+              }
+            }
+          ]
+        })
+      };
+    }
+
+    // Normal compliant AI response
+    const variantText = userPrompt.includes('Variant 1')
+      ? 'Consistent habits and personalized guidance helped me gain energy and feel lighter every day.'
+      : 'Following my daily routine boosted my stamina and helped me maintain healthy wellness.';
+
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              role: 'assistant',
+              content: variantText
+            }
+          }
+        ]
+      })
+    };
+  }
+
+  return origFetch(input, init);
+};
 
 const sessionToken = signOwnerSession({
   userId: 'usr-1',
@@ -35,6 +92,11 @@ const server = http.createServer(async (req, res) => {
   let bodyStr = '';
   req.on('data', c => bodyStr += c);
   req.on('end', async () => {
+    if (pathname === '/favicon.ico') {
+      res.writeHead(204);
+      return res.end();
+    }
+
     // 1. Static HTML serving
     if (pathname === '/owner' || pathname === '/owner.html') {
       let html = fs.readFileSync(path.join(process.cwd(), 'pulsezen_candidate_v2', 'owner.html'), 'utf8');
@@ -47,30 +109,16 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/center' || pathname === '/center.html') {
       let html = fs.readFileSync(path.join(process.cwd(), 'pulsezen_candidate_v2', 'center.html'), 'utf8');
-      // Inject test center id
       html = html.replace('</head>', `<script>window.__TEST_CENTER_ID__ = "${centerId}";</script></head>`);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(html);
     }
 
-    // 2. Candidate API routes
+    // 2. Candidate Owner API routes - ALL routed to real ownerHandler (including summarize!)
     if (pathname.startsWith('/api/owner')) {
       const query = Object.fromEntries(url.searchParams);
       const action = query.action || pathname.split('/').pop();
       query.action = action;
-
-      // Mock summarize endpoint for browser test to simulate AI responses without external API calls
-      if (action === 'summarize') {
-        const reqBody = bodyStr ? JSON.parse(bodyStr) : {};
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({
-          id: reqBody.id,
-          variants: [
-            'Consistent habits and personalized guidance helped me gain energy and feel lighter every day.',
-            'Following my daily routine boosted my stamina and helped me maintain healthy wellness.'
-          ]
-        }));
-      }
 
       const mockReq = {
         method: req.method,
@@ -94,6 +142,7 @@ const server = http.createServer(async (req, res) => {
       return await ownerHandler(mockReq, mockRes);
     }
 
+    // 3. Candidate Public API routes - Routed to real publicHandler
     if (pathname.startsWith('/api/public')) {
       const query = Object.fromEntries(url.searchParams);
       const action = query.action || pathname.split('/').pop();
@@ -126,7 +175,7 @@ const server = http.createServer(async (req, res) => {
       return await publicHandler(mockReq, mockRes);
     }
 
-    // 3. Mock Supabase REST & Storage
+    // 4. Mock Supabase REST & Storage
     if (pathname.startsWith('/storage/v1/object/authenticated/transformations/')) {
       res.writeHead(200, { 'Content-Type': 'image/jpeg' });
       return res.end(Buffer.from('MOCK_JPEG_IMAGE_BYTES'));
@@ -182,7 +231,20 @@ const server = http.createServer(async (req, res) => {
           res.writeHead(404, { 'Content-Type': 'application/json' });
           return res.end(JSON.stringify([]));
         }
-        Object.assign(db.transformations[id], JSON.parse(bodyStr));
+
+        // Snapshot conditional update checks
+        const patch = JSON.parse(bodyStr);
+        const condParams = Object.fromEntries(url.searchParams);
+        if (condParams['status'] === 'eq.draft' && db.transformations[id].status !== 'draft') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify([]));
+        }
+        if (condParams['customer_words'] && condParams['customer_words'].replace(/^eq\./, '') !== db.transformations[id].customer_words) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify([]));
+        }
+
+        Object.assign(db.transformations[id], patch);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify([db.transformations[id]]));
       }
@@ -280,9 +342,22 @@ server.listen(PORT, async () => {
       const ws = new WS(wsUrl);
       let idCounter = 1;
       const callbacks = new Map();
+      const cdpExceptions = [];
+      const cdpConsoleErrors = [];
 
       ws.onmessage = (msg) => {
         const data = JSON.parse(msg.data);
+
+        // Track runtime exceptions and console errors
+        if (data.method === 'Runtime.exceptionThrown') {
+          cdpExceptions.push(data.params);
+          console.error('[CDP Exception Caught]:', data.params.exceptionDetails?.text, data.params.exceptionDetails?.exception?.description);
+        }
+        if (data.method === 'Log.entryAdded' && data.params.entry?.level === 'error') {
+          cdpConsoleErrors.push(data.params.entry);
+          console.error('[CDP Log Error Caught]:', data.params.entry.text);
+        }
+
         if (callbacks.has(data.id)) {
           callbacks.get(data.id)(data);
           callbacks.delete(data.id);
@@ -302,6 +377,38 @@ server.listen(PORT, async () => {
 
       await sendCmd('Page.enable');
       await sendCmd('Runtime.enable');
+      await sendCmd('Log.enable');
+
+      // 0. Exercise Actual handleSummarize Handler directly with mock AI provider
+      console.log('-> Browser Step 0: Exercising actual handleSummarize handler with AI mock...');
+      const summarizeReq = {
+        method: 'POST',
+        query: { action: 'summarize' },
+        headers: { 'content-type': 'application/json', cookie: `pz_owner_session=${sessionToken}` },
+        body: { id: storyAId }
+      };
+      let summarizeResData = null;
+      let summarizeStatus = 0;
+      await ownerHandler(summarizeReq, {
+        status(c) { summarizeStatus = c; return this; },
+        json(d) { summarizeResData = d; }
+      });
+      assert.equal(summarizeStatus, 200, 'Actual handleSummarize must return 200 for valid words');
+      assert.equal(summarizeResData.variants?.length, 2, 'Actual handleSummarize must return 2 variants');
+      assert.match(summarizeResData.variants[0], /Consistent habits/, 'Variant 1 must match generated clean output');
+
+      // Test claim blocking filter in actual handleSummarize
+      mockGroqMode = 'banned_claim';
+      let blockedStatus = 0;
+      let blockedResData = null;
+      await ownerHandler(summarizeReq, {
+        status(c) { blockedStatus = c; return this; },
+        json(d) { blockedResData = d; }
+      });
+      assert.equal(blockedStatus, 400, 'Actual handleSummarize must block curative medical claims with HTTP 400');
+      assert.equal(blockedResData.error, 'claim_blocked', 'Must return error=claim_blocked');
+      assert.ok(blockedResData.banned_terms?.includes('cured') || blockedResData.banned_terms?.includes('healed'), 'Must identify banned terms');
+      mockGroqMode = 'normal'; // Reset back to normal
 
       // 1. Navigate to Owner Portal and verify initial render
       console.log('-> Browser Step 1: Navigating to Owner Portal...');
@@ -311,7 +418,9 @@ server.listen(PORT, async () => {
       const eval1 = await sendCmd('Runtime.evaluate', {
         expression: `document.querySelectorAll('.t-card').length`
       });
-      console.log(`[Browser Check 1] Cards rendered in Owner Portal: ${eval1.result.result.value}`);
+      const initialCardsCount = eval1.result.result.value;
+      console.log(`[Browser Check 1] Cards rendered in Owner Portal: ${initialCardsCount}`);
+      assert.equal(initialCardsCount, 2, 'Owner portal must initially render 2 transformation cards');
 
       // 2. Publish Story A with valid review snapshot
       console.log('-> Browser Step 2: Owner publishes Story A with valid review snapshot...');
@@ -342,7 +451,10 @@ server.listen(PORT, async () => {
         awaitPromise: true,
         returnByValue: true
       });
-      console.log('[Browser Check 2] Story A publish status:', JSON.stringify(evalPubRes.result.result.value));
+      const pubResult = evalPubRes.result.result.value;
+      console.log('[Browser Check 2] Story A publish status:', JSON.stringify(pubResult));
+      assert.equal(pubResult.status, 200, 'Publishing Story A must succeed with HTTP 200');
+      assert.equal(pubResult.pubStatus, 'published', 'Story A status must transition to published');
 
       // 3. Navigate to Center Public Page and verify publication appearance
       console.log('-> Browser Step 3: Navigating to Public Centre Showcase...');
@@ -366,7 +478,11 @@ server.listen(PORT, async () => {
         awaitPromise: true,
         returnByValue: true
       });
-      console.log('[Browser Check 3] Public Centre Page Presentation:', JSON.stringify(evalPub.result.result.value));
+      const publicPresentation = evalPub.result.result.value;
+      console.log('[Browser Check 3] Public Centre Page Presentation:', JSON.stringify(publicPresentation));
+      assert.equal(publicPresentation.cardCount, 1, 'Public centre page must display exactly 1 published story');
+      assert.equal(publicPresentation.cardName, 'Pooja Reddy', 'Published card name must be Pooja Reddy');
+      assert.match(publicPresentation.quote, /Lost 5.5kg/, 'Published quote must show approved AI summary');
 
       // 4. Edit details of Story A with quotes, backslashes, and multiline text
       console.log('-> Browser Step 4: Factual Edit with Quotes & Special Characters in Owner Portal...');
@@ -395,7 +511,12 @@ server.listen(PORT, async () => {
         awaitPromise: true,
         returnByValue: true
       });
-      console.log('[Browser Check 4] Factual Edit with special characters:', JSON.stringify(evalEdit.result.result.value));
+      const editResult = evalEdit.result.result.value;
+      console.log('[Browser Check 4] Factual Edit with special characters:', JSON.stringify(editResult));
+      assert.equal(editResult.status, 200, 'Factual edit must return HTTP 200');
+      assert.equal(editResult.requires_review, true, 'Factual edit must require owner review');
+      assert.equal(editResult.itemStatus, 'draft', 'Factual edit must atomically retract story to draft');
+      assert.equal(db.transformations[storyAId].customer_words, specialText, 'Special characters and newlines must be preserved in DB');
 
       // 5. Verify Centre Public Page immediately hides Story A after factual edit returned it to draft
       console.log('-> Browser Step 5: Checking Centre Public Page after factual edit (Consistency Safety)...');
@@ -411,7 +532,9 @@ server.listen(PORT, async () => {
         awaitPromise: true,
         returnByValue: true
       });
-      console.log('[Browser Check 5] Public Centre Page post-edit (Story retracted for review):', JSON.stringify(evalPubAfterEdit.result.result.value));
+      const publicPostEdit = evalPubAfterEdit.result.result.value;
+      console.log('[Browser Check 5] Public Centre Page post-edit (Story retracted for review):', JSON.stringify(publicPostEdit));
+      assert.equal(publicPostEdit.publicCount, 0, 'Public centre page must show 0 stories while edited story awaits re-review');
 
       // 6. Navigate back to Owner Portal and verify addEventListener DOM Safe Bindings
       console.log('-> Browser Step 6: Navigating to Owner Portal to verify addEventListener and safe DOM bindings...');
@@ -436,7 +559,12 @@ server.listen(PORT, async () => {
         `,
         returnByValue: true
       });
-      console.log('[Browser Check 6] DOM Safe Binding & Zero Inline Onclick:', JSON.stringify(evalDomCheck.result.result.value));
+      const domCheck = evalDomCheck.result.result.value;
+      console.log('[Browser Check 6] DOM Safe Binding & Zero Inline Onclick:', JSON.stringify(domCheck));
+      assert.equal(domCheck.hasInlineOnclickEdit, false, 'Edit button must NOT have inline onclick');
+      assert.equal(domCheck.hasInlineOnclickReview, false, 'Review button must NOT have inline onclick');
+      assert.equal(domCheck.hasInlineOnclickDelete, false, 'Delete button must NOT have inline onclick');
+      assert.ok(domCheck.dataId, 'Buttons must bind data-id for addEventListener handlers');
 
       // 7. Review-form State Isolation: Open Consented Story A followed by Unconsented Story B
       console.log('-> Browser Step 7: Testing Review-Form State Isolation (Consented Story A -> Unconsented Story B)...');
@@ -473,10 +601,10 @@ server.listen(PORT, async () => {
 
             // Verify Story B inherited NOTHING from Story A:
             // Checkbox must be reset to false, phone must be reset to empty, publish must be disabled
-            results.storyB_inheritedConsentCheck = document.getElementById('consent-check').checked; // MUST be false
-            results.storyB_inheritedPhone = document.getElementById('c-phone').value;                 // MUST be ''
-            results.storyB_name = document.getElementById('c-name').value;                           // MUST be 'Kiran Kumar'
-            results.storyB_publishDisabled = document.getElementById('btn-publish').disabled;        // MUST be true
+            results.storyB_inheritedConsentCheck = document.getElementById('consent-check').checked;
+            results.storyB_inheritedPhone = document.getElementById('c-phone').value;
+            results.storyB_name = document.getElementById('c-name').value;
+            results.storyB_publishDisabled = document.getElementById('btn-publish').disabled;
 
             // 7c: Attempt to publish Story B WITHOUT explicit consent confirmation
             // Calling handlePublishFinal() directly must be rejected and must NOT publish
@@ -508,9 +636,19 @@ server.listen(PORT, async () => {
         awaitPromise: true,
         returnByValue: true
       });
-      console.log('[Browser Check 7] Review-form State Isolation & Unconsented Story B:', JSON.stringify(evalIsolation.result.result.value));
+      const isolationRes = evalIsolation.result.result.value;
+      console.log('[Browser Check 7] Review-form State Isolation & Unconsented Story B:', JSON.stringify(isolationRes));
+      assert.equal(isolationRes.storyA_consentChecked, true, 'Story A consent check was set to true');
+      assert.equal(isolationRes.storyA_phone, '9988', 'Story A phone was entered');
+      assert.equal(isolationRes.storyA_publishEnabled, true, 'Story A publish button was enabled');
+      assert.equal(isolationRes.storyB_inheritedConsentCheck, false, 'Story B MUST NOT inherit consent check (must be false)');
+      assert.equal(isolationRes.storyB_inheritedPhone, '', 'Story B MUST NOT inherit phone digits (must be empty)');
+      assert.equal(isolationRes.storyB_publishDisabled, true, 'Story B publish button must be disabled initially');
+      assert.equal(isolationRes.unconfirmedPublishRejected, true, 'Story B publish without consent confirmation must be rejected');
+      assert.equal(isolationRes.storyB_explicitConfirmEnabled, true, 'Explicit consent enables publish for Story B');
+      assert.equal(isolationRes.storyB_finalStatusBadge.toLowerCase(), 'published', 'Story B must be published in DOM');
 
-      // 8. Verify Centre Public Page shows published Story B
+      // 8. Verify Centre Public Page shows republished Story B
       console.log('-> Browser Step 8: Verifying published Story B on Public Centre Showcase...');
       await sendCmd('Page.navigate', { url: `${BASE_URL}/center.html` });
       await new Promise(r => setTimeout(r, 1500));
@@ -530,7 +668,11 @@ server.listen(PORT, async () => {
         awaitPromise: true,
         returnByValue: true
       });
-      console.log('[Browser Check 8] Public Centre Page Presentation post-republish:', JSON.stringify(evalPublicB.result.result.value));
+      const publicB = evalPublicB.result.result.value;
+      console.log('[Browser Check 8] Public Centre Page Presentation post-republish:', JSON.stringify(publicB));
+      assert.equal(publicB.cardCount, 1, 'Public centre page must display Story B');
+      assert.equal(publicB.cardName, 'Kiran Kumar', 'Public story name must match Story B (Kiran Kumar)');
+      assert.ok(publicB.quote.length > 0, 'Public story quote must be present');
 
       // 9. Owner deletes Story B (Zero storage deletions enforced)
       console.log('-> Browser Step 9: Owner deletes transformation (Zero storage deletions enforced)...');
@@ -555,15 +697,46 @@ server.listen(PORT, async () => {
         awaitPromise: true,
         returnByValue: true
       });
-      console.log('[Browser Check 9] Delete response (Storage preserved):', JSON.stringify(evalDel.result.result.value));
+      const delResult = evalDel.result.result.value;
+      console.log('[Browser Check 9] Delete response (Storage preserved):', JSON.stringify(delResult));
+      assert.equal(delResult.status, 200, 'Delete must return HTTP 200');
+      assert.equal(delResult.success, true, 'Delete success flag must be true');
+      assert.equal(delResult.storageDeletedCount, 0, 'ZERO storage deletions must be performed');
+      assert.equal(delResult.deferredCount, 2, 'Both before and after photos must have deletion deferred');
+      assert.equal(db.transformations[storyBId], undefined, 'Story B must be removed from transformations DB');
+
+      // 10. Verify Public Centre Page after deletion
+      console.log('-> Browser Step 10: Verifying Public Centre Page after deletion...');
+      const evalPubAfterDel = await sendCmd('Runtime.evaluate', {
+        expression: `
+          (async () => {
+            await loadTransformations('${centerId}');
+            const res = await fetch('/api/public/transformations?center_id=${centerId}');
+            const data = await res.json();
+            return { publicCount: data.transformations?.length || 0 };
+          })()
+        `,
+        awaitPromise: true,
+        returnByValue: true
+      });
+      const pubAfterDel = evalPubAfterDel.result.result.value;
+      console.log('[Browser Check 10] Public Centre Page post-deletion:', JSON.stringify(pubAfterDel));
+      assert.equal(pubAfterDel.publicCount, 0, 'Public centre page must display 0 stories after deletion');
+
+      // 11. Assert ZERO CDP Unhandled Exceptions and Console Errors
+      console.log('-> Browser Step 11: Asserting CDP exception and error logs...');
+      console.log(`CDP Exceptions Caught: ${cdpExceptions.length}`);
+      console.log(`CDP Console Errors Caught: ${cdpConsoleErrors.length}`);
+      assert.equal(cdpExceptions.length, 0, `There must be 0 unhandled CDP runtime exceptions. Caught: ${JSON.stringify(cdpExceptions)}`);
+      assert.equal(cdpConsoleErrors.length, 0, `There must be 0 CDP console errors. Caught: ${JSON.stringify(cdpConsoleErrors)}`);
 
       ws.close();
       edge.kill();
       server.close();
-      console.log('=== REAL BROWSER WORKFLOW EXECUTION COMPLETE ===');
+      console.log('=== ALL BROWSER ASSERTIONS PASSED (100% SUCCESS) ===');
       process.exit(0);
     } catch (e) {
-      console.error('Browser Test Error:', e);
+      console.error('Browser Test Assertion Failure:', e);
       edge.kill();
       server.close();
       process.exit(1);

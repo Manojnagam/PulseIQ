@@ -1,0 +1,146 @@
+{
+  "id": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "center_id": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "customer_name": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "before_path": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "after_path": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "duration_weeks": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "start_weight_kg": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "end_weight_kg": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "health_issue": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "customer_words": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "ai_summary": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "consent_given": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "consent_name": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "consent_phone_last4": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "consent_at": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "status": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "created_at": {
+    "exists": true,
+    "status": "CONFIRMED_EXISTS_IN_DB",
+    "postgres_code": "42501",
+    "error": "permission denied (table level RLS reached)"
+  },
+  "reviewed_summary": {
+    "exists": false,
+    "status": "DOES_NOT_EXIST",
+    "postgres_code": "42703",
+    "error": "column transformations.reviewed_summary does not exist"
+  },
+  "updated_at": {
+    "exists": false,
+    "status": "DOES_NOT_EXIST",
+    "postgres_code": "42703",
+    "error": "column transformations.updated_at does not exist"
+  },
+  "notes": {
+    "exists": false,
+    "status": "DOES_NOT_EXIST",
+    "postgres_code": "42703",
+    "error": "column transformations.notes does not exist"
+  },
+  "deleted_at": {
+    "exists": false,
+    "status": "DOES_NOT_EXIST",
+    "postgres_code": "42703",
+    "error": "column transformations.deleted_at does not exist"
+  },
+  "storage_deleted": {
+    "exists": false,
+    "status": "DOES_NOT_EXIST",
+    "postgres_code": "42703",
+    "error": "column transformations.storage_deleted does not exist"
+  },
+  "archived": {
+    "exists": false,
+    "status": "DOES_NOT_EXIST",
+    "postgres_code": "42703",
+    "error": "column transformations.archived does not exist"
+  },
+  "non_existent_column_for_test": {
+    "exists": false,
+    "status": "DOES_NOT_EXIST",
+    "postgres_code": "42703",
+    "error": "column transformations.non_existent_column_for_test does not exist"
+  }
+}
