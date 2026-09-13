@@ -5,10 +5,11 @@ import puppeteer from 'puppeteer-core';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { signOwnerSession } from './pulsezen_candidate_v2/api/_session.js';
+import { getBrowserExecutablePath } from './browser_finder.js';
 
 const PORT = 9991;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
-const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+const BROWSER_PATH = getBrowserExecutablePath();
 const centerId = '2c1c3a6e-35b4-4e30-bbae-a0cf02d8dd7a';
 const secret = 'test-secret-must-be-32-chars-long-123456';
 process.env.OWNER_SESSION_SECRET = secret;
@@ -87,7 +88,7 @@ const server = http.createServer(async (req, res) => {
 test('Step 5 Variant Rendering, Selection, Textarea State, and Error Handling', async (t) => {
   await new Promise(r => server.listen(PORT, r));
   const browser = await puppeteer.launch({
-    executablePath: EDGE_PATH,
+    executablePath: BROWSER_PATH,
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });

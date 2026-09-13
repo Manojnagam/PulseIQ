@@ -971,6 +971,10 @@
         return;
       }
 
+      // Explicitly clear previous transformation ID and snapshot before creating new draft
+      state.transformationId = null;
+      state.reviewSnapshot = null;
+
       var btn = document.getElementById('btn-next-4');
       btn.disabled = true;
       btn.innerHTML = '<span class="loader"></span> Saving Draft...';

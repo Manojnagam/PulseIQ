@@ -36,14 +36,16 @@ with open(clean_diff_path, 'w', encoding='utf-8') as wf:
 # Also save copy in root for git tracking
 shutil.copy2(clean_diff_path, os.path.join(base_dir, 'pulsezen_candidate_v4_against_deployed_baseline.diff'))
 
-# 4. Executable test files
+# 4. Executable test files and helpers
 test_files = [
     'test_backend_summarize_direct.mjs',
     'test_step5_variants_comprehensive.mjs',
+    'test_new_story_flow.mjs',
     'test_upload_url_reproduction.mjs',
     'test_targeted_v2.mjs',
     'test_stale_race.mjs',
-    'test_step5_reproduction.mjs'
+    'test_step5_reproduction.mjs',
+    'browser_finder.js'
 ]
 
 for tf in test_files:
@@ -56,6 +58,7 @@ import path from 'node:path';
 const tests = [
   { name: 'Direct Backend Summarize Responses & Manual Entry Validation', file: 'test_backend_summarize_direct.mjs' },
   { name: 'Step 5 Frontend Variant Rendering, Collection Guarding & Textarea State', file: 'test_step5_variants_comprehensive.mjs' },
+  { name: 'Browser Flow: Actual New-Story Lifecycle (Draft -> Summarize -> Select/Manual -> Consent)', file: 'test_new_story_flow.mjs' },
   { name: 'Upload URL Reproduction & Guarding Suite', file: 'test_upload_url_reproduction.mjs' },
   { name: 'Targeted Candidate V2 Input & Deletion Safety Suite', file: 'test_targeted_v2.mjs' },
   { name: 'Deterministic Stale Race & Snapshot Protection Suite', file: 'test_stale_race.mjs' }
@@ -99,13 +102,20 @@ guide_content = '''# PulseZen Review Bundle v4: Test Execution Guide
 
 This review bundle contains the complete candidate archive `pulsezen_candidate_v4.zip`, the exact unified diff against deployed baseline `CAF7AA3BFD4FC86695B4E04EB2E7B0698BAD66F049E755A6CB2A1953186DD08E`, extracted candidate source files in `pulsezen_candidate_v2/`, and all executable verification test suites.
 
-## 1. Prerequisites
+## 1. Prerequisites & Portable Browser Detection
 - **Node.js**: v18.0.0 or later (tested on v22.17.1).
-- **Puppeteer / Chromium / Edge**: For the headless browser test (`test_step5_variants_comprehensive.mjs`), Microsoft Edge or Google Chrome is used. If Microsoft Edge is at a custom path, adjust `EDGE_PATH` in `test_step5_variants_comprehensive.mjs`.
+- **Puppeteer-core**: Uses `puppeteer-core`.
+- **Browser Executable**: Browser tests use `browser_finder.js` which automatically searches for local Edge, Chrome, or Chromium installations across standard Windows, macOS, and Linux locations.
+  - To override or specify a custom browser binary:
+    ```bash
+    export PUPPETEER_EXECUTABLE_PATH="/path/to/chrome-or-edge"
+    # Or in Windows PowerShell:
+    # $env:PUPPETEER_EXECUTABLE_PATH="C:\\path\\to\\msedge.exe"
+    ```
 
 ## 2. Exact Local Test Commands
 
-### Run All Test Suites At Once
+### Run All 6 Test Suites At Once
 ```bash
 node run_all_tests.mjs
 ```
@@ -124,17 +134,23 @@ node run_all_tests.mjs
    node test_step5_variants_comprehensive.mjs
    ```
 
-3. **Upload URL Fastify Reproduction & Route Guarding** (10 subtests):
+3. **Actual New-Story Lifecycle Flow & Stale ID Guarding** (4 subtests):
+   Tests end-to-end new-story progression through draft creation -> summary generation -> variant selection or manual entry -> consent step. Covers valid variants, empty/malformed responses, provider failure, and confirms failed draft creation stops on Step 4 and clears `transformationId` so it cannot reuse a previous ID.
+   ```bash
+   node test_new_story_flow.mjs
+   ```
+
+4. **Upload URL Fastify Reproduction & Route Guarding** (10 subtests):
    ```bash
    node test_upload_url_reproduction.mjs
    ```
 
-4. **Targeted Candidate V2 Input & Deletion Safety**:
+5. **Targeted Candidate V2 Input & Deletion Safety**:
    ```bash
    node test_targeted_v2.mjs
    ```
 
-5. **Deterministic Stale Race & Snapshot Protection**:
+6. **Deterministic Stale Race & Snapshot Protection**:
    ```bash
    node test_stale_race.mjs
    ```
@@ -145,7 +161,7 @@ sha256sum pulsezen_candidate_v4.zip
 # On Windows PowerShell:
 # Get-FileHash -Algorithm SHA256 pulsezen_candidate_v4.zip
 ```
-Expected SHA-256: `6D14C4317BD26D24A562EFD8B11B841055BC8AC6F31632BC32D4D15ECD612253`
+Expected SHA-256: `487C63B38566A904226A6651AE50905D8B2FDB14041D6E11E060B4FBD321CCF0`
 
 ## 4. Verify Review Bundle Hashes
 Refer to `SHA256SUMS` in this directory to verify every file in this bundle.

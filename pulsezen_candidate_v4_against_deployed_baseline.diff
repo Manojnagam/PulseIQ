@@ -1,4 +1,4 @@
-diff --git a/api/owner.js b/api/owner.js
+﻿diff --git a/api/owner.js b/api/owner.js
 index 35b2f64..a150418 100644
 --- a/api/owner.js
 +++ b/api/owner.js
@@ -91,7 +91,7 @@ index 35b2f64..a150418 100644
    if (hits.length > 0) {
      return res.status(400).json({
 diff --git a/owner.html b/owner.html
-index e53d98a..5da029a 100644
+index e53d98a..ce9a45b 100644
 --- a/owner.html
 +++ b/owner.html
 @@ -682,14 +682,14 @@
@@ -112,7 +112,18 @@ index e53d98a..5da029a 100644
              <div class="variant-tag">Variant B (Lifestyle & Consistency)</div>
              <div class="variant-text" id="text-v2"></div>
            </div>
-@@ -1022,6 +1022,7 @@
+@@ -971,6 +971,10 @@
+         return;
+       }
+ 
++      // Explicitly clear previous transformation ID and snapshot before creating new draft
++      state.transformationId = null;
++      state.reviewSnapshot = null;
++
+       var btn = document.getElementById('btn-next-4');
+       btn.disabled = true;
+       btn.innerHTML = '<span class="loader"></span> Saving Draft...';
+@@ -1022,6 +1026,7 @@
          goToStep(5);
          document.getElementById('ai-loading').style.display = 'block';
          document.getElementById('ai-content').style.display = 'none';
@@ -120,7 +131,7 @@ index e53d98a..5da029a 100644
  
          // 2. Call AI summarize
          var aiRes = await fetch('/api/owner/summarize', {
-@@ -1034,7 +1035,7 @@
+@@ -1034,7 +1039,7 @@
          document.getElementById('ai-loading').style.display = 'none';
          document.getElementById('ai-content').style.display = 'block';
  
@@ -128,9 +139,9 @@ index e53d98a..5da029a 100644
 +        var aiData = await aiRes.json().catch(function() { return {}; });
          if (!aiRes.ok) {
            if (aiData.error === 'claim_blocked') {
-             showAlert('G��n+� ' + aiData.message, true);
-@@ -1043,25 +1044,105 @@
-             btn.textContent = 'Generate Clean Summary =���';
+             showAlert('ΓÜá∩╕Å ' + aiData.message, true);
+@@ -1043,25 +1048,105 @@
+             btn.textContent = 'Generate Clean Summary ≡ƒñû';
              return;
            }
 -          throw new Error(aiData.error || 'Failed to generate AI summary');
@@ -155,7 +166,7 @@ index e53d98a..5da029a 100644
 +        }
 +      } finally {
          btn.disabled = false;
-         btn.textContent = 'Generate Clean Summary =���';
+         btn.textContent = 'Generate Clean Summary ≡ƒñû';
        }
      }
  
@@ -242,7 +253,7 @@ index e53d98a..5da029a 100644
        document.getElementById('chosen-text').value = text;
        state.chosenSummary = text;
      }
-@@ -1115,8 +1196,18 @@
+@@ -1115,8 +1200,18 @@
        document.getElementById('chosen-text').value = '';
        var cardV1 = document.getElementById('card-v1');
        var cardV2 = document.getElementById('card-v2');
@@ -263,7 +274,7 @@ index e53d98a..5da029a 100644
        state.chosenSummary = '';
        state.aiVariants = [];
        validateConsentForm();
-@@ -1350,6 +1441,7 @@
+@@ -1350,6 +1445,7 @@
        goToStep(5);
        document.getElementById('ai-loading').style.display = 'block';
        document.getElementById('ai-content').style.display = 'none';
@@ -271,7 +282,7 @@ index e53d98a..5da029a 100644
  
        try {
          var aiRes = await fetch('/api/owner/summarize', {
-@@ -1361,22 +1453,15 @@
+@@ -1361,22 +1457,15 @@
          document.getElementById('ai-loading').style.display = 'none';
          document.getElementById('ai-content').style.display = 'block';
  
