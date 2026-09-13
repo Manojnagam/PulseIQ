@@ -1,0 +1,860 @@
+﻿diff --git a/pulsezen_release/api/owner.js b/pulsezen_candidate_v2/api/owner.js
+index 72243de..4d34f5c 100644
+--- a/pulsezen_release/api/owner.js
++++ b/pulsezen_candidate_v2/api/owner.js
+@@ -13,16 +13,28 @@ You must strictly enforce ALL of these rules without exception:
+ 4. Never mention "Herbalife" or any brand name.
+ 5. Output plain text only. No quotes, no markdown, no emoji.`;
+ 
+-function parseOptionalInt(val) {
++function parseStrictInt(val) {
+   if (val === undefined || val === null || val === '') return null;
+-  const num = parseInt(val, 10);
+-  return isNaN(num) ? null : num;
++  if (typeof val === 'number') {
++    return Number.isInteger(val) ? val : null;
++  }
++  if (typeof val !== 'string') return null;
++  const trimmed = val.trim();
++  if (!/^-?\d+$/.test(trimmed)) return null;
++  const num = Number(trimmed);
++  return Number.isSafeInteger(num) ? num : null;
+ }
+ 
+-function parseOptionalFloat(val) {
++function parseStrictFloat(val) {
+   if (val === undefined || val === null || val === '') return null;
+-  const num = parseFloat(val);
+-  return isNaN(num) ? null : num;
++  if (typeof val === 'number') {
++    return Number.isFinite(val) ? val : null;
++  }
++  if (typeof val !== 'string') return null;
++  const trimmed = val.trim();
++  if (!/^-?\d+(\.\d+)?$/.test(trimmed)) return null;
++  const num = Number(trimmed);
++  return Number.isFinite(num) ? num : null;
+ }
+ 
+ // -----------------------------------------------------------------------------
+@@ -647,14 +659,29 @@ async function handleCreateTransformation(req, res) {
+   if (!serviceKey) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY missing' });
+ 
+   try {
++    const parsedDuration = parseStrictInt(duration_weeks);
++    if (duration_weeks !== undefined && duration_weeks !== null && duration_weeks !== '' && (parsedDuration === null || parsedDuration < 1 || parsedDuration > 520)) {
++      return res.status(400).json({ error: 'duration_weeks must be a positive integer between 1 and 520' });
++    }
++
++    const parsedStartWt = parseStrictFloat(start_weight_kg);
++    if (start_weight_kg !== undefined && start_weight_kg !== null && start_weight_kg !== '' && (parsedStartWt === null || parsedStartWt < 20 || parsedStartWt > 500)) {
++      return res.status(400).json({ error: 'start_weight_kg must be a valid number between 20 and 500' });
++    }
++
++    const parsedEndWt = parseStrictFloat(end_weight_kg);
++    if (end_weight_kg !== undefined && end_weight_kg !== null && end_weight_kg !== '' && (parsedEndWt === null || parsedEndWt < 20 || parsedEndWt > 500)) {
++      return res.status(400).json({ error: 'end_weight_kg must be a valid number between 20 and 500' });
++    }
++
+     const insertPayload = {
+       center_id: centerId,
+       customer_name: customer_name.trim(),
+       before_path,
+       after_path,
+-      duration_weeks: parseOptionalInt(duration_weeks),
+-      start_weight_kg: parseOptionalFloat(start_weight_kg),
+-      end_weight_kg: parseOptionalFloat(end_weight_kg),
++      duration_weeks: parsedDuration,
++      start_weight_kg: parsedStartWt,
++      end_weight_kg: parsedEndWt,
+       health_issue: (health_issue && health_issue.trim()) ? health_issue.trim() : null,
+       customer_words: customer_words.trim(),
+       status: 'draft',
+@@ -783,6 +810,31 @@ async function handleSummarize(req, res) {
+   }
+ }
+ 
++function validateReviewSnapshot(snapshot) {
++  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return null;
++  const { customer_name, duration_weeks, start_weight_kg, end_weight_kg, health_issue, customer_words } = snapshot;
++  if (typeof customer_name !== 'string' || !customer_name.trim()) return null;
++  if (typeof customer_words !== 'string' || !customer_words.trim()) return null;
++
++  const parsedDuration = (duration_weeks === null || duration_weeks === undefined) ? null : parseStrictInt(duration_weeks);
++  if (duration_weeks !== null && duration_weeks !== undefined && parsedDuration === null) return null;
++
++  const parsedStart = (start_weight_kg === null || start_weight_kg === undefined) ? null : parseStrictFloat(start_weight_kg);
++  if (start_weight_kg !== null && start_weight_kg !== undefined && parsedStart === null) return null;
++
++  const parsedEnd = (end_weight_kg === null || end_weight_kg === undefined) ? null : parseStrictFloat(end_weight_kg);
++  if (end_weight_kg !== null && end_weight_kg !== undefined && parsedEnd === null) return null;
++
++  return {
++    customer_name: customer_name.trim(),
++    duration_weeks: parsedDuration,
++    start_weight_kg: parsedStart,
++    end_weight_kg: parsedEnd,
++    health_issue: (health_issue && String(health_issue).trim()) ? String(health_issue).trim() : null,
++    customer_words: customer_words.trim()
++  };
++}
++
+ // -----------------------------------------------------------------------------
+ // 8. SUMMARY SELECT
+ // -----------------------------------------------------------------------------
+@@ -791,9 +843,24 @@ async function handleSummarySelect(req, res) {
+   const session = getOwnerSession(req);
+   if (!session || !session.center_id) return res.status(401).json({ error: 'Unauthorized' });
+ 
+-  const { id, text } = req.body || {};
++  const { id, text, review_snapshot } = req.body || {};
+   if (!id || !text || typeof text !== 'string') return res.status(400).json({ error: 'Transformation id and summary text are required' });
+ 
++  if (!review_snapshot) {
++    return res.status(400).json({
++      error: 'missing_review_snapshot',
++      message: 'Explicit review snapshot covering all editable facts is required.'
++    });
++  }
++
++  const snapshot = validateReviewSnapshot(review_snapshot);
++  if (!snapshot) {
++    return res.status(400).json({
++      error: 'invalid_review_snapshot',
++      message: 'Review snapshot must cover all editable facts (customer_name, duration_weeks, start_weight_kg, end_weight_kg, health_issue, customer_words).'
++    });
++  }
++
+   const cleanText = text.trim();
+   const hits = findBannedTerms(cleanText);
+   if (hits.length > 0) {
+@@ -808,7 +875,46 @@ async function handleSummarySelect(req, res) {
+   if (!serviceKey) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY missing' });
+ 
+   try {
+-    const updateUrl = `${supabaseUrl}/rest/v1/transformations?id=eq.${encodeURIComponent(id)}&center_id=eq.${encodeURIComponent(session.center_id)}`;
++    // 1. Fetch current transformation record to verify existence and check factual revision against snapshot
++    const fetchUrl = `${supabaseUrl}/rest/v1/transformations?id=eq.${encodeURIComponent(id)}&center_id=eq.${encodeURIComponent(session.center_id)}&select=id,customer_name,duration_weeks,start_weight_kg,end_weight_kg,health_issue,customer_words,status`;
++    const fetchRes = await fetch(fetchUrl, {
++      headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
++    });
++    if (!fetchRes.ok) return res.status(502).json({ error: 'Database query failed' });
++    const rows = await fetchRes.json();
++    if (!rows || rows.length === 0) return res.status(404).json({ error: 'Transformation not found or unauthorized' });
++
++    const row = rows[0];
++    const factsMatch = (
++      row.customer_name === snapshot.customer_name &&
++      row.customer_words === snapshot.customer_words &&
++      row.duration_weeks === snapshot.duration_weeks &&
++      (row.start_weight_kg === null ? snapshot.start_weight_kg === null : Number(row.start_weight_kg) === snapshot.start_weight_kg) &&
++      (row.end_weight_kg === null ? snapshot.end_weight_kg === null : Number(row.end_weight_kg) === snapshot.end_weight_kg) &&
++      row.health_issue === snapshot.health_issue
++    );
++
++    if (!factsMatch) {
++      return res.status(409).json({
++        error: 'stale_factual_revision',
++        message: 'Factual details or metrics were modified after review began. Please review and regenerate the AI summary.'
++      });
++    }
++
++    // 2. Atomically conditional PATCH: require that DB matches the review snapshot across all editable facts
++    let cond = `id=eq.${encodeURIComponent(id)}&center_id=eq.${encodeURIComponent(session.center_id)}`;
++    cond += `&customer_name=eq.${encodeURIComponent(snapshot.customer_name)}`;
++    cond += `&customer_words=eq.${encodeURIComponent(snapshot.customer_words)}`;
++    if (snapshot.duration_weeks === null) cond += `&duration_weeks=is.null`;
++    else cond += `&duration_weeks=eq.${snapshot.duration_weeks}`;
++    if (snapshot.start_weight_kg === null) cond += `&start_weight_kg=is.null`;
++    else cond += `&start_weight_kg=eq.${snapshot.start_weight_kg}`;
++    if (snapshot.end_weight_kg === null) cond += `&end_weight_kg=is.null`;
++    else cond += `&end_weight_kg=eq.${snapshot.end_weight_kg}`;
++    if (snapshot.health_issue === null) cond += `&health_issue=is.null`;
++    else cond += `&health_issue=eq.${encodeURIComponent(snapshot.health_issue)}`;
++
++    const updateUrl = `${supabaseUrl}/rest/v1/transformations?${cond}`;
+     const updateRes = await fetch(updateUrl, {
+       method: 'PATCH',
+       headers: {
+@@ -819,8 +925,14 @@ async function handleSummarySelect(req, res) {
+       },
+       body: JSON.stringify({ ai_summary: cleanText })
+     });
++    if (!updateRes.ok) return res.status(502).json({ error: 'Database update failed' });
+     const updated = await updateRes.json();
+-    if (!updated || updated.length === 0) return res.status(404).json({ error: 'Transformation not found or unauthorized' });
++    if (!updated || updated.length === 0) {
++      return res.status(409).json({
++        error: 'stale_factual_revision',
++        message: 'Factual details or metrics were modified concurrently. Summary selection rejected; please regenerate AI summary for the latest text.'
++      });
++    }
+     return res.status(200).json({ success: true, id: updated[0].id, ai_summary: updated[0].ai_summary });
+   } catch (err) {
+     return res.status(500).json({ error: 'Internal server error', details: err.message });
+@@ -884,9 +996,24 @@ async function handlePublish(req, res) {
+   const session = getOwnerSession(req);
+   if (!session || !session.center_id) return res.status(401).json({ error: 'Unauthorized' });
+ 
+-  const { id } = req.body || {};
++  const { id, review_snapshot } = req.body || {};
+   if (!id) return res.status(400).json({ error: 'Transformation id is required' });
+ 
++  if (!review_snapshot) {
++    return res.status(400).json({
++      error: 'missing_review_snapshot',
++      message: 'Explicit review snapshot covering all editable facts is required.'
++    });
++  }
++
++  const snapshot = validateReviewSnapshot(review_snapshot);
++  if (!snapshot) {
++    return res.status(400).json({
++      error: 'invalid_review_snapshot',
++      message: 'Review snapshot must cover all editable facts (customer_name, duration_weeks, start_weight_kg, end_weight_kg, health_issue, customer_words).'
++    });
++  }
++
+   const { supabaseUrl, serviceKey } = getSupabaseConfig();
+   if (!serviceKey) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY missing' });
+ 
+@@ -895,19 +1022,56 @@ async function handlePublish(req, res) {
+     const rowRes = await fetch(fetchUrl, {
+       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
+     });
++    if (!rowRes.ok) return res.status(502).json({ error: 'Database query failed' });
+     const rows = await rowRes.json();
+     if (!rows || rows.length === 0) return res.status(404).json({ error: 'Transformation record not found or unauthorized' });
+ 
+     const row = rows[0];
+     if (!row.consent_given) return res.status(400).json({ error: 'consent_required', message: 'Cannot publish without customer consent.' });
+-    if (!row.ai_summary) return res.status(400).json({ error: 'summary_required', message: 'Cannot publish without selecting a compliant AI summary.' });
++    if (!row.ai_summary) {
++      return res.status(400).json({
++        error: 'summary_required',
++        message: 'Factual details have been edited or no AI summary selected. Please review and select an AI summary before publishing.'
++      });
++    }
++
++    const factsMatch = (
++      row.customer_name === snapshot.customer_name &&
++      row.customer_words === snapshot.customer_words &&
++      row.duration_weeks === snapshot.duration_weeks &&
++      (row.start_weight_kg === null ? snapshot.start_weight_kg === null : Number(row.start_weight_kg) === snapshot.start_weight_kg) &&
++      (row.end_weight_kg === null ? snapshot.end_weight_kg === null : Number(row.end_weight_kg) === snapshot.end_weight_kg) &&
++      row.health_issue === snapshot.health_issue
++    );
++
++    if (!factsMatch) {
++      return res.status(409).json({
++        error: 'stale_factual_revision',
++        message: 'Factual details or metrics were modified after review began. Please review and republish.'
++      });
++    }
+ 
+     const hits = findBannedTerms(row.ai_summary);
+     if (hits.length > 0) {
+       return res.status(400).json({ error: 'claim_blocked', message: `Publication blocked: Summary contains prohibited terms: ${hits.join(', ')}.` });
+     }
+ 
+-    const updateUrl = `${supabaseUrl}/rest/v1/transformations?id=eq.${encodeURIComponent(id)}&center_id=eq.${encodeURIComponent(session.center_id)}`;
++    // Atomic conditional update tied to the review snapshot AND consent_given=true AND status=draft:
++    // Guarantees that if facts, metrics, summary, or consent were modified concurrently, 0 rows match.
++    let cond = `id=eq.${encodeURIComponent(id)}&center_id=eq.${encodeURIComponent(session.center_id)}&status=eq.draft&consent_given=eq.true`;
++    cond += `&customer_name=eq.${encodeURIComponent(snapshot.customer_name)}`;
++    cond += `&customer_words=eq.${encodeURIComponent(snapshot.customer_words)}`;
++    cond += `&ai_summary=eq.${encodeURIComponent(row.ai_summary)}`;
++    if (snapshot.duration_weeks === null) cond += `&duration_weeks=is.null`;
++    else cond += `&duration_weeks=eq.${snapshot.duration_weeks}`;
++    if (snapshot.start_weight_kg === null) cond += `&start_weight_kg=is.null`;
++    else cond += `&start_weight_kg=eq.${snapshot.start_weight_kg}`;
++    if (snapshot.end_weight_kg === null) cond += `&end_weight_kg=is.null`;
++    else cond += `&end_weight_kg=eq.${snapshot.end_weight_kg}`;
++    if (snapshot.health_issue === null) cond += `&health_issue=is.null`;
++    else cond += `&health_issue=eq.${encodeURIComponent(snapshot.health_issue)}`;
++
++    const updateUrl = `${supabaseUrl}/rest/v1/transformations?${cond}`;
+     const updateRes = await fetch(updateUrl, {
+       method: 'PATCH',
+       headers: {
+@@ -918,9 +1082,16 @@ async function handlePublish(req, res) {
+       },
+       body: JSON.stringify({ status: 'published' })
+     });
++    if (!updateRes.ok) return res.status(502).json({ error: 'Database update failed' });
+     const updated = await updateRes.json();
+-    const publishedRow = updated && updated[0] ? updated[0] : row;
++    if (!updated || updated.length === 0) {
++      return res.status(409).json({
++        error: 'stale_factual_revision',
++        message: 'Factual details, metrics, summary, or consent were modified concurrently. Publication rejected; please review the updated story before publishing.'
++      });
++    }
+ 
++    const publishedRow = updated[0];
+     return res.status(200).json({
+       success: true,
+       id: publishedRow.id,
+@@ -976,6 +1147,212 @@ async function handleUnpublish(req, res) {
+   }
+ }
+ 
++// -----------------------------------------------------------------------------
++// 12. EDIT (FACTUAL FIELDS)
++// -----------------------------------------------------------------------------
++async function handleEdit(req, res) {
++  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
++  const session = getOwnerSession(req);
++  if (!session || !session.center_id) return res.status(401).json({ error: 'Unauthorized' });
++
++  const { id, customer_name, duration_weeks, start_weight_kg, end_weight_kg, health_issue, customer_words } = req.body || {};
++  if (!id || typeof id !== 'string' || !UUID_REGEX.test(id)) {
++    return res.status(400).json({ error: 'Valid transformation id UUID is required' });
++  }
++
++  const centerId = session.center_id;
++  const { supabaseUrl, serviceKey } = getSupabaseConfig();
++  if (!serviceKey) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY missing' });
++
++  // Validate editable fields and enforce exact types and boundaries
++  const updates = {};
++  if (customer_name !== undefined) {
++    if (typeof customer_name !== 'string' || customer_name.trim().length === 0) {
++      return res.status(400).json({ error: 'customer_name must be a non-empty string' });
++    }
++    updates.customer_name = customer_name.trim();
++  }
++
++  if (duration_weeks !== undefined) {
++    const parsed = parseStrictInt(duration_weeks);
++    if (duration_weeks !== null && duration_weeks !== '' && (parsed === null || parsed < 1 || parsed > 520)) {
++      return res.status(400).json({ error: 'duration_weeks must be a positive integer between 1 and 520' });
++    }
++    updates.duration_weeks = parsed;
++  }
++
++  if (start_weight_kg !== undefined) {
++    const parsed = parseStrictFloat(start_weight_kg);
++    if (start_weight_kg !== null && start_weight_kg !== '' && (parsed === null || parsed < 20 || parsed > 500)) {
++      return res.status(400).json({ error: 'start_weight_kg must be a valid number between 20 and 500' });
++    }
++    updates.start_weight_kg = parsed;
++  }
++
++  if (end_weight_kg !== undefined) {
++    const parsed = parseStrictFloat(end_weight_kg);
++    if (end_weight_kg !== null && end_weight_kg !== '' && (parsed === null || parsed < 20 || parsed > 500)) {
++      return res.status(400).json({ error: 'end_weight_kg must be a valid number between 20 and 500' });
++    }
++    updates.end_weight_kg = parsed;
++  }
++
++  if (health_issue !== undefined) {
++    updates.health_issue = (typeof health_issue === 'string' && health_issue.trim()) ? health_issue.trim() : null;
++  }
++
++  if (customer_words !== undefined) {
++    if (typeof customer_words !== 'string' || customer_words.trim().length === 0) {
++      return res.status(400).json({ error: 'customer_words cannot be empty' });
++    }
++    updates.customer_words = customer_words.trim();
++  }
++
++  if (Object.keys(updates).length === 0) {
++    return res.status(400).json({ error: 'No valid editable fields provided' });
++  }
++
++  try {
++    // 1. Fetch current transformation
++    const getUrl = `${supabaseUrl}/rest/v1/transformations?id=eq.${encodeURIComponent(id)}&center_id=eq.${encodeURIComponent(centerId)}&select=id,status,ai_summary`;
++    const getRes = await fetch(getUrl, {
++      headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
++    });
++    if (!getRes.ok) return res.status(502).json({ error: 'Database query failed' });
++    const rows = await getRes.json();
++    if (!rows || rows.length === 0) {
++      return res.status(404).json({ error: 'Transformation not found or unauthorized' });
++    }
++    const current = rows[0];
++
++    // Atomically return factual edits to draft and invalidate stale summary/publication review.
++    // Any change to factual customer words or metrics requires fresh owner review before republication.
++    // Clears ai_summary without assuming any unmigrated columns.
++    updates.status = 'draft';
++    updates.ai_summary = null;
++
++    const updateUrl = `${supabaseUrl}/rest/v1/transformations?id=eq.${encodeURIComponent(id)}&center_id=eq.${encodeURIComponent(centerId)}`;
++    const updateRes = await fetch(updateUrl, {
++      method: 'PATCH',
++      headers: {
++        'apikey': serviceKey,
++        'Authorization': `Bearer ${serviceKey}`,
++        'Content-Type': 'application/json',
++        'Prefer': 'return=representation'
++      },
++      body: JSON.stringify(updates)
++    });
++
++    if (!updateRes.ok) {
++      const err = await updateRes.json().catch(() => ({}));
++      return res.status(502).json({ error: 'Database update failed', details: err });
++    }
++
++    const updated = await updateRes.json();
++    if (!updated || updated.length === 0) {
++      return res.status(404).json({ error: 'Transformation not found or unauthorized' });
++    }
++
++    return res.status(200).json({
++      success: true,
++      transformation: updated[0],
++      requires_review: true,
++      message: 'Factual details updated. Story returned to draft to ensure AI testimonial consistency. Please review and republish.'
++    });
++  } catch (err) {
++    return res.status(500).json({ error: 'Internal server error', details: err.message });
++  }
++}
++
++// -----------------------------------------------------------------------------
++// 13. DELETE (RECORD & ASSOCIATED STORAGE)
++// -----------------------------------------------------------------------------
++async function handleDelete(req, res) {
++  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
++  const session = getOwnerSession(req);
++  if (!session || !session.center_id) return res.status(401).json({ error: 'Unauthorized' });
++
++  const { id, confirm } = req.body || {};
++  if (!id || typeof id !== 'string' || !UUID_REGEX.test(id)) {
++    return res.status(400).json({ error: 'Valid transformation id UUID is required' });
++  }
++
++  // Strict boolean check: confirm === true
++  if (confirm !== true) {
++    return res.status(400).json({
++      error: 'confirmation_required',
++      message: 'Explicit confirmation (confirm === true) is required to delete a transformation.'
++    });
++  }
++
++  const centerId = session.center_id;
++  const { supabaseUrl, serviceKey } = getSupabaseConfig();
++  if (!serviceKey) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY missing' });
++
++  try {
++    // 1. Fetch record scoped strictly to center_id
++    const fetchUrl = `${supabaseUrl}/rest/v1/transformations?id=eq.${encodeURIComponent(id)}&center_id=eq.${encodeURIComponent(centerId)}&select=id,center_id,before_path,after_path`;
++    const fetchRes = await fetch(fetchUrl, {
++      headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
++    });
++
++    if (!fetchRes.ok) return res.status(502).json({ error: 'Database query failed' });
++    const rows = await fetchRes.json();
++    if (!rows || rows.length === 0) {
++      return res.status(404).json({ error: 'Transformation not found or unauthorized' });
++    }
++
++    const row = rows[0];
++
++    // 2. Delete database record FIRST and confirm deletion before cleanup/return
++    const delUrl = `${supabaseUrl}/rest/v1/transformations?id=eq.${encodeURIComponent(id)}&center_id=eq.${encodeURIComponent(centerId)}`;
++    const delRes = await fetch(delUrl, {
++      method: 'DELETE',
++      headers: {
++        'apikey': serviceKey,
++        'Authorization': `Bearer ${serviceKey}`,
++        'Prefer': 'return=representation'
++      }
++    });
++
++    if (!delRes.ok) {
++      return res.status(502).json({ error: 'Failed to delete transformation record' });
++    }
++    const deleted = await delRes.json();
++    if (!deleted || deleted.length === 0) {
++      return res.status(404).json({ error: 'Transformation not found or unauthorized' });
++    }
++
++    // 3. Row deletion confirmed.
++    // Defer ALL storage deletion: retain all storage objects safely to guarantee
++    // zero risk of deleting shared or unrelated customer photos.
++    const candidatePaths = [];
++    const prefix = `${centerId}/`;
++    if (row.before_path && typeof row.before_path === 'string' && row.before_path.startsWith(prefix)) {
++      candidatePaths.push(row.before_path);
++    }
++    if (row.after_path && typeof row.after_path === 'string' && row.after_path.startsWith(prefix)) {
++      candidatePaths.push(row.after_path);
++    }
++
++    const deferredStorageCleanups = candidatePaths.map(p => ({
++      path: p,
++      status: 'retained',
++      reason: 'storage_deletion_deferred_policy'
++    }));
++
++    return res.status(200).json({
++      success: true,
++      id,
++      message: 'Transformation record deleted successfully. Storage objects retained (cleanup deferred).',
++      storage_deleted: [],
++      storage_cleanup_deferred: deferredStorageCleanups
++    });
++  } catch (err) {
++    return res.status(500).json({ error: 'Internal server error', details: err.message });
++  }
++}
++
+ // -----------------------------------------------------------------------------
+ // MAIN DISPATCHER
+ // -----------------------------------------------------------------------------
+@@ -1008,6 +1385,10 @@ export default async function handler(req, res) {
+       return handlePublish(req, res);
+     case 'unpublish':
+       return handleUnpublish(req, res);
++    case 'edit':
++      return handleEdit(req, res);
++    case 'delete':
++      return handleDelete(req, res);
+     default:
+       return res.status(404).json({ error: `Unknown action: ${action}` });
+   }
+diff --git a/pulsezen_release/owner.html b/pulsezen_candidate_v2/owner.html
+index 74deb9c..42c6e36 100644
+--- a/pulsezen_release/owner.html
++++ b/pulsezen_candidate_v2/owner.html
+@@ -507,12 +507,42 @@
+       font-size: 11px;
+       font-weight: 700;
+       cursor: pointer;
+-      margin-top: 8px;
+       transition: background 0.2s;
+     }
+     .btn-unpublish:hover {
+       background: #fecaca;
+     }
++    .btn-action-group {
++      display: flex;
++      gap: 6px;
++      margin-top: 10px;
++      flex-wrap: wrap;
++    }
++    .btn-action {
++      padding: 4px 10px;
++      border-radius: 6px;
++      font-size: 11px;
++      font-weight: 700;
++      cursor: pointer;
++      border: 1px solid transparent;
++      transition: background 0.2s, border-color 0.2s;
++    }
++    .btn-edit {
++      background: #e0f2fe;
++      color: #0369a1;
++      border-color: #bae6fd;
++    }
++    .btn-edit:hover {
++      background: #bae6fd;
++    }
++    .btn-delete {
++      background: #fef2f2;
++      color: #dc2626;
++      border-color: #fecaca;
++    }
++    .btn-delete:hover {
++      background: #fee2e2;
++    }
+     .empty-state {
+       text-align: center;
+       padding: 30px;
+@@ -945,10 +975,10 @@
+       btn.innerHTML = '<span class="loader"></span> Saving Draft...';
+ 
+       try {
+-        // B4 Fix: Coerce empty strings to null client-side
+-        var durationWeeks = state.facts.weeks && state.facts.weeks.trim() !== '' ? parseInt(state.facts.weeks, 10) : null;
+-        var startWt = state.facts.startWt && state.facts.startWt.trim() !== '' ? parseFloat(state.facts.startWt) : null;
+-        var endWt = state.facts.endWt && state.facts.endWt.trim() !== '' ? parseFloat(state.facts.endWt) : null;
++        // Send raw numeric input for strict server-side validation
++        var rawWeeks = (state.facts.weeks !== undefined && state.facts.weeks !== null && state.facts.weeks.trim() !== '') ? state.facts.weeks.trim() : null;
++        var rawStart = (state.facts.startWt !== undefined && state.facts.startWt !== null && state.facts.startWt.trim() !== '') ? state.facts.startWt.trim() : null;
++        var rawEnd = (state.facts.endWt !== undefined && state.facts.endWt !== null && state.facts.endWt.trim() !== '') ? state.facts.endWt.trim() : null;
+ 
+         // 1. Create transformation record (status=draft)
+         var transRes = await fetch('/api/owner/transformation', {
+@@ -959,9 +989,9 @@
+             customer_name: state.facts.name,
+             before_path: state.beforePath,
+             after_path: state.afterPath,
+-            duration_weeks: durationWeeks,
+-            start_weight_kg: startWt,
+-            end_weight_kg: endWt,
++            duration_weeks: rawWeeks,
++            start_weight_kg: rawStart,
++            end_weight_kg: rawEnd,
+             health_issue: state.facts.issue || null,
+             customer_words: words
+           })
+@@ -975,6 +1005,16 @@
+         var transData = await transRes.json();
+         state.transformationId = transData.id;
+ 
++        // Capture review snapshot at the exact moment review begins covering all editable facts
++        state.reviewSnapshot = {
++          customer_name: (transData.row && transData.row.customer_name) ? transData.row.customer_name : state.facts.name,
++          duration_weeks: (transData.row && transData.row.duration_weeks !== undefined) ? transData.row.duration_weeks : (rawWeeks ? Number(rawWeeks) : null),
++          start_weight_kg: (transData.row && transData.row.start_weight_kg !== undefined) ? transData.row.start_weight_kg : (rawStart ? Number(rawStart) : null),
++          end_weight_kg: (transData.row && transData.row.end_weight_kg !== undefined) ? transData.row.end_weight_kg : (rawEnd ? Number(rawEnd) : null),
++          health_issue: (transData.row && transData.row.health_issue !== undefined) ? transData.row.health_issue : (state.facts.issue || null),
++          customer_words: (transData.row && transData.row.customer_words) ? transData.row.customer_words : words
++        };
++
+         goToStep(5);
+         document.getElementById('ai-loading').style.display = 'block';
+         document.getElementById('ai-content').style.display = 'none';
+@@ -1039,7 +1079,11 @@
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           credentials: 'include',
+-          body: JSON.stringify({ id: state.transformationId, text: text })
++          body: JSON.stringify({
++            id: state.transformationId,
++            text: text,
++            review_snapshot: state.reviewSnapshot
++          })
+         });
+ 
+         var resData = await res.json().catch(function() { return {}; });
+@@ -1086,6 +1130,7 @@
+           credentials: 'include',
+           body: JSON.stringify({
+             id: state.transformationId,
++            consent_given: true,
+             consent_name: name,
+             consent_phone_last4: phone
+           })
+@@ -1101,7 +1146,10 @@
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           credentials: 'include',
+-          body: JSON.stringify({ id: state.transformationId })
++          body: JSON.stringify({
++            id: state.transformationId,
++            review_snapshot: state.reviewSnapshot
++          })
+         });
+ 
+         if (!pubRes.ok) {
+@@ -1180,7 +1228,140 @@
+       }
+     }
+ 
+-    // Render Transformations List with B3 public images and B5 unpublish button
++    // Factual edit handler
++    async function handleEditTransformation(id, currentName, currentWeeks, currentStartWt, currentEndWt, currentIssue, currentWords) {
++      var newName = prompt('Customer Name:', currentName || '');
++      if (newName === null) return;
++      var newWeeks = prompt('Duration (weeks):', currentWeeks || '');
++      if (newWeeks === null) return;
++      var newStartWt = prompt('Start Weight (kg):', currentStartWt || '');
++      if (newStartWt === null) return;
++      var newEndWt = prompt('End Weight (kg):', currentEndWt || '');
++      if (newEndWt === null) return;
++      var newIssue = prompt('Health/Wellness Focus:', currentIssue || '');
++      if (newIssue === null) return;
++      var newWords = prompt('Customer Words / Notes:', currentWords || '');
++      if (newWords === null) return;
++
++      try {
++        // Send raw inputs for strict server-side validation
++        var res = await fetch('/api/owner/edit', {
++          method: 'POST',
++          headers: { 'Content-Type': 'application/json' },
++          credentials: 'include',
++          body: JSON.stringify({
++            id: id,
++            customer_name: newName.trim(),
++            duration_weeks: (newWeeks && newWeeks.trim() !== '') ? newWeeks.trim() : null,
++            start_weight_kg: (newStartWt && newStartWt.trim() !== '') ? newStartWt.trim() : null,
++            end_weight_kg: (newEndWt && newEndWt.trim() !== '') ? newEndWt.trim() : null,
++            health_issue: (newIssue && newIssue.trim() !== '') ? newIssue.trim() : null,
++            customer_words: newWords.trim()
++          })
++        });
++
++        if (!res.ok) {
++          var data = await res.json().catch(function() { return {}; });
++          throw new Error(data.error || 'Failed to update transformation');
++        }
++
++        showAlert('Transformation details updated. Story returned to draft for summary review.', false);
++        await loadTransformationsList();
++      } catch (err) {
++        showAlert(err.message, true);
++      }
++    }
++
++    // Delete handler with explicit confirmation explaining photo retention
++    async function handleDeleteTransformation(id, customerName) {
++      var confirmed = confirm('Are you sure you want to permanently delete the transformation for "' + (customerName || 'this customer') + '"? The story will be removed from your center page, but stored photos are retained safely per data retention policy.');
++      if (!confirmed) return;
++
++      try {
++        var res = await fetch('/api/owner/delete', {
++          method: 'POST',
++          headers: { 'Content-Type': 'application/json' },
++          credentials: 'include',
++          body: JSON.stringify({ id: id, confirm: true })
++        });
++
++        if (!res.ok) {
++          var data = await res.json().catch(function() { return {}; });
++          throw new Error(data.error || 'Failed to delete transformation');
++        }
++
++        showAlert('Transformation story removed from center page successfully. Stored photos retained safely.', false);
++        await loadTransformationsList();
++      } catch (err) {
++        showAlert(err.message, true);
++      }
++    }
++
++    // Reopen review workflow for an edited existing story
++    async function handleReopenReview(item) {
++      hideAlert();
++      state.transformationId = item.id;
++      state.facts = {
++        name: item.customer_name,
++        weeks: item.duration_weeks !== null ? String(item.duration_weeks) : '',
++        startWt: item.start_weight_kg !== null ? String(item.start_weight_kg) : '',
++        endWt: item.end_weight_kg !== null ? String(item.end_weight_kg) : '',
++        issue: item.health_issue || ''
++      };
++      // Capture review snapshot at the exact moment review begins covering all editable facts
++      state.reviewSnapshot = {
++        customer_name: item.customer_name,
++        duration_weeks: item.duration_weeks !== null ? Number(item.duration_weeks) : null,
++        start_weight_kg: item.start_weight_kg !== null ? Number(item.start_weight_kg) : null,
++        end_weight_kg: item.end_weight_kg !== null ? Number(item.end_weight_kg) : null,
++        health_issue: item.health_issue || null,
++        customer_words: item.customer_words
++      };
++
++      document.getElementById('c-name').value = item.consent_name || item.customer_name || '';
++      document.getElementById('f-words').value = item.customer_words || '';
++      if (item.consent_phone_last4) {
++        document.getElementById('c-phone').value = item.consent_phone_last4;
++      }
++      if (item.consent_given) {
++        document.getElementById('consent-check').checked = true;
++      }
++      validateConsentForm();
++
++      goToStep(5);
++      document.getElementById('ai-loading').style.display = 'block';
++      document.getElementById('ai-content').style.display = 'none';
++
++      try {
++        var aiRes = await fetch('/api/owner/summarize', {
++          method: 'POST',
++          headers: { 'Content-Type': 'application/json' },
++          credentials: 'include',
++          body: JSON.stringify({ id: item.id })
++        });
++        document.getElementById('ai-loading').style.display = 'none';
++        document.getElementById('ai-content').style.display = 'block';
++
++        var aiData = await aiRes.json();
++        if (!aiRes.ok) throw new Error(aiData.error || 'Failed to generate AI summary');
++
++        state.aiVariants = aiData.variants || [];
++        document.getElementById('text-v1').textContent = state.aiVariants[0] || '';
++        document.getElementById('text-v2').textContent = state.aiVariants[1] || '';
++        selectVariant(0);
++      } catch (err) {
++        document.getElementById('ai-loading').style.display = 'none';
++        document.getElementById('ai-content').style.display = 'block';
++        var fallbackText = item.ai_summary || item.customer_words || '';
++        state.aiVariants = [fallbackText, fallbackText];
++        document.getElementById('text-v1').textContent = fallbackText;
++        document.getElementById('text-v2').textContent = fallbackText;
++        selectVariant(0);
++        showAlert('AI service notice: ' + err.message + '. You can review or edit the summary directly below.', false);
++      }
++    }
++
++    // Render Transformations List with B3 public images, unpublish, edit, review, and delete buttons
+     function renderList(items) {
+       var container = document.getElementById('transformations-container');
+       var countEl = document.getElementById('list-count');
+@@ -1237,15 +1418,68 @@
+           html += '  <div style="font-size:11px; color:var(--success); margin-top:8px; font-weight:600;">Γ£ô Customer consent verified (ΓÇóΓÇóΓÇóΓÇó ' + escapeHtml(item.consent_phone_last4 || '') + ')</div>';
+         }
+ 
+-        // B5: Unpublish button on published cards
++        // Action controls
++        html += '  <div class="btn-action-group">';
+         if (isPublished) {
+-          html += '  <div><button class="btn-unpublish" onclick="handleUnpublish(\'' + escapeHtml(item.id) + '\')">Withdraw Consent / Unpublish</button></div>';
++          html += '    <button class="btn-unpublish action-unpublish-btn" data-id="' + escapeHtml(item.id) + '">Withdraw / Unpublish</button>';
++        } else {
++          html += '    <button class="btn-action btn-review action-review-btn" data-id="' + escapeHtml(item.id) + '" style="background:#ecfdf5; color:#047857; border-color:#a7f3d0;">Review & Publish</button>';
+         }
++        html += '    <button class="btn-action btn-edit action-edit-btn" data-id="' + escapeHtml(item.id) + '">Edit Details</button>';
++        html += '    <button class="btn-action btn-delete action-delete-btn" data-id="' + escapeHtml(item.id) + '">Delete</button>';
++        html += '  </div>';
+ 
+         html += '</div>';
+       });
+ 
+       container.innerHTML = html;
++
++      // Safe event binding without inline onclick code execution
++      var itemMap = new Map();
++      items.forEach(function(it) { itemMap.set(String(it.id), it); });
++
++      container.querySelectorAll('.action-unpublish-btn').forEach(function(btn) {
++        btn.addEventListener('click', function() {
++          var id = this.getAttribute('data-id');
++          if (id) handleUnpublish(id);
++        });
++      });
++
++      container.querySelectorAll('.action-review-btn').forEach(function(btn) {
++        btn.addEventListener('click', function() {
++          var id = this.getAttribute('data-id');
++          var item = itemMap.get(id);
++          if (item) handleReopenReview(item);
++        });
++      });
++
++      container.querySelectorAll('.action-edit-btn').forEach(function(btn) {
++        btn.addEventListener('click', function() {
++          var id = this.getAttribute('data-id');
++          var item = itemMap.get(id);
++          if (item) {
++            handleEditTransformation(
++              item.id,
++              item.customer_name,
++              item.duration_weeks,
++              item.start_weight_kg,
++              item.end_weight_kg,
++              item.health_issue,
++              item.customer_words
++            );
++          }
++        });
++      });
++
++      container.querySelectorAll('.action-delete-btn').forEach(function(btn) {
++        btn.addEventListener('click', function() {
++          var id = this.getAttribute('data-id');
++          var item = itemMap.get(id);
++          if (item) {
++            handleDeleteTransformation(item.id, item.customer_name);
++          }
++        });
++      });
+     }
+ 
+     function escapeHtml(str) {

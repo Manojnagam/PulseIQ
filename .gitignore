@@ -55,4 +55,8 @@ lh_report.json
 _audit/
 *.http
 
+pulsezen_release/
+
 .env*
+
+.edge-test-profile/

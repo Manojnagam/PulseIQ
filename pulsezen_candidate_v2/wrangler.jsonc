@@ -1,0 +1,14 @@
+{
+  "name": "pulsezen",
+  "main": "router.js",
+  "compatibility_date": "2026-05-18",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS"
+  },
+  "routes": [
+    { "pattern": "dharanis.pulsezen.in/*", "zone_name": "pulsezen.in" },
+    { "pattern": "bksprime.pulsezen.in/*", "zone_name": "pulsezen.in" },
+    { "pattern": "pulsezen.in/*", "zone_name": "pulsezen.in" }
+  ]
+}

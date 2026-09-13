@@ -1,0 +1,8 @@
+# Newly generated review packages, tests, and reports excluded from release payload
+test/
+*.test.*
+*.zip
+*.diff
+*.log
+INTENDED_SCHEMA*
+.git*
