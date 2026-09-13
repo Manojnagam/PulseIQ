@@ -520,7 +520,7 @@ index 72243de..4d34f5c 100644
        return res.status(404).json({ error: `Unknown action: ${action}` });
    }
 diff --git a/pulsezen_release/owner.html b/pulsezen_candidate_v2/owner.html
-index 74deb9c..560882c 100644
+index 74deb9c..e53d98a 100644
 --- a/pulsezen_release/owner.html
 +++ b/pulsezen_candidate_v2/owner.html
 @@ -507,12 +507,42 @@
@@ -567,7 +567,15 @@ index 74deb9c..560882c 100644
      .empty-state {
        text-align: center;
        padding: 30px;
-@@ -945,10 +975,10 @@
+@@ -736,6 +766,7 @@
+           return;
+         }
+         var data = await res.json();
++        resetReviewFormState('');
+         renderList(data.transformations || []);
+       } catch (e) {
+         window.location.replace('/owner-login.html');
+@@ -945,10 +976,10 @@
        btn.innerHTML = '<span class="loader"></span> Saving Draft...';
  
        try {
@@ -582,7 +590,7 @@ index 74deb9c..560882c 100644
  
          // 1. Create transformation record (status=draft)
          var transRes = await fetch('/api/owner/transformation', {
-@@ -959,9 +989,9 @@
+@@ -959,9 +990,9 @@
              customer_name: state.facts.name,
              before_path: state.beforePath,
              after_path: state.afterPath,
@@ -595,7 +603,7 @@ index 74deb9c..560882c 100644
              health_issue: state.facts.issue || null,
              customer_words: words
            })
-@@ -975,6 +1005,16 @@
+@@ -975,6 +1006,19 @@
          var transData = await transRes.json();
          state.transformationId = transData.id;
  
@@ -609,10 +617,13 @@ index 74deb9c..560882c 100644
 +          customer_words: (transData.row && transData.row.customer_words) ? transData.row.customer_words : words
 +        };
 +
++        // Reset review form and consent state for new story
++        resetReviewFormState(state.facts.name);
++
          goToStep(5);
          document.getElementById('ai-loading').style.display = 'block';
          document.getElementById('ai-content').style.display = 'none';
-@@ -1039,7 +1079,11 @@
+@@ -1039,7 +1083,11 @@
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
            credentials: 'include',
@@ -625,7 +636,29 @@ index 74deb9c..560882c 100644
          });
  
          var resData = await res.json().catch(function() { return {}; });
-@@ -1071,10 +1115,17 @@
+@@ -1059,6 +1107,21 @@
+       }
+     }
+ 
++    // Review-form state isolation: always reset consent checkbox, phone digits, and story-specific state
++    function resetReviewFormState(customerName) {
++      document.getElementById('consent-check').checked = false;
++      document.getElementById('c-phone').value = '';
++      document.getElementById('c-name').value = customerName ? customerName.trim() : '';
++      document.getElementById('chosen-text').value = '';
++      var cardV1 = document.getElementById('card-v1');
++      var cardV2 = document.getElementById('card-v2');
++      if (cardV1) cardV1.classList.remove('selected');
++      if (cardV2) cardV2.classList.remove('selected');
++      state.chosenSummary = '';
++      state.aiVariants = [];
++      validateConsentForm();
++    }
++
+     // Step 6: Consent Gate validation
+     function validateConsentForm() {
+       var check = document.getElementById('consent-check').checked;
+@@ -1071,10 +1134,17 @@
  
      async function handlePublishFinal() {
        hideAlert();
@@ -643,7 +676,7 @@ index 74deb9c..560882c 100644
        btn.disabled = true;
        btn.innerHTML = '<span class="loader"></span> Publishing...';
  
-@@ -1086,6 +1137,7 @@
+@@ -1086,6 +1156,7 @@
            credentials: 'include',
            body: JSON.stringify({
              id: state.transformationId,
@@ -651,7 +684,7 @@ index 74deb9c..560882c 100644
              consent_name: name,
              consent_phone_last4: phone
            })
-@@ -1101,7 +1153,10 @@
+@@ -1101,7 +1172,10 @@
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
            credentials: 'include',
@@ -663,7 +696,18 @@ index 74deb9c..560882c 100644
          });
  
          if (!pubRes.ok) {
-@@ -1180,7 +1235,145 @@
+@@ -1131,9 +1205,7 @@
+         document.getElementById('f-end-wt').value = '';
+         document.getElementById('f-issue').value = '';
+         document.getElementById('f-words').value = '';
+-        document.getElementById('chosen-text').value = '';
+-        document.getElementById('consent-check').checked = false;
+-        document.getElementById('c-phone').value = '';
++        resetReviewFormState('');
+         goToStep(1);
+ 
+         // Refresh list
+@@ -1180,7 +1252,135 @@
        }
      }
  
@@ -760,18 +804,8 @@ index 74deb9c..560882c 100644
 +
 +      // Review-form state isolation: ALWAYS reset consent checkbox, phone digits, and other story-specific state
 +      // Require explicit consent confirmation for the current story
-+      document.getElementById('consent-check').checked = false;
-+      document.getElementById('c-phone').value = '';
-+      document.getElementById('c-name').value = item.customer_name || '';
++      resetReviewFormState(item.customer_name);
 +      document.getElementById('f-words').value = item.customer_words || '';
-+      document.getElementById('chosen-text').value = '';
-+      var cardV1 = document.getElementById('card-v1');
-+      var cardV2 = document.getElementById('card-v2');
-+      if (cardV1) cardV1.classList.remove('selected');
-+      if (cardV2) cardV2.classList.remove('selected');
-+      state.chosenSummary = '';
-+      state.aiVariants = [];
-+      validateConsentForm();
 +
 +      goToStep(5);
 +      document.getElementById('ai-loading').style.display = 'block';
@@ -810,7 +844,7 @@ index 74deb9c..560882c 100644
      function renderList(items) {
        var container = document.getElementById('transformations-container');
        var countEl = document.getElementById('list-count');
-@@ -1237,15 +1430,68 @@
+@@ -1237,15 +1437,68 @@
            html += '  <div style="font-size:11px; color:var(--success); margin-top:8px; font-weight:600;">Γ£ô Customer consent verified (ΓÇóΓÇóΓÇóΓÇó ' + escapeHtml(item.consent_phone_last4 || '') + ')</div>';
          }
  

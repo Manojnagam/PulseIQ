@@ -766,6 +766,7 @@
           return;
         }
         var data = await res.json();
+        resetReviewFormState('');
         renderList(data.transformations || []);
       } catch (e) {
         window.location.replace('/owner-login.html');
@@ -1015,6 +1016,9 @@
           customer_words: (transData.row && transData.row.customer_words) ? transData.row.customer_words : words
         };
 
+        // Reset review form and consent state for new story
+        resetReviewFormState(state.facts.name);
+
         goToStep(5);
         document.getElementById('ai-loading').style.display = 'block';
         document.getElementById('ai-content').style.display = 'none';
@@ -1103,6 +1107,21 @@
       }
     }
 
+    // Review-form state isolation: always reset consent checkbox, phone digits, and story-specific state
+    function resetReviewFormState(customerName) {
+      document.getElementById('consent-check').checked = false;
+      document.getElementById('c-phone').value = '';
+      document.getElementById('c-name').value = customerName ? customerName.trim() : '';
+      document.getElementById('chosen-text').value = '';
+      var cardV1 = document.getElementById('card-v1');
+      var cardV2 = document.getElementById('card-v2');
+      if (cardV1) cardV1.classList.remove('selected');
+      if (cardV2) cardV2.classList.remove('selected');
+      state.chosenSummary = '';
+      state.aiVariants = [];
+      validateConsentForm();
+    }
+
     // Step 6: Consent Gate validation
     function validateConsentForm() {
       var check = document.getElementById('consent-check').checked;
@@ -1186,9 +1205,7 @@
         document.getElementById('f-end-wt').value = '';
         document.getElementById('f-issue').value = '';
         document.getElementById('f-words').value = '';
-        document.getElementById('chosen-text').value = '';
-        document.getElementById('consent-check').checked = false;
-        document.getElementById('c-phone').value = '';
+        resetReviewFormState('');
         goToStep(1);
 
         // Refresh list
@@ -1327,18 +1344,8 @@
 
       // Review-form state isolation: ALWAYS reset consent checkbox, phone digits, and other story-specific state
       // Require explicit consent confirmation for the current story
-      document.getElementById('consent-check').checked = false;
-      document.getElementById('c-phone').value = '';
-      document.getElementById('c-name').value = item.customer_name || '';
+      resetReviewFormState(item.customer_name);
       document.getElementById('f-words').value = item.customer_words || '';
-      document.getElementById('chosen-text').value = '';
-      var cardV1 = document.getElementById('card-v1');
-      var cardV2 = document.getElementById('card-v2');
-      if (cardV1) cardV1.classList.remove('selected');
-      if (cardV2) cardV2.classList.remove('selected');
-      state.chosenSummary = '';
-      state.aiVariants = [];
-      validateConsentForm();
 
       goToStep(5);
       document.getElementById('ai-loading').style.display = 'block';
