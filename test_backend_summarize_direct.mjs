@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import ownerHandler from './pulsezen/api/owner.js';
-import { signOwnerSession } from './pulsezen/api/_session.js';
+import ownerHandler from './pulsezen_candidate_v2/api/owner.js';
+import { signOwnerSession } from './pulsezen_candidate_v2/api/_session.js';
 
 const PORT = 9984;
 const BASE_URL = `http://127.0.0.1:${PORT}`;

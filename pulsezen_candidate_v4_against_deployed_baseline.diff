@@ -1,0 +1,300 @@
+diff --git a/api/owner.js b/api/owner.js
+index 35b2f64..a150418 100644
+--- a/api/owner.js
++++ b/api/owner.js
+@@ -787,7 +787,7 @@ async function callGroqVariant(groqKey, customerWords, styleHint) {
+     const hits = findBannedTerms(text);
+     attempts.push({ attempt, user_prompt: userPrompt, raw_output: text, banned_terms_detected: hits });
+ 
+-    if (hits.length === 0) {
++    if (text && hits.length === 0) {
+       return { ok: true, text, rawOutput: text, hits: [], attempts };
+     }
+     lastHits = hits;
+@@ -817,17 +817,32 @@ async function handleSummarize(req, res) {
+     if (!rows || rows.length === 0) return res.status(404).json({ error: 'Transformation record not found' });
+ 
+     const customerWords = rows[0].customer_words;
+-    const v1 = await callGroqVariant(groqKey, customerWords, 'Variant 1: Express feeling lighter, consistent habits, and personal well-being in simple first-person.');
+-    if (!v1.ok) {
++
++    let v1 = null;
++    let v1Error = null;
++    try {
++      v1 = await callGroqVariant(groqKey, customerWords, 'Variant 1: Express feeling lighter, consistent habits, and personal well-being in simple first-person.');
++    } catch (err) {
++      v1Error = err;
++    }
++
++    let v2 = null;
++    let v2Error = null;
++    try {
++      v2 = await callGroqVariant(groqKey, customerWords, 'Variant 2: Express daily routine, energy to do everyday tasks, and positive personal changes in simple first-person.');
++    } catch (err) {
++      v2Error = err;
++    }
++
++    // Preserve claim-blocking rules: if either generation encountered prohibited medical claims, fail closed (400)
++    if (v1 && !v1.ok && Array.isArray(v1.hits) && v1.hits.length > 0) {
+       return res.status(400).json({
+         error: 'claim_blocked',
+         message: "The customer's words contain medical or curative claims which cannot be published. Please rewrite without medical claims.",
+         banned_terms: v1.hits
+       });
+     }
+-
+-    const v2 = await callGroqVariant(groqKey, customerWords, 'Variant 2: Express daily routine, energy to do everyday tasks, and positive personal changes in simple first-person.');
+-    if (!v2.ok) {
++    if (v2 && !v2.ok && Array.isArray(v2.hits) && v2.hits.length > 0) {
+       return res.status(400).json({
+         error: 'claim_blocked',
+         message: "The customer's words contain medical or curative claims which cannot be published. Please rewrite without medical claims.",
+@@ -835,7 +850,21 @@ async function handleSummarize(req, res) {
+       });
+     }
+ 
+-    return res.status(200).json({ id: rows[0].id, variants: [v1.text, v2.text] });
++    // Retain valid compliant variants when companion generation is empty or unavailable
++    const validVariants = [];
++    if (v1 && v1.ok && typeof v1.text === 'string' && v1.text.trim().length > 0) {
++      validVariants.push(v1.text.trim());
++    }
++    if (v2 && v2.ok && typeof v2.text === 'string' && v2.text.trim().length > 0) {
++      validVariants.push(v2.text.trim());
++    }
++
++    if (validVariants.length > 0) {
++      return res.status(200).json({ id: rows[0].id, variants: validVariants });
++    }
++
++    const failureDetail = (v1Error?.message || v2Error?.message || 'AI provider returned no valid variants.');
++    return res.status(502).json({ error: 'Failed to generate AI summary', details: failureDetail });
+   } catch (err) {
+     return res.status(500).json({ error: 'Internal server error', details: err.message });
+   }
+@@ -875,7 +904,8 @@ async function handleSummarySelect(req, res) {
+   if (!session || !session.center_id) return res.status(401).json({ error: 'Unauthorized' });
+ 
+   const { id, text, review_snapshot } = req.body || {};
+-  if (!id || !text || typeof text !== 'string') return res.status(400).json({ error: 'Transformation id and summary text are required' });
++  const cleanText = (typeof text === 'string') ? text.trim() : '';
++  if (!id || !cleanText) return res.status(400).json({ error: 'Transformation id and summary text are required' });
+ 
+   if (!review_snapshot) {
+     return res.status(400).json({
+@@ -892,7 +922,6 @@ async function handleSummarySelect(req, res) {
+     });
+   }
+ 
+-  const cleanText = text.trim();
+   const hits = findBannedTerms(cleanText);
+   if (hits.length > 0) {
+     return res.status(400).json({
+diff --git a/owner.html b/owner.html
+index e53d98a..5da029a 100644
+--- a/owner.html
++++ b/owner.html
+@@ -682,14 +682,14 @@
+         </div>
+ 
+         <div id="ai-content">
+-          <p style="font-size:13px; color:var(--muted); margin-bottom:12px">
++          <p id="ai-variants-hint" style="font-size:13px; color:var(--muted); margin-bottom:12px">
+             Pick one of the 2 AI variants below, then edit freely to perfect it:
+           </p>
+-          <div class="variant-card" id="card-v1" onclick="selectVariant(0)">
++          <div class="variant-card" id="card-v1" style="display:none;" onclick="selectVariant(0)">
+             <div class="variant-tag">Variant A (Routine & Vitality)</div>
+             <div class="variant-text" id="text-v1"></div>
+           </div>
+-          <div class="variant-card" id="card-v2" onclick="selectVariant(1)">
++          <div class="variant-card" id="card-v2" style="display:none;" onclick="selectVariant(1)">
+             <div class="variant-tag">Variant B (Lifestyle & Consistency)</div>
+             <div class="variant-text" id="text-v2"></div>
+           </div>
+@@ -1022,6 +1022,7 @@
+         goToStep(5);
+         document.getElementById('ai-loading').style.display = 'block';
+         document.getElementById('ai-content').style.display = 'none';
++        var fallbackText = '';
+ 
+         // 2. Call AI summarize
+         var aiRes = await fetch('/api/owner/summarize', {
+@@ -1034,7 +1035,7 @@
+         document.getElementById('ai-loading').style.display = 'none';
+         document.getElementById('ai-content').style.display = 'block';
+ 
+-        var aiData = await aiRes.json();
++        var aiData = await aiRes.json().catch(function() { return {}; });
+         if (!aiRes.ok) {
+           if (aiData.error === 'claim_blocked') {
+             showAlert('G��n+� ' + aiData.message, true);
+@@ -1043,25 +1044,105 @@
+             btn.textContent = 'Generate Clean Summary =���';
+             return;
+           }
+-          throw new Error(aiData.error || 'Failed to generate AI summary');
++          throw new Error(aiData.error || 'AI summary service returned an error');
+         }
+ 
+-        state.aiVariants = aiData.variants || [];
+-        document.getElementById('text-v1').textContent = state.aiVariants[0] || '';
+-        document.getElementById('text-v2').textContent = state.aiVariants[1] || '';
+-        selectVariant(0);
++        var rawVariants = (aiData && Array.isArray(aiData.variants)) ? aiData.variants : [];
++        renderAiVariants(rawVariants, fallbackText);
+       } catch (err) {
+-        showAlert(err.message, true);
++        if (state.transformationId) {
++          document.getElementById('ai-loading').style.display = 'none';
++          document.getElementById('ai-content').style.display = 'block';
++          renderAiVariants([], fallbackText, 'AI service notice: ' + (err.message || 'Service unavailable') + '.');
++        } else {
++          showAlert(err.message, true);
++          goToStep(4);
++        }
++      } finally {
+         btn.disabled = false;
+         btn.textContent = 'Generate Clean Summary =���';
+       }
+     }
+ 
++    // Step 5: Render variants, guard against empty options, and allow manual entry
++    function renderAiVariants(variants, fallbackText, errorMessage) {
++      var validList = [];
++      if (Array.isArray(variants)) {
++        for (var i = 0; i < variants.length; i++) {
++          var entry = variants[i];
++          if (typeof entry === 'string' && entry.trim().length > 0) {
++            validList.push(entry.trim());
++          }
++        }
++      }
++
++      var v1 = validList[0] || '';
++      var v2 = validList[1] || '';
++      state.aiVariants = [v1, v2];
++
++      var cardV1 = document.getElementById('card-v1');
++      var cardV2 = document.getElementById('card-v2');
++      var textV1 = document.getElementById('text-v1');
++      var textV2 = document.getElementById('text-v2');
++      var hint = document.getElementById('ai-variants-hint');
++      var chosenArea = document.getElementById('chosen-text');
++
++      if (v1) {
++        cardV1.style.display = 'block';
++        textV1.textContent = v1;
++      } else {
++        cardV1.style.display = 'none';
++        cardV1.classList.remove('selected');
++        textV1.textContent = '';
++      }
++
++      if (v2) {
++        cardV2.style.display = 'block';
++        textV2.textContent = v2;
++      } else {
++        cardV2.style.display = 'none';
++        cardV2.classList.remove('selected');
++        textV2.textContent = '';
++      }
++
++      if (v1 || v2) {
++        if (hint) {
++          hint.style.display = 'block';
++          hint.textContent = (v1 && v2)
++            ? 'Pick one of the 2 AI variants below, then edit freely to perfect it:'
++            : 'Review the generated summary below, or edit freely to perfect it:';
++        }
++        if (v1) {
++          selectVariant(0);
++        } else {
++          selectVariant(1);
++        }
++      } else {
++        if (hint) hint.style.display = 'none';
++        cardV1.classList.remove('selected');
++        cardV2.classList.remove('selected');
++
++        var currentVal = (chosenArea.value || '').trim();
++        if (!currentVal && fallbackText) {
++          chosenArea.value = fallbackText.trim();
++          state.chosenSummary = fallbackText.trim();
++        } else if (!currentVal) {
++          chosenArea.value = '';
++          state.chosenSummary = '';
++        }
++
++        var msg = errorMessage || 'AI summary unavailable. Please enter or edit your clean testimonial summary below.';
++        showAlert(msg, false);
++      }
++    }
++
+     // Step 5: Variant select & Edit
+     function selectVariant(idx) {
++      var text = (Array.isArray(state.aiVariants) && typeof state.aiVariants[idx] === 'string') ? state.aiVariants[idx].trim() : '';
++      if (!text) return; // Guard: Empty variants must NOT appear selectable or overwrite state
++
+       document.getElementById('card-v1').classList.toggle('selected', idx === 0);
+       document.getElementById('card-v2').classList.toggle('selected', idx === 1);
+-      var text = state.aiVariants[idx] || '';
+       document.getElementById('chosen-text').value = text;
+       state.chosenSummary = text;
+     }
+@@ -1115,8 +1196,18 @@
+       document.getElementById('chosen-text').value = '';
+       var cardV1 = document.getElementById('card-v1');
+       var cardV2 = document.getElementById('card-v2');
+-      if (cardV1) cardV1.classList.remove('selected');
+-      if (cardV2) cardV2.classList.remove('selected');
++      if (cardV1) {
++        cardV1.classList.remove('selected');
++        cardV1.style.display = 'none';
++        document.getElementById('text-v1').textContent = '';
++      }
++      if (cardV2) {
++        cardV2.classList.remove('selected');
++        cardV2.style.display = 'none';
++        document.getElementById('text-v2').textContent = '';
++      }
++      var hint = document.getElementById('ai-variants-hint');
++      if (hint) hint.style.display = 'none';
+       state.chosenSummary = '';
+       state.aiVariants = [];
+       validateConsentForm();
+@@ -1350,6 +1441,7 @@
+       goToStep(5);
+       document.getElementById('ai-loading').style.display = 'block';
+       document.getElementById('ai-content').style.display = 'none';
++      var fallbackText = item.ai_summary || '';
+ 
+       try {
+         var aiRes = await fetch('/api/owner/summarize', {
+@@ -1361,22 +1453,15 @@
+         document.getElementById('ai-loading').style.display = 'none';
+         document.getElementById('ai-content').style.display = 'block';
+ 
+-        var aiData = await aiRes.json();
++        var aiData = await aiRes.json().catch(function() { return {}; });
+         if (!aiRes.ok) throw new Error(aiData.error || 'Failed to generate AI summary');
+ 
+-        state.aiVariants = aiData.variants || [];
+-        document.getElementById('text-v1').textContent = state.aiVariants[0] || '';
+-        document.getElementById('text-v2').textContent = state.aiVariants[1] || '';
+-        selectVariant(0);
++        var rawVariants = (aiData && Array.isArray(aiData.variants)) ? aiData.variants : [];
++        renderAiVariants(rawVariants, fallbackText);
+       } catch (err) {
+         document.getElementById('ai-loading').style.display = 'none';
+         document.getElementById('ai-content').style.display = 'block';
+-        var fallbackText = item.ai_summary || item.customer_words || '';
+-        state.aiVariants = [fallbackText, fallbackText];
+-        document.getElementById('text-v1').textContent = fallbackText;
+-        document.getElementById('text-v2').textContent = fallbackText;
+-        selectVariant(0);
+-        showAlert('AI service notice: ' + err.message + '. You can review or edit the summary directly below.', false);
++        renderAiVariants([], fallbackText, 'AI service notice: ' + (err.message || 'Service unavailable') + '.');
+       }
+     }
+ 
