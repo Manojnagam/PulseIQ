@@ -240,27 +240,24 @@ REVOKE ALL ON FUNCTION pz_plan_gated_rpc_shutdown() FROM PUBLIC, anon, authentic
 -- ---------------------------------------------------------------------------
 DO $$
 DECLARE
-  anon_ok  int;
-  svc_ok   int;
+  svc_ok int;
 BEGIN
-  -- anon must still have a policy on wellness_centers (from pulsezen-centers-schema.sql).
-  SELECT count(*) INTO anon_ok
-    FROM pg_policies
-   WHERE schemaname = 'public'
-     AND tablename  = 'wellness_centers'
-     AND roles::text LIKE '%{%'   -- any role-scoped policy
-     OR (schemaname = 'public' AND tablename = 'wellness_centers' AND policyname LIKE '%anon%');
-
-  -- service_role must still exist and have its standard superuser bypass
-  -- (we never changed it; this confirms nothing was revoked accidentally).
-  SELECT count(*) INTO svc_ok
-    FROM pg_roles WHERE rolname = 'service_role';
-
+  -- service_role must still exist (we never changed membership; this
+  -- confirms nothing was accidentally revoked).
+  SELECT count(*) INTO svc_ok FROM pg_roles WHERE rolname = 'service_role';
   IF svc_ok = 0 THEN
     RAISE EXCEPTION 'tenancy_foundation:invariant service_role missing — migration aborted';
   END IF;
 
-  -- Paid-plan functions exist.
+  -- Shared tables must still exist (belt-and-suspenders: confirms we never DROPped them).
+  IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'wellness_centers') THEN
+    RAISE EXCEPTION 'tenancy_foundation:invariant wellness_centers missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'transformations') THEN
+    RAISE EXCEPTION 'tenancy_foundation:invariant transformations missing';
+  END IF;
+
+  -- Paid-plan functions created.
   IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'pz_plan_activate') THEN
     RAISE EXCEPTION 'tenancy_foundation:invariant pz_plan_activate not created';
   END IF;
