@@ -1,0 +1,15 @@
+{
+  "name": "pulsezen-tenancy-foundation",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test:pg": "node --test test/tenancy-foundation.pg.test.mjs",
+    "test:consent": "node --test test/owner-consent.pg.test.mjs",
+    "test:consent-a2": "node --test test/owner-consent-addendum2.pg.test.mjs"
+  },
+  "devDependencies": {
+    "pg": "^8.12.0"
+  }
+}
