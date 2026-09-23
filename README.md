@@ -52,3 +52,8 @@ app.pulsezen.in <!-- Update this with your actual Netlify URL -->
 ## Author
 
 **Manoj Nagam** — [GitHub](https://github.com/Manojnagam)
+
+## Integrations
+
+* **CodeRabbit**: Configured for AI-powered pull request code reviews and automated quality feedback.
+
